@@ -9,6 +9,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ComposedChart, Legend, L
 import * as XLSX from "xlsx";
 import { formatCompactVnd, formatPercent, formatVnd } from "@/lib/format";
 import { getUploadUserName } from "@/lib/upload-users";
+import { getAdsPlan, getAdsMonthlyTarget, getAdsQuarterTarget, getAdsYearTarget } from "@/lib/ads-plan";
 
 type DashboardData = any;
 type Tab = "overview" | "groups" | "agents" | "status" | "time" | "ads" | "starviet" | "admin" | "upload";
@@ -38,15 +39,6 @@ const QUARTER_PLAN_VND: Record<number, number> = {
   4: 15_660_000_000
 };
 const YEAR_PLAN_VND = 54_000_000_000;
-
-const ADS_MONTHLY_PLANS: Record<string, number[]> = {
-  "Nguyễn Thị Mai Trang": [715, 550, 935, 880, 935, 990, 935, 935, 935, 990, 1045, 1155],
-  "Nguyễn Thị Trầm": [748, 575, 978, 920, 978, 1035, 978, 978, 978, 1035, 1093, 1208],
-  "Đinh Quốc Tiến": [293, 225, 383, 360, 383, 405, 383, 383, 383, 405, 428, 473],
-  "Nguyễn Thóc": [780, 600, 1020, 960, 1020, 1080, 1020, 1020, 1020, 1080, 1140, 1260],
-  "Trần Xuân Thu": [260, 200, 340, 320, 340, 360, 340, 340, 340, 360, 380, 420],
-  "Nguyễn Thành Nhân": [715, 550, 935, 880, 935, 990, 935, 935, 935, 990, 1045, 1155]
-};
 
 const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIcon }> = [
   { id: "overview", label: "Tổng quan", mobileLabel: "TQ", icon: LayoutGrid },
@@ -679,7 +671,7 @@ export default function HomePage() {
         {error && <div className="panel error-list">{error}</div>}
         {!loading && !error && data && (
           <>
-            {tab === "overview" && <Overview data={data} month={month} onViewDetails={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} onGoGroups={() => switchTab("groups")} onGoAgents={() => switchTab("agents")} />}
+            {tab === "overview" && <Overview data={data} month={month} selectedAds={filters.ads} onViewDetails={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} onGoGroups={() => switchTab("groups")} onGoAgents={() => switchTab("agents")} />}
             {tab === "groups" && <GroupTable month={month} rows={data.groups} contracts={data.contracts} openContracts={(title, rows) => setSelectedGroupDetail({ title, rows })} />}
             {tab === "agents" && <AgentTable month={month} rows={data.agents} contracts={data.contracts} openContracts={(title, rows) => setSelectedAgentDetail({ title, rows })} />}
             {tab === "status" && <StatusReport report={data.statuses} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
@@ -797,7 +789,7 @@ function Select({ icon: Icon, label, value, options, onChange }: { icon: LucideI
   );
 }
 
-function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data: DashboardData; month: string; onViewDetails: (title: string, rows: any[]) => void; onGoGroups: () => void; onGoAgents: () => void }) {
+function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAgents }: { data: DashboardData; month: string; selectedAds?: string; onViewDetails: (title: string, rows: any[]) => void; onGoGroups: () => void; onGoAgents: () => void }) {
   const [chartMode, setChartMode] = useState<"day" | "group" | "agent">("day");
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [isMobileChart, setIsMobileChart] = useState(false);
@@ -817,7 +809,11 @@ function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data
   const todayRevenueLines = todayRevenueValue === 0
     ? [{ text: "Hôm nay chưa có phát sinh", tone: "muted" as const }, yesterdayCompare]
     : [yesterdayCompare];
-  const monthlyPlan = useMemo(() => calculateMonthlyPlanProgress(month, overview, timeRows, dashboardToday), [dashboardToday, month, overview, timeRows]);
+  const planOverview = useMemo(() => {
+    if (!selectedAds) return overview;
+    return { ...overview, monthlyTargetAfyp: getAdsMonthlyTarget(selectedAds, month) };
+  }, [month, overview, selectedAds]);
+  const monthlyPlan = useMemo(() => calculateMonthlyPlanProgress(month, planOverview, timeRows, dashboardToday), [dashboardToday, month, planOverview, timeRows]);
   const desktopPlanItems = useMemo(() => {
     const [quarterPlan, yearPlan] = buildHeaderPlanProgress(month, data?.planTable ?? []);
     const monthRemaining = Math.max(monthlyPlan.remainingRaw, 0);
@@ -827,12 +823,29 @@ function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data
     const quarterEndMonth = quarter * 3;
     const quarterRemainingDays = remainingDaysUntilMonthEnd(month, quarterEndMonth);
     const yearRemainingDays = remainingDaysUntilMonthEnd(month, 12);
+    const adsActuals = selectedAds ? data?.adsPlanActuals : null;
+    const adsQuarterPlan = selectedAds ? getAdsQuarterTarget(selectedAds, month) : 0;
+    const adsYearPlan = selectedAds ? getAdsYearTarget(selectedAds) : 0;
+    const effectiveQuarterPlan = selectedAds ? {
+      ...quarterPlan,
+      actual: Number(adsActuals?.quarterActual ?? 0),
+      plan: adsQuarterPlan,
+      remaining: Math.max(adsQuarterPlan - Number(adsActuals?.quarterActual ?? 0), 0),
+      percent: adsQuarterPlan > 0 ? (Number(adsActuals?.quarterActual ?? 0) / adsQuarterPlan) * 100 : null
+    } : quarterPlan;
+    const effectiveYearPlan = selectedAds ? {
+      ...yearPlan,
+      actual: Number(adsActuals?.yearActual ?? 0),
+      plan: adsYearPlan,
+      remaining: Math.max(adsYearPlan - Number(adsActuals?.yearActual ?? 0), 0),
+      percent: adsYearPlan > 0 ? (Number(adsActuals?.yearActual ?? 0) / adsYearPlan) * 100 : null
+    } : yearPlan;
     return [
       { label: "Kế hoạch tháng", tone: "month", item: { label: "Kế hoạch tháng", actual: monthlyPlan.actual, plan: monthlyPlan.plan, remaining: monthRemaining, percent: monthlyPlan.plan > 0 ? (monthlyPlan.actual / monthlyPlan.plan) * 100 : null, requiredPerDay: monthRemainingDays > 0 ? monthRemaining / monthRemainingDays : null } },
-      { label: `Kế hoạch Quý ${quarter === 1 ? "I" : quarter === 2 ? "II" : quarter === 3 ? "III" : "IV"}`, tone: "quarter", item: { ...quarterPlan, requiredPerDay: quarterRemainingDays > 0 ? quarterPlan.remaining / quarterRemainingDays : null } },
-      { label: `Kế hoạch Năm ${month.slice(0, 4)}`, tone: "year", item: { ...yearPlan, requiredPerDay: yearRemainingDays > 0 ? yearPlan.remaining / yearRemainingDays : null } }
+      { label: `Kế hoạch Quý ${quarter === 1 ? "I" : quarter === 2 ? "II" : quarter === 3 ? "III" : "IV"}`, tone: "quarter", item: { ...effectiveQuarterPlan, requiredPerDay: quarterRemainingDays > 0 ? effectiveQuarterPlan.remaining / quarterRemainingDays : null } },
+      { label: `Kế hoạch Năm ${month.slice(0, 4)}`, tone: "year", item: { ...effectiveYearPlan, requiredPerDay: yearRemainingDays > 0 ? effectiveYearPlan.remaining / yearRemainingDays : null } }
     ] satisfies OverviewPlanItem[];
-  }, [data?.planTable, month, monthlyPlan]);
+  }, [data?.adsPlanActuals, data?.planTable, month, monthlyPlan, selectedAds]);
   const monthlyPlanMobileDetailLines = useMemo(() => monthlyPlanMobileLines(monthlyPlan), [monthlyPlan]);
   const todayRevenueMobileDetailLines = useMemo(() => todayRevenueMobileLines(overview), [overview]);
   useEffect(() => {
@@ -1676,11 +1689,6 @@ function TimeReport({ report }: { report: any }) {
       </div>
     </>
   );
-}
-
-function getAdsPlan(adsName: string, month: string) {
-  const monthIndex = selectedMonthNumber(month) - 1;
-  return ADS_MONTHLY_PLANS[adsName]?.[monthIndex] ?? null;
 }
 
 function formatPlanMillion(value: number | null) {
