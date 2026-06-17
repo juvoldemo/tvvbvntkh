@@ -1680,11 +1680,26 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
           {filteredRows.map((row: any) => (
             <article className="star-viet-card" key={`${row.rank}-${row.agentName}-mobile`}>
               <div className="star-viet-card-head"><strong>#{row.rank} {row.agentName}</strong></div>
-              <span>{row.groupName || "-"}</span>
-              <b>{formatCompactVnd(row.totalAfyp)}</b>
-              <div><span className={`star-rank-badge ${row.rankTone}`}>{row.currentRank}</span><span className="star-ticket">{ticketLabel(row.currentTickets)}</span></div>
-              <small>Còn thiếu: {formatCompactVnd(row.remainingToNext)} đến {row.nextRank}</small>
-              <StarProgress row={row} />
+              <div className="star-viet-card-meta">
+                <span>Nhóm</span>
+                <strong>{row.groupName || "-"}</strong>
+              </div>
+              <div className="star-viet-card-meta">
+                <span>Tổng AFYP Sao Việt</span>
+                <strong>{formatCompactVnd(row.totalAfyp)}</strong>
+              </div>
+              <div className="star-viet-card-badges"><span className={`star-rank-badge ${row.rankTone}`}>{row.currentRank}</span><span className="star-ticket">{ticketLabel(row.currentTickets)}</span></div>
+              <div className="star-next-block">
+                {row.remainingToNext > 0 ? (
+                  <>
+                    <p><span>Mốc tiếp theo:</span><strong>{row.nextRank}</strong></p>
+                    <p><span>Còn thiếu:</span><strong>{formatCompactVnd(row.remainingToNext)}</strong></p>
+                  </>
+                ) : (
+                  <p><span>Mốc tiếp theo:</span><strong>Đã đạt mốc cao nhất</strong></p>
+                )}
+                <StarProgress row={row} />
+              </div>
             </article>
           ))}
         </div>
@@ -1695,8 +1710,9 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
 
 function StarProgress({ row }: { row: any }) {
   const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
+  const tone = row.remainingToNext > 0 ? rankTone(row.nextRank) : row.rankTone;
   return (
-    <div className="star-progress">
+    <div className={`star-progress star-progress-${tone}`}>
       <div className="star-progress-top">
         <span>{formatCompactVnd(row.totalAfyp)} / {row.remainingToNext > 0 ? formatCompactVnd(row.nextThreshold) : formatCompactVnd(row.totalAfyp)}</span>
         <b>{formatPercent(progress)}</b>
@@ -1704,6 +1720,14 @@ function StarProgress({ row }: { row: any }) {
       <div className="star-progress-bar"><span style={{ width: `${progress}%` }} /></div>
     </div>
   );
+}
+
+function rankTone(rank: string) {
+  const normalized = normalizeViText(rank ?? "");
+  if (normalized.includes("kim cuong")) return "diamond";
+  if (normalized.includes("bach kim")) return "platinum";
+  if (normalized.includes("vang")) return "gold";
+  return "none";
 }
 
 function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any[]; onSaved: () => void }) {

@@ -2747,18 +2747,90 @@ tr.clickable:hover {
     grid-template-columns: 1fr;
   }
 
+  .star-viet-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .star-viet-kpis .kpi-card {
+    min-height: 92px;
+    height: 92px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .star-viet-kpis .kpi-mobile-layout {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+  }
+
+  .star-viet-kpis .kpi-main-row {
+    width: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    text-align: center;
+  }
+
+  .star-viet-kpis .kpi-left {
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+  }
+
+  .star-viet-kpis .kpi-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  .star-viet-kpis .kpi-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .star-viet-kpis .kpi-left > span {
+    width: 100%;
+    color: #18345f;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.18;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .star-viet-kpis .kpi-main-row > strong {
+    max-width: 100%;
+    margin: 0;
+    color: var(--blue-900);
+    font-size: 20px;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .star-viet-mobile-list {
     margin-top: 4px;
   }
 
   .star-viet-card {
     display: grid;
-    gap: 8px;
+    gap: 7px;
     border: 1px solid var(--line);
     border-radius: 13px;
     background: #fff;
     box-shadow: 0 8px 22px rgba(15, 35, 66, 0.07);
-    padding: 10px;
+    padding: 10px 11px;
   }
 
   .star-viet-card-head strong {
@@ -2768,16 +2840,40 @@ tr.clickable:hover {
     line-height: 1.25;
   }
 
-  .star-viet-card > span,
-  .star-viet-card small {
+  .star-viet-card-meta {
+    display: grid;
+    grid-template-columns: minmax(88px, auto) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .star-viet-card-meta span,
+  .star-next-block p span {
     color: var(--muted);
     font-size: 12px;
     font-weight: 700;
   }
 
-  .star-viet-card > b {
+  .star-viet-card-meta strong {
+    min-width: 0;
+    color: var(--blue-900);
+    font-size: 13px;
+    line-height: 1.25;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .star-viet-card-meta:nth-of-type(2) strong {
     color: #005bc5;
-    font-size: 18px;
+    font-size: 17px;
+    font-weight: 900;
+  }
+
+  .star-viet-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    align-items: center;
   }
 
   .star-ticket {
@@ -2792,8 +2888,67 @@ tr.clickable:hover {
     font-weight: 900;
   }
 
+  .star-next-block {
+    display: grid;
+    gap: 6px;
+    border-radius: 10px;
+    background: #f7faff;
+    padding: 9px;
+  }
+
+  .star-next-block p {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+    margin: 0;
+  }
+
+  .star-next-block p strong {
+    min-width: 0;
+    color: var(--blue-900);
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
   .star-progress {
     min-width: 0;
+    gap: 5px;
+  }
+
+  .star-progress-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .star-progress-top span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .star-progress-bar {
+    height: 9px;
+    background: #dfe7f1;
+  }
+
+  .star-progress-gold .star-progress-bar span {
+    background: linear-gradient(90deg, #f7c948, #f2a900);
+  }
+
+  .star-progress-platinum .star-progress-bar span {
+    background: linear-gradient(90deg, #a8c7df, #5aa6c8);
+  }
+
+  .star-progress-diamond .star-progress-bar span {
+    background: linear-gradient(90deg, #0759a3, #6d28d9);
+  }
+
+  .star-progress-none .star-progress-bar span {
+    background: linear-gradient(90deg, #94a3b8, #64748b);
   }
 
   .star-upload-actions {
