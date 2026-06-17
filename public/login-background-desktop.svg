@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="topLight" cx="70%" cy="12%" r="80%">
+      <stop offset="0" stop-color="#0aa5ef"/>
+      <stop offset="0.48" stop-color="#006cc7"/>
+      <stop offset="1" stop-color="#003a88"/>
+    </radialGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00469b"/>
+      <stop offset="0.5" stop-color="#0067c8"/>
+      <stop offset="1" stop-color="#003682"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff5bb"/>
+      <stop offset="0.3" stop-color="#f7c948"/>
+      <stop offset="1" stop-color="#b87500"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#base)"/>
+  <rect width="1920" height="1080" fill="url(#topLight)" opacity="0.96"/>
+
+  <path d="M-120 1030C260 1110 690 1085 1025 1010c285-64 580-200 1005-430v560H-120z" fill="#002f78" opacity="0.45"/>
+  <path d="M-80 1040C320 1088 725 1070 1065 990c325-77 622-218 998-500" fill="none" stroke="url(#gold)" stroke-width="7" opacity="0.96"/>
+  <path d="M-110 1015C320 1072 712 1048 1060 966c326-77 637-212 1010-500" fill="none" stroke="#ffd757" stroke-width="2" opacity="0.8"/>
+
+  <path d="M-95 320C95 34 330-50 760-96" fill="none" stroke="url(#gold)" stroke-width="6" opacity="0.98"/>
+  <path d="M-100 300C95 18 340-70 760-124" fill="none" stroke="#ffd85b" stroke-width="2" opacity="0.85"/>
+  <path d="M-85 280C105 5 345-88 740-145" fill="none" stroke="#f5c43b" stroke-width="1.5" opacity="0.65"/>
+
+  <path d="M1580 1085C1695 860 1725 610 1968 160" fill="none" stroke="#8bdcff" stroke-width="1.6" opacity="0.25"/>
+  <path d="M1610 1090C1720 875 1765 620 2010 170" fill="none" stroke="#ffd650" stroke-width="2" opacity="0.42"/>
+  <path d="M1640 1090C1750 890 1805 635 2050 190" fill="none" stroke="#85dbff" stroke-width="1.4" opacity="0.22"/>
+  <path d="M1675 1090C1780 902 1845 650 2090 210" fill="none" stroke="#65cfff" stroke-width="1.2" opacity="0.18"/>
+
+  <path d="M0 585C275 500 560 500 860 585c395 112 715 250 1060 76" fill="none" stroke="#113c8c" stroke-width="2" opacity="0.35"/>
+  <path d="M0 420C335 505 665 530 1050 398c250-86 475-205 870-180" fill="none" stroke="#2b79cc" stroke-width="1.5" opacity="0.22"/>
+
+  <g opacity="0.35">
+    <circle cx="45" cy="295" r="3" fill="#55d1ff"/>
+    <circle cx="72" cy="295" r="3" fill="#55d1ff"/>
+    <circle cx="99" cy="295" r="3" fill="#55d1ff"/>
+    <circle cx="126" cy="295" r="3" fill="#55d1ff"/>
+    <circle cx="45" cy="322" r="3" fill="#55d1ff"/>
+    <circle cx="72" cy="322" r="3" fill="#55d1ff"/>
+    <circle cx="99" cy="322" r="3" fill="#55d1ff"/>
+    <circle cx="126" cy="322" r="3" fill="#55d1ff"/>
+    <circle cx="45" cy="349" r="3" fill="#55d1ff"/>
+    <circle cx="72" cy="349" r="3" fill="#55d1ff"/>
+    <circle cx="99" cy="349" r="3" fill="#55d1ff"/>
+    <circle cx="126" cy="349" r="3" fill="#55d1ff"/>
+    <circle cx="1602" cy="438" r="3" fill="#55d1ff"/>
+    <circle cx="1630" cy="438" r="3" fill="#55d1ff"/>
+    <circle cx="1658" cy="438" r="3" fill="#55d1ff"/>
+    <circle cx="1686" cy="438" r="3" fill="#55d1ff"/>
+    <circle cx="1602" cy="468" r="3" fill="#55d1ff"/>
+    <circle cx="1630" cy="468" r="3" fill="#55d1ff"/>
+    <circle cx="1658" cy="468" r="3" fill="#55d1ff"/>
+    <circle cx="1686" cy="468" r="3" fill="#55d1ff"/>
+    <circle cx="1602" cy="498" r="3" fill="#55d1ff"/>
+    <circle cx="1630" cy="498" r="3" fill="#55d1ff"/>
+    <circle cx="1658" cy="498" r="3" fill="#55d1ff"/>
+    <circle cx="1686" cy="498" r="3" fill="#55d1ff"/>
+  </g>
+
+  <g opacity="0.34">
+    <ellipse cx="260" cy="930" rx="410" ry="175" fill="none" stroke="#b8efff" stroke-width="2"/>
+    <path d="M0 1010C210 820 500 770 780 905" fill="none" stroke="#a9eeff" stroke-width="2"/>
+    <path d="M0 960C170 790 415 750 730 850" fill="none" stroke="#6dd6ff" stroke-width="1.4"/>
+    <path d="M0 900C260 785 520 792 830 925" fill="none" stroke="#82e0ff" stroke-width="1.2"/>
+  </g>
+</svg>
