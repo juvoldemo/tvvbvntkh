@@ -674,6 +674,10 @@ input:focus-visible {
   margin: 0;
 }
 
+.overview-plan-card {
+  display: none;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -1749,6 +1753,241 @@ tr.clickable:hover {
   .overview-kpi-grid .kpi-monthly-plan,
   .overview-kpi-grid .kpi-today-revenue {
     grid-column: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .topbar .header-plan-progress {
+    display: none;
+  }
+
+  .overview-kpi-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .overview-kpi-grid > .kpi-card {
+    grid-column: span 3;
+    min-height: 154px;
+    border-color: #dbe6f3;
+    border-radius: 14px;
+    box-shadow: 0 10px 28px rgba(15, 35, 66, 0.07);
+    padding: 24px 24px;
+  }
+
+  .overview-kpi-grid .kpi-monthly-plan {
+    display: none;
+  }
+
+  .overview-kpi-grid .kpi-desktop-layout {
+    height: 100%;
+    align-items: center;
+  }
+
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue) .kpi-icon {
+    flex-basis: 82px;
+    width: 82px;
+    height: 82px;
+  }
+
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue) .kpi-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue) .kpi-copy span {
+    color: var(--blue-900);
+    font-size: 17px;
+    font-weight: 850;
+  }
+
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue) .kpi-copy strong {
+    margin-top: 12px;
+    font-size: clamp(42px, 3vw, 50px);
+    line-height: 1.05;
+    font-weight: 900;
+  }
+
+  .overview-plan-card {
+    grid-column: span 8;
+    min-height: 252px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 18px;
+    border: 1px solid #dbe6f3;
+    border-radius: 16px;
+    background: var(--card);
+    box-shadow: 0 14px 34px rgba(15, 35, 66, 0.08);
+    padding: 20px 22px 22px;
+  }
+
+  .overview-plan-card h3 {
+    margin: 0;
+    color: var(--blue-900);
+    font-size: 20px;
+    line-height: 1.15;
+    font-weight: 900;
+  }
+
+  .overview-plan-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .overview-plan-column {
+    min-width: 0;
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    border-right: 1px solid #e5edf7;
+    padding: 0 18px;
+  }
+
+  .overview-plan-column:first-child {
+    padding-left: 0;
+  }
+
+  .overview-plan-column:last-child {
+    border-right: 0;
+    padding-right: 0;
+  }
+
+  .overview-plan-title {
+    color: var(--blue-900);
+    font-size: 15px;
+    line-height: 1.2;
+    font-weight: 900;
+  }
+
+  .overview-plan-column strong {
+    color: var(--blue-700);
+    font-size: clamp(42px, 3.25vw, 48px);
+    line-height: 1;
+    font-weight: 900;
+  }
+
+  .overview-plan-column p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 760;
+  }
+
+  .overview-plan-bar {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e8eff7;
+  }
+
+  .overview-plan-bar div {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #f2a900, var(--gold-500), #ffe082);
+    box-shadow: 0 0 12px rgba(247, 201, 72, 0.34);
+  }
+
+  .overview-plan-required-box {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    border-radius: 12px;
+    padding: 9px 10px;
+  }
+
+  .overview-plan-required-box.month {
+    background: #fff6d8;
+  }
+
+  .overview-plan-required-box.quarter {
+    background: #e7f7ed;
+  }
+
+  .overview-plan-required-box.year {
+    background: #e8f2ff;
+  }
+
+  .overview-plan-required-icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: var(--blue-700);
+  }
+
+  .overview-plan-required-box span:last-child {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .overview-plan-required-box b {
+    color: var(--blue-900);
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 900;
+  }
+
+  .overview-plan-required-box small {
+    color: #536985;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 750;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue {
+    grid-column: span 4;
+    min-height: 252px;
+    padding: 24px 26px;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-desktop-layout {
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-icon {
+    flex-basis: 72px;
+    width: 72px;
+    height: 72px;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-copy {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-copy span {
+    color: var(--blue-900);
+    font-size: 17px;
+    font-weight: 850;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-copy strong {
+    margin-top: 10px;
+    font-size: clamp(44px, 3.15vw, 52px);
+    line-height: 1;
+    font-weight: 900;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .kpi-detail-lines {
+    gap: 0;
+    margin-top: 9px;
+  }
+
+  .overview-kpi-grid .kpi-today-revenue .mini-line {
+    color: var(--bad);
+    font-size: 12px;
+    line-height: 1.25;
   }
 }
 

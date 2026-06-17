@@ -23,6 +23,12 @@ type HeaderPlanProgressItem = {
   actual: number;
   remaining: number;
   percent: number | null;
+  requiredPerDay?: number | null;
+};
+type OverviewPlanItem = {
+  label: string;
+  tone: "month" | "quarter" | "year";
+  item: HeaderPlanProgressItem;
 };
 
 const QUARTER_PLAN_VND: Record<number, number> = {
@@ -156,6 +162,59 @@ function formatHeaderCompactMoney(value: number) {
 function selectedMonthNumber(month: string) {
   const value = Number(month.slice(5, 7));
   return Number.isFinite(value) && value >= 1 && value <= 12 ? value : 1;
+}
+
+function vietnamTodayParts() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const partValue = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  return {
+    year: partValue("year"),
+    month: partValue("month"),
+    day: partValue("day")
+  };
+}
+
+function remainingDaysInViewedMonth(month: string) {
+  const year = Number(month.slice(0, 4));
+  const monthNo = selectedMonthNumber(month);
+  const daysInMonth = new Date(year, monthNo, 0).getDate();
+  const today = vietnamTodayParts();
+  if (today.year === year && today.month === monthNo) return daysInMonth - today.day;
+  if (today.year > year || (today.year === year && today.month > monthNo)) return 0;
+  return daysInMonth;
+}
+
+function remainingDaysUntilMonthEnd(month: string, endMonth: number) {
+  const year = Number(month.slice(0, 4));
+  const selectedMonth = selectedMonthNumber(month);
+  const today = vietnamTodayParts();
+  if (today.year > year || (today.year === year && today.month > endMonth)) return 0;
+
+  const endOfPeriod = new Date(year, endMonth, 0);
+  if (today.year === year && today.month >= selectedMonth && today.month <= endMonth) {
+    const currentDay = new Date(year, today.month - 1, today.day);
+    return Math.max(0, Math.floor((endOfPeriod.getTime() - currentDay.getTime()) / 86_400_000));
+  }
+
+  if (today.year < year || (today.year === year && today.month < selectedMonth)) {
+    const startOfViewedMonth = new Date(year, selectedMonth - 1, 1);
+    return Math.max(0, Math.floor((endOfPeriod.getTime() - startOfViewedMonth.getTime()) / 86_400_000) + 1);
+  }
+
+  return 0;
+}
+
+function formatRequiredDailyVnd(value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "-- triệu/ngày";
+  if (Math.abs(value) >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tỷ/ngày`;
+  }
+  return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu/ngày`;
 }
 
 function buildHeaderPlanProgress(month: string, planRows: any[] = []) {
@@ -759,6 +818,21 @@ function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data
     ? [{ text: "Hôm nay chưa có phát sinh", tone: "muted" as const }, yesterdayCompare]
     : [yesterdayCompare];
   const monthlyPlan = useMemo(() => calculateMonthlyPlanProgress(month, overview, timeRows, dashboardToday), [dashboardToday, month, overview, timeRows]);
+  const desktopPlanItems = useMemo(() => {
+    const [quarterPlan, yearPlan] = buildHeaderPlanProgress(month, data?.planTable ?? []);
+    const monthRemaining = Math.max(monthlyPlan.remainingRaw, 0);
+    const monthRemainingDays = remainingDaysInViewedMonth(month);
+    const selectedMonth = selectedMonthNumber(month);
+    const quarter = Math.ceil(selectedMonth / 3);
+    const quarterEndMonth = quarter * 3;
+    const quarterRemainingDays = remainingDaysUntilMonthEnd(month, quarterEndMonth);
+    const yearRemainingDays = remainingDaysUntilMonthEnd(month, 12);
+    return [
+      { label: "Kế hoạch tháng", tone: "month", item: { label: "Kế hoạch tháng", actual: monthlyPlan.actual, plan: monthlyPlan.plan, remaining: monthRemaining, percent: monthlyPlan.plan > 0 ? (monthlyPlan.actual / monthlyPlan.plan) * 100 : null, requiredPerDay: monthRemainingDays > 0 ? monthRemaining / monthRemainingDays : null } },
+      { label: `Kế hoạch Quý ${quarter === 1 ? "I" : quarter === 2 ? "II" : quarter === 3 ? "III" : "IV"}`, tone: "quarter", item: { ...quarterPlan, requiredPerDay: quarterRemainingDays > 0 ? quarterPlan.remaining / quarterRemainingDays : null } },
+      { label: `Kế hoạch Năm ${month.slice(0, 4)}`, tone: "year", item: { ...yearPlan, requiredPerDay: yearRemainingDays > 0 ? yearPlan.remaining / yearRemainingDays : null } }
+    ] satisfies OverviewPlanItem[];
+  }, [data?.planTable, month, monthlyPlan]);
   const monthlyPlanMobileDetailLines = useMemo(() => monthlyPlanMobileLines(monthlyPlan), [monthlyPlan]);
   const todayRevenueMobileDetailLines = useMemo(() => todayRevenueMobileLines(overview), [overview]);
   useEffect(() => {
@@ -867,9 +941,12 @@ function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data
   return (
     <>
       <section className="kpi-grid overview-kpi-grid">
-        {kpis.map((item) => (
+        {kpis.slice(0, 4).map((item) => (
           <KpiCard key={item.title} {...item} />
         ))}
+        <OverviewPlanCard items={desktopPlanItems} />
+        <KpiCard {...kpis[4]} />
+        <KpiCard {...kpis[5]} />
       </section>
 
       <section className="overview-grid">
@@ -949,6 +1026,38 @@ function Overview({ data, month, onViewDetails, onGoGroups, onGoAgents }: { data
         />
       </section>
     </>
+  );
+}
+
+function OverviewPlanCard({ items }: { items: OverviewPlanItem[] }) {
+  return (
+    <article className="overview-plan-card">
+      <h3>Tiến độ kế hoạch</h3>
+      <div className="overview-plan-columns">
+        {items.map(({ label, tone, item }) => {
+          const percent = item.percent ?? 0;
+          const clampedPercent = Math.min(100, Math.max(0, percent));
+          return (
+            <section className="overview-plan-column" key={label}>
+              <span className="overview-plan-title">{label}</span>
+              <strong>{formatPercent(percent)}</strong>
+              <p>Đạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
+              <p>Thiếu: {formatMoney(item.remaining)}</p>
+              <div className="overview-plan-bar" aria-label={`${label}: ${formatPercent(percent)}`}>
+                <div style={{ width: `${clampedPercent}%` }} />
+              </div>
+              <div className={`overview-plan-required-box ${tone}`}>
+                <span className="overview-plan-required-icon"><Target size={15} /></span>
+                <span>
+                  <b>Cần: {formatRequiredDailyVnd(item.requiredPerDay)}</b>
+                  <small>để hoàn thành kế hoạch</small>
+                </span>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </article>
   );
 }
 
