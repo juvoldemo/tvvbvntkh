@@ -392,6 +392,20 @@ function todayRevenueMobileLines(overview: any) {
   return lines;
 }
 
+function samePeriodComparisonLine(comparison: any): KpiDetailLine {
+  if (!comparison?.hasPrevious) {
+    return { text: "Chưa có dữ liệu tháng trước", tone: "muted" };
+  }
+  const percent = Number(comparison.percent ?? 0);
+  if (percent > 0) {
+    return { text: `▲ ${formatPercent(percent)} so với cùng kỳ tháng trước`, tone: "positive" };
+  }
+  if (percent < 0) {
+    return { text: `▼ ${formatPercent(Math.abs(percent))} so với cùng kỳ tháng trước`, tone: "negative" };
+  }
+  return { text: "— 0% so với cùng kỳ tháng trước", tone: "muted" };
+}
+
 function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingRaw?: number; remainingDays?: number }) {
   if (plan.plan <= 0) return [{ text: "Chưa có kế hoạch", tone: "muted" as const }];
   const remaining = Number(plan.remainingRaw ?? plan.plan - plan.actual);
@@ -900,6 +914,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     return `${Math.max(100, chartRows.length * itemWidth)}px`;
   }, [chartMode, chartRows.length, isMobileChart]);
   const hideMobileCategoryLabels = isMobileChart && chartMode !== "day";
+  const comparisons = data?.overviewComparisons ?? {};
 
   const kpis = [
     {
@@ -907,28 +922,36 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
       mobileTitle: "AFYP",
       value: formatCompactVnd(overview.monthlyAfyp ?? 0),
       icon: Coins,
-      tone: "blue"
+      tone: "blue",
+      detailLines: [samePeriodComparisonLine(comparisons.monthlyAfyp)],
+      mobileDetailLines: []
     },
     {
       title: "IP",
       mobileTitle: "IP",
       value: formatCompactVnd(overview.monthlyIp ?? 0),
       icon: Layers3,
-      tone: "gold"
+      tone: "gold",
+      detailLines: [samePeriodComparisonLine(comparisons.monthlyIp)],
+      mobileDetailLines: []
     },
     {
       title: "Số hợp đồng",
       mobileTitle: "HĐ",
       value: formatNumber(overview.totalContracts ?? 0),
       icon: ClipboardList,
-      tone: "green"
+      tone: "green",
+      detailLines: [samePeriodComparisonLine(comparisons.totalContracts)],
+      mobileDetailLines: []
     },
     {
       title: "TVV hoạt động",
       mobileTitle: "TVV HĐ",
       value: formatNumber(overview.activeAgents ?? 0),
       icon: UserRound,
-      tone: "purple"
+      tone: "purple",
+      detailLines: [samePeriodComparisonLine(comparisons.activeAgents)],
+      mobileDetailLines: []
     },
     {
       title: "Kế hoạch tháng",

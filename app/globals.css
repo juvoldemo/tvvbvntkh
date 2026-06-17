@@ -1809,6 +1809,18 @@ tr.clickable:hover {
     font-weight: 900;
   }
 
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue):not(.kpi-monthly-plan) .kpi-detail-lines {
+    gap: 0;
+    margin-top: 8px;
+  }
+
+  .overview-kpi-grid > .kpi-card:not(.kpi-today-revenue):not(.kpi-monthly-plan) .mini-line {
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
   .overview-plan-card {
     grid-column: span 8;
     min-height: 252px;
