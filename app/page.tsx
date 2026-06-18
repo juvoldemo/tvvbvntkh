@@ -950,8 +950,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     day: {
       label: "Theo ngày",
       section: "Biểu đồ theo ngày",
-      title: `AFYP / Số H theo ngày - ${monthOnlyLabel(month)}`,
-      countLabel: "Số H",
+      title: `AFYP / Số hợp đồng theo ngày - ${monthOnlyLabel(month)}`,
+      countLabel: "Số HĐ",
       subtitle: visibleDayCount > 0
         ? `Hiển thị từ ngày 1 đến ngày ${visibleDayCount}, ngày đã qua không phát sinh sẽ bằng 0.`
         : "Chưa có ngày nào trong tháng được chn để hiển thị."
@@ -966,8 +966,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     agent: {
       label: "Theo TVV",
       section: "Biểu đồ theo TVV",
-      title: `Top TVV theo AFYP / Số H - ${monthOnlyLabel(month)}`,
-      countLabel: "Số H",
+      title: `Top TVV theo AFYP / Số hợp đồng - ${monthOnlyLabel(month)}`,
+      countLabel: "Số HĐ",
       subtitle: "Hiển thị các TVV dẫn đầu theo dữ liệu sau bộ l?c."
     }
   }[chartMode];
@@ -1014,7 +1014,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     },
     {
       title: "Số hợp đồng",
-      mobileTitle: "H",
+      mobileTitle: "HĐ",
       value: formatNumber(overview.totalContracts ?? 0),
       icon: ClipboardList,
       tone: "green",
@@ -1117,8 +1117,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
             { header: "Hạng", render: (row) => <RankBadge rank={row.rank} /> },
             { header: "Nhóm", render: (row) => row.groupName },
             { header: "AFYP", render: (row) => moneyCell(row.afyp) },
-            { header: "H", render: (row) => row.contractCount },
-            { header: "Tỷ trng", render: (row) => formatPercent(row.afypShare) }
+            { header: "HĐ", render: (row) => row.contractCount },
+            { header: "Tỷ trọng", render: (row) => formatPercent(row.afypShare) }
           ]}
           onRowClick={(row) => onViewDetails(row.groupName, overviewContracts.filter((item: any) => item.group_name === row.groupName))}
         />
@@ -1401,7 +1401,7 @@ function OverviewGroupTable({ rows, contracts, openContracts }: { rows: any[]; c
   return (
     <div className="panel">
       <div className="panel-header"><h2>Xếp hạng nhóm</h2></div>
-      <DataTable headers={["#", "Nhóm", "AFYP", "H", "TVV", "Tỷ trng"]}>
+      <DataTable headers={["#", "Nhóm", "AFYP", "HĐ", "TVV", "Tỷ trọng"]}>
         {rows.map((row) => (
           <tr key={`${row.banName}-${row.groupName}`} className="clickable" onClick={() => openContracts(row.groupName, contracts.filter((item) => item.group_name === row.groupName))}>
             <td>{row.rank}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td>
@@ -1416,7 +1416,7 @@ function OverviewAgentTable({ rows, contracts, openContracts }: { rows: any[]; c
   return (
     <div className="panel">
       <div className="panel-header"><h2>Xếp hạng TVV</h2></div>
-      <DataTable headers={["#", "Tên TVV", "Nhóm", "AFYP", "H"]}>
+      <DataTable headers={["#", "Tên TVV", "Nhóm", "AFYP", "HĐ"]}>
         {rows.map((row) => (
           <tr key={`${row.agentName}-${row.agentCode}`} className="clickable" onClick={() => openContracts(row.agentName, contracts.filter((item) => item.agent_name === row.agentName))}>
             <td>{row.rank}</td><td>{row.agentName}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{row.contractCount}</td>
@@ -1521,10 +1521,10 @@ function buildGroupXlsxRows(rows: any[]): XlsxRow[] {
     "Nhóm": row.groupName || "",
     "AFYP": formatCompactVnd(row.afyp),
     "IP": formatCompactVnd(row.ip),
-    "H": row.contractCount,
+    "HĐ": row.contractCount,
     "TVV": row.agentCount,
-    "Tỷ trng": formatPercent(row.afypShare),
-    "BQ/H": formatCompactVnd(row.averageAfypPerContract)
+    "Tỷ trọng": formatPercent(row.afypShare),
+    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
   }));
 }
 
@@ -1538,8 +1538,8 @@ function buildAgentXlsxRows(rows: any[]): XlsxRow[] {
     "ADS": row.adsName || "",
     "AFYP": formatCompactVnd(row.afyp),
     "IP": formatCompactVnd(row.ip),
-    "H": row.contractCount,
-    "BQ/H": formatCompactVnd(row.averageAfypPerContract)
+    "HĐ": row.contractCount,
+    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
   }));
 }
 
@@ -1577,8 +1577,8 @@ function RankingPoster({ type, rows }: { type: "group" | "agent"; rows: any[] })
     ? `BẢNG VÀNG DOANH THU NHÓM THNG ${date.monthTitle}`
     : `BẢNG VÀNG DOANH THU TƯ VẤN VIÊN THNG ${date.monthTitle}`;
   const headers = isGroup
-    ? ["#", "Ban", "Nhóm", "AFYP", "IP", "H", "TVV", "Tỷ trng", "BQ/H"]
-    : ["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "H", "BQ/H"];
+    ? ["#", "Ban", "Nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]
+    : ["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"];
   return (
     <div className="ranking-poster">
       <div className="poster-hero">
@@ -1628,7 +1628,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng nhóm" fileName={`xep-hang-nhom-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Ban", "Nhóm", "AFYP", "IP", "H", "TVV", "Tỷ trng", "BQ/H"]}>
+      <DataTable className="desktop-table" headers={["#", "Ban", "Nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]}>
         {rows.map((row) => (
           <tr key={`${row.banName}-${row.groupName}`} className="clickable" onClick={() => openContracts(row.groupName, contracts.filter((item) => groupNameForRecord(item) === row.groupName))}>
             <td>{row.rank}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
@@ -1654,7 +1654,7 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng TVV" fileName={`xep-hang-tvv-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "H", "BQ/H"]}>
+      <DataTable className="desktop-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"]}>
         {rows.map((row) => (
           <tr key={`${row.agentName}-${row.agentCode}`} className="clickable" onClick={() => openContracts(row.agentName, contracts.filter((item) => item.agent_name === row.agentName))}>
             <td>{row.rank}</td><td>{row.agentCode}</td><td>{row.agentName}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{row.adsName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
@@ -1802,7 +1802,7 @@ function AdsTable({ rows, month, contracts, openContracts }: { rows: any[]; mont
   return (
     <div className="panel">
       <div className="panel-header"><h2>Báo cáo ADS</h2></div>
-      <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "H", "TVV", "Tỷ trng"]} colWidths={adsColWidths}>
+      <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "HĐ", "TVV", "Tỷ trọng"]} colWidths={adsColWidths}>
         {rows.map((row) => {
           const planMillion = getAdsPlan(row.adsName, month);
           const planVnd = planMillion ? planMillion * 1_000_000 : 0;
@@ -2624,7 +2624,7 @@ function CompetitionContractsTable({ rows }: { rows: any[] }) {
 function CompetitionExcludedTable({ rows }: { rows: any[] }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có danh sách hợp đồng bị loại. Hãy xác nhận rule và tính thưởng để xem lý do.</p>;
   return (
-    <DataTable className="desktop-table contest-mini-table" headers={["Số GYC", "Số H", "TVV", "Nhóm", "Khách hàng", "IP", "AFYP", "Trạng thái", "Lý do bị loại"]}>
+    <DataTable className="desktop-table contest-mini-table" headers={["Số GYC", "Số HĐ", "TVV", "Nhóm", "Khách hàng", "IP", "AFYP", "Trạng thái", "Lý do bị loại"]}>
       {rows.map((row, index) => (
         <tr key={row.id || index}>
           <td>{row.gyc_no}</td><td>{row.contract_no}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.customer_name}</td><td>{formatCompactVnd(row.ip ?? 0)}</td><td>{formatCompactVnd(row.afyp ?? 0)}</td><td>{row.status}</td><td>{row.reason}</td>
@@ -2923,7 +2923,7 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
             <h2>{titlePrefix}: {title}</h2>
             <div className="contract-modal-summary">
               <span>AFYP: <b>{formatCompactVnd(afyp)}</b></span>
-              <span>Số H: <b>{formatNumber(contractCount)}</b></span>
+              <span>Số HĐ: <b>{formatNumber(contractCount)}</b></span>
               {isAgentDetail ? <span>{groupSummary}</span> : <span>Số TVV: <b>{formatNumber(agentCount)}</b></span>}
             </div>
           </div>
