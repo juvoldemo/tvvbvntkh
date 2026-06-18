@@ -2193,7 +2193,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
   }, [refreshKey]);
 
   return (
-    <>
+    <div className={`competition-panel-stack ${selectedProgramId ? "has-selected-program" : ""}`}>
       <div className="panel contest-panel competition-section">
         <div className="panel-header contest-header">
           <div>
@@ -2225,7 +2225,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
             </DataTable>
             <div className="mobile-card-list contest-mobile-list">
               {programs.map((program) => (
-                <article className="contest-mobile-card" key={`${program.id}-mobile`}>
+                <button className="contest-mobile-card" key={`${program.id}-mobile`} type="button" onClick={() => setSelectedProgramId(program.id)}>
                   <div className="contest-mobile-head">
                     <div>
                       <strong>{program.programName}</strong>
@@ -2239,15 +2239,14 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
                     <span><b>Thưởng</b>{formatCompactVnd(program.totalReward ?? 0)}</span>
                     <span><b>Còn lại</b><CompetitionRemainingBadge endDate={program.endDate} /></span>
                   </div>
-                  <button type="button" onClick={() => setSelectedProgramId((current) => current === program.id ? "" : program.id)}>Xem chi tiết</button>
-                </article>
+                </button>
               ))}
             </div>
           </>
         )}
       </div>
       {selectedProgramId && <CompetitionDetailModal programId={selectedProgramId} month={month} refreshKey={refreshKey} onClose={() => setSelectedProgramId("")} onChanged={() => { onChanged(); loadPrograms(); }} />}
-    </>
+    </div>
   );
 }
 
@@ -2451,6 +2450,7 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
             </p>
           </div>
         </div>
+        <button className="competition-mobile-back" type="button" onClick={onClose}>Danh sách</button>
       </div>
         <div className="contest-detail-tabs" role="tablist">
           {[

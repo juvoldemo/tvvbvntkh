@@ -1253,6 +1253,11 @@ tr.clickable:hover {
   color: var(--ink);
   box-shadow: 0 8px 22px rgba(15, 35, 66, 0.07);
   padding: 12px;
+  text-align: left;
+}
+
+.competition-mobile-back {
+  display: none;
 }
 
 .contest-mobile-head {
@@ -3861,21 +3866,32 @@ tr.clickable:hover {
     margin-top: 4px;
   }
 
-  .contest-mobile-card button {
-    width: 100%;
+  .competition-panel-stack.has-selected-program > .contest-panel {
+    display: none;
+  }
+
+  .competition-mobile-back {
+    display: inline-flex;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cfe0f3;
+    border-radius: 999px;
+    background: #eef6ff;
+    color: #005bc5;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 900;
   }
 
   .contest-mobile-card .mobile-info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: none;
   }
 
-  .contest-mobile-card .mobile-info-grid span {
-    overflow-wrap: anywhere;
-  }
-
-  .contest-mobile-card .mobile-info-grid span:last-child {
-    color: #005bc5;
-    font-weight: 900;
+  .contest-mobile-card {
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
   }
 
   .status-mobile-list {
