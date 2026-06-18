@@ -3,6 +3,7 @@ import { parseRevenueCsv } from "@/lib/csv";
 import { toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getUploadUserName } from "@/lib/upload-users";
+import { recalculateAllCompetitionProgramsAfterUpload, syncCompetitionContractSnapshotsAfterUpload } from "@/src/lib/competition/competitionService";
 
 function getUploadErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -55,11 +56,11 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Chưa chọn file CSV." }, { status: 400 });
+      return NextResponse.json({ error: "Chưa chn file CSV." }, { status: 400 });
     }
 
     if (mode === "commit" && (!uploadedByCode || !uploadedByName)) {
-      return NextResponse.json({ error: "Không xác định được người upload. Vui lòng nhập lại mật khẩu upload." }, { status: 401 });
+      return NextResponse.json({ error: "Không xác định được ngưi upload. Vui lòng nhập lại mật khẩu upload." }, { status: 401 });
     }
 
     const text = await file.text();
@@ -163,6 +164,25 @@ export async function POST(request: NextRequest) {
       .eq("data_month", dataMonth);
     if (updateBatchIdError) throw new Error(getUploadErrorMessage(updateBatchIdError));
 
+    const { data: contractsAfterUpload, error: contractsAfterUploadError } = await supabase
+      .from("revenue_records")
+      .select("*")
+      .eq("data_month", dataMonth);
+    if (contractsAfterUploadError) throw new Error(getUploadErrorMessage(contractsAfterUploadError));
+
+    const snapshotSync = await syncCompetitionContractSnapshotsAfterUpload({
+      monthKey: selectedMonth,
+      uploadBatchId: String(batch.id),
+      uploadedAt: batch.uploaded_at,
+      contracts: contractsAfterUpload ?? [],
+      supabaseClient: supabase
+    });
+
+    const competitionRecalculate = await recalculateAllCompetitionProgramsAfterUpload(selectedMonth, contractsAfterUpload ?? [], uploadedByName || uploadedByCode || "upload").catch((error) => {
+      console.error("[competition] auto recalculation failed", error);
+      return { recalculatedPrograms: [{ ok: false, error: getUploadErrorMessage(error) }], skippedPrograms: [], programCount: 0 };
+    });
+    const competitionNotice = "Đã cập nhật dữ liệu tháng và tự động đồng bộ Chương trình thi đua.";
     return NextResponse.json({
       ok: true,
       batchId: batch.id,
@@ -181,7 +201,10 @@ export async function POST(request: NextRequest) {
       outOfMonthCount,
       rowCount: parsed.records.length,
       totalAfyp: parsed.totalAfyp,
-      totalIp: parsed.totalIp
+      totalIp: parsed.totalIp,
+      snapshotSync,
+      competitionRecalculate,
+      competitionNotice
     });
   } catch (error) {
     const message = getUploadErrorMessage(error);

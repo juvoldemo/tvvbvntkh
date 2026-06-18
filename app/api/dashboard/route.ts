@@ -176,6 +176,7 @@ export async function GET(request: NextRequest) {
       ads: buildAdsReport(filteredRecords),
       starViet: buildStarVietReport(starVietError ? [] : (starVietRecords ?? []) as StarVietRecord[]),
       starVietWarning: starVietError ? "Chưa có bảng dữ liệu Sao Việt. Vui lòng chạy schema mới trước khi upload." : null,
+      competitionContracts: allRecords,
       contracts: filteredRecords.slice(0, 500)
     });
   } catch (error) {

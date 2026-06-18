@@ -1,0 +1,892 @@
+type AnyRecord = Record<string, any>;
+
+export type CompetitionRewardRule = {
+  id?: string;
+  reward_name?: string;
+  prize_name?: string;
+  reward_type?: string;
+  type?: string;
+  target_type?: string;
+  condition_text?: string;
+  calculation_logic?: string;
+  thresholds?: AnyRecord[];
+  top_n?: number;
+  order_by?: string;
+  min_policy_ip?: number | null;
+  reward_amount?: number;
+  reward_formula?: string;
+  max_reward?: number | null;
+  priority?: number;
+  condition?: AnyRecord;
+  reward?: AnyRecord;
+  tiers?: AnyRecord[];
+};
+
+export type CompetitionRuleInput = {
+  id?: string;
+  program_name: string;
+  start_date: string;
+  end_date: string;
+  issue_deadline?: string | null;
+  target_types?: string[];
+  target_type?: string | string[];
+  metric_type?: string | string[];
+  min_policy_ip?: number | null;
+  min_policy_afyp?: number | null;
+  eligible_products?: string[];
+  excluded_statuses?: string[];
+  included_statuses?: string[];
+  reward_rules?: CompetitionRewardRule[];
+  max_reward?: number | null;
+  notes?: string | string[];
+  ai_summary?: string;
+  confidence?: number;
+  needs_review?: boolean;
+};
+
+export type NormalizedCompetitionContract = {
+  collection_date: string;
+  issue_date: string;
+  paidDate: string;
+  issuedDate: string;
+  ban: string;
+  team: string;
+  tvv: string;
+  advisor: string;
+  group: string;
+  ads: string;
+  gyc_no: string;
+  applicationNo: string;
+  contract_no: string;
+  contractNo: string;
+  customer_name: string;
+  customer: string;
+  product_name: string;
+  product: string;
+  spbk_products: string;
+  spbkCount: number;
+  ip: number;
+  afyp: number;
+  status: string;
+  first_seen_at?: string;
+  firstSeenAt?: string;
+  payment_datetime?: string;
+  sourceIndex: number;
+  source: AnyRecord;
+};
+
+export type EligibleContractReward = {
+  paidDate: string;
+  issuedDate: string;
+  applicationNo: string;
+  contractNo: string;
+  advisor: string;
+  group: string;
+  ads: string;
+  customer: string;
+  product: string;
+  ip: number;
+  afyp: number;
+  status: string;
+  prizeName: string;
+  rewardName?: string;
+  rewardType?: string;
+  rewardAmount: number;
+  rewardFormula?: string;
+  reason?: string;
+  source: AnyRecord;
+};
+
+export type ExcludedContract = {
+  applicationNo: string;
+  contractNo: string;
+  advisor: string;
+  group: string;
+  customer: string;
+  ip: number;
+  afyp: number;
+  status: string;
+  reason: string;
+  source: AnyRecord;
+};
+
+export type EligibleAdvisorReward = {
+  advisor: string;
+  group: string;
+  ads: string;
+  contractCount: number;
+  totalIP: number;
+  totalAFYP: number;
+  prizeName: string;
+  rewardAmount: number;
+  achievedRewardNames?: string[];
+  note?: string;
+};
+
+export type EligibleGroupReward = {
+  group: string;
+  totalIP: number;
+  totalAFYP: number;
+  activeAdvisorCount: number;
+  eligibleContractCount: number;
+  achievedTier: string;
+  rewardPerAdvisor: number;
+  totalReward: number;
+  prizeName: string;
+  note?: string;
+  advisors: Array<{
+    advisor: string;
+    group: string;
+    ads: string;
+    contractCount: number;
+    totalIP: number;
+    totalAFYP: number;
+  }>;
+};
+
+export type CompetitionRewardResult = {
+  summary: {
+    totalEligibleGroups: number;
+    totalEligibleAdvisors: number;
+    totalEligibleContracts: number;
+    totalExcludedContracts: number;
+    totalReward: number;
+    totalIP: number;
+    totalAFYP: number;
+    warnings?: string[];
+    debug?: AnyRecord;
+  };
+  eligibleGroups: EligibleGroupReward[];
+  eligibleAdvisors: EligibleAdvisorReward[];
+  eligibleContracts: EligibleContractReward[];
+  excludedContracts: ExcludedContract[];
+  warnings: string[];
+};
+
+const MONEY_MULTIPLIERS: Array<[RegExp, number]> = [
+  [/\b(t|ty|ty dong|ty vnd)\b/i, 1_000_000_000],
+  [/\b(tr|trd|trieu|trieu dong|trieu vnd)\b/i, 1_000_000]
+];
+const SPBK_CODES = ["R21", "R22", "R23", "R24", "R25", "R26", "R27", "R28", "R29"];
+const SPBK_CODE_PATTERN = /(?:^|[^a-z0-9])(?:bv-)?n?r(21|22|23|24|25|26|27|28|29)(?=[^0-9]|$)/gi;
+
+function normalizeText(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+}
+
+function valueFrom(record: AnyRecord, aliases: string[]) {
+  const sources = [record, record.raw_data].filter((item) => item && typeof item === "object") as AnyRecord[];
+  const aliasSet = new Set(aliases.map(normalizeText));
+
+  for (const source of sources) {
+    for (const key of aliases) {
+      const value = source[key];
+      if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+    }
+    for (const [key, value] of Object.entries(source)) {
+      if (aliasSet.has(normalizeText(key)) && value !== undefined && value !== null && String(value).trim() !== "") return value;
+    }
+  }
+
+  return undefined;
+}
+
+function countSpbkProducts(value: unknown) {
+  const text = String(value ?? "");
+  if (!text.trim()) return 0;
+  return [...text.matchAll(SPBK_CODE_PATTERN)].filter((match) => SPBK_CODES.includes(`R${match[1]}`)).length;
+}
+
+function isGenericSpbkProduct(value: unknown) {
+  const text = normalizeText(value);
+  return text.includes("spbk")
+    || text.includes("san pham ban kem")
+    || text.includes("san pham bo tro")
+    || text.includes("rider");
+}
+
+export function parseCompetitionMoney(value: unknown) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const raw = String(value ?? "").trim();
+  if (!raw) return 0;
+  const normalizedWords = normalizeText(raw);
+  const multiplier = MONEY_MULTIPLIERS.find(([pattern]) => pattern.test(normalizedWords))?.[1] ?? 1;
+  const withoutWords = raw.replace(/tỷ|ty|triệu|trieu|trđ|trd|tr/gi, "");
+  const compact = withoutWords.replace(/[^\d,.-]/g, "").trim();
+  if (!compact) return 0;
+
+  let normalizedNumber = compact;
+  const lastComma = compact.lastIndexOf(",");
+  const lastDot = compact.lastIndexOf(".");
+  if (lastComma > -1 && lastDot > -1) {
+    normalizedNumber = lastComma > lastDot ? compact.replace(/\./g, "").replace(",", ".") : compact.replace(/,/g, "");
+  } else if (lastComma > -1) {
+    const decimalDigits = compact.length - lastComma - 1;
+    normalizedNumber = decimalDigits === 3 ? compact.replace(/,/g, "") : compact.replace(",", ".");
+  } else if (lastDot > -1) {
+    const decimalDigits = compact.length - lastDot - 1;
+    normalizedNumber = decimalDigits === 3 ? compact.replace(/\./g, "") : compact;
+  }
+
+  const amount = Number(normalizedNumber);
+  return Number.isFinite(amount) ? amount * multiplier : 0;
+}
+
+export function parseCompetitionDate(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  const normalized = text.replace(/[.]/g, "/").replace(/-/g, "/");
+  const parts = normalized.split("/").map((part) => part.trim()).filter(Boolean);
+  if (parts.length === 3) {
+    const [a, b, c] = parts;
+    if (a.length === 4) return `${a}-${b.padStart(2, "0")}-${c.padStart(2, "0")}`;
+    const year = c.length === 2 ? `20${c}` : c;
+    return `${year.padStart(4, "20")}-${b.padStart(2, "0")}-${a.padStart(2, "0")}`;
+  }
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+}
+
+function parseCompetitionDateTime(value: unknown) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
+}
+
+export function normalizeContract(row: AnyRecord, sourceIndex = 0): NormalizedCompetitionContract {
+  const collectionDate = parseCompetitionDate(valueFrom(row, ["collection_date", "paid_date", "paidDate", "Ngày thu", "ngay_thu"]));
+  const issueDate = parseCompetitionDate(valueFrom(row, ["issue_date", "issued_date", "issuedDate", "Ngày phát hành", "ngay_phat_hanh"]));
+  const team = String(valueFrom(row, ["team", "group", "group_name", "groupName", "Nhóm", "Nhom", "nhom"]) ?? "").trim();
+  const tvv = String(valueFrom(row, ["tvv", "advisor", "agent_name", "agentName", "Tên TVV", "ten_tvv", "TVV"]) ?? "").trim();
+  const gycNo = String(valueFrom(row, ["gyc_no", "application_no", "applicationNo", "Số GYC", "so_gyc", "gyc"]) ?? "").trim();
+  const contractNo = String(valueFrom(row, ["contract_no", "contractNo", "policy_no", "policyNo", "Số HĐ", "Số hợp đồng", "so_hop_dong"]) ?? "").trim();
+  const customer = String(valueFrom(row, ["customer_name", "customer", "policy_owner", "insured_name", "Khách hàng", "BMBH", "NĐBH"]) ?? "").trim();
+  const product = String(valueFrom(row, ["product_name", "product", "Sản phẩm", "san_pham", "SẢN PHẨM CHÍNH", "SAN PHAM CHINH", "Sáº¢N PHáº¨M CHÃNH"]) ?? "").trim();
+  const spbkProducts = String(valueFrom(row, ["spbk", "SPBK", "SẢN PHẨM BỔ TRỢ", "SAN PHAM BO TRO", "Sản phẩm bổ trợ", "san_pham_bo_tro", "Sáº¢N PHáº¨M Bá» TRá»¢"]) ?? "").trim();
+  const paymentDateTime = parseCompetitionDateTime(valueFrom(row, ["payment_datetime", "paid_datetime", "created_at", "gio_thu", "Gi? thu", "thoi_diem_nop_phi", "Th?i ?i?m n?p ph?"]));
+  const firstSeenAt = parseCompetitionDateTime(valueFrom(row, ["first_seen_at", "firstSeenAt"]));
+
+  return {
+    collection_date: collectionDate,
+    issue_date: issueDate,
+    paidDate: collectionDate,
+    issuedDate: issueDate,
+    ban: String(valueFrom(row, ["ban", "ban_name", "Ban"]) ?? "").trim(),
+    team,
+    tvv,
+    advisor: tvv,
+    group: team,
+    ads: String(valueFrom(row, ["ads", "ads_name", "adsName", "Tên ADS", "ten_ads"]) ?? "").trim(),
+    gyc_no: gycNo,
+    applicationNo: gycNo,
+    contract_no: contractNo,
+    contractNo,
+    customer_name: customer,
+    customer,
+    product_name: product,
+    product,
+    spbk_products: spbkProducts,
+    spbkCount: countSpbkProducts(spbkProducts),
+    ip: parseCompetitionMoney(valueFrom(row, ["ip", "IP", "Phí thực thu", "Phi thuc thu"])),
+    afyp: parseCompetitionMoney(valueFrom(row, ["afyp", "AFYP", "Phí quy năm", "Phi quy nam"])),
+    status: String(valueFrom(row, ["status", "policy_status", "policyStatus", "Trạng thái", "Tình trạng"]) ?? "").trim(),
+    first_seen_at: firstSeenAt,
+    firstSeenAt,
+    payment_datetime: paymentDateTime,
+    sourceIndex,
+    source: row
+  };
+}
+
+function uniqueBy<T>(items: T[], keyOf: (item: T) => string) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = keyOf(item);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function groupBy<T>(items: T[], keyOf: (item: T) => string) {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item) || "-";
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  return groups;
+}
+
+function rewardKind(rule: CompetitionRewardRule) {
+  return String(rule.reward_type || rule.type || rule.condition?.type || rule.reward?.type || "reward_per_contract");
+}
+
+function rewardName(rule: CompetitionRewardRule) {
+  return String(rule.reward_name || rule.prize_name || rule.id || "Giải thưởng");
+}
+
+function rewardAmount(rule: CompetitionRewardRule) {
+  return Number(rule.reward_amount ?? rule.reward?.amount ?? rule.reward?.reward_amount ?? rule.reward?.amount_per_contract ?? 0) || 0;
+}
+
+function rewardFormula(rule: CompetitionRewardRule) {
+  return String(rule.reward_formula || rule.calculation_logic || rule.condition_text || "");
+}
+
+function isContractTargetRule(rule: CompetitionRewardRule) {
+  return normalizeText(String(rule.target_type || rule.condition?.target_type || "")).includes("hop dong");
+}
+
+function spbkThresholdFromRule(rule: CompetitionRewardRule) {
+  const candidates = [
+    rule.condition?.min_spbk_count,
+    rule.condition?.min_rider_count,
+    rule.condition?.min_supplementary_product_count,
+    rule.condition?.spbk_count,
+    rule.condition?.rider_count
+  ];
+  for (const value of candidates) {
+    const count = Number(value);
+    if (count > 0) return count;
+  }
+
+  for (const threshold of rule.thresholds ?? []) {
+    const metric = normalizeText(String(threshold.metric || threshold.name || threshold.type || threshold.label || ""));
+    if (!isGenericSpbkProduct(metric)) continue;
+    const count = Number(threshold.value ?? threshold.min ?? threshold.threshold ?? threshold.count ?? 0);
+    if (count > 0) return count;
+  }
+
+  const text = normalizeText([rule.condition_text, rule.calculation_logic].join(" "));
+  const match = text.match(/(?:it nhat|>=|toi thieu)\s*(\d+)\s*(?:spbk|san pham ban kem|san pham bo tro)/);
+  return match ? Number(match[1]) || 0 : 0;
+}
+
+function minSpbkCount(rule: CompetitionRuleInput) {
+  const ruleCounts = (rule.reward_rules ?? []).map(spbkThresholdFromRule).filter((count) => count > 0);
+  const topLevelCandidates = [
+    (rule as AnyRecord).min_spbk_count,
+    (rule as AnyRecord).min_rider_count,
+    (rule as AnyRecord).min_supplementary_product_count
+  ].map(Number).filter((count) => count > 0);
+  const counts = [...ruleCounts, ...topLevelCandidates];
+  if (counts.length > 0) return Math.min(...counts);
+  return (rule.eligible_products ?? []).some(isGenericSpbkProduct) ? 1 : 0;
+}
+
+function contractRewardLimit(rule: CompetitionRewardRule) {
+  const limit = Number(rule.max_reward ?? rule.condition?.max_reward ?? rule.condition?.limit ?? 0);
+  return limit > 0 && limit <= 1000 ? limit : 0;
+}
+
+function toEligibleContract(contract: NormalizedCompetitionContract, rule: CompetitionRewardRule, amount = rewardAmount(rule), reason?: string): EligibleContractReward {
+  return {
+    paidDate: contract.collection_date,
+    issuedDate: contract.issue_date,
+    applicationNo: contract.gyc_no,
+    contractNo: contract.contract_no,
+    advisor: contract.tvv,
+    group: contract.team,
+    ads: contract.ads,
+    customer: contract.customer_name,
+    product: contract.product_name,
+    ip: contract.ip,
+    afyp: contract.afyp,
+    status: contract.status,
+    prizeName: rewardName(rule),
+    rewardName: rewardName(rule),
+    rewardType: rewardKind(rule),
+    rewardAmount: amount,
+    rewardFormula: rewardFormula(rule),
+    reason: reason || rule.condition_text || "Đạt điều kiện rule",
+    source: contract.source
+  };
+}
+
+function toExcluded(contract: NormalizedCompetitionContract, reason: string): ExcludedContract {
+  return {
+    applicationNo: contract.gyc_no,
+    contractNo: contract.contract_no,
+    advisor: contract.tvv,
+    group: contract.team,
+    customer: contract.customer_name,
+    ip: contract.ip,
+    afyp: contract.afyp,
+    status: contract.status,
+    reason,
+    source: contract.source
+  };
+}
+
+function findTier(tiers: AnyRecord[], value: number) {
+  return [...(tiers ?? [])]
+    .filter((tier) => value >= Number(tier.min ?? tier.min_value ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? 0))
+    .sort((a, b) => Number(b.min ?? b.min_value ?? b.min_revenue ?? b.min_group_revenue ?? b.threshold ?? 0) - Number(a.min ?? a.min_value ?? a.min_revenue ?? a.min_group_revenue ?? a.threshold ?? 0))[0] ?? null;
+}
+
+function tierThreshold(tier: AnyRecord) {
+  return Number(tier.min ?? tier.min_value ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? 0);
+}
+
+function nextTier(tiers: AnyRecord[], value: number) {
+  return [...(tiers ?? [])]
+    .filter((tier) => tierThreshold(tier) > value)
+    .sort((a, b) => tierThreshold(a) - tierThreshold(b))[0] ?? null;
+}
+
+function isGroupRevenueRule(rule: CompetitionRewardRule) {
+  const targetText = normalizeText(String(rule.target_type || rule.condition?.target_type || ""));
+  if (targetText.includes("nhom") || targetText.includes("group")) return true;
+
+  const conditionText = normalizeText([
+    rule.condition_text,
+    rule.calculation_logic,
+    rule.condition?.text,
+    rule.condition?.description,
+    rule.condition?.metric
+  ].join(" "));
+  return [
+    "tong doanh thu/nhom",
+    "tong doanh thu nhom",
+    "doanh thu nhom",
+    "tong ip nhom",
+    "tong afyp nhom",
+    "theo nhom",
+    "moi nhom"
+  ].some((phrase) => conditionText.includes(phrase));
+}
+
+function tierLabel(tier: AnyRecord) {
+  const threshold = tierThreshold(tier);
+  return threshold > 0 ? `>= ${(threshold / 1_000_000).toLocaleString("vi-VN")} triệu` : String(tier.label ?? tier.name ?? "Đạt mốc");
+}
+
+function tierRewardPerAdvisor(tier: AnyRecord, fallback = 0) {
+  return Number(tier.reward_per_active_agent ?? tier.reward_per_advisor ?? tier.reward_amount ?? tier.amount ?? fallback) || 0;
+}
+
+function sortEarliestContracts(contracts: NormalizedCompetitionContract[]) {
+  return [...contracts].sort((a, b) =>
+    a.collection_date.localeCompare(b.collection_date)
+    || a.sourceIndex - b.sourceIndex
+    || (a.gyc_no || a.contract_no).localeCompare(b.gyc_no || b.contract_no)
+  );
+}
+
+function topNLimit(rule: CompetitionRewardRule) {
+  return Number(rule.top_n ?? rule.condition?.limit ?? rule.condition?.top_n ?? rule.thresholds?.[0]?.limit ?? 10) || 10;
+}
+
+function contractPaymentOrderValue(contract: NormalizedCompetitionContract) {
+  return contract.payment_datetime || contract.first_seen_at || "";
+}
+
+function calculateGroupRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
+  if (!isGroupRevenueRule(rule)) return [] as EligibleGroupReward[];
+  const tiers = rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [];
+  if (!tiers.length) return [];
+
+  return [...groupBy(contracts, (contract) => contract.team).entries()].map(([group, rows]) => {
+    const totalIP = rows.reduce((sum, row) => sum + row.ip, 0);
+    const totalAFYP = rows.reduce((sum, row) => sum + row.afyp, 0);
+    const tier = findTier(tiers, totalIP);
+    const upcomingTier = tier ? null : nextTier(tiers, totalIP);
+    const advisorRows = [...groupBy(rows, (row) => row.tvv).entries()].map(([advisor, advisorContracts]) => ({
+      advisor,
+      group,
+      ads: advisorContracts.find((contract) => contract.ads)?.ads ?? "",
+      contractCount: new Set(advisorContracts.map((contract) => contract.contract_no || contract.gyc_no).filter(Boolean)).size,
+      totalIP: advisorContracts.reduce((sum, contract) => sum + contract.ip, 0),
+      totalAFYP: advisorContracts.reduce((sum, contract) => sum + contract.afyp, 0)
+    })).filter((advisor) => advisor.advisor);
+    const rewardPerAdvisor = tier ? tierRewardPerAdvisor(tier, rewardAmount(rule)) : 0;
+    const missingAmount = upcomingTier ? Math.max(0, tierThreshold(upcomingTier) - totalIP) : 0;
+    return {
+      group,
+      totalIP,
+      totalAFYP,
+      activeAdvisorCount: advisorRows.length,
+      eligibleContractCount: new Set(rows.map((row) => row.contract_no || row.gyc_no).filter(Boolean)).size,
+      achievedTier: tier ? tierLabel(tier) : (upcomingTier ? `Ch\u01b0a \u0111\u1ea1t ${tierLabel(upcomingTier)}` : "Ch\u01b0a \u0111\u1ea1t"),
+      rewardPerAdvisor,
+      totalReward: advisorRows.length * rewardPerAdvisor,
+      prizeName: rewardName(rule),
+      note: tier
+        ? rewardName(rule)
+        : `${rewardName(rule)} - C\u00f2n thi\u1ebfu ${(missingAmount / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u \u0111\u1ec3 \u0111\u1ea1t ${upcomingTier ? tierLabel(upcomingTier) : "m\u1ed1c th\u01b0\u1edfng"}`,
+      advisors: advisorRows
+    };
+  }).sort((a, b) =>
+    Number(a.totalReward > 0) - Number(b.totalReward > 0)
+    || (a.totalReward > 0 ? b.totalReward - a.totalReward : b.totalIP - a.totalIP)
+  );
+}
+
+function calculateTopNEarliestContracts(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
+  const limit = topNLimit(rule);
+  const amount = rewardAmount(rule) || 500_000;
+  return sortEarliestContracts(contracts)
+    .slice(0, limit)
+    .map((contract) => toEligibleContract(contract, rule, amount, `Top ${limit} hợp đồng nộp phí sớm nhất`));
+}
+
+function calculateTopNNewlySeenContracts(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
+  const limit = topNLimit(rule);
+  const amount = rewardAmount(rule) || 500_000;
+  const orderBy = String(rule.order_by || rule.condition?.order_by || "first_seen_at_asc");
+  const minPolicyIP = Number(rule.min_policy_ip ?? rule.condition?.min_policy_ip ?? 0);
+  const candidates = contracts.filter((contract) =>
+    Boolean(contractPaymentOrderValue(contract))
+    && (minPolicyIP <= 0 || contract.ip >= minPolicyIP)
+  );
+  const direction = orderBy.includes("desc") ? -1 : 1;
+  const selected = [...candidates]
+    .sort((a, b) => (
+      contractPaymentOrderValue(a).localeCompare(contractPaymentOrderValue(b))
+      || a.collection_date.localeCompare(b.collection_date)
+      || a.sourceIndex - b.sourceIndex
+      || (a.gyc_no || a.contract_no).localeCompare(b.gyc_no || b.contract_no)
+    ) * direction)
+    .slice(0, limit);
+
+  console.log("[CTTD NEWLY SEEN]", {
+    reward_type: "top_n_newly_seen_contracts",
+    total_snapshot_contracts: contracts.filter((contract) => contract.first_seen_at).length,
+    eligible_new_contracts: candidates.length,
+    selected_top_n_contracts: selected.length
+  });
+
+  return selected.map((contract) => toEligibleContract(
+    contract,
+    rule,
+    amount,
+    `Hợp đồng mới xuất hiện trong dữ liệu upload, thuộc top ${limit} theo thời điểm first_seen_at`
+  ));
+}
+
+function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompetitionContract) {
+  const reasons: string[] = [];
+  if (!contract.collection_date) reasons.push("Thiếu ngày thu");
+  if (contract.collection_date && rule.start_date && contract.collection_date < rule.start_date) reasons.push("Ngoài thời gian thi đua");
+  if (contract.collection_date && rule.end_date && contract.collection_date > rule.end_date) reasons.push("Ngoài thời gian thi đua");
+  if (rule.issue_deadline && contract.issue_date && contract.issue_date > rule.issue_deadline) reasons.push("Ngày phát hành quá hạn");
+
+  const excludedStatuses = new Set((rule.excluded_statuses ?? []).map(normalizeText).filter(Boolean));
+  const status = normalizeText(contract.status);
+  if (excludedStatuses.has(status)) reasons.push("Trạng thái bị loại");
+
+  if (Number(rule.min_policy_ip ?? 0) > 0 && contract.ip < Number(rule.min_policy_ip)) reasons.push(`IP dưới ${(Number(rule.min_policy_ip) / 1_000_000).toLocaleString("vi-VN")} triệu`);
+  if (Number(rule.min_policy_afyp ?? 0) > 0 && contract.afyp < Number(rule.min_policy_afyp)) reasons.push("AFYP/HĐ dưới điều kiện tối thiểu");
+
+  const products = new Set((rule.eligible_products ?? []).map(normalizeText).filter(Boolean));
+  const hasGenericSpbkProduct = (rule.eligible_products ?? []).some(isGenericSpbkProduct);
+  if (hasGenericSpbkProduct) {
+    const requiredSpbkCount = minSpbkCount(rule);
+    if (requiredSpbkCount > 0 && contract.spbkCount < requiredSpbkCount) {
+      reasons.push(`SPBK dưới ${requiredSpbkCount} sản phẩm`);
+    }
+  }
+  if (products.size > 0 && !hasGenericSpbkProduct && !products.has(normalizeText(contract.product_name))) reasons.push("Sản phẩm không thuộc danh sách được tính");
+
+  return reasons;
+}
+
+function calculateContractRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
+  const kind = rewardKind(rule);
+  if (kind === "top_n_newly_seen_contracts") return calculateTopNNewlySeenContracts(rule, contracts);
+  if (kind === "top_n_earliest_contracts") return calculateTopNEarliestContracts(rule, contracts);
+  if (kind === "reward_by_product") {
+    const products = new Set([...(rule.condition?.products ?? []), ...(rule.condition?.eligible_products ?? [])].map(normalizeText));
+    return contracts
+      .filter((contract) => products.size === 0 || products.has(normalizeText(contract.product_name)))
+      .map((contract) => toEligibleContract(contract, rule));
+  }
+  if (["reward_per_contract", "fixed_amount_per_policy", "fixed_amount_per_contract"].includes(kind) || (kind === "reward_by_policy_count" && isContractTargetRule(rule))) {
+    const limit = contractRewardLimit(rule);
+    const eligible = limit > 0 ? contracts.slice(0, limit) : contracts;
+    return eligible.map((contract) => toEligibleContract(contract, rule));
+  }
+  return [];
+}
+
+function advisorSummaryForContracts(contracts: NormalizedCompetitionContract[], rule: CompetitionRewardRule, amount = rewardAmount(rule)) {
+  return [...groupBy(contracts, (contract) => contract.tvv).entries()].map(([advisor, rows]) => ({
+    advisor,
+    group: rows.find((row) => row.team)?.team ?? "",
+    ads: rows.find((row) => row.ads)?.ads ?? "",
+    contractCount: new Set(rows.map((row) => row.contract_no || row.gyc_no).filter(Boolean)).size,
+    totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
+    totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
+    prizeName: rewardName(rule),
+    rewardAmount: amount,
+    achievedRewardNames: [rewardName(rule)]
+  }));
+}
+
+function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
+  const kind = rewardKind(rule);
+  if (kind === "reward_per_active_advisor") {
+    const minCount = Number(rule.condition?.min_policy_count ?? rule.condition?.active_agent_definition?.min_valid_policy_count ?? 1);
+    return advisorSummaryForContracts(contracts, rule).filter((advisor) => advisor.contractCount >= minCount);
+  }
+  if (kind === "reward_by_policy_count") {
+    if (isContractTargetRule(rule)) return [];
+    const minCount = Number(rule.condition?.min_policy_count ?? rule.thresholds?.[0]?.min_policy_count ?? 1);
+    return advisorSummaryForContracts(contracts, rule).filter((advisor) => advisor.contractCount >= minCount);
+  }
+  if (kind === "reward_by_revenue_tier") {
+    return [...groupBy(contracts, (contract) => contract.tvv).entries()].flatMap(([advisor, rows]) => {
+      const metric = normalizeText(String(rule.calculation_logic || rule.condition?.metric || "afyp")).includes("ip") ? "ip" : "afyp";
+      const total = rows.reduce((sum, row) => sum + (metric === "ip" ? row.ip : row.afyp), 0);
+      const tier = findTier(rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [], total);
+      if (!tier) return [];
+      return [{
+        advisor,
+        group: rows.find((row) => row.team)?.team ?? "",
+        ads: rows.find((row) => row.ads)?.ads ?? "",
+        contractCount: new Set(rows.map((row) => row.contract_no || row.gyc_no).filter(Boolean)).size,
+        totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
+        totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
+        prizeName: rewardName(rule),
+        rewardAmount: Number(tier.reward_amount ?? tier.rewardAmount ?? tier.amount ?? rule.reward_amount ?? 0) || 0,
+        achievedRewardNames: [rewardName(rule)]
+      }];
+    });
+  }
+  if (kind === "reward_per_active_advisor_by_group_revenue_tier") {
+    const tiers = rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [];
+    const minCount = Number(rule.condition?.active_agent_definition?.min_valid_policy_count ?? 1);
+    return [...groupBy(contracts, (contract) => contract.team).entries()].flatMap(([, rows]) => {
+      const groupRevenue = rows.reduce((sum, row) => sum + row.ip, 0);
+      const tier = findTier(tiers, groupRevenue);
+      if (!tier) return [];
+      const amount = Number(tier.reward_per_active_agent ?? tier.reward_amount ?? tier.amount ?? 0) || 0;
+      return advisorSummaryForContracts(rows, rule, amount).filter((advisor) => advisor.contractCount >= minCount);
+    });
+  }
+  return [];
+}
+
+function addAdvisorReward(
+  map: Map<string, EligibleAdvisorReward>,
+  advisor: string,
+  group: string,
+  ads: string,
+  contractCount: number,
+  totalIP: number,
+  totalAFYP: number,
+  prizeName: string,
+  rewardAmount: number
+) {
+  if (!advisor) return;
+  const key = `${normalizeText(advisor)}__${normalizeText(group)}`;
+  const current = map.get(key) ?? {
+    advisor,
+    group,
+    ads,
+    contractCount: 0,
+    totalIP: 0,
+    totalAFYP: 0,
+    prizeName,
+    rewardAmount: 0,
+    achievedRewardNames: [],
+    note: ""
+  };
+  current.contractCount += contractCount;
+  current.totalIP += totalIP;
+  current.totalAFYP += totalAFYP;
+  current.rewardAmount += rewardAmount;
+  if (ads && !current.ads) current.ads = ads;
+  current.achievedRewardNames = [...new Set([...(current.achievedRewardNames ?? []), prizeName])];
+  current.prizeName = current.achievedRewardNames.join(", ");
+  current.note = current.prizeName;
+  map.set(key, current);
+}
+
+export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts: AnyRecord[]): CompetitionRewardResult {
+  const warnings: string[] = [];
+  const normalizedContracts = contracts.map((contract, index) => normalizeContract(contract, index));
+  const eligibleBaseContracts: NormalizedCompetitionContract[] = [];
+  const excludedContracts: ExcludedContract[] = [];
+
+  for (const contract of normalizedContracts) {
+    const reasons = passesBaseFilters(rule, contract);
+    if (reasons.length > 0) excludedContracts.push(toExcluded(contract, [...new Set(reasons)].join("; ")));
+    else eligibleBaseContracts.push(contract);
+  }
+  if (rule.issue_deadline && eligibleBaseContracts.some((contract) => !contract.issue_date)) {
+    warnings.push("Một số hợp đồng chưa có ngày phát hành, chưa loại theo điều kiện phát hành đến.");
+  }
+
+  const eligibleContracts: EligibleContractReward[] = [];
+  const eligibleGroups: EligibleGroupReward[] = [];
+  const advisorRewardMap = new Map<string, EligibleAdvisorReward>();
+  const rewardRules = [...(rule.reward_rules ?? [])].sort((a, b) => Number(a.priority ?? 999) - Number(b.priority ?? 999));
+  const excludedKeys = new Set(excludedContracts.map((contract) => contract.contractNo || contract.applicationNo));
+
+  if (rewardRules.length === 0) warnings.push("Chưa có reward_rules để tính thưởng.");
+
+  for (const rewardRule of rewardRules) {
+    const kind = rewardKind(rewardRule);
+    if (kind === "custom_ai_rule") {
+      warnings.push(`Rule "${rewardName(rewardRule)}" là custom_ai_rule, cần AI xử lý bổ sung.`);
+      continue;
+    }
+    const rewardContracts = calculateContractRewards(rewardRule, eligibleBaseContracts);
+    eligibleContracts.push(...rewardContracts);
+    for (const contract of rewardContracts) {
+      addAdvisorReward(
+        advisorRewardMap,
+        contract.advisor,
+        contract.group,
+        contract.ads,
+        1,
+        contract.ip,
+        contract.afyp,
+        contract.prizeName,
+        contract.rewardAmount
+      );
+    }
+    const groupRewards = calculateGroupRewards(rewardRule, eligibleBaseContracts);
+    eligibleGroups.push(...groupRewards);
+    for (const groupReward of groupRewards) {
+      if (groupReward.totalReward <= 0) continue;
+      for (const advisor of groupReward.advisors) {
+        addAdvisorReward(
+          advisorRewardMap,
+          advisor.advisor,
+          advisor.group,
+          advisor.ads,
+          advisor.contractCount,
+          advisor.totalIP,
+          advisor.totalAFYP,
+          groupReward.prizeName,
+          groupReward.rewardPerAdvisor
+        );
+      }
+    }
+    if (kind === "top_n_earliest_contracts" || kind === "top_n_newly_seen_contracts") {
+      const selectedKeys = new Set(rewardContracts.map((contract) => contract.contractNo || contract.applicationNo));
+      for (const contract of eligibleBaseContracts) {
+        const key = contract.contract_no || contract.gyc_no;
+        if (!selectedKeys.has(key) && !excludedKeys.has(key)) {
+          excludedContracts.push(toExcluded(contract, "Không thuộc top 10 hợp đồng nộp phí sớm nhất"));
+          excludedKeys.add(key);
+        }
+      }
+    }
+    const advisorRewards = calculateAdvisorRewards(rewardRule, eligibleBaseContracts);
+    for (const advisor of advisorRewards) {
+      addAdvisorReward(
+        advisorRewardMap,
+        advisor.advisor,
+        advisor.group,
+        advisor.ads,
+        advisor.contractCount,
+        advisor.totalIP,
+        advisor.totalAFYP,
+        advisor.prizeName,
+        advisor.rewardAmount
+      );
+    }
+    console.log("[CTTD RULE OUTPUT]", {
+      reward_name: rewardName(rewardRule),
+      target_type: rewardRule.target_type || rewardRule.condition?.target_type || "",
+      reward_type: kind,
+      group_rows: groupRewards.length,
+      advisor_rows: advisorRewards.length + groupRewards.reduce((sum, group) => sum + group.advisors.length, 0),
+      contract_rows: rewardContracts.length
+    });
+  }
+
+  const eligibleAdvisors = [...advisorRewardMap.values()].sort((a, b) => b.rewardAmount - a.rewardAmount || b.totalIP - a.totalIP);
+  const totalRewardRaw = eligibleAdvisors.reduce((sum, item) => sum + (Number(item.rewardAmount) || 0), 0);
+  const moneyCap = Number(rule.max_reward ?? 0);
+  const totalReward = moneyCap > 1000 ? Math.min(totalRewardRaw, moneyCap) : totalRewardRaw;
+  const uniqueContracts = uniqueBy(eligibleContracts, (contract) => contract.contractNo || contract.applicationNo);
+  const achievedGroups = eligibleGroups.filter((group) => group.totalReward > 0);
+  const excludedStatuses = new Set((rule.excluded_statuses ?? []).map(normalizeText).filter(Boolean));
+  const minPolicyIP = Number(rule.min_policy_ip ?? 0);
+  const requiredSpbkCount = minSpbkCount(rule);
+  const afterDateFilter = normalizedContracts.filter((contract) =>
+    Boolean(contract.collection_date)
+    && (!rule.start_date || contract.collection_date >= rule.start_date)
+    && (!rule.end_date || contract.collection_date <= rule.end_date)
+  );
+  const afterStatusFilter = afterDateFilter.filter((contract) => !excludedStatuses.has(normalizeText(contract.status)));
+  const afterIpFilter = afterStatusFilter.filter((contract) => minPolicyIP <= 0 || contract.ip >= minPolicyIP);
+  const afterSpbkFilter = afterIpFilter.filter((contract) => requiredSpbkCount <= 0 || contract.spbkCount >= requiredSpbkCount);
+  const afterIssueDateFilter = afterSpbkFilter.filter((contract) => !rule.issue_deadline || !contract.issue_date || contract.issue_date <= rule.issue_deadline);
+  const topNRule = rewardRules.find((rewardRule) => ["top_n_earliest_contracts", "top_n_newly_seen_contracts"].includes(rewardKind(rewardRule)));
+  const topNRuleLimit = topNRule ? topNLimit(topNRule) : 0;
+  const topNSelectedCount = topNRule ? Math.min(topNRuleLimit, afterIssueDateFilter.length) : 0;
+  const filterDebug = {
+    program_name: rule.program_name,
+    reward_type: topNRule ? rewardKind(topNRule) : null,
+    inputRows: contracts.length,
+    afterCollectionDateFilter: afterDateFilter.length,
+    afterExcludedStatusFilter: afterStatusFilter.length,
+    afterMinIPFilter: afterIpFilter.length,
+    afterSpbkFilter: afterSpbkFilter.length,
+    afterIssueDateFilter: afterIssueDateFilter.length,
+    topNSelectedContracts: topNSelectedCount
+  };
+  console.log("[competition] calculateCompetitionReward debug", filterDebug);
+  const groupRevenueByTeam = [...groupBy(eligibleBaseContracts, (contract) => contract.team).entries()].map(([team, rows]) => ({
+    team,
+    totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
+    totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
+    contracts: new Set(rows.map((row) => row.contract_no || row.gyc_no).filter(Boolean)).size,
+    advisors: new Set(rows.map((row) => row.tvv).filter(Boolean)).size
+  }));
+  console.log("[competition] reward output", {
+    eligibleContracts: eligibleContracts.length,
+    eligibleGroups: achievedGroups.length,
+    eligibleAdvisors: eligibleAdvisors.length,
+    groupRevenueByTeam,
+    advisorRewardsByTVV: eligibleAdvisors,
+    summaryPreview: {
+      totalEligibleGroups: achievedGroups.length,
+      totalEligibleAdvisors: eligibleAdvisors.length,
+      totalEligibleContracts: uniqueContracts.length,
+      totalReward
+    }
+  });
+
+  const summary = {
+    totalEligibleGroups: achievedGroups.length,
+    totalEligibleAdvisors: eligibleAdvisors.length,
+    totalEligibleContracts: uniqueContracts.length,
+    totalExcludedContracts: excludedContracts.length,
+    totalReward,
+    totalIP: eligibleBaseContracts.reduce((sum, contract) => sum + contract.ip, 0),
+    totalAFYP: eligibleBaseContracts.reduce((sum, contract) => sum + contract.afyp, 0),
+    warnings,
+    debug: {
+      inputRows: contracts.length,
+      normalizedRows: normalizedContracts.length,
+      afterBaseFilters: eligibleBaseContracts.length,
+      excludedRows: excludedContracts.length,
+      rewardRules: rewardRules.length,
+      filterSteps: filterDebug,
+      groupRevenueByTeam
+    }
+  };
+
+  return {
+    summary,
+    eligibleGroups,
+    eligibleAdvisors,
+    eligibleContracts,
+    excludedContracts,
+    warnings
+  };
+}

@@ -3,7 +3,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, Coins, Download, Eye, EyeOff, Filter, LockKeyhole, Medal, Megaphone, Search, Sparkles, Target, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3 } from "lucide-react";
+import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, Coins, Download, Eye, EyeOff, Filter, LockKeyhole, Medal, Megaphone, MoreHorizontal, Search, Sparkles, Target, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
@@ -12,7 +12,7 @@ import { getUploadUserName } from "@/lib/upload-users";
 import { getAdsPlan, getAdsMonthlyTarget, getAdsQuarterTarget, getAdsYearTarget } from "@/lib/ads-plan";
 
 type DashboardData = any;
-type Tab = "overview" | "groups" | "agents" | "status" | "time" | "ads" | "starviet" | "admin" | "upload";
+type Tab = "overview" | "groups" | "agents" | "status" | "time" | "ads" | "contests" | "starviet" | "admin" | "upload";
 type CurrentUploader = {
   code: string;
   name: string;
@@ -31,6 +31,33 @@ type OverviewPlanItem = {
   tone: "month" | "quarter" | "year";
   item: HeaderPlanProgressItem;
 };
+type CompetitionProgramView = {
+  id: string;
+  programName: string;
+  originalFileUrl?: string | null;
+  originalFileName?: string | null;
+  extractedText?: string;
+  aiSummary?: string;
+  aiRule?: any;
+  confirmedRule?: any;
+  status: string;
+  startDate?: string;
+  endDate?: string;
+  issueDeadline?: string;
+  targetTypes?: string[];
+  confidence?: number;
+  needsReview?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  lastCalculatedAt?: string | null;
+  latestResultId?: string | null;
+  totalEligibleAdvisors?: number;
+  totalEligibleContracts?: number;
+  totalExcludedContracts?: number;
+  totalIP?: number;
+  totalAFYP?: number;
+  totalReward?: number;
+};
 
 const QUARTER_PLAN_VND: Record<number, number> = {
   1: 10_800_000_000,
@@ -41,13 +68,14 @@ const QUARTER_PLAN_VND: Record<number, number> = {
 const YEAR_PLAN_VND = 54_000_000_000;
 
 const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIcon }> = [
-  { id: "overview", label: "Tổng quan", mobileLabel: "TQ", icon: LayoutGrid },
-  { id: "status", label: "Hợp đồng", mobileLabel: "HĐ", icon: ClipboardList },
+  { id: "overview", label: "Tổng quan", mobileLabel: "Tổng quan", icon: LayoutGrid },
+  { id: "status", label: "Hợp đồng", mobileLabel: "Hợp đồng", icon: ClipboardList },
   { id: "groups", label: "Nhóm", mobileLabel: "Nhóm", icon: Users },
   { id: "agents", label: "TVV", mobileLabel: "TVV", icon: UserRound },
   { id: "ads", label: "ADS", mobileLabel: "ADS", icon: Sparkles },
+  { id: "contests", label: "Chương trình thi đua", mobileLabel: "Thi đua", icon: Trophy },
   { id: "starviet", label: "Sao Việt", mobileLabel: "SV", icon: Trophy },
-  { id: "upload", label: "Upload", mobileLabel: "Up", icon: Download }
+  { id: "upload", label: "Quản trị", mobileLabel: "Quản trị", icon: Download }
 ];
 
 function currentMonth() {
@@ -260,6 +288,17 @@ function normalizeViText(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 }
 
+function repairMojibake(value: unknown) {
+  const text = String(value ?? "");
+  if (!/[ÃÄÆáºá»]/.test(text) || typeof TextDecoder === "undefined") return text;
+  try {
+    const bytes = Uint8Array.from([...text].map((char) => char.charCodeAt(0) & 255));
+    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  } catch {
+    return text;
+  }
+}
+
 function abbreviateGroupName(value: unknown) {
   const text = String(value ?? "").trim();
   const known: Record<string, string> = {
@@ -339,14 +378,14 @@ function calculateMonthlyPlanProgress(month: string, overview: any, timeRows: an
 
   const overPlan = remainingRaw < 0;
   const lines: KpiDetailLine[] = [
-    { text: `Đạt: ${formatMoney(actual)} / ${formatMoney(plan)}`, tone: "muted" },
+    { text: `ạt: ${formatMoney(actual)} / ${formatMoney(plan)}`, tone: "muted" },
     { text: overPlan ? `Vượt kế hoạch: ${formatMoney(Math.abs(remainingRaw))}` : `Còn thiếu: ${formatMoney(Math.max(remainingRaw, 0))}`, tone: overPlan ? "positive" : "muted" },
     {
       text: overPlan
-        ? "Đã hoàn thành kế hoạch"
+        ? "ã hoàn thành kế hoạch"
         : remainingDays > 0
           ? `Cần TB/ngày còn lại: ${formatMoney(remainingRaw / remainingDays)}`
-          : "Đã hết kỳ theo dõi",
+          : "ã hết kỳ theo dõi",
       tone: overPlan ? "positive" : "muted"
     }
   ];
@@ -398,12 +437,12 @@ function samePeriodComparisonLine(comparison: any): KpiDetailLine {
   }
   const percent = Number(comparison.percent ?? 0);
   if (percent > 0) {
-    return { text: `▲ ${formatPercent(percent)} so với cùng kỳ tháng trước`, tone: "positive" };
+    return { text: `▲ ${formatPercent(percent)}`, tone: "positive" };
   }
   if (percent < 0) {
-    return { text: `▼ ${formatPercent(Math.abs(percent))} so với cùng kỳ tháng trước`, tone: "negative" };
+    return { text: `▼ ${formatPercent(Math.abs(percent))}`, tone: "negative" };
   }
-  return { text: "— 0% so với cùng kỳ tháng trước", tone: "muted" };
+  return { text: "— 0%", tone: "muted" };
 }
 
 function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingRaw?: number; remainingDays?: number }) {
@@ -411,10 +450,10 @@ function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingR
   const remaining = Number(plan.remainingRaw ?? plan.plan - plan.actual);
   const needPerDay = remaining > 0 && Number(plan.remainingDays ?? 0) > 0 ? remaining / Number(plan.remainingDays) : null;
   const shortageText = remaining > 0
-    ? `Thiếu: ${formatShortCompactVnd(remaining)} (${needPerDay ? `Cần: ${formatDailyCompactVnd(needPerDay)}/ngày` : "Đã hết kỳ"})`
+    ? `Thiếu: ${formatShortCompactVnd(remaining)} (${needPerDay ? `Cần: ${formatDailyCompactVnd(needPerDay)}/ngày` : "ã hết kỳ"})`
     : "Hoàn thành KH";
   return [
-    { text: `Đạt: ${formatShortCompactVnd(plan.actual)}/${formatShortCompactVnd(plan.plan)}`, tone: "muted" as const },
+    { text: `ạt: ${formatShortCompactVnd(plan.actual)}/${formatShortCompactVnd(plan.plan)}`, tone: "muted" as const },
     {
       text: shortageText,
       tone: remaining > 0 ? "muted" as const : "positive" as const
@@ -446,8 +485,8 @@ function compactStatusLabel(value: unknown) {
   const normalized = normalizedContractStatus(label);
   const labels: Record<string, string> = {
     "có hiệu lực": "Hiệu lực",
-    "chờ kiểm tra ycbh": "Chờ KT YCBH",
-    "cnbh có điều kiện": "CNBH ĐK",
+    "ch? kiểm tra ycbh": "Ch? KT YCBH",
+    "cnbh có điu kiện": "CNBH ?K",
     "số hồ sơ": "HS",
     "tỷ lệ": "Tỷ lệ"
   };
@@ -501,6 +540,8 @@ export default function HomePage() {
   const [selectedAgentDetail, setSelectedAgentDetail] = useState<{ title: string; rows: any[] } | null>(null);
   const [uploadAuthOpen, setUploadAuthOpen] = useState(false);
   const [currentUploader, setCurrentUploader] = useState<CurrentUploader | null>(null);
+  const [competitionRefreshKey, setCompetitionRefreshKey] = useState(0);
+  const [mobileOptionsOpen, setMobileOptionsOpen] = useState(false);
 
   const query = useMemo(() => {
     const params = new URLSearchParams({ month });
@@ -556,8 +597,11 @@ export default function HomePage() {
   const statusDetailTitle = tab === "status" && selectedContracts.length > 0 ? selectedTitle : "Chi tiết hợp đồng";
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const activeFilterChips = useMemo(() => getActiveFilterChips(filters), [filters]);
+  const mobileOptionTabs = tabs.filter((item) => item.id !== "overview" && item.id !== "status");
+  const isMobileOptionTabActive = tab !== "overview" && tab !== "status";
 
   function switchTab(nextTab: Tab) {
+    setMobileOptionsOpen(false);
     if (nextTab === "upload") {
       setUploadAuthOpen(true);
       return;
@@ -576,7 +620,7 @@ export default function HomePage() {
     setUploadAuthOpen(false);
     setTab("upload");
     setSelectedContracts([]);
-    setSelectedTitle("Chi tiáº¿t há»£p Ä‘á»“ng");
+    setSelectedTitle("Chi tiết hợp đồng");
     setSelectedGroupDetail(null);
     setSelectedAgentDetail(null);
   }
@@ -635,13 +679,37 @@ export default function HomePage() {
 
       <nav className="tabs dashboard-tabs" aria-label="Dashboard tabs">
         {tabs.map((item) => (
-          <button key={item.id} className={`tab ${tab === item.id ? "active" : ""}`} onClick={() => switchTab(item.id)}>
+          <button key={item.id} className={`tab ${tab === item.id ? "active" : ""} ${item.id !== "overview" && item.id !== "status" ? "mobile-hidden-tab" : ""}`} onClick={() => switchTab(item.id)}>
             <item.icon size={16} />
             <span className="tab-label-full">{item.label}</span>
             <span className="tab-label-short">{item.mobileLabel}</span>
           </button>
         ))}
+        <button className={`tab mobile-options-tab ${isMobileOptionTabActive ? "active" : ""}`} type="button" onClick={() => setMobileOptionsOpen(true)} aria-haspopup="dialog" aria-expanded={mobileOptionsOpen}>
+          <MoreHorizontal size={16} />
+          <span className="tab-label-full">Tùy chọn</span>
+          <span className="tab-label-short">Tùy chọn</span>
+        </button>
       </nav>
+
+      {mobileOptionsOpen && (
+        <div className="mobile-options-backdrop" role="presentation" onClick={() => setMobileOptionsOpen(false)}>
+          <section className="mobile-options-sheet" role="dialog" aria-modal="true" aria-label="Tùy chọn" onClick={(event) => event.stopPropagation()}>
+            <div className="mobile-options-header">
+              <h2>Tùy chọn</h2>
+              <button type="button" aria-label="Đóng" onClick={() => setMobileOptionsOpen(false)}><X size={18} /></button>
+            </div>
+            <div className="mobile-options-list">
+              {mobileOptionTabs.map((item) => (
+                <button key={item.id} className={tab === item.id ? "active" : ""} type="button" onClick={() => switchTab(item.id)}>
+                  <span><item.icon size={18} /></span>
+                  <strong>{item.label}</strong>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
 
       <section className="content">
         <div className={`filters filter-card filter-bar ${isFilterOpen ? "open" : "collapsed"}`}>
@@ -691,9 +759,10 @@ export default function HomePage() {
             {tab === "status" && <StatusReport report={data.statuses} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "time" && <TimeReport report={data.timeSeries} />}
             {tab === "ads" && <AdsTable rows={data.ads} month={month} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
+            {tab === "contests" && <CompetitionPanel month={month} refreshKey={competitionRefreshKey} onChanged={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
             {tab === "starviet" && <StarVietPanel report={data.starViet} warning={data.starVietWarning} />}
             {tab === "admin" && <AdminPanel month={month} planRows={data.planTable ?? []} onSaved={loadDashboard} />}
-            {tab === "upload" && <UploadPanel month={month} uploader={currentUploader} onUploaded={loadDashboard} />}
+            {tab === "upload" && <UploadPanel month={month} uploader={currentUploader} onUploaded={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
 
             {tab === "status" && <ContractDetails title={statusDetailTitle} rows={statusDetailRows} showStatus />}
           </>
@@ -763,9 +832,9 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
   return (
     <main className="login-screen">
       <form className="login-card" onSubmit={submit}>
-        <div className="login-title" aria-label="Dashboard Bảo Việt Nhân thọ Khánh Hòa">
+        <div className="login-title" aria-label="Dashboard Bảo Việt Nhân th Khánh Hòa">
           <h1>Dashboard</h1>
-          <p>Bảo Việt Nhân thọ Khánh Hòa</p>
+          <p>Bảo Việt Nhân th Khánh Hòa</p>
         </div>
         <label className="login-password-field">
           <LockKeyhole size={18} />
@@ -873,25 +942,25 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     day: {
       label: "Theo ngày",
       section: "Biểu đồ theo ngày",
-      title: `AFYP / Số HĐ theo ngày - ${monthOnlyLabel(month)}`,
-      countLabel: "Số HĐ",
+      title: `AFYP / Số H theo ngày - ${monthOnlyLabel(month)}`,
+      countLabel: "Số H",
       subtitle: visibleDayCount > 0
         ? `Hiển thị từ ngày 1 đến ngày ${visibleDayCount}, ngày đã qua không phát sinh sẽ bằng 0.`
-        : "Chưa có ngày nào trong tháng được chọn để hiển thị."
+        : "Chưa có ngày nào trong tháng được chn để hiển thị."
     },
     group: {
       label: "Theo nhóm",
       section: "Biểu đồ theo nhóm",
       title: `Top nhóm theo AFYP / Số TVV - ${monthOnlyLabel(month)}`,
       countLabel: "Số TVV",
-      subtitle: "Hiển thị các nhóm dẫn đầu theo dữ liệu sau bộ lọc."
+      subtitle: "Hiển thị các nhóm dẫn đầu theo dữ liệu sau bộ l?c."
     },
     agent: {
       label: "Theo TVV",
       section: "Biểu đồ theo TVV",
-      title: `Top TVV theo AFYP / Số HĐ - ${monthOnlyLabel(month)}`,
-      countLabel: "Số HĐ",
-      subtitle: "Hiển thị các TVV dẫn đầu theo dữ liệu sau bộ lọc."
+      title: `Top TVV theo AFYP / Số H - ${monthOnlyLabel(month)}`,
+      countLabel: "Số H",
+      subtitle: "Hiển thị các TVV dẫn đầu theo dữ liệu sau bộ l?c."
     }
   }[chartMode];
   const chartRows = useMemo(() => {
@@ -937,7 +1006,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     },
     {
       title: "Số hợp đồng",
-      mobileTitle: "HĐ",
+      mobileTitle: "H",
       value: formatNumber(overview.totalContracts ?? 0),
       icon: ClipboardList,
       tone: "green",
@@ -946,7 +1015,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     },
     {
       title: "TVV hoạt động",
-      mobileTitle: "TVV HĐ",
+      mobileTitle: "TVV H",
       value: formatNumber(overview.activeAgents ?? 0),
       icon: UserRound,
       tone: "purple",
@@ -1005,8 +1074,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
               </label>
               <button className="secondary icon-button" type="button" aria-label="Tải xuống biểu đồ"><Download size={16} /></button>
               <button className="secondary chart-expand-button" type="button" onClick={() => setIsChartExpanded((value) => !value)}>
-                <span className="chart-expand-full">{isChartExpanded ? "Thu gọn biểu đồ" : "Mở rộng biểu đồ"}</span>
-                <span className="chart-expand-short">{isChartExpanded ? "Thu gọn" : "Mở rộng"}</span>
+                <span className="chart-expand-full">{isChartExpanded ? "Thu gn biểu đồ" : "Mở rộng biểu đồ"}</span>
+                <span className="chart-expand-short">{isChartExpanded ? "Thu gn" : "Mở rộng"}</span>
               </button>
             </div>
           </div>
@@ -1040,8 +1109,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
             { header: "Hạng", render: (row) => <RankBadge rank={row.rank} /> },
             { header: "Nhóm", render: (row) => row.groupName },
             { header: "AFYP", render: (row) => moneyCell(row.afyp) },
-            { header: "HĐ", render: (row) => row.contractCount },
-            { header: "Tỷ trọng", render: (row) => formatPercent(row.afypShare) }
+            { header: "H", render: (row) => row.contractCount },
+            { header: "Tỷ trng", render: (row) => formatPercent(row.afypShare) }
           ]}
           onRowClick={(row) => onViewDetails(row.groupName, overviewContracts.filter((item: any) => item.group_name === row.groupName))}
         />
@@ -1056,7 +1125,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
             { header: "Tên TVV", render: (row) => row.agentName },
             { header: "Nhóm", render: (row) => row.groupName },
             { header: "AFYP", render: (row) => moneyCell(row.afyp) },
-            { header: "HĐ", render: (row) => row.contractCount }
+            { header: "H", render: (row) => row.contractCount }
           ]}
           onRowClick={(row) => onViewDetails(row.agentName, overviewContracts.filter((item: any) => item.agent_name === row.agentName))}
         />
@@ -1077,7 +1146,7 @@ function OverviewPlanCard({ items }: { items: OverviewPlanItem[] }) {
             <section className="overview-plan-column" key={label}>
               <span className="overview-plan-title">{label}</span>
               <strong>{formatPercent(percent)}</strong>
-              <p>Đạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
+              <p>ạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
               <p>Thiếu: {formatMoney(item.remaining)}</p>
               <div className="overview-plan-bar" aria-label={`${label}: ${formatPercent(percent)}`}>
                 <div style={{ width: `${clampedPercent}%` }} />
@@ -1101,8 +1170,9 @@ function KpiCard({ title, mobileTitle, value, icon: Icon, tone, note, mobileNote
   const lines = detailLines ?? (note ? [{ text: note, tone: "muted" as const }] : []);
   const mobileLines = mobileDetailLines ?? detailLines ?? (mobileNote || note ? [{ text: mobileNote ?? note ?? "", tone: "muted" as const }] : []);
   const extraClass = title === "Doanh thu hôm nay" ? " kpi-today-revenue" : title === "Kế hoạch tháng" ? " kpi-monthly-plan" : "";
+  const comparisonClass = lines.length === 1 && ["positive", "negative", "muted"].includes(lines[0]?.tone ?? "") ? " kpi-comparison-card" : "";
   return (
-    <div className={`kpi kpi-card kpi-${tone}${extraClass}`}>
+    <div className={`kpi kpi-card kpi-${tone}${extraClass}${comparisonClass}`}>
       <div className="kpi-desktop-layout">
         <div className="kpi-icon"><Icon size={22} /></div>
         <div className="kpi-copy">
@@ -1189,7 +1259,7 @@ function MobileRankingList({ rows, type, onRowClick }: { rows: any[]; type: "gro
             <div className="mobile-rank-subtitle">{type === "group" ? row.banName : row.groupName}</div>
             <div className="mobile-metric-grid compact">
               <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
-              <MobileMetric label="HĐ" value={row.contractCount} />
+              <MobileMetric label="H" value={row.contractCount} />
               {type === "group" ? <MobileMetric label="TT" value={formatPercent(row.afypShare)} /> : <MobileMetric label="Nhóm" value={row.groupName} />}
             </div>
           </div>
@@ -1212,10 +1282,10 @@ function MobileGroupRankingCards({ rows, contracts, openContracts }: { rows: any
             <div className="mobile-metric-grid">
               <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
               <MobileMetric label="IP" value={formatCompactVnd(row.ip)} />
-              <MobileMetric label="HĐ" value={row.contractCount} />
+              <MobileMetric label="H" value={row.contractCount} />
               <MobileMetric label="TVV" value={row.agentCount} />
               <MobileMetric label="TT" value={formatPercent(row.afypShare)} />
-              <MobileMetric label="BQ/HĐ" value={formatCompactVnd(row.averageAfypPerContract)} />
+              <MobileMetric label="BQ/H" value={formatCompactVnd(row.averageAfypPerContract)} />
             </div>
           </div>
           <ChevronDown className="mobile-card-chevron" size={18} />
@@ -1241,8 +1311,8 @@ function MobileAgentRankingCards({ rows, contracts, openContracts }: { rows: any
             <div className="mobile-metric-grid">
               <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
               <MobileMetric label="IP" value={formatCompactVnd(row.ip)} />
-              <MobileMetric label="HĐ" value={row.contractCount} />
-              <MobileMetric label="BQ/HĐ" value={formatCompactVnd(row.averageAfypPerContract)} />
+              <MobileMetric label="H" value={row.contractCount} />
+              <MobileMetric label="BQ/H" value={formatCompactVnd(row.averageAfypPerContract)} />
             </div>
           </div>
           <ChevronDown className="mobile-card-chevron" size={18} />
@@ -1270,7 +1340,7 @@ function MobileAdsCards({ rows, month, contracts, openContracts }: { rows: any[]
               <MobileMetric label="KH" value={formatPlanMillion(planMillion)} />
               <MobileMetric label="HT" value={formatPercent(achievement)} />
               <MobileMetric label="IP" value={formatCompactVnd(row.ip)} />
-              <MobileMetric label="HĐ" value={row.contractCount} />
+              <MobileMetric label="H" value={row.contractCount} />
               <MobileMetric label="TVV" value={row.agentCount} />
               <MobileMetric label="TT" value={formatPercent(row.afypShare)} />
             </div>
@@ -1323,7 +1393,7 @@ function OverviewGroupTable({ rows, contracts, openContracts }: { rows: any[]; c
   return (
     <div className="panel">
       <div className="panel-header"><h2>Xếp hạng nhóm</h2></div>
-      <DataTable headers={["#", "Nhóm", "AFYP", "HĐ", "TVV", "Tỷ trọng"]}>
+      <DataTable headers={["#", "Nhóm", "AFYP", "H", "TVV", "Tỷ trng"]}>
         {rows.map((row) => (
           <tr key={`${row.banName}-${row.groupName}`} className="clickable" onClick={() => openContracts(row.groupName, contracts.filter((item) => item.group_name === row.groupName))}>
             <td>{row.rank}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td>
@@ -1338,7 +1408,7 @@ function OverviewAgentTable({ rows, contracts, openContracts }: { rows: any[]; c
   return (
     <div className="panel">
       <div className="panel-header"><h2>Xếp hạng TVV</h2></div>
-      <DataTable headers={["#", "Tên TVV", "Nhóm", "AFYP", "HĐ"]}>
+      <DataTable headers={["#", "Tên TVV", "Nhóm", "AFYP", "H"]}>
         {rows.map((row) => (
           <tr key={`${row.agentName}-${row.agentCode}`} className="clickable" onClick={() => openContracts(row.agentName, contracts.filter((item) => item.agent_name === row.agentName))}>
             <td>{row.rank}</td><td>{row.agentName}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{row.contractCount}</td>
@@ -1443,10 +1513,10 @@ function buildGroupXlsxRows(rows: any[]): XlsxRow[] {
     "Nhóm": row.groupName || "",
     "AFYP": formatCompactVnd(row.afyp),
     "IP": formatCompactVnd(row.ip),
-    "HĐ": row.contractCount,
+    "H": row.contractCount,
     "TVV": row.agentCount,
-    "Tỷ trọng": formatPercent(row.afypShare),
-    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
+    "Tỷ trng": formatPercent(row.afypShare),
+    "BQ/H": formatCompactVnd(row.averageAfypPerContract)
   }));
 }
 
@@ -1460,8 +1530,8 @@ function buildAgentXlsxRows(rows: any[]): XlsxRow[] {
     "ADS": row.adsName || "",
     "AFYP": formatCompactVnd(row.afyp),
     "IP": formatCompactVnd(row.ip),
-    "HĐ": row.contractCount,
-    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
+    "H": row.contractCount,
+    "BQ/H": formatCompactVnd(row.averageAfypPerContract)
   }));
 }
 
@@ -1496,11 +1566,11 @@ function RankingPoster({ type, rows }: { type: "group" | "agent"; rows: any[] })
   const date = posterDateText();
   const isGroup = type === "group";
   const title = isGroup
-    ? `BẢNG VÀNG DOANH THU NHÓM THÁNG ${date.monthTitle}`
-    : `BẢNG VÀNG DOANH THU TƯ VẤN VIÊN THÁNG ${date.monthTitle}`;
+    ? `BẢNG VÀNG DOANH THU NHÓM THNG ${date.monthTitle}`
+    : `BẢNG VÀNG DOANH THU TƯ VẤN VIÊN THNG ${date.monthTitle}`;
   const headers = isGroup
-    ? ["#", "Ban", "Nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]
-    : ["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"];
+    ? ["#", "Ban", "Nhóm", "AFYP", "IP", "H", "TVV", "Tỷ trng", "BQ/H"]
+    : ["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "H", "BQ/H"];
   return (
     <div className="ranking-poster">
       <div className="poster-hero">
@@ -1532,7 +1602,7 @@ function RankingPoster({ type, rows }: { type: "group" | "agent"; rows: any[] })
           </tbody>
         </table>
       </div>
-      <div className="poster-footer"><span>↗</span><strong>Đơn vị: triệu đồng</strong><span>★</span></div>
+      <div className="poster-footer"><span>↗</span><strong>ơn vị: triệu đồng</strong><span>★</span></div>
     </div>
   );
 }
@@ -1550,7 +1620,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng nhóm" fileName={`xep-hang-nhom-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Ban", "Nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]}>
+      <DataTable className="desktop-table" headers={["#", "Ban", "Nhóm", "AFYP", "IP", "H", "TVV", "Tỷ trng", "BQ/H"]}>
         {rows.map((row) => (
           <tr key={`${row.banName}-${row.groupName}`} className="clickable" onClick={() => openContracts(row.groupName, contracts.filter((item) => groupNameForRecord(item) === row.groupName))}>
             <td>{row.rank}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
@@ -1576,7 +1646,7 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng TVV" fileName={`xep-hang-tvv-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"]}>
+      <DataTable className="desktop-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "H", "BQ/H"]}>
         {rows.map((row) => (
           <tr key={`${row.agentName}-${row.agentCode}`} className="clickable" onClick={() => openContracts(row.agentName, contracts.filter((item) => item.agent_name === row.agentName))}>
             <td>{row.rank}</td><td>{row.agentCode}</td><td>{row.agentName}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{row.adsName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
@@ -1596,7 +1666,7 @@ function StatusReport({ report, contracts, openContracts }: { report: any; contr
   const cards = [
     { title: "Tổng hồ sơ", mobileTitle: "Tổng HS", count: report.totalPolicies ?? 0, afyp: report.totalAfyp ?? 0, icon: ClipboardList, tone: "blue" },
     { title: "Có hiệu lực", mobileTitle: "Hiệu lực", count: report.activePolicyCount ?? 0, afyp: report.activePolicyAfyp ?? 0, icon: Target, tone: "green" },
-    { title: "Chờ xử lý", mobileTitle: "Chờ XL", count: report.pendingPolicyCount ?? 0, afyp: report.pendingPolicyAfyp ?? 0, icon: TrendingUp, tone: "orange" },
+    { title: "Ch xử lý", mobileTitle: "Ch XL", count: report.pendingPolicyCount ?? 0, afyp: report.pendingPolicyAfyp ?? 0, icon: TrendingUp, tone: "orange" },
     { title: "Hoàn phí", mobileTitle: "Hoàn phí", count: report.refundPolicyCount ?? 0, afyp: report.refundPolicyAfyp ?? 0, icon: Coins, tone: "purple" }
   ];
 
@@ -1724,7 +1794,7 @@ function AdsTable({ rows, month, contracts, openContracts }: { rows: any[]; mont
   return (
     <div className="panel">
       <div className="panel-header"><h2>Báo cáo ADS</h2></div>
-      <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "HĐ", "TVV", "Tỷ trọng"]} colWidths={adsColWidths}>
+      <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "H", "TVV", "Tỷ trng"]} colWidths={adsColWidths}>
         {rows.map((row) => {
           const planMillion = getAdsPlan(row.adsName, month);
           const planVnd = planMillion ? planMillion * 1_000_000 : 0;
@@ -1765,7 +1835,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
       <section className="star-viet-hero">
         <div>
           <p>Sao Việt cá nhân</p>
-          <h2>SAO VIỆT CÁ NHÂN</h2>
+          <h2>SAO VIỆT C NHÂN</h2>
           <span>Theo dõi danh hiệu Sao Việt năm 2026</span>
         </div>
         <div className="star-viet-highlight">
@@ -1777,7 +1847,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
       {warning && <p className="warning-list">{warning}</p>}
       <section className="kpi-grid star-viet-kpis">
         <KpiCard tone="blue" icon={Users} title="TVV theo dõi" value={formatNumber(summary.totalAgents ?? 0)} />
-        <KpiCard tone="gold" icon={Trophy} title="Đạt Sao Việt" value={formatNumber(summary.achievedAgents ?? 0)} />
+        <KpiCard tone="gold" icon={Trophy} title="ạt Sao Việt" value={formatNumber(summary.achievedAgents ?? 0)} />
         <KpiCard tone="green" icon={Coins} title="Tổng AFYP Sao Việt" value={formatCompactVnd(summary.totalAfyp ?? 0)} />
         <KpiCard tone="purple" icon={Medal} title="Gần đạt mốc" value={formatNumber(summary.nearNextAgents ?? 0)} />
       </section>
@@ -1792,11 +1862,11 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
             <span className="sr-only">Tìm TVV Sao Việt</span>
             <input aria-label="Tìm TVV Sao Việt" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm TVV" />
           </label>
-          <select value={group} onChange={(event) => setGroup(event.target.value)} aria-label="Lọc nhóm Sao Việt">
+          <select value={group} onChange={(event) => setGroup(event.target.value)} aria-label="Lc nhóm Sao Việt">
             <option value="">Tất cả nhóm</option>
             {(options.groups ?? []).map((item: string) => <option key={item} value={item}>{item}</option>)}
           </select>
-          <select value={rank} onChange={(event) => setRank(event.target.value)} aria-label="Lọc hạng Sao Việt">
+          <select value={rank} onChange={(event) => setRank(event.target.value)} aria-label="Lc hạng Sao Việt">
             <option value="">Tất cả hạng</option>
             {(options.ranks ?? []).map((item: string) => <option key={item} value={item}>{item}</option>)}
           </select>
@@ -1836,7 +1906,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
                     <p><span>Còn thiếu:</span><strong>{formatCompactVnd(row.remainingToNext)}</strong></p>
                   </>
                 ) : (
-                  <p><span>Mốc tiếp theo:</span><strong>Đã đạt mốc cao nhất</strong></p>
+                  <p><span>Mốc tiếp theo:</span><strong>ã đạt mốc cao nhất</strong></p>
                 )}
                 <StarProgress row={row} />
               </div>
@@ -1865,7 +1935,7 @@ function StarProgress({ row }: { row: any }) {
 function rankTone(rank: string) {
   const normalized = normalizeViText(rank ?? "");
   if (normalized.includes("kim cuong")) return "diamond";
-  if (normalized.includes("bach kim")) return "platinum";
+  if (normalized.includes("bach? kim")) return "platinum";
   if (normalized.includes("vang")) return "gold";
   return "none";
 }
@@ -1883,7 +1953,7 @@ function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any
     const payload = await response.json();
     if (!response.ok) setMessage(payload.error || "Không lưu được chỉ tiêu.");
     else {
-      setMessage("Đã lưu chỉ tiêu tháng.");
+      setMessage("ã lưu chỉ tiêu tháng.");
       onSaved();
     }
   }
@@ -1896,7 +1966,7 @@ function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any
           <label><span className="label">Chỉ tiêu AFYP</span><input inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value)} placeholder="Ví dụ: 5000000000" /></label>
           <button onClick={save}>Lưu chỉ tiêu</button>
         </div>
-        {message && <p className={message.startsWith("Đã") ? "success" : "error-list"}>{message}</p>}
+        {message && <p className={message.startsWith("ã") ? "success" : "error-list"}>{message}</p>}
       </div>
       <div className="panel">
         <div className="panel-header"><h2>Kế hoạch AFYP năm 2026</h2><span>Tổng 54 tỷ</span></div>
@@ -1915,6 +1985,630 @@ function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any
         </DataTable>
       </div>
     </>
+  );
+}
+
+function targetTypesText(value: unknown) {
+  const normalizeTarget = (item: unknown) => {
+    const text = String(item ?? "").trim();
+    const normalized = normalizeViText(text);
+    if (normalized.includes("hop dong") || normalized.includes("hd")) return "Hợp đồng";
+    if (normalized.includes("nhom")) return "Nhóm";
+    if (normalized.includes("tvv") || normalized.includes("tu van")) return "TVV";
+    return text;
+  };
+  if (Array.isArray(value)) return [...new Set(value.map(normalizeTarget).filter(Boolean))].join(", ");
+  if (typeof value === "string") return normalizeTarget(value);
+  return "-";
+}
+
+function rewardRuleCards(rule: any) {
+  return Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+}
+
+function competitionStatusClass(status?: string | null) {
+  const normalized = normalizeViText(status ?? "");
+  if (normalized.includes("co ket qua")) return "done";
+  if (normalized.includes("khong co")) return "warning";
+  if (normalized.includes("cho") || normalized.includes("xac nhan")) return "review";
+  return "pending";
+}
+
+function competitionStatusText(status?: string | null) {
+  const text = String(status ?? "").trim();
+  if (text.startsWith("ã ")) return `Đ${text}`;
+  if (text.startsWith("a tinh")) return `Đã tính${text.slice("a tinh".length)}`;
+  return text;
+}
+
+function vietnamDateOnly(value?: string | Date | null) {
+  const date = value ? new Date(value) : new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? 0);
+  return Date.UTC(get("year"), get("month") - 1, get("day"));
+}
+
+function competitionRemainingInfo(endDate?: string | null) {
+  if (!endDate) return { days: null, text: "-", tone: "ended" };
+  const remainingDays = Math.round((vietnamDateOnly(endDate) - vietnamDateOnly()) / 86_400_000);
+  if (remainingDays < 0) return { days: remainingDays, text: "Đã kết thúc", tone: "ended" };
+  if (remainingDays === 0) return { days: remainingDays, text: "Kết thúc hôm nay", tone: "danger" };
+  if (remainingDays <= 2) return { days: remainingDays, text: `Còn ${remainingDays} ngày`, tone: "danger" };
+  if (remainingDays <= 4) return { days: remainingDays, text: `Còn ${remainingDays} ngày`, tone: "warning" };
+  return { days: remainingDays, text: `Còn ${remainingDays} ngày`, tone: "success" };
+}
+
+function CompetitionRemainingBadge({ endDate }: { endDate?: string | null }) {
+  const remaining = competitionRemainingInfo(endDate);
+  return <span className={`contest-remaining ${remaining.tone}`}>{remaining.text}</span>;
+}
+
+function buildCompetitionGroupRows(advisors: any[] = [], contracts: any[] = []) {
+  const byGroup = new Map<string, any>();
+  for (const advisor of advisors) {
+    const group = String(advisor.team || "Không xác định").trim() || "Không xác định";
+    const current = byGroup.get(group) ?? {
+      group,
+      totalIP: 0,
+      totalAFYP: 0,
+      activeAdvisors: new Set<string>(),
+      contractCount: 0,
+      rewardPerAdvisor: 0,
+      totalReward: 0,
+      milestones: new Set<string>(),
+      notes: new Set<string>()
+    };
+    current.totalIP += Number(advisor.total_ip ?? 0);
+    current.totalAFYP += Number(advisor.total_afyp ?? 0);
+    current.contractCount += Number(advisor.eligible_contract_count ?? 0);
+    current.rewardPerAdvisor = Math.max(current.rewardPerAdvisor, Number(advisor.reward_amount ?? 0));
+    current.totalReward += Number(advisor.reward_amount ?? 0);
+    if (advisor.tvv) current.activeAdvisors.add(String(advisor.tvv));
+    for (const name of advisor.achieved_reward_names ?? []) current.milestones.add(String(name));
+    if (advisor.note) current.notes.add(String(advisor.note));
+    byGroup.set(group, current);
+  }
+  for (const contract of contracts) {
+    const group = String(contract.team || "Không xác định").trim() || "Không xác định";
+    const current = byGroup.get(group);
+    if (!current) continue;
+    current.totalIP = Math.max(current.totalIP, Number(contract.ip ?? 0));
+    current.totalAFYP = Math.max(current.totalAFYP, Number(contract.afyp ?? 0));
+  }
+  return [...byGroup.values()]
+    .filter((row) => row.totalReward > 0)
+    .map((row) => ({
+      ...row,
+      activeAdvisorCount: row.activeAdvisors.size,
+      milestone: [...row.milestones][0] || [...row.notes][0] || "-",
+      note: [...row.notes].join("; ") || "-"
+    }))
+    .sort((a, b) => b.totalReward - a.totalReward || b.totalIP - a.totalIP);
+}
+
+function normalizeCompetitionRewardGroups(rows: any[] = []) {
+  return rows
+    .map((row) => ({
+      group: String(row.team || row.group || "-").trim() || "-",
+      totalIP: Number(row.total_ip ?? row.totalIP ?? 0),
+      totalAFYP: Number(row.total_afyp ?? row.totalAFYP ?? 0),
+      activeAdvisorCount: Number(row.active_advisor_count ?? row.activeAdvisorCount ?? 0),
+      contractCount: Number(row.eligible_contract_count ?? row.contractCount ?? 0),
+      milestone: repairMojibake(row.achieved_tier || row.milestone || "-"),
+      rewardPerAdvisor: Number(row.reward_per_advisor ?? row.rewardPerAdvisor ?? 0),
+      totalReward: Number(row.total_reward ?? row.totalReward ?? 0),
+      note: repairMojibake(Number(row.total_reward ?? row.totalReward ?? 0) > 0
+        ? (row.prize_name || row.reward_name || row.note || "-")
+        : (row.note || row.prize_name || row.reward_name || "-"))
+    }))
+    .sort((a, b) =>
+      Number(a.totalReward > 0) - Number(b.totalReward > 0)
+      || (a.totalReward > 0 ? b.totalReward - a.totalReward : b.totalIP - a.totalIP)
+    );
+}
+
+function isWaitingRuleConfirmation(program?: CompetitionProgramView | null) {
+  return Boolean(program && !program.confirmedRule && String(program.status || "").includes("Ch xác nhận"));
+}
+
+function competitionFlowMessage(program: CompetitionProgramView | undefined, detail: any, month: string, isCalculating: boolean) {
+  if (isCalculating) return { tone: "success", text: "Đang tính thưởng" };
+  if (!program) return { tone: "info", text: "Đang tải chi tiết" };
+  if (isWaitingRuleConfirmation(program)) {
+    return {
+      tone: "warning",
+      text: "Chương trình chưa xác nhận rule. Vui lòng vào tab Rule AI để xác nhận trước khi tính thưởng."
+    };
+  }
+  if (String(detail?.result?.result_summary?.error || "").includes("Chưa có dữ liệu")) {
+    return { tone: "warning", text: "Chưa có dữ liệu hợp đồng trong thi gian thi đua. Vui lòng upload CSV có chứa khoảng thi gian chương trình trước." };
+  }
+  if (!program.lastCalculatedAt) {
+    return { tone: "info", text: "ã xác nhận rule. Có thể tính thưởng từ dữ liệu CSV theo thi gian chương trình." };
+  }
+  if ((program.totalEligibleContracts ?? 0) === 0 && (program.totalEligibleAdvisors ?? 0) === 0) {
+    return { tone: "warning", text: "Đã tính thưởng nhưng không có hợp đồng nào thỏa điều kiện." };
+  }
+  return { tone: "success", text: "Đã tính có kết quả" };
+}
+
+function logCompetitionCalculationDebug(params: {
+  programId: string;
+  program?: CompetitionProgramView | null;
+  month: string;
+  payload: any;
+}) {
+  const resultSummary = params.payload?.rewardResult?.summary
+    ?? params.payload?.result?.result_summary?.summary
+    ?? params.payload?.result?.result_summary
+    ?? null;
+
+  console.log({
+    programId: params.programId,
+    status: params.program?.status,
+    hasAiRule: Boolean(params.program?.aiRule),
+    hasConfirmedRule: Boolean(params.program?.confirmedRule),
+    contractsCount: Number(resultSummary?.debug?.inputRows ?? 0),
+    selectedMonth: params.month,
+    resultSummary
+  });
+}
+
+function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; refreshKey: number; onChanged: () => void }) {
+  const [programs, setPrograms] = useState<CompetitionProgramView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [selectedProgramId, setSelectedProgramId] = useState("");
+
+  async function loadPrograms() {
+    setLoading(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/competition", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không tải được chương trình thi đua.");
+      setPrograms(payload.programs ?? []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không tải được chương trình thi đua.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPrograms();
+  }, [refreshKey]);
+
+  return (
+    <>
+      <div className="panel contest-panel competition-section">
+        <div className="panel-header contest-header">
+          <div>
+            <h2><Trophy size={18} /> Danh sách chương trình thi đua</h2>
+          </div>
+        </div>
+        {message && <p className={message.includes("ã") || message.includes("ang") ? "success" : "error-list"}>{message}</p>}
+        {loading ? (
+          <p>Đang tải chương trình thi đua...</p>
+        ) : programs.length === 0 ? (
+          <p className="empty-state">Chưa có chương trình thi đua. Hãy upload poster để AI tạo rule.</p>
+        ) : (
+          <>
+            <DataTable className="desktop-table contest-table" headers={["Tên chương trình", "Thời gian", "Phát hành đến", "Còn lại", "TVV đạt", "HĐ đạt", "Thưởng dự kiến", "Thao tác"]}>
+              {programs.map((program) => (
+                <tr key={program.id} className={selectedProgramId === program.id ? "selected" : ""}>
+                  <td><strong><Trophy size={16} /> {program.programName}</strong></td>
+                  <td>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</td>
+                  <td>{formatDateVi(program.issueDeadline) || "-"}</td>
+                  <td><CompetitionRemainingBadge endDate={program.endDate} /></td>
+                  <td>{formatNumber(program.totalEligibleAdvisors ?? 0)}</td>
+                  <td>{formatNumber(program.totalEligibleContracts ?? 0)}</td>
+                  <td>{formatCompactVnd(program.totalReward ?? 0)}</td>
+                  <td>
+                    <button className="small-button" type="button" onClick={() => setSelectedProgramId((current) => current === program.id ? "" : program.id)}>Xem chi tiết</button>
+                  </td>
+                </tr>
+              ))}
+            </DataTable>
+            <div className="mobile-card-list contest-mobile-list">
+              {programs.map((program) => (
+                <article className="contest-mobile-card" key={`${program.id}-mobile`}>
+                  <div className="contest-mobile-head">
+                    <div>
+                      <strong>{program.programName}</strong>
+                      <span>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</span>
+                    </div>
+                  </div>
+                  <CompetitionRemainingBadge endDate={program.endDate} />
+                  <div className="mobile-info-grid">
+                    <span><b>TVV đạt</b>{formatNumber(program.totalEligibleAdvisors ?? 0)}</span>
+                    <span><b>HĐ đạt</b>{formatNumber(program.totalEligibleContracts ?? 0)}</span>
+                    <span><b>Thưởng</b>{formatCompactVnd(program.totalReward ?? 0)}</span>
+                    <span><b>Còn lại</b><CompetitionRemainingBadge endDate={program.endDate} /></span>
+                  </div>
+                  <button type="button" onClick={() => setSelectedProgramId((current) => current === program.id ? "" : program.id)}>Xem chi tiết</button>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {selectedProgramId && <CompetitionDetailModal programId={selectedProgramId} month={month} refreshKey={refreshKey} onClose={() => setSelectedProgramId("")} onChanged={() => { onChanged(); loadPrograms(); }} />}
+    </>
+  );
+}
+
+function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; onAnalyzed: (program: any) => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit() {
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      const response = await fetch("/api/competition/analyze-poster", { method: "POST", body });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "AI không phân tích được poster.");
+      onAnalyzed(payload.program);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "AI không phân tích được poster.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="contract-modal-backdrop">
+      <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
+        <div className="contract-modal-header">
+          <div><h2>Thêm CTTĐ</h2><p>Upload poster JPG/PNG, AI sẽ đc nội dung và tạo rule nháp.</p></div>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
+        </div>
+        <div className="contract-modal-body contest-rule-content">
+          <label><span className="label">Poster chương trình</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
+          {error && <p className="error-list">{error}</p>}
+          <div className="contest-run-row">
+            <button type="button" disabled={!file || busy} onClick={submit}>{busy ? "AI đang đc poster..." : "Phân tích bằng AI"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompetitionRuleModal({ program, month, onClose, onChanged }: { program: any; month: string; onClose: () => void; onChanged: () => void }) {
+  const initialRule = program.confirmedRule || program.confirmed_rule || program.aiRule || program.ai_rule || {};
+  const [jsonText, setJsonText] = useState(JSON.stringify(initialRule, null, 2));
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function parsedRule() {
+    return JSON.parse(jsonText);
+  }
+
+  async function confirmRule(shouldCalculate = false) {
+    setBusy(true);
+    setMessage("");
+    try {
+      const confirmedRule = parsedRule();
+      const response = await fetch("/api/competition/confirm-rule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ program_id: program.id, confirmed_rule: confirmedRule })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không lưu được rule.");
+      if (shouldCalculate) {
+        const calc = await fetch("/api/competition/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ program_id: program.id, month })
+        });
+        const calcPayload = await calc.json();
+        if (!calc.ok) throw new Error(calcPayload.error || "Không tính được thưởng.");
+      }
+      onChanged();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Rule JSON không hợp lệ.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  let preview: any = {};
+  try { preview = JSON.parse(jsonText); } catch { preview = {}; }
+
+  return (
+    <div className="contract-modal-backdrop">
+      <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
+        <div className="contract-modal-header">
+          <div><h2>Kiểm tra rule AI</h2><p>{preview.program_name || program.programName || program.program_name}</p></div>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
+        </div>
+        <div className="contract-modal-body contest-rule-content">
+          <div className="contest-overview-grid">
+            <div className="contest-overview-item"><span>Thời gian thi đua</span><strong>{formatDateVi(preview.start_date)} - {formatDateVi(preview.end_date)}</strong></div>
+            <div className="contest-overview-item"><span>Phát hành đến</span><strong>{formatDateVi(preview.issue_deadline) || "-"}</strong></div>
+            <div className="contest-overview-item"><span>Đối tượng</span><strong>{targetTypesText(preview.target_types)}</strong></div>
+          </div>
+          <div className="contest-overview-grid">
+            {(preview.reward_rules ?? []).slice(0, 6).map((rule: any, index: number) => (
+              <div className="contest-overview-item" key={rule.id || index}>
+                <span>{rule.reward_name || `Giải ${index + 1}`}</span>
+                <strong>{rule.condition_text || rule.calculation_logic || rule.reward_type}</strong>
+                <small>{formatCompactVnd(Number(rule.reward_amount ?? 0))}</small>
+              </div>
+            ))}
+          </div>
+          {program.extractedText || program.extracted_text ? <div><h3>Nội dung AI đc được</h3><p>{program.extractedText || program.extracted_text}</p></div> : null}
+          {message && <p className="error-list">{message}</p>}
+          <div className="contest-run-row">
+            <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>Xác nhận rule</button>
+            <button type="button" disabled={busy} onClick={() => confirmRule(true)}>Tính thưởng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CompetitionKpiCard({ label, value, icon: Icon, highlight = false }: { label: string; value: string; icon: LucideIcon; highlight?: boolean }) {
+  return (
+    <div className={`contest-kpi-card ${highlight ? "highlight" : ""}`}>
+      <span className="contest-kpi-icon"><Icon size={20} /></span>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function rankLabel(index: number) {
+  return index < 3 ? ["1", "2", "3"][index] : String(index + 1);
+}
+
+function CompetitionTopPanel({ title, actionTab, onOpen, headers, rows }: { title: string; actionTab: "groups" | "advisors" | "contracts"; onOpen: (tab: "groups" | "advisors" | "contracts") => void; headers: string[]; rows: ReactNode }) {
+  return (
+    <section className="contest-top-panel">
+      <div className="contest-top-header">
+        <h3>{title}</h3>
+        <button type="button" onClick={() => onOpen(actionTab)}>Xem tất cả</button>
+      </div>
+      <div className="contest-top-table">
+        <table>
+          <thead><tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr></thead>
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+const COMPETITION_STATUS_LEGEND = [
+  ["Đang kiểm tra YCBH", "#1677ff"],
+  ["CNBH chuẩn", "#19a65a"],
+  ["Chờ ĐGRR", "#f58b00"],
+  ["CNBH có điều kiện", "#8b5cf6"],
+  ["Đang ĐGRR", "#12a7a2"],
+  ["Có hiệu lực", "#16a34a"]
+];
+
+function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChanged }: { programId: string; month: string; refreshKey: number; onClose: () => void; onChanged: () => void }) {
+  const [detail, setDetail] = useState<any | null>(null);
+  const [tab, setTab] = useState<"overview" | "groups" | "advisors" | "contracts">("overview");
+  const [message, setMessage] = useState("");
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  async function loadDetail() {
+    const response = await fetch(`/api/competition?id=${programId}`, { cache: "no-store" });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Không tải được chi tiết chương trình.");
+    setDetail(payload);
+  }
+
+  useEffect(() => {
+    loadDetail().catch((error) => setMessage(error instanceof Error ? error.message : "Không tải được chi tiết chương trình."));
+  }, [programId, refreshKey]);
+
+  const program: CompetitionProgramView | undefined = detail?.program;
+  const eligibleContracts = (detail?.rewardContracts ?? []).filter((row: any) => row.is_eligible);
+  const groupRows = normalizeCompetitionRewardGroups(detail?.rewardGroups ?? []);
+  const flowStatus = competitionFlowMessage(program, detail, month, isCalculating);
+  const sortedContracts = [...eligibleContracts].sort((a: any, b: any) =>
+    String(b.collection_date ?? "").localeCompare(String(a.collection_date ?? ""))
+    || Number(b.ip ?? 0) - Number(a.ip ?? 0)
+  );
+  const achievedGroupRows = groupRows.filter((row) => Number(row.totalReward ?? 0) > 0);
+  const topGroups = achievedGroupRows.slice(0, 5);
+  const topAdvisors = [...(detail?.rewardAdvisors ?? [])].sort((a: any, b: any) => Number(b.total_ip ?? 0) - Number(a.total_ip ?? 0)).slice(0, 5);
+  const topContracts = sortedContracts.slice(0, 5);
+
+  return (
+    <section className="competition-detail-panel">
+      <div className="competition-detail-header">
+        <div className="competition-detail-title">
+          <span className="competition-title-icon"><Trophy size={22} /></span>
+          <div>
+            <h2>{program?.programName || "Chi tiết chương trình thi đua"}</h2>
+            <p>
+              {program && <span className={`contest-status ${competitionStatusClass(program.status)}`}>{competitionStatusText(program.status)}</span>}
+            </p>
+          </div>
+        </div>
+      </div>
+        <div className="contest-detail-tabs" role="tablist">
+          {[
+            ["overview", "Tổng quan", LayoutGrid],
+            ["groups", "Nhóm đạt", Users],
+            ["advisors", "TVV đạt", UserRound],
+            ["contracts", "HĐ đạt", ClipboardList]
+          ].map(([id, label, Icon]) => {
+            const TabIcon = Icon as LucideIcon;
+            return <button key={id as string} className={tab === id ? "active" : ""} type="button" onClick={() => setTab(id as any)}><TabIcon size={16} />{label as string}</button>;
+          })}
+        </div>
+        <div className="competition-detail-content contest-detail-body">
+          {message && <p className={message.includes("ã") || message.includes("ang") ? "success" : "error-list"}>{message}</p>}
+          {detail && <p className={`competition-flow-alert ${flowStatus.tone}`}>{flowStatus.text}</p>}
+          {!detail ? <p>Đang tải chi tiết...</p> : (
+            <>
+              {tab === "overview" && program && (
+                <>
+                  <div className="contest-overview-grid">
+                    <CompetitionKpiCard label="Thời gian thi đua" value={`${formatDateVi(program.startDate)} - ${formatDateVi(program.endDate)}`} icon={CalendarDays} />
+                    <CompetitionKpiCard label="Phát hành đến" value={formatDateVi(program.issueDeadline) || "-"} icon={Megaphone} />
+                    <div className="contest-kpi-card"><span className="contest-kpi-icon"><CalendarDays size={20} /></span><span>Còn lại</span><strong><CompetitionRemainingBadge endDate={program.endDate} /></strong></div>
+                    <CompetitionKpiCard label="Đối tượng" value={targetTypesText(program.targetTypes)} icon={Target} />
+                    <CompetitionKpiCard label="Tổng nhóm đạt" value={formatNumber(achievedGroupRows.length)} icon={Users} />
+                    <CompetitionKpiCard label="Tổng TVV đạt" value={formatNumber(program.totalEligibleAdvisors ?? 0)} icon={UserRound} />
+                    <CompetitionKpiCard label="Tổng HĐ đạt" value={formatNumber(program.totalEligibleContracts ?? 0)} icon={ClipboardList} />
+                    <CompetitionKpiCard label="Tổng IP đạt" value={formatCompactVnd(program.totalIP ?? 0)} icon={Coins} />
+                    <CompetitionKpiCard label="Tổng AFYP đạt" value={formatCompactVnd(program.totalAFYP ?? 0)} icon={TrendingUp} />
+                    <CompetitionKpiCard label="Tổng thưởng" value={formatVnd(program.totalReward ?? 0)} icon={Trophy} highlight />
+                  </div>
+                  <div className="contest-top-grid">
+                    <CompetitionTopPanel title="Top 5 nhóm đạt" actionTab="groups" onOpen={setTab as any} headers={["#", "Nhóm", "Tổng IP", "Mốc đạt", "Tổng thưởng"]} rows={topGroups.map((row, index) => (
+                      <tr key={row.group || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td></tr>
+                    ))} />
+                    <CompetitionTopPanel title="Top 5 TVV đạt" actionTab="advisors" onOpen={setTab as any} headers={["#", "TVV", "HĐ đạt", "Tổng IP", "Thưởng"]} rows={topAdvisors.map((row: any, index: number) => (
+                      <tr key={row.id || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.tvv}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td></tr>
+                    ))} />
+                    <CompetitionTopPanel title="Top 5 HĐ đạt" actionTab="contracts" onOpen={setTab as any} headers={["#", "Số GYC", "TVV", "IP", "Thưởng"]} rows={topContracts.map((row: any, index: number) => (
+                      <tr key={row.id || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.gyc_no}</td><td>{row.tvv}</td><td>{formatCompactVnd(row.ip ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td></tr>
+                    ))} />
+                  </div>
+                  <div className="contest-note-grid">
+                    <div className="contest-note-box"><span>i</span><p><strong>Ghi chú</strong>Hợp đồng chỉ tính thưởng khi thỏa điều kiện: IP/HĐ ≥ 15 triệu, trong thời gian thi đua và không thuộc trạng thái loại trừ.</p></div>
+                    <div className="contest-legend-box"><strong>Trạng thái hợp đồng được tính:</strong>{COMPETITION_STATUS_LEGEND.map(([label, color]) => <span key={label}><i style={{ backgroundColor: color }} />{label}</span>)}</div>
+                  </div>
+                </>
+              )}
+              {tab === "groups" && <CompetitionGroupsTable rows={groupRows} />}
+              {tab === "advisors" && <CompetitionAdvisorsTable rows={detail.rewardAdvisors ?? []} />}
+              {tab === "contracts" && <CompetitionContractsTable rows={eligibleContracts} />}
+            </>
+          )}
+        </div>
+    </section>
+  );
+}
+
+function CompetitionGroupsTable({ rows }: { rows: any[] }) {
+  if (rows.length === 0) return <p className="empty-state">Chưa có nhóm đạt mốc thưởng.</p>;
+  return (
+    <>
+      <DataTable className="desktop-table contest-mini-table contest-wide-table" headers={["STT", "Nhóm", "Tổng IP", "Tổng AFYP", "Số TVV hoạt động", "Số HĐ đạt", "Mốc đạt", "Thưởng/TVV", "Tổng thưởng nhóm", "Ghi chú"]}>
+        {rows.map((row, index) => (
+          <tr key={row.group || index}>
+            <td>{index + 1}</td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{formatCompactVnd(row.totalAFYP ?? 0)}</td><td>{formatNumber(row.activeAdvisorCount ?? 0)}</td><td>{formatNumber(row.contractCount ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td><td>{row.note}</td>
+          </tr>
+        ))}
+      </DataTable>
+      <div className="contest-detail-card-list">
+        {rows.map((row, index) => (
+          <article className="contest-result-card" key={`${row.group || index}-mobile`}>
+            <div className="contest-result-card-head"><strong>{index + 1}. {row.group}</strong><span>{formatCompactVnd(row.totalReward ?? 0)}</span></div>
+            <div className="mobile-info-grid">
+              <span><b>Tổng IP</b>{formatCompactVnd(row.totalIP ?? 0)}</span>
+              <span><b>Tổng AFYP</b>{formatCompactVnd(row.totalAFYP ?? 0)}</span>
+              <span><b>TVV hoạt động</b>{formatNumber(row.activeAdvisorCount ?? 0)}</span>
+              <span><b>HĐ đạt</b>{formatNumber(row.contractCount ?? 0)}</span>
+              <span><b>Mốc đạt</b>{row.milestone}</span>
+              <span><b>Thưởng/TVV</b>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</span>
+            </div>
+            <small>{row.note}</small>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function CompetitionAdvisorsTable({ rows }: { rows: any[] }) {
+  if (rows.length === 0) return <p className="empty-state">Chưa có TVV đạt thưởng.</p>;
+  return (
+    <>
+      <DataTable className="desktop-table contest-mini-table" headers={["STT", "TVV", "Nhóm", "ADS", "Số HĐ đạt", "Tổng IP", "Tổng AFYP", "Thưởng đạt", "Đạt giải nào"]}>
+        {rows.map((row, index) => (
+          <tr key={row.id || index}>
+            <td>{index + 1}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.ads}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.total_afyp ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td><td>{row.note}</td>
+          </tr>
+        ))}
+      </DataTable>
+      <div className="contest-detail-card-list">
+        {rows.map((row, index) => (
+          <article className="contest-result-card" key={`${row.id || index}-advisor-mobile`}>
+            <div className="contest-result-card-head"><strong>{index + 1}. {row.tvv}</strong><span>{formatCompactVnd(row.reward_amount ?? 0)}</span></div>
+            <div className="mobile-info-grid">
+              <span><b>Nhóm</b>{row.team || "-"}</span>
+              <span><b>ADS</b>{row.ads || "-"}</span>
+              <span><b>HĐ đạt</b>{formatNumber(row.eligible_contract_count ?? 0)}</span>
+              <span><b>Tổng IP</b>{formatCompactVnd(row.total_ip ?? 0)}</span>
+              <span><b>Tổng AFYP</b>{formatCompactVnd(row.total_afyp ?? 0)}</span>
+              <span><b>Đạt giải</b>{row.note || "-"}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function CompetitionContractsTable({ rows }: { rows: any[] }) {
+  if (rows.length === 0) return <p className="empty-state">Chưa có hợp đồng đạt điu kiện.</p>;
+  const sortedRows = [...rows].sort((a, b) =>
+    String(b.collection_date ?? "").localeCompare(String(a.collection_date ?? ""))
+    || String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+  );
+  return (
+    <>
+      <DataTable className="desktop-table contest-mini-table contest-wide-table" headers={["STT", "Ngày thu", "Số GYC", "Nhóm", "TVV", "BMBH", "NĐBH", "Trạng thái hợp đồng", "IP", "AFYP", "Giải thưởng", "Tiền thưởng"]}>
+        {sortedRows.map((row, index) => (
+          <tr key={row.id || index}>
+            <td>{index + 1}</td><td>{formatDateVi(row.collection_date)}</td><td>{row.gyc_no}</td><td>{row.team}</td><td>{row.tvv}</td><td>{row.customer_name}</td><td>{row.insured_name || "-"}</td><td><span className="contract-status-pill">{row.status || "-"}</span></td><td className="numeric-cell">{formatCompactVnd(row.ip ?? 0)}</td><td className="numeric-cell">{formatCompactVnd(row.afyp ?? 0)}</td><td>{row.reward_name}</td><td className="numeric-cell">{formatCompactVnd(row.reward_amount ?? 0)}</td>
+          </tr>
+        ))}
+      </DataTable>
+      <div className="contest-detail-card-list">
+        {sortedRows.map((row, index) => (
+          <article className="contest-result-card" key={`${row.id || index}-contract-mobile`}>
+            <div className="contest-result-card-head"><strong>{index + 1}. {row.gyc_no || row.contract_no || `HĐ ${index + 1}`}</strong><span>{formatCompactVnd(row.reward_amount ?? 0)}</span></div>
+            <div className="mobile-info-grid">
+              <span><b>Ngày thu</b>{formatDateVi(row.collection_date)}</span>
+              <span><b>Nhóm</b>{row.team || "-"}</span>
+              <span><b>TVV</b>{row.tvv || "-"}</span>
+              <span><b>BMBH</b>{row.customer_name || "-"}</span>
+              <span><b>NĐBH</b>{row.insured_name || "-"}</span>
+              <span><b>Trạng thái</b>{row.status || "-"}</span>
+              <span><b>IP</b>{formatCompactVnd(row.ip ?? 0)}</span>
+              <span><b>AFYP</b>{formatCompactVnd(row.afyp ?? 0)}</span>
+              <span><b>Giải thưởng</b>{row.reward_name || "-"}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function CompetitionExcludedTable({ rows }: { rows: any[] }) {
+  if (rows.length === 0) return <p className="empty-state">Chưa có danh sách hợp đồng bị loại. Hãy xác nhận rule và tính thưởng để xem lý do.</p>;
+  return (
+    <DataTable className="desktop-table contest-mini-table" headers={["Số GYC", "Số H", "TVV", "Nhóm", "Khách hàng", "IP", "AFYP", "Trạng thái", "Lý do bị loại"]}>
+      {rows.map((row, index) => (
+        <tr key={row.id || index}>
+          <td>{row.gyc_no}</td><td>{row.contract_no}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.customer_name}</td><td>{formatCompactVnd(row.ip ?? 0)}</td><td>{formatCompactVnd(row.afyp ?? 0)}</td><td>{row.status}</td><td>{row.reason}</td>
+        </tr>
+      ))}
+    </DataTable>
   );
 }
 
@@ -1970,6 +2664,8 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
   const [result, setResult] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [competitionUploadOpen, setCompetitionUploadOpen] = useState(false);
+  const [ruleProgram, setRuleProgram] = useState<any | null>(null);
   const selectedYear = Number(month.slice(0, 4)) || 2026;
   const [uploadMonth, setUploadMonth] = useState(month);
   const selectedMonthNumber = Number(uploadMonth.slice(5, 7));
@@ -2002,7 +2698,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
       body.set("uploadPassword", uploader?.code ?? "");
       body.set("file", file);
       const response = await fetch("/api/upload", { method: "POST", body });
-      const payload = await response.json().catch(() => ({ error: "Không đọc được phản hồi từ máy chủ." }));
+      const payload = await response.json().catch(() => ({ error: "Không đc được phản hồi từ máy chủ." }));
       setResult(payload);
       if (response.ok && mode === "commit") {
         if (payload.upload) {
@@ -2020,6 +2716,12 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
 
   return (
     <>
+      <div className="panel">
+        <div className="panel-header">
+          <h2>Quản trị Chương trình thi đua</h2>
+          <button className="contest-add-button" type="button" onClick={() => setCompetitionUploadOpen(true)}>+ Thêm CTTĐ</button>
+        </div>
+      </div>
       <div className="panel">
         <div className="panel-header"><h2>Upload dữ liệu doanh thu theo tháng</h2><span>{uploader?.name || "-"}</span></div>
         <div className="month-button-grid">
@@ -2040,7 +2742,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
             );
           })}
         </div>
-        <p className="selected-upload-month">Đang chọn: Tháng {selectedMonthNumber}/{selectedYear}</p>
+        <p className="selected-upload-month">ang chn: Tháng {selectedMonthNumber}/{selectedYear}</p>
         <div className="panel-header"><h2>Upload CSV lũy kế tháng {uploadMonth}</h2></div>
         <div className="form-row">
           <label><span className="label">File CSV</span><input type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
@@ -2050,9 +2752,12 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
         {result?.error && <p className="error-list">{result.error}</p>}
         {result?.warnings?.length > 0 && <ul className="warning-list">{result.warnings.map((warning: string, index: number) => <li key={index}>{warning}</li>)}</ul>}
         {result?.errors?.length > 0 && <ul className="error-list">{result.errors.slice(0, 30).map((err: any, index: number) => <li key={index}>Dòng {err.row ?? "-"}: {err.message}</li>)}</ul>}
+        {result?.competitionNotice && <p className="success">{result.competitionNotice}</p>}
         {result?.ok && <p className="success">Hợp lệ: {result.rowCount} dòng, AFYP {formatCompactVnd(result.totalAfyp)}, IP {formatCompactVnd(result.totalIp)}.</p>}
         {result?.preview?.length > 0 && <ContractDetails title={`Xem trước dữ liệu upload cho tháng ${selectedMonthNumber}/${selectedYear}`} rows={result.preview} />}
       </div>
+      {competitionUploadOpen && <CompetitionUploadModal onClose={() => setCompetitionUploadOpen(false)} onAnalyzed={(program) => { setCompetitionUploadOpen(false); setRuleProgram(program); onUploaded(); }} />}
+      {ruleProgram && <CompetitionRuleModal program={ruleProgram} month={month} onClose={() => setRuleProgram(null)} onChanged={() => { setRuleProgram(null); onUploaded(); }} />}
       <StarVietUploadPanel year={selectedYear} uploader={uploader} onUploaded={onUploaded} />
       <UploadHistory rows={history} />
     </>
@@ -2078,7 +2783,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
       body.set("uploadPassword", uploader?.code ?? "");
       body.set("file", file);
       const response = await fetch("/api/star-viet-upload", { method: "POST", body });
-      const payload = await response.json().catch(() => ({ error: "Không đọc được phản hồi từ máy chủ." }));
+      const payload = await response.json().catch(() => ({ error: "Không đc được phản hồi từ máy chủ." }));
       setResults((current) => ({ ...current, [source]: payload }));
       if (response.ok && mode === "commit") onUploaded();
     } catch (error) {
@@ -2113,7 +2818,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
     <div className="panel star-upload-panel">
       <div className="panel-header"><h2>Upload dữ liệu Sao Việt</h2><span>Năm {year}</span></div>
       <div className="star-upload-grid">
-        {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng liền trước. Toàn bộ AFYP được tính.")}
+        {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng lin trước. Toàn bộ AFYP được tính.")}
         {uploadBlock("bc02", "File BC02 tháng hiện tại", "Dữ liệu tạm tháng hiện tại. Tự loại trừ hồ sơ hoàn/hủy theo trạng thái.")}
       </div>
     </div>
@@ -2124,7 +2829,7 @@ function UploadHistory({ rows }: { rows: any[] }) {
   return (
     <div className="panel">
       <div className="panel-header"><h2>Lịch sử upload</h2><span>{rows.length} lần gần nhất</span></div>
-      <DataTable className="desktop-table" headers={["Thời gian upload", "Người upload", "Tháng dữ liệu", "Tên file", "Số dòng", "Kết quả"]}>
+      <DataTable className="desktop-table" headers={["Thi gian upload", "Ngưi upload", "Tháng dữ liệu", "Tên file", "Số dòng", "Kết quả"]}>
         {rows.map((row) => (
           <tr key={row.id}>
             <td>{new Date(row.uploaded_at).toLocaleString("vi-VN")}</td>
@@ -2144,7 +2849,7 @@ function UploadHistory({ rows }: { rows: any[] }) {
               <span className={`upload-status ${row.status === "success" ? "success" : "failed"}`}>{row.status === "success" ? "Thành công" : "Lỗi"}</span>
             </div>
             <div className="mobile-info-grid">
-              <span><b>Người upload</b>{row.uploaded_by_name || row.uploaded_by || "-"}</span>
+              <span><b>Ngưi upload</b>{row.uploaded_by_name || row.uploaded_by || "-"}</span>
               <span><b>Tháng dữ liệu</b>{String(row.data_month ?? "").slice(0, 7)}</span>
               <span><b>Tên file</b>{row.file_name || "-"}</span>
               <span><b>Số dòng</b>{Number(row.row_count ?? 0).toLocaleString("vi-VN")} dòng</span>
@@ -2172,8 +2877,8 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
   const titlePrefix = isAgentDetail ? "Chi tiết TVV" : "Chi tiết nhóm";
   const groupSummary = groupNames.length > 3 ? `Số nhóm: ${formatNumber(groupNames.length)}` : `Nhóm: ${groupNames.join(", ") || "-"}`;
   const emptyMessage = isAgentDetail
-    ? "Không có hợp đồng thuộc TVV này trong bộ lọc hiện tại."
-    : "Không có hợp đồng thuộc nhóm này trong bộ lọc hiện tại.";
+    ? "Không có hợp đồng thuộc TVV này trong bộ l?c hiện tại."
+    : "Không có hợp đồng thuộc nhóm này trong bộ l?c hiện tại.";
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -2196,11 +2901,11 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
             <h2>{titlePrefix}: {title}</h2>
             <div className="contract-modal-summary">
               <span>AFYP: <b>{formatCompactVnd(afyp)}</b></span>
-              <span>Số HĐ: <b>{formatNumber(contractCount)}</b></span>
+              <span>Số H: <b>{formatNumber(contractCount)}</b></span>
               {isAgentDetail ? <span>{groupSummary}</span> : <span>Số TVV: <b>{formatNumber(agentCount)}</b></span>}
             </div>
           </div>
-          <button className="contract-modal-close" type="button" onClick={onClose} aria-label={`Đóng ${titlePrefix.toLowerCase()}`}>×</button>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label={`óng ${titlePrefix.toLowerCase()}`}>×</button>
         </div>
         <div className="contract-modal-body">
           <h3>Danh sách hợp đồng</h3>
