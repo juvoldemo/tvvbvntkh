@@ -92,10 +92,18 @@ function moneyCell(value: number) {
 
 function sortContracts(rows: any[]) {
   return [...rows].sort((a, b) => {
+    const newBatchDiff = Number(Boolean(b.is_new_in_batch)) - Number(Boolean(a.is_new_in_batch));
+    if (newBatchDiff !== 0) return newBatchDiff;
+    const firstSeenDiff = new Date(b.first_seen_at ?? 0).getTime() - new Date(a.first_seen_at ?? 0).getTime();
+    if (firstSeenDiff !== 0) return firstSeenDiff;
     const dateDiff = new Date(b.paid_date).getTime() - new Date(a.paid_date).getTime();
     if (dateDiff !== 0) return dateDiff;
     return Number(b.afyp || 0) - Number(a.afyp || 0);
   });
+}
+
+function isNewUploadContract(row: any) {
+  return Boolean(row?.is_new_in_batch);
 }
 
 function groupNameForRecord(record: any) {
@@ -2508,7 +2516,7 @@ function CompetitionGroupsTable({ rows }: { rows: any[] }) {
       <DataTable className="desktop-table contest-mini-table contest-wide-table" headers={["STT", "Nhóm", "Tổng IP", "Tổng AFYP", "Số TVV hoạt động", "Số HĐ đạt", "Mốc đạt", "Thưởng/TVV", "Tổng thưởng nhóm", "Ghi chú"]}>
         {rows.map((row, index) => (
           <tr key={row.group || index}>
-            <td>{index + 1}</td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{formatCompactVnd(row.totalAFYP ?? 0)}</td><td>{formatNumber(row.activeAdvisorCount ?? 0)}</td><td>{formatNumber(row.contractCount ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td><td>{row.note}</td>
+            <td>{index + 1}</td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{formatCompactVnd(row.totalAFYP ?? 0)}</td><td>{formatNumber(row.activeAdvisorCount ?? 0)}</td><td>{formatNumber(row.contractCount ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td><td><CompetitionGroupNote note={row.note} /></td>
           </tr>
         ))}
       </DataTable>
@@ -2524,11 +2532,25 @@ function CompetitionGroupsTable({ rows }: { rows: any[] }) {
               <span><b>Mốc đạt</b>{row.milestone}</span>
               <span><b>Thưởng/TVV</b>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</span>
             </div>
-            <small>{row.note}</small>
+            <small><CompetitionGroupNote note={row.note} /></small>
           </article>
         ))}
       </div>
     </>
+  );
+}
+
+function CompetitionGroupNote({ note }: { note: unknown }) {
+  const text = String(note ?? "-").trim() || "-";
+  const markers = [" - Thiếu ", " - Còn thiếu "];
+  const markerIndex = markers.map((marker) => text.indexOf(marker)).find((index) => index >= 0) ?? -1;
+  if (markerIndex < 0) return <>{text}</>;
+
+  return (
+    <span className="contest-group-note">
+      {text.slice(0, markerIndex)}
+      <strong>{text.slice(markerIndex)}</strong>
+    </span>
   );
 }
 
@@ -2995,7 +3017,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
       <DataTable className="desktop-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`}>
-            <td>{formatDateVi(row.paid_date)}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>
@@ -3005,6 +3027,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
+              {isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}
               {showStatus && <span className="status-badge">{contractStatusLabel(row.policy_status)}</span>}
             </div>
             <div className="mobile-contract-main">

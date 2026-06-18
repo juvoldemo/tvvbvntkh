@@ -45,6 +45,14 @@ function isMissingColumnError(error: unknown, columnName: string) {
   );
 }
 
+function contractIdentity(record: { contract_no?: unknown; application_no?: unknown }) {
+  const contractNo = String(record.contract_no ?? "").trim();
+  if (contractNo) return `contract:${contractNo}`;
+  const applicationNo = String(record.application_no ?? "").trim();
+  if (applicationNo) return `application:${applicationNo}`;
+  return "";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -99,17 +107,48 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
     const dataMonth = toMonthStart(month);
-    const records = parsed.records.map(({ contract_no_display: _contractNoDisplay, ...record }) => ({
-      ...record,
-      data_month: dataMonth
-    }));
+    const { data: existingRecords, error: existingRecordsError } = await supabase
+      .from("revenue_records")
+      .select("contract_no, application_no, first_seen_at")
+      .eq("data_month", dataMonth);
+
+    if (existingRecordsError && !isMissingColumnError(existingRecordsError, "first_seen_at")) {
+      throw new Error(getUploadErrorMessage(existingRecordsError));
+    }
+
+    const existingFirstSeenByContract = new Map<string, string>();
+    if (!existingRecordsError) {
+      for (const record of existingRecords ?? []) {
+        const key = contractIdentity(record);
+        if (key) existingFirstSeenByContract.set(key, String(record.first_seen_at || "__existing__"));
+      }
+    }
 
     const { error: deleteError } = await supabase.from("revenue_records").delete().eq("data_month", dataMonth);
     if (deleteError) throw new Error(getUploadErrorMessage(deleteError));
 
+    const uploadedAt = new Date().toISOString();
+    const records = parsed.records.map(({ contract_no_display: _contractNoDisplay, ...record }) => {
+      const key = contractIdentity(record);
+      const existingFirstSeenAt = key ? existingFirstSeenByContract.get(key) : "";
+      const wasAlreadyStored = Boolean(key && existingFirstSeenByContract.has(key));
+      const firstSeenAt = existingFirstSeenAt && existingFirstSeenAt !== "__existing__" ? existingFirstSeenAt : uploadedAt;
+      return {
+        ...record,
+        data_month: dataMonth,
+        first_seen_at: firstSeenAt,
+        is_new_in_batch: !wasAlreadyStored
+      };
+    });
+
     const chunkSize = 500;
     for (let index = 0; index < records.length; index += chunkSize) {
-      const { error: insertError } = await supabase.from("revenue_records").insert(records.slice(index, index + chunkSize));
+      let { error: insertError } = await supabase.from("revenue_records").insert(records.slice(index, index + chunkSize));
+      if (insertError && (isMissingColumnError(insertError, "first_seen_at") || isMissingColumnError(insertError, "is_new_in_batch"))) {
+        const compatibleRecords = records.slice(index, index + chunkSize).map(({ first_seen_at: _firstSeenAt, is_new_in_batch: _isNewInBatch, ...record }) => record);
+        const retry = await supabase.from("revenue_records").insert(compatibleRecords);
+        insertError = retry.error;
+      }
       if (insertError) throw new Error(getUploadErrorMessage(insertError));
     }
 

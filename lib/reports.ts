@@ -83,6 +83,10 @@ export function applyFilters(records: RevenueRecord[], filters: DashboardFilters
 
 export function sortContractDetails(records: RevenueRecord[]) {
   return [...records].sort((a, b) => {
+    const newBatchDiff = Number(Boolean(b.is_new_in_batch)) - Number(Boolean(a.is_new_in_batch));
+    if (newBatchDiff !== 0) return newBatchDiff;
+    const firstSeenDiff = new Date(b.first_seen_at ?? 0).getTime() - new Date(a.first_seen_at ?? 0).getTime();
+    if (firstSeenDiff !== 0) return firstSeenDiff;
     const dateDiff = new Date(b.paid_date).getTime() - new Date(a.paid_date).getTime();
     if (dateDiff !== 0) return dateDiff;
     return (Number(b.afyp) || 0) - (Number(a.afyp) || 0);

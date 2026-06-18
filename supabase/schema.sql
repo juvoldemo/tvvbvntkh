@@ -30,6 +30,8 @@ create table if not exists revenue_records (
   afyp numeric default 0,
   raw_data jsonb,
   upload_batch_id uuid,
+  first_seen_at timestamptz,
+  is_new_in_batch boolean default false,
   created_at timestamptz default now()
 );
 
@@ -76,6 +78,8 @@ alter table revenue_records add column if not exists ads_code text;
 alter table revenue_records add column if not exists ads_name text;
 alter table revenue_records add column if not exists raw_data jsonb;
 alter table revenue_records add column if not exists upload_batch_id uuid;
+alter table revenue_records add column if not exists first_seen_at timestamptz;
+alter table revenue_records add column if not exists is_new_in_batch boolean default false;
 
 create table if not exists monthly_targets (
   id uuid primary key default gen_random_uuid(),
@@ -106,6 +110,8 @@ create index if not exists idx_star_viet_records_agent on star_viet_records(agen
 
 create index if not exists idx_revenue_records_data_month on revenue_records(data_month);
 create index if not exists idx_revenue_records_paid_date on revenue_records(paid_date);
+create index if not exists idx_revenue_records_first_seen on revenue_records(first_seen_at);
+create index if not exists idx_revenue_records_new_batch on revenue_records(data_month, is_new_in_batch);
 create index if not exists idx_revenue_records_ban on revenue_records(ban_name);
 create index if not exists idx_revenue_records_group on revenue_records(group_name);
 create index if not exists idx_revenue_records_agent on revenue_records(agent_code);

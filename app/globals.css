@@ -1609,6 +1609,11 @@ tr.clickable:hover {
   white-space: nowrap;
 }
 
+.contest-group-note strong {
+  color: #b42318;
+  font-weight: 900;
+}
+
 .contest-mini-table th:last-child,
 .contest-mini-table td:last-child {
   text-align: right;
@@ -1625,6 +1630,23 @@ tr.clickable:hover {
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.new-contract-badge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  margin-left: 8px;
+  border: 1px solid #f0d77a;
+  border-radius: 999px;
+  background: var(--gold-100);
+  color: #8a5a00;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .contest-wide-table table {

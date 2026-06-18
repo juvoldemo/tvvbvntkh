@@ -508,6 +508,8 @@ function calculateGroupRewards(rule: CompetitionRewardRule, contracts: Normalize
       totalAFYP: advisorContracts.reduce((sum, contract) => sum + contract.afyp, 0)
     })).filter((advisor) => advisor.advisor);
     const rewardPerAdvisor = tier ? tierRewardPerAdvisor(tier, rewardAmount(rule)) : 0;
+    const upcomingRewardPerAdvisor = upcomingTier ? tierRewardPerAdvisor(upcomingTier, rewardAmount(rule)) : 0;
+    const upcomingTotalReward = advisorRows.length * upcomingRewardPerAdvisor;
     const missingAmount = upcomingTier ? Math.max(0, tierThreshold(upcomingTier) - totalIP) : 0;
     return {
       group,
@@ -521,7 +523,7 @@ function calculateGroupRewards(rule: CompetitionRewardRule, contracts: Normalize
       prizeName: rewardName(rule),
       note: tier
         ? rewardName(rule)
-        : `${rewardName(rule)} - C\u00f2n thi\u1ebfu ${(missingAmount / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u \u0111\u1ec3 \u0111\u1ea1t ${upcomingTier ? tierLabel(upcomingTier) : "m\u1ed1c th\u01b0\u1edfng"}`,
+        : `${rewardName(rule)} - Thi\u1ebfu ${(missingAmount / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u \u0111\u1ec3 nh\u1eadn ${upcomingRewardPerAdvisor > 0 ? `${(upcomingRewardPerAdvisor / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u/TVV` : "th\u01b0\u1edfng"}${upcomingTotalReward > 0 ? ` (t\u1ed5ng ${(upcomingTotalReward / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u)` : ""}`,
       advisors: advisorRows
     };
   }).sort((a, b) =>

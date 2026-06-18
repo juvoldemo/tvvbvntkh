@@ -31,6 +31,8 @@ export type RevenueRecord = {
   afyp: number;
   raw_data?: Record<string, unknown>;
   upload_batch_id?: string | null;
+  first_seen_at?: string | null;
+  is_new_in_batch?: boolean | null;
   created_at?: string;
 };
 
