@@ -24,17 +24,22 @@ function visibleAdsName(record: RevenueRecord) {
   return name && !isAdsCodeLike(name) ? name : "";
 }
 
-const EXCLUDED_OVERVIEW_REVENUE_STATUSES = new Set([
-  "hết hiệu lực",
-  "ycbh hết hiệu lực",
-  "từ chối",
-  "trì hoãn"
-]);
+function normalizeStatusText(status: unknown) {
+  return String(status ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "D")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-export const EXCLUDED_RANKING_STATUSES = new Set([
-  "ycbh hết hiệu lực",
-  "từ chối",
-  "trì hoãn"
+export const EXCLUDED_REVENUE_STATUSES = new Set([
+  "het hieu luc",
+  "tri hoan",
+  "tu choi",
+  "ycbh het hieu luc"
 ]);
 
 function rawStatusValue(record: RevenueRecord) {
@@ -50,20 +55,15 @@ function rawStatusValue(record: RevenueRecord) {
 }
 
 function normalizedStatus(record: RevenueRecord) {
-  return String(rawStatusValue(record) ?? "").trim().toLocaleLowerCase("vi-VN");
+  return normalizeStatusText(rawStatusValue(record));
 }
 
-export function isOverviewRevenueRecord(record: RevenueRecord) {
-  return !EXCLUDED_OVERVIEW_REVENUE_STATUSES.has(normalizedStatus(record));
+export function isCountedRevenueRecord(record: RevenueRecord) {
+  return !EXCLUDED_REVENUE_STATUSES.has(normalizedStatus(record));
 }
 
-export function isExcludedRankingStatus(record: RevenueRecord) {
-  return EXCLUDED_RANKING_STATUSES.has(normalizedStatus(record));
-}
-
-export function isValidForRanking(record: RevenueRecord) {
-  return !isExcludedRankingStatus(record);
-}
+export const isOverviewRevenueRecord = isCountedRevenueRecord;
+export const isValidForRanking = isCountedRevenueRecord;
 
 export function applyFilters(records: RevenueRecord[], filters: DashboardFilters) {
   const bounds = monthBounds(filters.month);
@@ -121,43 +121,39 @@ export function countDistinctActiveAgents(records: RevenueRecord[]) {
 }
 
 function activeStatus(status?: string | null) {
-  return String(status ?? "").trim().toLowerCase() === "có hiệu lực";
+  return normalizeStatusText(status) === "co hieu luc";
 }
 
 function normalizePolicyStatus(status?: string | null) {
-  return String(status ?? "").trim().toLocaleLowerCase("vi-VN");
+  return normalizeStatusText(status);
 }
 
 const PENDING_PROCESS_STATUSES = new Set([
-  "chờ kiểm tra ycbh",
-  "cnbh chuẩn",
-  "chờ đgrr",
-  "cnbh có điều kiện",
-  "đang đgrr"
+  "cho kiem tra ycbh",
+  "cnbh chuan",
+  "cho dgrr",
+  "cnbh co dieu kien",
+  "dang dgrr"
 ]);
 
-const REFUND_STATUSES = new Set([
-  "ycbh hết hiệu lực",
-  "từ chối",
-  "trì hoãn"
-]);
+const REFUND_STATUSES = EXCLUDED_REVENUE_STATUSES;
 
 const STATUS_TABLE_DEFINITIONS = [
-  { key: "active", label: "Có hiệu lực", statuses: ["có hiệu lực"] },
-  { key: "waiting_ycbh", label: "Chờ kiểm tra YCBH", statuses: ["chờ kiểm tra ycbh"] },
-  { key: "cnbh_standard", label: "CNBH chuẩn", statuses: ["cnbh chuẩn"] },
-  { key: "waiting_dgrr", label: "Chờ ĐGRR", statuses: ["chờ đgrr"] },
-  { key: "cnbh_conditional", label: "CNBH có điều kiện", statuses: ["cnbh có điều kiện"] },
-  { key: "in_dgrr", label: "Đang ĐGRR", statuses: ["đang đgrr"] },
+  { key: "active", label: "Có hiệu lực", statuses: ["co hieu luc"] },
+  { key: "waiting_ycbh", label: "Chờ kiểm tra YCBH", statuses: ["cho kiem tra ycbh"] },
+  { key: "cnbh_standard", label: "CNBH chuẩn", statuses: ["cnbh chuan"] },
+  { key: "waiting_dgrr", label: "Chờ ĐGRR", statuses: ["cho dgrr"] },
+  { key: "cnbh_conditional", label: "CNBH có điều kiện", statuses: ["cnbh co dieu kien"] },
+  { key: "in_dgrr", label: "Đang ĐGRR", statuses: ["dang dgrr"] },
   { key: "refund", label: "Hoàn phí", statuses: [...REFUND_STATUSES] }
 ];
 
 export function statusBucket(status?: string | null) {
-  const normalized = String(status ?? "").trim();
-  if (normalized === "Có hiệu lực") return "active";
-  if (["CNBH chuẩn", "CNBH có điều kiện"].includes(normalized)) return "approved_pending_or_issued";
-  if (["Chờ ĐGRR", "Đang ĐGRR", "Chờ kiểm tra YCBH"].includes(normalized)) return "pending";
-  if (normalized === "Từ chối") return "rejected";
+  const normalized = normalizeStatusText(status);
+  if (normalized === "co hieu luc") return "active";
+  if (["cnbh chuan", "cnbh co dieu kien"].includes(normalized)) return "approved_pending_or_issued";
+  if (["cho dgrr", "dang dgrr", "cho kiem tra ycbh"].includes(normalized)) return "pending";
+  if (normalized === "tu choi") return "rejected";
   return "unknown";
 }
 
@@ -288,7 +284,7 @@ export function buildStatusReport(records: RevenueRecord[]) {
     }))
     .sort((a, b) => b.count - a.count);
 
-  const activeRecords = records.filter((record) => normalizePolicyStatus(record.policy_status) === "có hiệu lực");
+  const activeRecords = records.filter((record) => normalizePolicyStatus(record.policy_status) === "co hieu luc");
   const pendingRecords = records.filter((record) => PENDING_PROCESS_STATUSES.has(normalizePolicyStatus(record.policy_status)));
   const refundRecords = records.filter((record) => REFUND_STATUSES.has(normalizePolicyStatus(record.policy_status)));
   const groupedStatusRows = [

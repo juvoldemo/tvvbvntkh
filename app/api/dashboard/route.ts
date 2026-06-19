@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "@/lib/types";
 import { buildAfypPlanSummary, buildAfypPlanTable } from "@/lib/afyp-plan";
-import { applyFilters, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isOverviewRevenueRecord, isValidForRanking, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
+import { applyFilters, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { buildStarVietReport, type StarVietRecord } from "@/lib/star-viet";
 import { getAdsMonthlyTarget } from "@/lib/ads-plan";
@@ -26,7 +26,7 @@ function buildAdsPlanActuals(records: RevenueRecord[], filters: DashboardFilters
     if (visibleName(record.ads_name, /^L\d+/i) !== filters.ads) return false;
     if (filters.status && record.policy_status !== filters.status) return false;
     return Number.isFinite(recordMonth);
-  }).filter(isOverviewRevenueRecord);
+  }).filter(isCountedRevenueRecord);
 
   const sum = (items: RevenueRecord[]) => items.reduce((total, record) => total + (Number(record.afyp) || 0), 0);
   return {
@@ -140,13 +140,13 @@ export async function GET(request: NextRequest) {
       .eq("data_year", starYear);
     const filteredRecords = sortContractDetails(applyFilters(allRecords, filters));
     const previousFilteredRecords = sortContractDetails(applyFilters(allPreviousRecords, previousFilters));
-    const overviewRevenueRecords = sortContractDetails(filteredRecords.filter(isOverviewRevenueRecord));
-    const previousOverviewRevenueRecords = sortContractDetails(previousFilteredRecords.filter(isOverviewRevenueRecord));
-    const rankingRecords = filteredRecords.filter(isValidForRanking);
+    const countedRecords = sortContractDetails(filteredRecords.filter(isCountedRevenueRecord));
+    const previousCountedRecords = sortContractDetails(previousFilteredRecords.filter(isCountedRevenueRecord));
+    const countedYearRecords = sortContractDetails(allYearRecords.filter(isCountedRevenueRecord));
     const companyTarget = target as MonthlyTarget | null;
-    const planTable = buildAfypPlanTable(allYearRecords);
+    const planTable = buildAfypPlanTable(countedYearRecords);
     const adsMonthlyTarget = filters.ads ? getAdsMonthlyTarget(filters.ads, month) : 0;
-    const overview = buildOverview(overviewRevenueRecords, month, companyTarget);
+    const overview = buildOverview(countedRecords, month, companyTarget);
     if (filters.ads) {
       overview.monthlyTargetAfyp = adsMonthlyTarget;
       overview.achievementRate = adsMonthlyTarget > 0 ? (overview.monthlyAfyp / adsMonthlyTarget) * 100 : null;
@@ -158,26 +158,26 @@ export async function GET(request: NextRequest) {
       updatedAt: latestUpload?.uploaded_at ?? null,
       options: filterOptions(allRecords),
       overview,
-      overviewComparisons: buildOverviewComparisons(overview, previousOverviewRevenueRecords),
-      overviewGroups: buildGroupRanking(overviewRevenueRecords),
-      overviewAgents: buildAgentRanking(overviewRevenueRecords),
-      overviewTimeSeries: buildTimeSeries(overviewRevenueRecords, month, companyTarget),
-      overviewContracts: overviewRevenueRecords.slice(0, 500),
-      adsPlanActuals: buildAdsPlanActuals(allYearRecords, filters),
-      planSummary: buildAfypPlanSummary(month, allYearRecords, companyTarget),
+      overviewComparisons: buildOverviewComparisons(overview, previousCountedRecords),
+      overviewGroups: buildGroupRanking(countedRecords),
+      overviewAgents: buildAgentRanking(countedRecords),
+      overviewTimeSeries: buildTimeSeries(countedRecords, month, companyTarget),
+      overviewContracts: countedRecords.slice(0, 500),
+      adsPlanActuals: buildAdsPlanActuals(countedYearRecords, filters),
+      planSummary: buildAfypPlanSummary(month, countedYearRecords, companyTarget),
       planTable,
-      groups: buildGroupRanking(rankingRecords),
-      agents: buildAgentRanking(rankingRecords),
-      statuses: buildStatusReport(filteredRecords),
+      groups: buildGroupRanking(countedRecords),
+      agents: buildAgentRanking(countedRecords),
+      statuses: buildStatusReport(countedRecords),
       timeSeries: {
-        ...buildTimeSeries(filteredRecords, month, companyTarget),
+        ...buildTimeSeries(countedRecords, month, companyTarget),
         yearPlanRows: buildYearPlanSeries(planTable)
       },
-      ads: buildAdsReport(filteredRecords),
+      ads: buildAdsReport(countedRecords),
       starViet: buildStarVietReport(starVietError ? [] : (starVietRecords ?? []) as StarVietRecord[]),
       starVietWarning: starVietError ? "Chưa có bảng dữ liệu Sao Việt. Vui lòng chạy schema mới trước khi upload." : null,
       competitionContracts: allRecords,
-      contracts: filteredRecords.slice(0, 500)
+      contracts: countedRecords.slice(0, 500)
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown dashboard error.";
