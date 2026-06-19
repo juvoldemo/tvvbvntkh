@@ -10,3 +10,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
+downloads/*
+!downloads/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+debug/*
+!debug/.gitkeep

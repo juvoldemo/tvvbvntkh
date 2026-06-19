@@ -1,0 +1,65 @@
+name: Fetch BC02
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 01:00 Asia/Ho_Chi_Minh (UTC+7) every day.
+    - cron: "0 18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-bc02
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    env:
+      DATA_SOURCE_URL: ${{ secrets.DATA_SOURCE_URL }}
+      DATA_SOURCE_USERNAME: ${{ secrets.DATA_SOURCE_USERNAME }}
+      DATA_SOURCE_PASSWORD: ${{ secrets.DATA_SOURCE_PASSWORD }}
+      # Dashboard reads Supabase, so these are required to publish the new batch.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Optional stable CSS selectors for a changed source website UI.
+      BC02_USERNAME_SELECTOR: ${{ secrets.BC02_USERNAME_SELECTOR }}
+      BC02_PASSWORD_SELECTOR: ${{ secrets.BC02_PASSWORD_SELECTOR }}
+      BC02_LOGIN_BUTTON_SELECTOR: ${{ secrets.BC02_LOGIN_BUTTON_SELECTOR }}
+      BC02_EXPORT_BUTTON_SELECTOR: ${{ secrets.BC02_EXPORT_BUTTON_SELECTOR }}
+      BC02_CONFIRM_EXPORT_SELECTOR: ${{ secrets.BC02_CONFIRM_EXPORT_SELECTOR }}
+      PLAYWRIGHT_HEADLESS: "true"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Fetch and import BC02
+        run: npm run fetch:data
+
+      - name: Commit updated BC02 files
+        run: |
+          git add -f data/raw data/processed
+          if git diff --cached --quiet; then
+            echo "No BC02 data changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "auto: update BC02 data"
+          git push origin HEAD:main
