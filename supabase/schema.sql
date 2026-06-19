@@ -136,11 +136,14 @@ create table if not exists competition_programs (
   target_types jsonb default '[]'::jsonb,
   confidence numeric default 0,
   needs_review boolean default true,
+  is_hidden boolean default false,
   created_by text,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
   last_calculated_at timestamptz
 );
+
+alter table competition_programs add column if not exists is_hidden boolean default false;
 
 create table if not exists competition_results (
   id uuid primary key default gen_random_uuid(),

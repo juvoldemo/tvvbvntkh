@@ -45,6 +45,7 @@ function normalizeProgram(row: any, result?: any) {
     targetTypes: row.target_types || rule.target_types || rule.target_type || [],
     confidence: Number(row.confidence ?? rule.confidence ?? 0),
     needsReview: Boolean(row.needs_review ?? rule.needs_review ?? true),
+    isHidden: Boolean(row.is_hidden ?? false),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastCalculatedAt: row.last_calculated_at || result?.calculated_at || null,
@@ -270,7 +271,7 @@ async function enrichContractsWithCompetitionSnapshots(supabase: SupabaseClient,
   });
 }
 
-export async function listCompetitionPrograms() {
+export async function listCompetitionPrograms(options: { includeHidden?: boolean } = {}) {
   const supabase = getSupabaseAdmin();
   const [{ data: programs, error: programError }, { data: results, error: resultError }] = await Promise.all([
     supabase.from("competition_programs").select("*").order("created_at", { ascending: false }),
@@ -281,7 +282,9 @@ export async function listCompetitionPrograms() {
   if (resultError) throw new Error(messageFromError(resultError));
 
   const latest = latestResultByProgram(results ?? []);
-  return (programs ?? []).map((program) => normalizeProgram(program, latest.get(program.id)));
+  return (programs ?? [])
+    .filter((program) => options.includeHidden || !program.is_hidden)
+    .map((program) => normalizeProgram(program, latest.get(program.id)));
 }
 
 export async function getCompetitionProgramDetail(programId: string) {

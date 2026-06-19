@@ -1744,6 +1744,245 @@ tr.clickable:hover {
   gap: 14px;
 }
 
+.admin-contest-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-contest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.admin-rule-inline {
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid #d8e4f1;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 35, 66, 0.09);
+  overflow: hidden;
+}
+
+.admin-rule-inline .contract-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+.admin-rule-inline .contract-modal-body {
+  max-height: none;
+  overflow: visible;
+}
+
+.contest-rule-visual {
+  display: grid;
+  gap: 14px;
+}
+
+.contest-rule-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.contest-rule-summary div,
+.contest-rule-flow,
+.contest-rule-reward-card,
+.contest-rule-source {
+  border: 1px solid #d8e4f1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.contest-rule-summary div {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.contest-rule-summary span,
+.contest-rule-reward-head span,
+.contest-rule-reward-grid b {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contest-rule-summary strong {
+  color: var(--blue-900);
+  overflow-wrap: anywhere;
+}
+
+.contest-rule-flow,
+.contest-rule-source {
+  padding: 14px;
+}
+
+.contest-rule-flow h3,
+.contest-rule-rewards h3 {
+  margin: 0 0 10px;
+  color: var(--blue-900);
+  font-size: 16px;
+}
+
+.contest-rule-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.contest-rule-steps div {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  border: 1px solid #e6eef8;
+  border-radius: 8px;
+  background: #f7faff;
+  padding: 10px;
+}
+
+.contest-rule-steps b {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--blue-700);
+  color: #fff;
+}
+
+.contest-rule-steps span {
+  color: var(--blue-900);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.contest-rule-rewards {
+  display: grid;
+  gap: 10px;
+}
+
+.contest-rule-reward-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.contest-rule-reward-head {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.contest-rule-reward-head strong {
+  color: var(--blue-900);
+  overflow-wrap: anywhere;
+}
+
+.contest-rule-reward-head em {
+  color: #005bc5;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.contest-rule-reward-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.contest-rule-reward-grid span {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #edf2f8;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 9px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.contest-rule-source summary {
+  cursor: pointer;
+  color: var(--blue-900);
+  font-weight: 900;
+}
+
+.contest-rule-source p {
+  margin: 10px 0 0;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.contest-rule-editor {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #d8e4f1;
+  border-radius: 8px;
+  background: #fbfdff;
+  padding: 14px;
+}
+
+.contest-rule-editor-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.contest-rule-editor-head h3 {
+  margin: 0 0 4px;
+  color: var(--blue-900);
+  font-size: 16px;
+}
+
+.contest-rule-editor-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.contest-rule-editor-body {
+  display: grid;
+  gap: 10px;
+}
+
+.contest-rule-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-rule-textarea {
+  min-height: 420px;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #c9d9ea;
+  border-radius: 8px;
+  background: #071f3f;
+  color: #e9f4ff;
+  padding: 14px;
+  font-family: Consolas, "SFMono-Regular", "Roboto Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  outline: none;
+}
+
+.contest-rule-textarea:focus {
+  border-color: #6aa8ee;
+  box-shadow: 0 0 0 3px rgba(0, 91, 197, 0.14);
+}
+
 .contest-copy-rule-button {
   justify-self: start;
 }
@@ -4374,6 +4613,31 @@ tr.clickable:hover {
 
   .contest-run-row button {
     width: 100%;
+  }
+
+  .contest-rule-summary,
+  .contest-rule-steps,
+  .contest-rule-reward-grid,
+  .contest-rule-reward-head {
+    grid-template-columns: 1fr;
+  }
+
+  .contest-rule-reward-head em {
+    justify-self: start;
+  }
+
+  .contest-rule-editor-head {
+    grid-template-columns: 1fr;
+  }
+
+  .contest-rule-editor-head button,
+  .contest-rule-editor-actions button,
+  .admin-contest-actions button {
+    width: 100%;
+  }
+
+  .admin-contest-actions {
+    justify-content: stretch;
   }
 
   .contest-overview-grid {

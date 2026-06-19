@@ -57,6 +57,7 @@ type CompetitionProgramView = {
   totalIP?: number;
   totalAFYP?: number;
   totalReward?: number;
+  isHidden?: boolean;
 };
 
 const QUARTER_PLAN_VND: Record<number, number> = {
@@ -66,6 +67,7 @@ const QUARTER_PLAN_VND: Record<number, number> = {
   4: 15_660_000_000
 };
 const YEAR_PLAN_VND = 54_000_000_000;
+const HIDDEN_COMPETITION_PROGRAMS_KEY = "dashboard.hiddenCompetitionProgramIds";
 
 const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIcon }> = [
   { id: "overview", label: "Tổng quan", mobileLabel: "Tổng quan", icon: LayoutGrid },
@@ -84,6 +86,21 @@ function currentMonth() {
 
 function monthKey(year: number, monthNo: number) {
   return `${year}-${String(monthNo).padStart(2, "0")}`;
+}
+
+function hiddenCompetitionProgramIds() {
+  if (typeof window === "undefined") return new Set<string>();
+  try {
+    const values = JSON.parse(window.localStorage.getItem(HIDDEN_COMPETITION_PROGRAMS_KEY) || "[]");
+    return new Set(Array.isArray(values) ? values.map(String) : []);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function saveHiddenCompetitionProgramIds(ids: Set<string>) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(HIDDEN_COMPETITION_PROGRAMS_KEY, JSON.stringify([...ids]));
 }
 
 function moneyCell(value: number) {
@@ -2121,7 +2138,8 @@ function normalizeCompetitionRewardGroups(rows: any[] = []) {
 }
 
 function isWaitingRuleConfirmation(program?: CompetitionProgramView | null) {
-  return Boolean(program && !program.confirmedRule && String(program.status || "").includes("Ch xác nhận"));
+  const status = normalizeViText(String(program?.status || ""));
+  return Boolean(program && !program.confirmedRule && status.includes("cho xac nhan"));
 }
 
 function competitionFlowMessage(program: CompetitionProgramView | undefined, detail: any, month: string, isCalculating: boolean) {
@@ -2180,7 +2198,8 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
       const response = await fetch("/api/competition", { cache: "no-store" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Không tải được chương trình thi đua.");
-      setPrograms(payload.programs ?? []);
+      const hiddenIds = hiddenCompetitionProgramIds();
+      setPrograms((payload.programs ?? []).filter((program: CompetitionProgramView) => !program.isHidden && !hiddenIds.has(program.id)));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không tải được chương trình thi đua.");
     } finally {
@@ -2292,11 +2311,12 @@ function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; 
   );
 }
 
-function CompetitionRuleModal({ program, month, onClose, onChanged }: { program: any; month: string; onClose: () => void; onChanged: () => void }) {
+function CompetitionRuleModal({ program, month, onClose, onChanged, inline = false }: { program: any; month: string; onClose: () => void; onChanged: () => void; inline?: boolean }) {
   const initialRule = program.confirmedRule || program.confirmed_rule || program.aiRule || program.ai_rule || {};
   const [jsonText, setJsonText] = useState(JSON.stringify(initialRule, null, 2));
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isEditingRule, setIsEditingRule] = useState(false);
 
   function parsedRule() {
     return JSON.parse(jsonText);
@@ -2333,37 +2353,137 @@ function CompetitionRuleModal({ program, month, onClose, onChanged }: { program:
 
   let preview: any = {};
   try { preview = JSON.parse(jsonText); } catch { preview = {}; }
+  const extractedRuleText = program.extractedText || program.extracted_text;
 
-  return (
-    <div className="contract-modal-backdrop">
-      <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
+  function formatRuleJson() {
+    try {
+      const parsed = parsedRule();
+      setJsonText(JSON.stringify(parsed, null, 2));
+      setMessage("Đã chuẩn hóa JSON rule.");
+    } catch {
+      setMessage("Rule JSON chưa hợp lệ, vui lòng kiểm tra lại dấu phẩy, ngoặc hoặc dấu nháy.");
+    }
+  }
+
+  function resetRuleJson() {
+    setJsonText(JSON.stringify(initialRule, null, 2));
+    setMessage("Đã khôi phục rule AI ban đầu.");
+  }
+
+  const content = (
+    <>
         <div className="contract-modal-header">
           <div><h2>Kiểm tra rule AI</h2><p>{preview.program_name || program.programName || program.program_name}</p></div>
           <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
         </div>
         <div className="contract-modal-body contest-rule-content">
-          <div className="contest-overview-grid">
-            <div className="contest-overview-item"><span>Thời gian thi đua</span><strong>{formatDateVi(preview.start_date)} - {formatDateVi(preview.end_date)}</strong></div>
-            <div className="contest-overview-item"><span>Phát hành đến</span><strong>{formatDateVi(preview.issue_deadline) || "-"}</strong></div>
-            <div className="contest-overview-item"><span>Đối tượng</span><strong>{targetTypesText(preview.target_types)}</strong></div>
-          </div>
-          <div className="contest-overview-grid">
-            {(preview.reward_rules ?? []).slice(0, 6).map((rule: any, index: number) => (
-              <div className="contest-overview-item" key={rule.id || index}>
-                <span>{rule.reward_name || `Giải ${index + 1}`}</span>
-                <strong>{rule.condition_text || rule.calculation_logic || rule.reward_type}</strong>
-                <small>{formatCompactVnd(Number(rule.reward_amount ?? 0))}</small>
+          <CompetitionRuleVisualPreview rule={preview} extractedText={extractedRuleText} />
+          <section className="contest-rule-editor">
+            <div className="contest-rule-editor-head">
+              <div>
+                <h3>Sửa rule thủ công</h3>
+                <p>Chỉnh trực tiếp JSON bên dưới trước khi xác nhận. Bản trực quan phía trên sẽ đọc theo nội dung JSON hiện tại.</p>
               </div>
-            ))}
-          </div>
-          {program.extractedText || program.extracted_text ? <div><h3>Nội dung AI đc được</h3><p>{program.extractedText || program.extracted_text}</p></div> : null}
+              <button className="secondary" type="button" onClick={() => setIsEditingRule((current) => !current)}>
+                {isEditingRule ? "Ẩn phần sửa" : "Sửa rule thủ công"}
+              </button>
+            </div>
+            {isEditingRule && (
+              <div className="contest-rule-editor-body">
+                <div className="contest-rule-editor-actions">
+                  <button className="secondary" type="button" onClick={formatRuleJson}>Kiểm tra & format JSON</button>
+                  <button className="ghost" type="button" onClick={resetRuleJson}>Khôi phục rule AI</button>
+                </div>
+                <textarea
+                  className="contest-rule-textarea"
+                  spellCheck={false}
+                  value={jsonText}
+                  onChange={(event) => {
+                    setJsonText(event.target.value);
+                    setMessage("");
+                  }}
+                />
+              </div>
+            )}
+          </section>
           {message && <p className="error-list">{message}</p>}
           <div className="contest-run-row">
-            <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>Xác nhận rule</button>
-            <button type="button" disabled={busy} onClick={() => confirmRule(true)}>Tính thưởng</button>
+            <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>Xác nhận thể lệ</button>
+            <button type="button" disabled={busy} onClick={() => confirmRule(true)}>Xác nhận & tính thưởng</button>
           </div>
         </div>
-      </div>
+    </>
+  );
+
+  if (inline) {
+    return <section className="admin-rule-inline">{content}</section>;
+  }
+
+  return (
+    <div className="contract-modal-backdrop">
+      <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
+        {content}
+    </div>
+    </div>
+  );
+}
+
+function ruleMoney(value: unknown) {
+  const amount = Number(value ?? 0);
+  return amount > 0 ? formatCompactVnd(amount) : "-";
+}
+
+function ruleListText(values: unknown, fallback = "-") {
+  if (Array.isArray(values)) return values.filter(Boolean).join(", ") || fallback;
+  return String(values ?? "").trim() || fallback;
+}
+
+function CompetitionRuleVisualPreview({ rule, extractedText }: { rule: any; extractedText?: string | null }) {
+  const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+  const excludedStatuses = ruleListText(rule?.excluded_statuses);
+  const eligibleProducts = ruleListText(rule?.eligible_products);
+  return (
+    <div className="contest-rule-visual">
+      <section className="contest-rule-summary">
+        <div><span>Thời gian thi đua</span><strong>{formatDateVi(rule?.start_date)} - {formatDateVi(rule?.end_date)}</strong></div>
+        <div><span>Phát hành đến</span><strong>{formatDateVi(rule?.issue_deadline) || "-"}</strong></div>
+        <div><span>Đối tượng</span><strong>{targetTypesText(rule?.target_types)}</strong></div>
+        <div><span>Độ tin cậy AI</span><strong>{Number(rule?.confidence ?? 0) ? `${Math.round(Number(rule.confidence) * 100)}%` : "-"}</strong></div>
+      </section>
+      <section className="contest-rule-flow">
+        <h3>Luồng xét thưởng</h3>
+        <div className="contest-rule-steps">
+          <div><b>1</b><span>Lọc hợp đồng trong thời gian thi đua</span></div>
+          <div><b>2</b><span>Loại trạng thái: {excludedStatuses}</span></div>
+          <div><b>3</b><span>Kiểm tra IP/HĐ tối thiểu: {ruleMoney(rule?.min_policy_ip)}</span></div>
+          <div><b>4</b><span>Áp điều kiện sản phẩm: {eligibleProducts}</span></div>
+          <div><b>5</b><span>Tính thưởng theo từng giải bên dưới</span></div>
+        </div>
+      </section>
+      <section className="contest-rule-rewards">
+        <h3>Các giải thưởng AI trích xuất</h3>
+        {rewardRules.length === 0 ? <p className="empty-state">AI chưa trích xuất được giải thưởng nào.</p> : rewardRules.map((item: any, index: number) => (
+          <article className="contest-rule-reward-card" key={item.id || index}>
+            <div className="contest-rule-reward-head">
+              <span>Giải {index + 1}</span>
+              <strong>{item.reward_name || item.prize_name || "Giải thưởng"}</strong>
+              <em>{ruleMoney(item.reward_amount ?? item.reward?.amount)}</em>
+            </div>
+            <div className="contest-rule-reward-grid">
+              <span><b>Đối tượng</b>{item.target_type || item.condition?.target_type || "-"}</span>
+              <span><b>Kiểu tính</b>{item.reward_type || item.type || "-"}</span>
+              <span><b>Điều kiện</b>{item.condition_text || item.condition?.description || item.condition?.text || "-"}</span>
+              <span><b>Công thức</b>{item.calculation_logic || item.reward_formula || "-"}</span>
+            </div>
+          </article>
+        ))}
+      </section>
+      {extractedText ? (
+        <details className="contest-rule-source">
+          <summary>Nội dung OCR từ poster</summary>
+          <p>{extractedText}</p>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -2681,11 +2801,67 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
   );
 }
 
+function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onToggleHidden }: { programs: CompetitionProgramView[]; selectedProgramId?: string; onOpenRule: (program: CompetitionProgramView) => void; onToggleHidden: (program: CompetitionProgramView) => void }) {
+  if (programs.length === 0) {
+    return <p className="empty-state">Chưa có CTTĐ nào. Bấm Thêm CTTĐ để upload poster và tạo thể lệ AI.</p>;
+  }
+
+  return (
+    <div className="admin-contest-list">
+      <DataTable className="desktop-table contest-mini-table" headers={["Tên chương trình", "Trạng thái", "Thời gian", "Phát hành đến", "Hiển thị", "AI", "Thao tác"]}>
+        {programs.map((program) => {
+          const waiting = isWaitingRuleConfirmation(program);
+          return (
+            <tr key={program.id} className={`clickable ${selectedProgramId === program.id ? "selected" : ""}`} onClick={() => onOpenRule(program)}>
+              <td><strong>{program.programName}</strong></td>
+              <td><span className={`contest-status ${competitionStatusClass(program.status)}`}>{competitionStatusText(program.status)}</span></td>
+              <td>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</td>
+              <td>{formatDateVi(program.issueDeadline) || "-"}</td>
+              <td>{program.isHidden ? "Đang ẩn" : "Đang hiện"}</td>
+              <td>{program.aiRule ? "Đã có rule AI" : "-"}</td>
+              <td>
+                <div className="admin-contest-actions">
+                  <button className={waiting ? "small-button" : "small-button secondary"} type="button" onClick={(event) => { event.stopPropagation(); onOpenRule(program); }}>
+                    {waiting ? "Kiểm tra & xác nhận" : "Xem thể lệ"}
+                  </button>
+                  <button className="small-button secondary" type="button" onClick={(event) => { event.stopPropagation(); onToggleHidden(program); }}>
+                    {program.isHidden ? "Hiện" : "Ẩn"}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </DataTable>
+      <div className="contest-detail-card-list">
+        {programs.map((program) => {
+          const waiting = isWaitingRuleConfirmation(program);
+          return (
+            <article className="contest-result-card" key={`${program.id}-admin-mobile`} onClick={() => onOpenRule(program)}>
+              <div className="contest-result-card-head"><strong>{program.programName}</strong><span>{competitionStatusText(program.status)}</span></div>
+              <div className="mobile-info-grid">
+                <span><b>Thời gian</b>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</span>
+                <span><b>Phát hành đến</b>{formatDateVi(program.issueDeadline) || "-"}</span>
+                <span><b>AI</b>{program.aiRule ? "Đã có rule AI" : "-"}</span>
+              </div>
+              <div className="admin-contest-actions">
+                <button className={waiting ? "" : "secondary"} type="button" onClick={(event) => { event.stopPropagation(); onOpenRule(program); }}>{waiting ? "Kiểm tra & xác nhận" : "Xem thể lệ"}</button>
+                <button className="secondary" type="button" onClick={(event) => { event.stopPropagation(); onToggleHidden(program); }}>{program.isHidden ? "Hiện CTTĐ" : "Ẩn CTTĐ"}</button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader: CurrentUploader | null; onUploaded: () => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgramView[]>([]);
   const [competitionUploadOpen, setCompetitionUploadOpen] = useState(false);
   const [ruleProgram, setRuleProgram] = useState<any | null>(null);
   const selectedYear = Number(month.slice(0, 4)) || 2026;
@@ -2702,8 +2878,44 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
     if (response.ok) setHistory(payload.uploads ?? []);
   }
 
+  async function loadCompetitionPrograms() {
+    const response = await fetch("/api/competition?includeHidden=1", { cache: "no-store" });
+    const payload = await response.json();
+    if (response.ok) {
+      const hiddenIds = hiddenCompetitionProgramIds();
+      setCompetitionPrograms((payload.programs ?? []).map((program: CompetitionProgramView) => ({
+        ...program,
+        isHidden: Boolean(program.isHidden || hiddenIds.has(program.id))
+      })));
+    }
+  }
+
+  async function toggleCompetitionHidden(program: CompetitionProgramView) {
+    const nextHidden = !program.isHidden;
+    const response = await fetch("/api/competition", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ program_id: program.id, is_hidden: nextHidden })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const text = String(payload.error || "");
+      if (!text.includes("is_hidden")) {
+        setResult({ error: payload.error || "Không cập nhật được trạng thái ẩn/hiện CTTĐ." });
+        return;
+      }
+    }
+    const hiddenIds = hiddenCompetitionProgramIds();
+    if (nextHidden) hiddenIds.add(program.id);
+    else hiddenIds.delete(program.id);
+    saveHiddenCompetitionProgramIds(hiddenIds);
+    await loadCompetitionPrograms();
+    onUploaded();
+  }
+
   useEffect(() => {
     loadHistory();
+    loadCompetitionPrograms();
   }, []);
 
   const uploadedMonths = new Set(history.map((item) => String(item.data_month ?? "").slice(0, 7)));
@@ -2743,6 +2955,21 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
           <h2>Quản trị Chương trình thi đua</h2>
           <button className="contest-add-button" type="button" onClick={() => setCompetitionUploadOpen(true)}>+ Thêm CTTĐ</button>
         </div>
+        <AdminCompetitionPrograms
+          programs={competitionPrograms}
+          selectedProgramId={ruleProgram?.id}
+          onOpenRule={(program) => setRuleProgram((current: any) => current?.id === program.id ? null : program)}
+          onToggleHidden={toggleCompetitionHidden}
+        />
+        {ruleProgram && (
+          <CompetitionRuleModal
+            inline
+            program={ruleProgram}
+            month={month}
+            onClose={() => setRuleProgram(null)}
+            onChanged={() => { setRuleProgram(null); loadCompetitionPrograms(); onUploaded(); }}
+          />
+        )}
       </div>
       <div className="panel">
         <div className="panel-header"><h2>Upload dữ liệu doanh thu theo tháng</h2><span>{uploader?.name || "-"}</span></div>
@@ -2778,8 +3005,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
         {result?.ok && <p className="success">Hợp lệ: {result.rowCount} dòng, AFYP {formatCompactVnd(result.totalAfyp)}, IP {formatCompactVnd(result.totalIp)}.</p>}
         {result?.preview?.length > 0 && <ContractDetails title={`Xem trước dữ liệu upload cho tháng ${selectedMonthNumber}/${selectedYear}`} rows={result.preview} />}
       </div>
-      {competitionUploadOpen && <CompetitionUploadModal onClose={() => setCompetitionUploadOpen(false)} onAnalyzed={(program) => { setCompetitionUploadOpen(false); setRuleProgram(program); onUploaded(); }} />}
-      {ruleProgram && <CompetitionRuleModal program={ruleProgram} month={month} onClose={() => setRuleProgram(null)} onChanged={() => { setRuleProgram(null); onUploaded(); }} />}
+      {competitionUploadOpen && <CompetitionUploadModal onClose={() => setCompetitionUploadOpen(false)} onAnalyzed={(program) => { setCompetitionUploadOpen(false); setRuleProgram(program); loadCompetitionPrograms(); onUploaded(); }} />}
       <StarVietUploadPanel year={selectedYear} uploader={uploader} onUploaded={onUploaded} />
       <UploadHistory rows={history} />
     </>
