@@ -43,6 +43,14 @@ async function screenshot(page: Page, reason: string) {
   return file;
 }
 
+async function screenshotNamed(page: Page, fileName: string) {
+  if (page.isClosed()) return undefined;
+  await mkdir(directories.debug, { recursive: true });
+  const file = path.join(directories.debug, fileName);
+  await page.screenshot({ path: file, fullPage: true }).catch(() => undefined);
+  return file;
+}
+
 async function safeClick(page: Page, locator: Locator, label: string) {
   try {
     await locator.waitFor({ state: "visible", timeout: 120_000 });
@@ -143,6 +151,7 @@ async function main() {
   const browser = await chromium.launch({ headless: process.env.PLAYWRIGHT_HEADLESS !== "false" });
   const page = await browser.newPage({ acceptDownloads: true });
   let activePage: Page = page;
+  let page1: Page | undefined;
 
   try {
     log("Mở SAP Files từ DATA_SOURCE_URL");
@@ -164,12 +173,23 @@ async function main() {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await waitForReady(page, "SAP Files");
 
-    const page1Promise = page.waitForEvent("popup", { timeout: 120_000 });
+    const popupPromise = page.waitForEvent("popup", { timeout: 120_000 });
     await safeClick(page, page.getByText("NEW_BC02 - Doanh thu bảo hiểm"), "NEW_BC02 - Doanh thu bảo hiểm");
-    const page1 = await page1Promise;
+    page1 = await popupPromise;
     activePage = page1;
-    await waitForReady(page1, "popup NEW_BC02");
-    await page1.waitForTimeout(10_000);
+    if (page1.isClosed()) throw new Error("Popup BC02 was closed before export screen loaded");
+    await page1.waitForLoadState("domcontentloaded", { timeout: 120_000 }).catch(() => {});
+    await page1.waitForLoadState("networkidle", { timeout: 120_000 }).catch(() => {});
+    if (page1.isClosed()) throw new Error("Popup BC02 was closed before export screen loaded");
+
+    await Promise.any([
+      page1.getByRole("rowheader", { name: "Kênh Đại lý" }).nth(3).waitFor({ state: "visible", timeout: 120_000 }),
+      page1.getByRole("button", { name: "Thêm thao tác BC02 - Doanh" }).waitFor({ state: "visible", timeout: 120_000 })
+    ]).catch(async () => {
+      if (page1?.isClosed()) throw new Error("Popup BC02 was closed before export screen loaded");
+      throw new Error("BC02 export screen did not become ready within 120 seconds");
+    });
+    if (page1.isClosed()) throw new Error("Popup BC02 was closed before export screen loaded");
 
     // All report operations after this point use page1, the NEW_BC02 popup.
     await safeClick(page1, page1.getByRole("rowheader", { name: "Kênh Đại lý" }).nth(3), "Kênh Đại lý");
@@ -193,9 +213,13 @@ async function main() {
     await importIntoDashboard(csv, path.basename(rawFile), (await stat(rawFile)).size, month);
     log(`Hoàn tất. File gốc: ${path.relative(root, rawFile)}`);
   } catch (error) {
+    const [mainImage, popupImage] = await Promise.all([
+      screenshotNamed(page, "main-page-error.png"),
+      page1 ? screenshotNamed(page1, "popup-page-error.png") : undefined
+    ]);
     const image = await screenshot(activePage, "failed");
-    log(`LỖI tại ${activePage.url() || "trang chưa tải"}. Screenshot: ${image}`);
-    throw new Error(`${error instanceof Error ? error.message : String(error)} Screenshot: ${image}`);
+    log(`LỖI tại ${activePage.isClosed() ? "trang đã đóng" : activePage.url() || "trang chưa tải"}. Main: ${mainImage}; Popup: ${popupImage}; Screenshot: ${image}`);
+    throw new Error(`${error instanceof Error ? error.message : String(error)} Main screenshot: ${mainImage}; popup screenshot: ${popupImage}; screenshot: ${image}`);
   } finally {
     await browser.close();
   }
