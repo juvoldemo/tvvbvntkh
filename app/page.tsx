@@ -487,7 +487,12 @@ function todayRevenueMobileLines(overview: any) {
   const lines: KpiDetailLine[] = [];
   if (todayValue === 0) lines.push({ text: "Chưa phát sinh", tone: "muted" });
   if (yesterdayValue <= 0 && diff === 0) lines.push({ text: "So với qua: Chưa có dữ liệu", tone: "muted" });
-  else lines.push({ text: `So vá»›i qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
+  else lines.push({
+    text: yesterdayValue > 0
+      ? `So với hôm qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")} / ${formatPercent((diff / yesterdayValue) * 100)}`
+      : `So với hôm qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`,
+    tone
+  });
   return lines;
 }
 
@@ -724,6 +729,7 @@ export default function HomePage() {
     time: { title: "Theo dõi thời gian", subtitle: "Diễn biến doanh thu theo thời gian" }
   };
   const currentHeader = headerCopy[tab];
+  const mobileHeaderTitle = tab === "overview" ? `Doanh thu T${selectedMonthNumber(month)}/${month.slice(0, 4)}` : tabs.find((item) => item.id === tab)?.mobileLabel ?? currentHeader.title;
 
   function switchTab(nextTab: Tab) {
     setMobileOptionsOpen(false);
@@ -780,7 +786,7 @@ export default function HomePage() {
           <div className="topbar-copy">
             <h1>
               <span className="desktop-header-title">{currentHeader.title}</span>
-              <span className="mobile-header-title">Doanh thu T{selectedMonthNumber(month)}/{month.slice(0, 4)}</span>
+              <span className="mobile-header-title">{mobileHeaderTitle}</span>
             </h1>
           </div>
           {tab === "overview" && data && <HeaderPlanProgress items={headerPlanProgress} />}
@@ -1075,7 +1081,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
   const monthlyPlanMobileDetailLines = useMemo(() => monthlyPlanMobileLines(monthlyPlan), [monthlyPlan]);
   const todayRevenueMobileDetailLines = useMemo(() => todayRevenueMobileLines(overview), [overview]);
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 759px)");
+    const media = window.matchMedia("(max-width: 767px)");
     const sync = () => setIsMobileChart(media.matches);
     sync();
     media.addEventListener("change", sync);
@@ -1113,7 +1119,8 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     if (chartMode === "agent") {
       return getDisplayedTvvChartData(data?.overviewAgents ?? [], isMobileChart);
     }
-    return visibleTimeRows.map((row: any) => ({
+    const displayedDayRows = isMobileChart ? visibleTimeRows.slice(-10) : visibleTimeRows;
+    return displayedDayRows.map((row: any) => ({
       label: row.day,
       fullLabel: row.day,
       afyp: Number(row.afyp ?? 0),
@@ -1158,7 +1165,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
     },
     {
       title: "TVV hoạt động",
-      mobileTitle: "TVV H",
+      mobileTitle: "TVV",
       value: formatNumber(overview.activeAgents ?? 0),
       icon: UserRound,
       tone: "purple",
@@ -1226,7 +1233,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartRows} margin={{ top: 10, right: 8, left: 0, bottom: hideMobileCategoryLabels ? 4 : chartMode === "day" ? 0 : 18 }} barCategoryGap={hideMobileCategoryLabels ? "6%" : "18%"} barGap={hideMobileCategoryLabels ? 2 : 6}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} />
-                  <XAxis dataKey="label" tick={!hideMobileCategoryLabels} tickLine={false} axisLine={false} interval={0} angle={chartMode === "day" ? 0 : isMobileChart ? 0 : -18} textAnchor={chartMode === "day" || isMobileChart ? "middle" : "end"} height={hideMobileCategoryLabels ? 8 : chartMode === "day" ? 30 : isMobileChart ? 34 : 66} tickFormatter={(value) => chartMode === "day" || isMobileChart ? value : truncateChartLabel(value)} />
+                  <XAxis dataKey="label" tick={hideMobileCategoryLabels ? false : { fontSize: isMobileChart ? 10 : 12 }} tickLine={false} axisLine={false} interval={0} angle={chartMode === "day" ? 0 : isMobileChart ? 0 : -18} textAnchor={chartMode === "day" || isMobileChart ? "middle" : "end"} height={hideMobileCategoryLabels ? 8 : chartMode === "day" ? 30 : isMobileChart ? 34 : 66} tickFormatter={(value) => chartMode === "day" || isMobileChart ? value : truncateChartLabel(value)} />
                   <YAxis yAxisId="afyp" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1_000_000)}tr`} />
                   <YAxis yAxisId="count" orientation="right" tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={(value) => `${Number(value).toLocaleString("vi-VN")}`} />
                   <Tooltip content={<OverviewChartTooltip mode={chartMode} countLabel={chartMeta.countLabel} />} />
@@ -1312,6 +1319,7 @@ function KpiCard({ title, mobileTitle, value, icon: Icon, tone, note, mobileNote
   const lines = detailLines ?? (note ? [{ text: note, tone: "muted" as const }] : []);
   const mobileLines = mobileDetailLines ?? detailLines ?? (mobileNote || note ? [{ text: mobileNote ?? note ?? "", tone: "muted" as const }] : []);
   const extraClass = title === "Doanh thu hôm nay" ? " kpi-today-revenue" : title === "Kế hoạch tháng" ? " kpi-monthly-plan" : "";
+  const isTodayRevenue = title === "Doanh thu hôm nay";
   const comparisonClass = lines.length === 1 && ["positive", "negative", "muted"].includes(lines[0]?.tone ?? "") ? " kpi-comparison-card" : "";
   return (
     <div className={`kpi kpi-card kpi-${tone}${extraClass}${comparisonClass}`}>
@@ -1332,25 +1340,40 @@ function KpiCard({ title, mobileTitle, value, icon: Icon, tone, note, mobileNote
           )}
         </div>
       </div>
-      <div className="kpi-mobile-layout">
-        <div className="kpi-main-row">
-          <div className="kpi-left">
-            <div className="kpi-icon"><Icon size={22} /></div>
-            <span>{mobileTitle ?? title}</span>
+      {isTodayRevenue ? (
+        <div className="today-mobile-card">
+          <div className="today-mobile-top">
+            <span className="today-mobile-icon"><Icon size={16} /></span>
+            <span className="today-mobile-label">{mobileTitle ?? title}</span>
+            <strong className="today-mobile-value">{value}</strong>
           </div>
-          <strong>{value}</strong>
+          {mobileLines.length > 0 && (
+            <p className={`today-mobile-compare ${mobileLines[0].tone ?? "muted"}`}>
+              <KpiDetailLineView line={mobileLines[0]} />
+            </p>
+          )}
         </div>
-        {mobileLines.length > 0 && (
-          <div className="kpi-detail-lines">
-            {mobileLines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}><KpiDetailLineView line={line} /></p>)}
+      ) : (
+        <div className="kpi-mobile-layout">
+          <div className="kpi-main-row">
+            <div className="kpi-left">
+              <div className="kpi-icon"><Icon size={22} /></div>
+              <span>{mobileTitle ?? title}</span>
+            </div>
+            <strong>{value}</strong>
           </div>
-        )}
-        {progress !== undefined && progress !== null && (
-          <div className="progress-shell" aria-hidden="true">
-            <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
-          </div>
-        )}
-      </div>
+          {mobileLines.length > 0 && (
+            <div className="kpi-detail-lines">
+              {mobileLines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}><KpiDetailLineView line={line} /></p>)}
+            </div>
+          )}
+          {progress !== undefined && progress !== null && (
+            <div className="progress-shell" aria-hidden="true">
+              <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -2136,13 +2159,29 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
   const adoColWidths = ["28%", "12%", "12%", "16%", "13%", "10%", "9%"];
   const periodButtons = <div className="ado-period-toggle">{periodOptions.map((option) => <button key={option.key} type="button" className={detailPeriod === option.key ? "active" : ""} onClick={() => setDetailPeriod(option.key)}>{option.label}</button>)}</div>;
   const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatCompactVnd(metric.afyp)}</td><td>{formatCompactVnd(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(delta))}` : formatCompactVnd(delta)}</td><td>{formatCompactVnd(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
+  const mobileDetailRow = (row: any, index = 0) => {
+    const metric = periodMetrics(row);
+    return (
+      <button className="ado-mobile-detail-row" type="button" key={`${row.adoName}-mobile`} onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}>
+        <span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span>
+        <strong className="ado-mobile-name">{row.adoName}</strong>
+        <span className="ado-mobile-rate">{formatPercent(metric.rate)}</span>
+        <div className="ado-mobile-metrics">
+          <span><small>AFYP</small><b>{formatCompactVnd(metric.afyp)}</b></span>
+          <span><small>KPI</small><b>{formatCompactVnd(metric.kpi)}</b></span>
+          <span><small>IP</small><b>{formatCompactVnd(metric.ip)}</b></span>
+          <span><small>HĐ / TVV</small><b>{metric.contractCount} / {metric.agentCount}</b></span>
+        </div>
+      </button>
+    );
+  };
   return (
     <div className="panel ado-page">
       <div className="panel-header"><h2>Tổng quan KPI theo phòng</h2></div>
       <div className="ado-departments">{departmentRows.map((row: any, index: number) => <section className="ado-department summary" key={row.department}><div><h3>{row.department}</h3><strong>{formatCompactVnd(row.monthlyAfyp)}</strong></div>{kpiDonut(row.monthlyRate, index ? "#16a34a" : "#1677ff")}<aside><span>Hoàn thành<b>{formatPercent(row.monthlyRate)}</b></span><span>Còn thiếu<b>{formatCompactVnd(Math.max(row.monthlyKpi-row.monthlyAfyp,0))}</b></span></aside></section>)}</div>
       <div className="ado-composition">{departmentRows.map((department: any) => { const items=adoRows.filter((row:any)=>row.department===department.department); const total = Number(department.monthlyAfyp ?? 0); return <section key={department.department} className={department.department === "PTKD 2" ? "ptkd-2" : "ptkd-1"}><h3>Cơ cấu doanh thu {department.department} (AFYP tháng)</h3>{revenueDonut(items,total)}<div className="ado-composition-list">{items.map((row:any,index:number)=>{ const share = total ? Number(row.monthlyAfyp ?? 0) / total * 100 : 0; return <p key={row.adoName} style={{ "--ado-color": adoColor(row.adoName, index) } as React.CSSProperties}><span>{row.adoName}</span><b>{formatCompactVnd(row.monthlyAfyp)}</b><strong>{formatPercent(share)}</strong></p>;})}</div></section>;})}</div>
       <div className="panel-header ado-detail-header"><h2>Chi tiết ADO</h2></div>
-      <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatCompactVnd(total.afyp)}</td><td>{formatCompactVnd(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(totalDelta))}` : formatCompactVnd(totalDelta)}</td><td>{formatCompactVnd(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable></section>; })}</div>
+      <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatCompactVnd(total.afyp)}</td><td>{formatCompactVnd(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(totalDelta))}` : formatCompactVnd(totalDelta)}</td><td>{formatCompactVnd(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable><div className="ado-mobile-detail-list">{items.map(mobileDetailRow)}</div></section>; })}</div>
     </div>
   );
 }
@@ -2184,7 +2223,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
       <section className="kpi-grid star-viet-kpis">
         <KpiCard tone="blue" icon={Users} title="TVV theo dõi" value={formatNumber(summary.totalAgents ?? 0)} />
         <KpiCard tone="gold" icon={Trophy} title="TVV đạt Sao Việt" value={formatNumber(summary.achievedAgents ?? 0)} />
-        <KpiCard tone="green" icon={Coins} title="Tổng AFYP Sao Việt" value={formatCompactVnd(summary.totalAfyp ?? 0)} />
+        <KpiCard tone="green" icon={Coins} title="Tổng AFYP Sao Việt" mobileTitle="AFYP SV" value={formatCompactVnd(summary.totalAfyp ?? 0)} />
         <KpiCard tone="purple" icon={Medal} title="Gần đạt mốc" value={formatNumber(summary.nearNextAgents ?? 0)} />
       </section>
       <section className="panel">
