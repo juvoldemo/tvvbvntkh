@@ -7373,6 +7373,25 @@ body,
 .today-mobile-card { display: none; }
 .ado-mobile-detail-list { display: none; }
 
+/* Desktop Groups: summary cards show only the primary metric. */
+@media (min-width: 768px) {
+  .tab-groups .template-kpi-row .kpi-detail-lines { display: none !important; }
+  .tab-groups .template-kpi-row > .kpi:nth-child(3),
+  .tab-groups .template-kpi-row > .kpi:nth-child(4) { display: none !important; }
+  body .dashboard-page.tab-groups .template-kpi-row {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Advisors: the first two KPI cards do not need explanatory sublines. */
+.tab-agents .template-kpi-row > .kpi:nth-child(1) .kpi-detail-lines,
+.tab-agents .template-kpi-row > .kpi:nth-child(2) .kpi-detail-lines { display: none !important; }
+
+/* Contracts: hide the decorative row-count label, not the data itself. */
+.tab-status .contract-details-actions > span { display: none !important; }
+
 /* The status-group list is redundant on the compact Contracts mobile view. */
 @media (max-width: 767px) {
   .tab-status .status-table-panel { display: none !important; }
