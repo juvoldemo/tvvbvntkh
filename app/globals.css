@@ -674,6 +674,30 @@ input:focus-visible {
   margin: 0;
 }
 
+.kpi-detail-line-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+}
+
+.mini-line .kpi-detail-line-content span {
+  color: inherit;
+}
+
+.overview-kpi-grid .kpi-detail-lines .mini-line .kpi-detail-line-content span {
+  color: inherit !important;
+}
+
+.overview-kpi-grid .kpi-detail-lines .mini-line .kpi-trend-icon {
+  color: currentColor !important;
+}
+
+.kpi-trend-icon {
+  flex: 0 0 auto;
+  color: currentColor;
+}
+
 .overview-plan-card {
   display: none;
 }
@@ -1957,6 +1981,93 @@ tr.clickable:hover {
   gap: 10px;
 }
 
+.contest-rule-form {
+  display: grid;
+  gap: 10px;
+}
+
+.contest-rule-general-grid,
+.contest-rule-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.contest-rule-general-grid {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f1f7fd;
+}
+
+.contest-rule-form label,
+.contest-rule-general-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.contest-rule-form input,
+.contest-rule-form select {
+  min-width: 0;
+  height: 36px;
+  border: 1px solid #c9d9ea;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 9px;
+  font: inherit;
+}
+
+.contest-rule-form .full-width { grid-column: 1 / -1; }
+
+.contest-rule-form-card,
+.contest-rule-advanced {
+  border: 1px solid #d8e4f1;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.contest-rule-form-card summary,
+.contest-rule-advanced summary {
+  cursor: pointer;
+  color: var(--blue-900);
+  font-weight: 900;
+}
+
+.contest-rule-form-card summary span { margin-right: 8px; color: var(--blue-700); }
+.contest-rule-form-grid { margin-top: 12px; }
+.contest-rule-checkbox { display: flex !important; grid-template-columns: auto 1fr; align-items: center; }
+.contest-rule-checkbox input { width: 16px; height: 16px; }
+.contest-remove-reward { margin-top: 10px; }
+.contest-rule-advanced { margin-top: 2px; }
+.contest-rule-advanced .contest-rule-editor-body { margin-top: 10px; }
+
+.contest-rule-fallback {
+  margin: 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff8e8;
+  color: #815c13;
+  font-weight: 700;
+}
+
+.pdt-reward-table-wrap { overflow-x: auto; }
+.pdt-reward-table { width: 100%; min-width: 720px; border-collapse: collapse; }
+.pdt-reward-table th,
+.pdt-reward-table td { padding: 8px; border-bottom: 1px solid #dce7f2; text-align: left; vertical-align: middle; }
+.pdt-reward-table th { color: var(--blue-900); background: #f1f7fd; font-size: 12px; }
+.pdt-reward-table td { white-space: nowrap; }
+.pdt-reward-table input { width: 140px; }
+.pdt-reward-table td span,
+.pdt-reward-table td small { margin-left: 6px; color: var(--muted); font-weight: 800; }
+.pdt-statuses { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.pdt-statuses > span { width: 100%; }
+.pdt-statuses label { display: flex; grid-template-columns: none; align-items: center; gap: 5px; }
+.pdt-statuses input { width: 16px; height: 16px; }
+
 .contest-rule-editor-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1964,7 +2075,7 @@ tr.clickable:hover {
 }
 
 .contest-rule-textarea {
-  min-height: 420px;
+  min-height: 280px;
   width: 100%;
   resize: vertical;
   border: 1px solid #c9d9ea;
@@ -2071,6 +2182,27 @@ tr.clickable:hover {
 .ads-table th:first-child,
 .ads-table td:first-child {
   text-align: left;
+}
+
+.ads-name-cell {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ads-name-cell strong {
+  color: var(--blue-900);
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ads-name-cell span {
+  color: #5c6f86;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .ads-table th:nth-child(n + 2),
@@ -4490,6 +4622,15 @@ tr.clickable:hover {
     line-height: 1.2;
   }
 
+  .mobile-ads-subtitle {
+    color: #5c6f86;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: -2px 0 2px 47px;
+    overflow-wrap: anywhere;
+  }
+
   .mobile-ads-afyp {
     display: block;
     color: #005bc5;
@@ -4628,6 +4769,16 @@ tr.clickable:hover {
 
   .contest-rule-editor-head {
     grid-template-columns: 1fr;
+  }
+
+  .contest-rule-general-grid,
+  .contest-rule-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contest-rule-form input,
+  .contest-rule-form select {
+    width: 100%;
   }
 
   .contest-rule-editor-head button,

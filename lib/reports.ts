@@ -1,3 +1,4 @@
+import { ADS_MASTER_NAMES, findAdsByBanGroup, findAdsMasterName, getAdsPlan, normalizeAdsName, resolveAdsName } from "./ads-plan";
 import { getEffectiveMonthlyPlan } from "./afyp-plan";
 import { getVietnamToday, getVietnamYesterday, monthBounds } from "./format";
 import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "./types";
@@ -20,8 +21,48 @@ function visibleAgentName(record: RevenueRecord) {
 }
 
 function visibleAdsName(record: RevenueRecord) {
-  const name = String(record.ads_name ?? "").trim();
+  const name = resolveAdsName(record.ads_name, record.ban_name, record.group_name);
   return name && !isAdsCodeLike(name) ? name : "";
+}
+
+function visibleAdsCode(record: RevenueRecord) {
+  return String(record.ads_code ?? "").trim();
+}
+
+function rawAdsValue(record: RevenueRecord, type: "name" | "code") {
+  const raw = record.raw_data ?? {};
+  const candidates = Object.entries(raw).filter(([key]) => {
+    const normalized = key
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    if (!normalized.includes("ads")) return false;
+    if (type === "code") return normalized.includes("ma") || normalized.includes("code");
+    return normalized.includes("ten") || normalized.includes("ho ten") || normalized === "ads";
+  });
+
+  for (const [, value] of candidates) {
+    const text = String(value ?? "").trim();
+    if (!text) continue;
+    if (type === "name" && !isAdsCodeLike(text)) return text;
+    if (type === "code") return text;
+  }
+  return "";
+}
+
+function adsIdentity(record: RevenueRecord) {
+  const rawName = rawAdsValue(record, "name");
+  const name = resolveAdsName(record.ads_name || rawName, record.ban_name, record.group_name);
+  const code = visibleAdsCode(record) || rawAdsValue(record, "code");
+  const fallbackParts = [record.ban_name, record.group_name].map((value) => String(value ?? "").trim()).filter(Boolean);
+  const fallback = fallbackParts.length ? `Chưa gán ADS - ${fallbackParts.join(" / ")}` : "Chưa gán ADS";
+
+  return {
+    key: name || code || fallback,
+    name,
+    code,
+    fallback
+  };
 }
 
 function normalizeStatusText(status: unknown) {
@@ -75,7 +116,7 @@ export function applyFilters(records: RevenueRecord[], filters: DashboardFilters
     if (filters.ban && record.ban_name !== filters.ban) return false;
     if (filters.group && record.group_name !== filters.group) return false;
     if (filters.agent && visibleAgentName(record) !== filters.agent) return false;
-    if (filters.ads && visibleAdsName(record) !== filters.ads) return false;
+    if (filters.ads && normalizeAdsName(visibleAdsName(record)) !== normalizeAdsName(filters.ads)) return false;
     if (filters.status && record.policy_status !== filters.status) return false;
     return true;
   });
@@ -245,24 +286,71 @@ export function buildAdsReport(records: RevenueRecord[]) {
   const totalAfyp = sumAfyp(records);
   const grouped = new Map<string, RevenueRecord[]>();
   records.forEach((record) => {
-    const key = visibleAdsName(record) || "Không xác định";
+    const key = adsIdentity(record).key;
     grouped.set(key, [...(grouped.get(key) ?? []), record]);
   });
 
   return [...grouped.values()]
     .map((items) => {
       const afyp = sumAfyp(items);
+      const identity = adsIdentity(items[0]);
+      const groups = [...new Set(items.map((item) => item.group_name).filter(Boolean))];
+      const planMillion = getAdsPlan(identity.name, items[0]?.data_month ?? "");
       return {
-        adsCode: items[0]?.ads_code ?? "",
-        adsName: visibleAdsName(items[0]) || "Không xác định",
+        adsCode: identity.code,
+        adsName: identity.name || (identity.code ? `Chưa có tên ADS (${identity.code})` : "Chưa gán ADS"),
+        adsDisplayName: identity.name || (identity.code ? `Chưa có tên ADS (${identity.code})` : "Chưa gán ADS"),
+        adsSubtitle: identity.name
+          ? identity.code
+          : groups.length > 1
+            ? `${groups.length} nhóm chưa gán tên ADS`
+            : (groups[0] || identity.fallback.replace(/^Chưa gán ADS - /, "")),
+        hasAdsName: Boolean(identity.name),
         afyp,
         ip: sumIp(items),
         contractCount: countDistinct(items, "contract_no"),
         agentCount: new Set(items.map(visibleAgentName).filter(Boolean)).size,
+        kpi: planMillion,
+        hasKpi: planMillion !== null,
         afypShare: totalAfyp > 0 ? (afyp / totalAfyp) * 100 : 0
       };
     })
     .sort((a, b) => b.afyp - a.afyp);
+}
+
+export function buildAdsDebugReport(records: RevenueRecord[], month: string) {
+  const rows = records.map((record) => {
+    const ads = visibleAdsName(record);
+    const matchedAds = findAdsMasterName(ads) || findAdsByBanGroup(record.ban_name, record.group_name);
+    return {
+      ban: record.ban_name,
+      nhom: record.group_name,
+      ads,
+      adsNormalized: normalizeAdsName(ads),
+      matchedAds,
+      kpi: matchedAds ? getAdsPlan(matchedAds, month) : null
+    };
+  });
+  const missingRows = rows.filter((row) => !row.matchedAds);
+  const summary = {
+    totalRecords: records.length,
+    recordsWithAds: rows.length - missingRows.length,
+    recordsWithoutAds: missingRows.length,
+    missingGroups: [...new Set(missingRows.map((row) => `${row.ban} / ${row.nhom}`))].sort(),
+    masterAds: ADS_MASTER_NAMES
+  };
+
+  console.table(rows.map(({ ban, nhom, ads, adsNormalized, matchedAds, kpi }) => ({
+    ban,
+    nhom,
+    ads,
+    adsNormalized,
+    matchedAds,
+    kpi
+  })));
+  console.log("[ADS dashboard summary]", summary);
+
+  return { rows, summary };
 }
 
 export function buildStatusReport(records: RevenueRecord[]) {

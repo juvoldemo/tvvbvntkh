@@ -3,7 +3,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, Coins, Download, Eye, EyeOff, Filter, LockKeyhole, Medal, Megaphone, MoreHorizontal, Search, Sparkles, Target, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
+import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, Coins, Download, Eye, EyeOff, Filter, LockKeyhole, Medal, Megaphone, MoreHorizontal, Search, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
@@ -17,7 +17,7 @@ type CurrentUploader = {
   code: string;
   name: string;
 };
-type KpiDetailLine = { text: string; tone?: "muted" | "positive" | "negative" };
+type KpiDetailLine = { text: string; tone?: "muted" | "positive" | "negative"; trend?: "up" | "down" };
 type HeaderPlanProgressItem = {
   label: string;
   plan: number;
@@ -57,6 +57,7 @@ type CompetitionProgramView = {
   totalIP?: number;
   totalAFYP?: number;
   totalReward?: number;
+  recipientTypes?: string[];
   isHidden?: boolean;
 };
 
@@ -196,7 +197,7 @@ function formatMoney(value: number) {
 function formatHeaderCompactMoney(value: number) {
   const abs = Math.abs(value || 0);
   if (abs >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
+    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tá»·`;
   }
   if (abs >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tr`;
@@ -296,8 +297,8 @@ function buildHeaderPlanProgress(month: string, planRows: any[] = []) {
 function formatShortCompactVnd(value: number) {
   return formatCompactVnd(value)
     .replace(" triệu", "tr")
-    .replace(" tỷ", " tỷ")
-    .replace(" ₫", "đ");
+    .replace(" tá»·", " tá»·")
+    .replace(" â'«", "Ä'");
 }
 
 function formatDailyCompactVnd(value: number) {
@@ -403,7 +404,7 @@ function calculateMonthlyPlanProgress(month: string, overview: any, timeRows: an
 
   const overPlan = remainingRaw < 0;
   const lines: KpiDetailLine[] = [
-    { text: `ạt: ${formatMoney(actual)} / ${formatMoney(plan)}`, tone: "muted" },
+    { text: `Đạt: ${formatMoney(actual)} / ${formatMoney(plan)}`, tone: "muted" },
     { text: overPlan ? `Vượt kế hoạch: ${formatMoney(Math.abs(remainingRaw))}` : `Còn thiếu: ${formatMoney(Math.max(remainingRaw, 0))}`, tone: overPlan ? "positive" : "muted" },
     {
       text: overPlan
@@ -452,7 +453,7 @@ function todayRevenueMobileLines(overview: any) {
   const lines: KpiDetailLine[] = [];
   if (todayValue === 0) lines.push({ text: "Chưa phát sinh", tone: "muted" });
   if (yesterdayValue <= 0 && diff === 0) lines.push({ text: "So với qua: Chưa có dữ liệu", tone: "muted" });
-  else lines.push({ text: `So với qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
+  else lines.push({ text: `So vá»›i qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
   return lines;
 }
 
@@ -462,12 +463,22 @@ function samePeriodComparisonLine(comparison: any): KpiDetailLine {
   }
   const percent = Number(comparison.percent ?? 0);
   if (percent > 0) {
-    return { text: `▲ ${formatPercent(percent)}`, tone: "positive" };
+    return { text: formatPercent(percent), tone: "positive", trend: "up" };
   }
   if (percent < 0) {
-    return { text: `▼ ${formatPercent(Math.abs(percent))}`, tone: "negative" };
+    return { text: formatPercent(Math.abs(percent)), tone: "negative", trend: "down" };
   }
-  return { text: "— 0%", tone: "muted" };
+  return { text: "0%", tone: "muted" };
+}
+
+function KpiDetailLineView({ line }: { line: KpiDetailLine }) {
+  const TrendIcon = line.trend === "up" ? TrendingUp : line.trend === "down" ? TrendingDown : null;
+  return (
+    <span className="kpi-detail-line-content" style={{ color: "inherit" }}>
+      {TrendIcon && <TrendIcon className="kpi-trend-icon" size={14} strokeWidth={2.4} aria-hidden="true" style={{ color: "inherit" }} />}
+      <span style={{ color: "inherit" }}>{line.text}</span>
+    </span>
+  );
 }
 
 function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingRaw?: number; remainingDays?: number }) {
@@ -478,7 +489,7 @@ function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingR
     ? `Thiếu: ${formatShortCompactVnd(remaining)} (${needPerDay ? `Cần: ${formatDailyCompactVnd(needPerDay)}/ngày` : "ã hết kỳ"})`
     : "Hoàn thành KH";
   return [
-    { text: `ạt: ${formatShortCompactVnd(plan.actual)}/${formatShortCompactVnd(plan.plan)}`, tone: "muted" as const },
+    { text: `Đạt: ${formatShortCompactVnd(plan.actual)}/${formatShortCompactVnd(plan.plan)}`, tone: "muted" as const },
     {
       text: shortageText,
       tone: remaining > 0 ? "muted" as const : "positive" as const
@@ -797,6 +808,9 @@ export default function HomePage() {
         )}
         {tab === "agents" && selectedAgentDetail && (
           <ContractDetailModal type="agent" title={selectedAgentDetail.title} rows={selectedAgentDetail.rows} onClose={() => setSelectedAgentDetail(null)} />
+        )}
+        {tab === "ads" && selectedContracts.length > 0 && (
+          <ContractDetailModal type="ads" title={selectedTitle} rows={selectedContracts} onClose={() => setSelectedContracts([])} />
         )}
         {uploadAuthOpen && (
           <UploadAuthModal onCancel={() => setUploadAuthOpen(false)} onSuccess={enterUploadTab} />
@@ -1171,7 +1185,7 @@ function OverviewPlanCard({ items }: { items: OverviewPlanItem[] }) {
             <section className="overview-plan-column" key={label}>
               <span className="overview-plan-title">{label}</span>
               <strong>{formatPercent(percent)}</strong>
-              <p>ạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
+              <p>Đạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
               <p>Thiếu: {formatMoney(item.remaining)}</p>
               <div className="overview-plan-bar" aria-label={`${label}: ${formatPercent(percent)}`}>
                 <div style={{ width: `${clampedPercent}%` }} />
@@ -1205,7 +1219,7 @@ function KpiCard({ title, mobileTitle, value, icon: Icon, tone, note, mobileNote
           <strong>{value}</strong>
           {lines.length > 0 && (
             <div className="kpi-detail-lines">
-              {lines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}>{line.text}</p>)}
+              {lines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}><KpiDetailLineView line={line} /></p>)}
             </div>
           )}
           {progress !== undefined && progress !== null && (
@@ -1225,7 +1239,7 @@ function KpiCard({ title, mobileTitle, value, icon: Icon, tone, note, mobileNote
         </div>
         {mobileLines.length > 0 && (
           <div className="kpi-detail-lines">
-            {mobileLines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}>{line.text}</p>)}
+            {mobileLines.map((line, index) => <p className={`mini-line ${line.tone ?? "muted"}`} key={`${line.text}-${index}`}><KpiDetailLineView line={line} /></p>)}
           </div>
         )}
         {progress !== undefined && progress !== null && (
@@ -1351,16 +1365,18 @@ function MobileAdsCards({ rows, month, contracts, openContracts }: { rows: any[]
   return (
     <div className="mobile-card-list mobile-ranking-list">
       {rows.map((row, index) => {
-        const planMillion = getAdsPlan(row.adsName, month);
+        const planMillion = row.kpi ?? getAdsPlan(row.adsName, month);
         const planVnd = planMillion ? planMillion * 1_000_000 : 0;
         const achievement = planVnd > 0 ? (Number(row.afyp ?? 0) / planVnd) * 100 : null;
+        const title = adsRowTitle(row);
         return (
-          <button className="mobile-ads-card" key={`${row.adsName}-${row.adsCode}`} type="button" onClick={() => openContracts(row.adsName, contracts.filter((item) => item.ads_name === row.adsName))}>
+          <button className="mobile-ads-card" key={`${row.adsName}-${row.adsCode}-${row.adsSubtitle}`} type="button" onClick={() => openContracts(title, adsRowContracts(row, contracts))}>
             <div className="mobile-ads-head">
               <span className="mobile-rank-badge plain">{index + 1}</span>
-              <strong>{row.adsName}</strong>
+              <strong>{title}</strong>
               <span className="mobile-ads-afyp">{formatCompactVnd(row.afyp)}</span>
             </div>
+            {row.adsSubtitle && <p className="mobile-ads-subtitle">{row.adsSubtitle}</p>}
             <div className="mobile-metric-grid compact ads-mobile-stats">
               <MobileMetric label="KH" value={formatPlanMillion(planMillion)} />
               <MobileMetric label="HT" value={formatPercent(achievement)} />
@@ -1778,7 +1794,7 @@ function TimeReport({ report }: { report: any }) {
             <LineChart data={report.yearPlanRows ?? []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="monthLabel" />
-              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tỷ`} />
+              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tá»·`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
               <Line type="monotone" dataKey="actual" name="AFYP thực hiện" stroke="#0759a3" strokeWidth={2} />
@@ -1814,19 +1830,43 @@ function formatPlanMillion(value: number | null) {
   return `${value.toLocaleString("vi-VN")} triệu`;
 }
 
+function adsRowTitle(row: any) {
+  return row.adsDisplayName || row.adsName || "Chưa gán ADS";
+}
+
+function adsRowContracts(row: any, contracts: any[]) {
+  const name = String(row.adsName ?? "").trim();
+  const code = String(row.adsCode ?? "").trim();
+  const subtitle = String(row.adsSubtitle ?? "").trim();
+  const hasName = Boolean(row.hasAdsName);
+
+  return contracts.filter((item) => {
+    if (hasName && name) return item.ads_name === name;
+    if (code) return item.ads_code === code || item.ads_name === code;
+    if (subtitle && !subtitle.includes("nhóm chưa gán")) return item.group_name === subtitle || item.ban_name === subtitle;
+    return !item.ads_name && !item.ads_code;
+  });
+}
+
 function AdsTable({ rows, month, contracts, openContracts }: { rows: any[]; month: string; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
-  const adsColWidths = ["18%", "12%", "15%", "13%", "12%", "8%", "8%", "14%"];
+  const adsColWidths = ["24%", "12%", "14%", "12%", "12%", "7%", "7%", "12%"];
   return (
     <div className="panel">
       <div className="panel-header"><h2>Báo cáo ADS</h2></div>
       <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "HĐ", "TVV", "Tỷ trọng"]} colWidths={adsColWidths}>
         {rows.map((row) => {
-          const planMillion = getAdsPlan(row.adsName, month);
+          const planMillion = row.kpi ?? getAdsPlan(row.adsName, month);
           const planVnd = planMillion ? planMillion * 1_000_000 : 0;
           const achievement = planVnd > 0 ? (Number(row.afyp ?? 0) / planVnd) * 100 : null;
+          const title = adsRowTitle(row);
           return (
-            <tr key={`${row.adsName}-${row.adsCode}`} className="clickable" onClick={() => openContracts(row.adsName, contracts.filter((item) => item.ads_name === row.adsName))}>
-              <td>{row.adsName}</td><td>{moneyCell(row.afyp)}</td><td>{formatPlanMillion(planMillion)}</td><td>{formatPercent(achievement)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td>
+            <tr key={`${row.adsName}-${row.adsCode}-${row.adsSubtitle}`} className="clickable" onClick={() => openContracts(title, adsRowContracts(row, contracts))}>
+              <td>
+                <div className="ads-name-cell">
+                  <strong>{title}</strong>
+                  {row.adsSubtitle && <span>{row.adsSubtitle}</span>}
+                </div>
+              </td><td>{moneyCell(row.afyp)}</td><td>{formatPlanMillion(planMillion)}</td><td>{formatPercent(achievement)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td>
             </tr>
           );
         })}
@@ -2017,9 +2057,9 @@ function targetTypesText(value: unknown) {
   const normalizeTarget = (item: unknown) => {
     const text = String(item ?? "").trim();
     const normalized = normalizeViText(text);
-    if (normalized.includes("hop dong") || normalized.includes("hd")) return "Hợp đồng";
-    if (normalized.includes("nhom")) return "Nhóm";
-    if (normalized.includes("tvv") || normalized.includes("tu van")) return "TVV";
+    if (normalized.includes("hop dong") || normalized.includes("contract") || normalized.includes("policy") || normalized.includes("hd")) return "Hợp đồng";
+    if (normalized.includes("nhom") || normalized.includes("group")) return "Nhóm";
+    if (normalized.includes("tvv") || normalized.includes("tu van") || normalized.includes("advisor") || normalized.includes("agent")) return "TVV";
     return text;
   };
   if (Array.isArray(value)) return [...new Set(value.map(normalizeTarget).filter(Boolean))].join(", ");
@@ -2027,8 +2067,128 @@ function targetTypesText(value: unknown) {
   return "-";
 }
 
+type CompetitionResultTarget = "groups" | "advisors" | "contracts";
+
+function competitionTargetKey(value: unknown): CompetitionResultTarget | null {
+  const normalized = normalizeViText(String(value ?? "").trim());
+  if (!normalized) return null;
+  if (normalized.includes("hop dong") || normalized.includes("contract") || normalized.includes("policy") || normalized.includes("hd")) return "contracts";
+  if (normalized.includes("nhom") || normalized.includes("group")) return "groups";
+  if (normalized.includes("tvv") || normalized.includes("tu van") || normalized.includes("advisor") || normalized.includes("agent")) return "advisors";
+  return null;
+}
+
+function inferCompetitionRecipientTarget(rule: any): CompetitionResultTarget | null {
+  const resultTab = competitionTargetKey(rule?.result_tab ?? rule?.condition?.result_tab);
+  if (resultTab) return resultTab;
+  const target = competitionTargetKey(rule?.target_type ?? rule?.condition?.target_type);
+  if (target === "groups") return "groups";
+  const explicit = competitionTargetKey(rule?.reward_recipient_type ?? rule?.recipient_type ?? rule?.recipient ?? rule?.condition?.reward_recipient_type ?? rule?.condition?.recipient_type ?? rule?.condition?.recipient);
+  if (explicit) return explicit;
+  const normalized = normalizeViText([
+    rule?.reward_name,
+    rule?.prize_name,
+    rule?.condition_text,
+    rule?.calculation_logic,
+    rule?.reward_formula,
+    rule?.reward_type,
+    rule?.condition?.type,
+    rule?.condition?.text,
+    rule?.condition?.description
+  ].join(" "));
+  if (isCompetitionGroupRuleText(normalized)) return "groups";
+  if (normalized.includes("/tvv") || normalized.includes("tvv hoat dong") || normalized.includes("moi tvv") || normalized.includes("tu van vien") || normalized.includes("active_advisor")) return "advisors";
+  if (normalized.includes("/hd") || normalized.includes("/hop dong") || normalized.includes("moi hd") || normalized.includes("moi hop dong") || normalized.includes("pdt/hd") || normalized.includes("per_contract") || normalized.includes("per_policy") || normalized.includes("top_n")) return "contracts";
+  return null;
+}
+
+function isCompetitionGroupRuleText(normalized: string) {
+  return [
+    "tong doanh thu/nhom",
+    "tong doanh thu nhom",
+    "doanh thu nhom",
+    "tong ip nhom",
+    "tong afyp nhom",
+    "chi tieu nhom",
+    "kpi nhom",
+    "nhom dat",
+    "theo nhom",
+    "moi nhom",
+    "nhom co doanh thu",
+    "so hd/nhom",
+    "so hop dong/nhom",
+    "tvv hoat dong trong nhom"
+  ].some((phrase) => normalized.includes(phrase));
+}
+
+function competitionResultTargets(program: CompetitionProgramView | undefined): CompetitionResultTarget[] {
+  const summaryTargets = Array.isArray(program?.recipientTypes)
+    ? program.recipientTypes.map(competitionTargetKey).filter(Boolean) as CompetitionResultTarget[]
+    : [];
+  if (summaryTargets.length > 0) return [...new Set(summaryTargets)];
+
+  const rewardRules = Array.isArray(program?.confirmedRule?.reward_rules) ? program?.confirmedRule.reward_rules : [];
+  const ruleTargets = rewardRules
+    .map(inferCompetitionRecipientTarget)
+    .filter(Boolean) as CompetitionResultTarget[];
+  return [...new Set(ruleTargets)];
+}
+
 function rewardRuleCards(rule: any) {
   return Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+}
+
+function dedupeRewardContracts(rows: any[] = []) {
+  const selected = new Map<string, any>();
+  for (const row of rows) {
+    if (!row?.is_eligible || !(Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)) continue;
+    const gycNo = String(row.gyc_no ?? row.applicationNo ?? "").trim();
+    const contractNo = String(row.contract_no ?? row.contractNo ?? row.policy_no ?? "").trim();
+    const key = gycNo
+      ? `gyc:${normalizeViText(gycNo)}`
+      : contractNo
+        ? `contract:${normalizeViText(contractNo)}`
+        : [row.collection_date ?? row.paidDate, row.tvv ?? row.advisor, row.customer_name ?? row.customer, row.ip, row.afyp].map(normalizeViText).join("|");
+    const current = selected.get(key);
+    const amount = Number(row.reward_amount ?? row.rewardAmount ?? 0);
+    const currentAmount = Number(current?.reward_amount ?? current?.rewardAmount ?? 0);
+    const priority = Number(row.rule_priority ?? row.rulePriority ?? Number.MAX_SAFE_INTEGER);
+    const currentPriority = Number(current?.rule_priority ?? current?.rulePriority ?? Number.MAX_SAFE_INTEGER);
+    if (!current || amount > currentAmount || (amount === currentAmount && priority < currentPriority)) selected.set(key, row);
+  }
+  return [...selected.values()];
+}
+
+function summarizeQualifiedRewardContracts(qualifiedRewardContracts: any[] = []) {
+  const advisors = new Map<string, any>();
+  const groups = new Map<string, any>();
+  for (const contract of qualifiedRewardContracts) {
+    const advisor = String(contract.tvv ?? contract.advisor ?? "").trim() || "-";
+    const group = String(contract.team ?? contract.group ?? "").trim() || "-";
+    const amount = Number(contract.reward_amount ?? contract.rewardAmount ?? 0);
+    const ip = Number(contract.ip ?? 0);
+    const afyp = Number(contract.afyp ?? 0);
+    const rewardName = String(contract.reward_name ?? contract.rewardName ?? contract.prize_name ?? "").trim();
+    const advisorKey = `${normalizeViText(advisor)}__${normalizeViText(group)}`;
+    const advisorRow = advisors.get(advisorKey) ?? { tvv: advisor, team: group, eligible_contract_count: 0, total_ip: 0, total_afyp: 0, reward_amount: 0, rewardNames: new Set<string>() };
+    advisorRow.eligible_contract_count += 1;
+    advisorRow.total_ip += ip;
+    advisorRow.total_afyp += afyp;
+    advisorRow.reward_amount += amount;
+    if (rewardName) advisorRow.rewardNames.add(rewardName);
+    advisors.set(advisorKey, advisorRow);
+    const groupRow = groups.get(group) ?? { group, totalIP: 0, totalAFYP: 0, contractCount: 0, totalReward: 0, advisors: new Set<string>(), rewardNames: new Set<string>() };
+    groupRow.totalIP += ip;
+    groupRow.totalAFYP += afyp;
+    groupRow.contractCount += 1;
+    groupRow.totalReward += amount;
+    if (advisor !== "-") groupRow.advisors.add(advisor);
+    if (rewardName) groupRow.rewardNames.add(rewardName);
+    groups.set(group, groupRow);
+  }
+  const advisorRows = [...advisors.values()].map((row) => ({ ...row, note: [...row.rewardNames].join(", ") || "-" })).sort((a, b) => b.reward_amount - a.reward_amount || b.total_ip - a.total_ip);
+  const groupRows = [...groups.values()].map((row) => ({ group: row.group, totalIP: row.totalIP, totalAFYP: row.totalAFYP, activeAdvisorCount: row.advisors.size, contractCount: row.contractCount, milestone: [...row.rewardNames].join(", ") || "-", rewardPerAdvisor: row.advisors.size ? row.totalReward / row.advisors.size : 0, totalReward: row.totalReward, note: [...row.rewardNames].join(", ") || "-" })).sort((a, b) => b.totalReward - a.totalReward || b.totalIP - a.totalIP);
+  return { advisorRows, groupRows, totalReward: qualifiedRewardContracts.reduce((sum, row) => sum + Number(row.reward_amount ?? row.rewardAmount ?? 0), 0) };
 }
 
 function competitionStatusClass(status?: string | null) {
@@ -2311,15 +2471,183 @@ function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; 
   );
 }
 
+const DEFAULT_PDT_TIERS = [[50, "8%", "6%"], [40, 2800000, 2500000], [30, 1800000, 1500000], [24, 1400000, 1200000], [18, 900000, 700000], [12, 600000, 500000], [8, 400000, 300000]];
+
+function isPdtRewardTable(rule: any) {
+  return (rule?.reward_rules ?? []).some((item: any) => item?.reward_type === "reward_by_policy_pdt_table" && Array.isArray(item?.pdt_reward_tiers));
+}
+
+function LegacyCompetitionRuleForm({ rule, onUpdateRule }: { rule: any; onUpdateRule: (mutator: (rule: any) => any) => void }) {
+  const tableRule = (rule?.reward_rules ?? []).find((item: any) => item?.reward_type === "reward_by_policy_pdt_table");
+  if (!isPdtRewardTable(rule) || !tableRule) return <div className="contest-rule-fallback"><p>Thể lệ này chưa nhận diện được dạng bảng thưởng PĐT/HĐ. Bạn vẫn có thể chỉnh sửa trong phần JSON nâng cao.</p><button className="secondary" type="button" onClick={() => onUpdateRule((current) => ({ ...current, reward_rules: [{ id: "pdt-reward-table", reward_name: "Bảng thưởng theo PĐT/HĐ", target_type: "policy", reward_recipient_type: "Hợp đồng", reward_type: "reward_by_policy_pdt_table", spc_products: ["BV-NCUVL08"], pdt_reward_tiers: DEFAULT_PDT_TIERS.map(([min_pdt, spc_reward, other_reward]) => ({ min_pdt: Number(min_pdt) * 1000000, spc_reward, other_reward })) }] }))}>Tạo bảng thưởng PĐT/HĐ</button></div>;
+  const tiers = tableRule.pdt_reward_tiers ?? [];
+  const updateTable = (mutator: (item: any) => any) => onUpdateRule((current) => ({ ...current, reward_rules: current.reward_rules.map((item: any) => item === tableRule || item.id === tableRule.id ? mutator(item) : item) }));
+  const updateGeneral = (key: string, value: any) => onUpdateRule((current) => ({ ...current, [key]: value }));
+  const statuses = ["YCBH hết hiệu lực", "Từ chối", "Trì hoãn", "Hết hiệu lực"];
+  return <div className="contest-rule-form pdt-table-form">
+    <div className="pdt-reward-table-wrap"><table className="pdt-reward-table"><thead><tr><th>PĐT/HĐ từ</th><th>Thưởng HĐ SPC An Thịnh Phúc Niên</th><th>Thưởng HĐ còn lại</th><th /></tr></thead><tbody>{tiers.map((tier: any, index: number) => <tr key={index}><td><input type="number" min="0" value={Number(tier.min_pdt ?? 0) / 1000000 || ""} onChange={(event) => updateTable((item) => ({ ...item, pdt_reward_tiers: item.pdt_reward_tiers.map((row: any, rowIndex: number) => rowIndex === index ? { ...row, min_pdt: Number(event.target.value || 0) * 1000000 } : row) }))} /><span>trđ</span></td><td><input value={tier.spc_reward ?? ""} placeholder="VD: 8% hoặc 2800000" onChange={(event) => updateTable((item) => ({ ...item, pdt_reward_tiers: item.pdt_reward_tiers.map((row: any, rowIndex: number) => rowIndex === index ? { ...row, spc_reward: event.target.value } : row) }))} /><small>{String(tier.spc_reward ?? "").includes("%") ? "% * PĐT" : "đ"}</small></td><td><input value={tier.other_reward ?? ""} placeholder="VD: 6% hoặc 2500000" onChange={(event) => updateTable((item) => ({ ...item, pdt_reward_tiers: item.pdt_reward_tiers.map((row: any, rowIndex: number) => rowIndex === index ? { ...row, other_reward: event.target.value } : row) }))} /><small>{String(tier.other_reward ?? "").includes("%") ? "% * PĐT" : "đ"}</small></td><td><button className="ghost" type="button" onClick={() => updateTable((item) => ({ ...item, pdt_reward_tiers: item.pdt_reward_tiers.filter((_: any, rowIndex: number) => rowIndex !== index) }))}>Xóa dòng</button></td></tr>)}</tbody></table></div>
+    <button className="secondary" type="button" onClick={() => updateTable((item) => ({ ...item, pdt_reward_tiers: [...item.pdt_reward_tiers, { min_pdt: 0, spc_reward: "", other_reward: "" }] }))}>Thêm dòng thưởng</button>
+    <div className="contest-rule-general-grid"><label><span>Từ ngày</span><input type="date" value={rule?.start_date ?? ""} onChange={(event) => updateGeneral("start_date", event.target.value)} /></label><label><span>Đến ngày</span><input type="date" value={rule?.end_date ?? ""} onChange={(event) => updateGeneral("end_date", event.target.value)} /></label><label><span>Hạn phát hành hợp đồng</span><input type="date" value={rule?.issue_deadline ?? ""} onChange={(event) => updateGeneral("issue_deadline", event.target.value)} /></label><label><span>Sản phẩm SPC</span><input value={(tableRule.spc_products ?? ["BV-NCUVL08"]).join(", ")} onChange={(event) => updateTable((item) => ({ ...item, spc_products: event.target.value.split(",").map((value) => value.trim()).filter(Boolean) }))} /></label><div className="full-width pdt-statuses"><span>Trạng thái loại trừ</span>{statuses.map((status) => <label key={status}><input type="checkbox" checked={(rule?.excluded_statuses ?? []).includes(status)} onChange={(event) => updateGeneral("excluded_statuses", event.target.checked ? [...new Set([...(rule?.excluded_statuses ?? []), status])] : (rule?.excluded_statuses ?? []).filter((value: string) => value !== status))} />{status}</label>)}</div></div>
+  </div>;
+}
+
+type DynamicRewardKind = "pdt" | "contract" | "tvv" | "group" | "gift" | "custom";
+
+function dynamicRuleText(value: unknown) {
+  return normalizeViText(Array.isArray(value) ? value.join(" ") : String(value ?? ""));
+}
+
+function dynamicRewardKind(item: any): DynamicRewardKind {
+  const scope = dynamicRuleText([item?.scope, item?.target_type, item?.condition?.scope, item?.condition?.target_type, item?.metric_type].filter(Boolean).join(" "));
+  const kind = dynamicRuleText([item?.rule_type, item?.calculation_type, item?.reward_type, item?.type, item?.condition?.type, item?.reward?.type, item?.reward_name, item?.prize_name].filter(Boolean).join(" "));
+  if (item?.reward_type === "reward_by_policy_pdt_table" && Array.isArray(item?.pdt_reward_tiers)) return "pdt";
+  if (kind.includes("qua") || kind.includes("gift") || kind.includes("san pham")) return "gift";
+  if (scope.includes("nhom") || scope.includes("group") || kind.includes("group_revenue") || kind.includes("active_advisor_by_group") || kind.includes("revenue_tier")) return "group";
+  if (scope.includes("tvv") || scope.includes("advisor") || scope.includes("agent") || scope.includes("tu van")) return "tvv";
+  if (scope.includes("hop dong") || scope.includes("policy") || scope.includes("contract") || kind.includes("top_n") || kind.includes("per_contract")) return "contract";
+  return "custom";
+}
+
+function dynamicRewardLabel(kind: DynamicRewardKind) {
+  if (kind === "contract" || kind === "pdt") return "Giải HĐ";
+  if (kind === "tvv") return "Giải TVV";
+  if (kind === "group") return "Giải Nhóm";
+  if (kind === "gift") return "Quà tặng";
+  return "Rule đặc thù";
+}
+
+function hasEditableDynamicRules(rule: any) {
+  const rewards = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+  return rewards.some((item: any) => dynamicRewardKind(item) !== "custom");
+}
+
+function isOnlyPdtTableRule(rule: any) {
+  const rewards = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+  return rewards.length > 0 && rewards.every((item: any) => dynamicRewardKind(item) === "pdt");
+}
+
+function shouldPreferAiRuleStructure(program: any) {
+  const confirmedRule = program.confirmedRule || program.confirmed_rule;
+  const aiRule = program.aiRule || program.ai_rule;
+  const aiRewards = Array.isArray(aiRule?.reward_rules) ? aiRule.reward_rules : [];
+  const programName = dynamicRuleText(program.programName || program.program_name || confirmedRule?.program_name || aiRule?.program_name);
+  if (programName.includes("an thinh") || programName.includes("pdt")) return false;
+  if (!confirmedRule || !aiRule || aiRewards.length === 0) return false;
+  if (!isOnlyPdtTableRule(confirmedRule)) return false;
+  return aiRewards.some((item: any) => dynamicRewardKind(item) !== "pdt" && dynamicRewardKind(item) !== "custom");
+}
+
+function setNestedValue(source: any, path: string[], value: any): any {
+  if (path.length === 0) return value;
+  const [head, ...rest] = path;
+  return { ...(source ?? {}), [head]: setNestedValue(source?.[head], rest, value) };
+}
+
+function dynamicNumberValue(value: unknown) {
+  const amount = Number(value ?? 0);
+  return amount > 0 ? amount : "";
+}
+
+function DynamicTextField({ label, value, onChange, placeholder = "" }: { label: string; value: unknown; onChange: (value: string) => void; placeholder?: string }) {
+  return <label><span>{label}</span><input value={String(value ?? "")} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} /></label>;
+}
+
+function DynamicNumberField({ label, value, onChange, suffix = "" }: { label: string; value: unknown; onChange: (value: number) => void; suffix?: string }) {
+  return <label><span>{label}</span><input type="number" min="0" value={dynamicNumberValue(value)} onChange={(event) => onChange(Number(event.target.value || 0))} />{suffix ? <small>{suffix}</small> : null}</label>;
+}
+
+function CompetitionRuleForm({ rule, onUpdateRule, onUnsupportedRule }: { rule: any; onUpdateRule: (mutator: (rule: any) => any) => void; onUnsupportedRule?: () => void }) {
+  const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+  const statuses = ["YCBH hết hiệu lực", "Từ chối", "Trì hoãn", "Hết hiệu lực"];
+  const updateGeneral = (key: string, value: any) => onUpdateRule((current) => ({ ...current, [key]: value }));
+  const updateReward = (index: number, mutator: (item: any) => any) => onUpdateRule((current) => ({ ...current, reward_rules: (current.reward_rules ?? []).map((item: any, itemIndex: number) => itemIndex === index ? mutator(item) : item) }));
+  const unsupportedOnly = rewardRules.length === 0 || !hasEditableDynamicRules(rule);
+
+  return <div className="contest-rule-form dynamic-rule-form">
+    <div className="contest-rule-general-grid">
+      <label><span>Từ ngày</span><input type="date" value={rule?.start_date ?? ""} onChange={(event) => updateGeneral("start_date", event.target.value)} /></label>
+      <label><span>Đến ngày</span><input type="date" value={rule?.end_date ?? ""} onChange={(event) => updateGeneral("end_date", event.target.value)} /></label>
+      <label><span>Hạn phát hành hợp đồng</span><input type="date" value={rule?.issue_deadline ?? ""} onChange={(event) => updateGeneral("issue_deadline", event.target.value)} /></label>
+      <div className="full-width pdt-statuses"><span>Trạng thái loại trừ</span>{statuses.map((status) => <label key={status}><input type="checkbox" checked={(rule?.excluded_statuses ?? []).includes(status)} onChange={(event) => updateGeneral("excluded_statuses", event.target.checked ? [...new Set([...(rule?.excluded_statuses ?? []), status])] : (rule?.excluded_statuses ?? []).filter((value: string) => value !== status))} />{status}</label>)}</div>
+    </div>
+    {unsupportedOnly ? <div className="contest-rule-fallback"><p>Chương trình này có thể lệ đặc thù, vui lòng sửa ở chế độ nâng cao.</p><button className="secondary" type="button" onClick={onUnsupportedRule}>Mở JSON nâng cao</button></div> : null}
+    {rewardRules.map((item: any, index: number) => {
+      const kind = dynamicRewardKind(item);
+      const title = item.reward_name || item.prize_name || `Giải ${index + 1}`;
+      const tiers = item.pdt_reward_tiers ?? item.thresholds ?? item.tiers ?? item.condition?.tiers ?? [];
+      const amount = item.reward_amount ?? item.reward?.amount;
+      return <article className={`contest-rule-reward-card dynamic-rule-card kind-${kind}`} key={item.id || index}>
+        <div className="contest-rule-reward-head"><span>{dynamicRewardLabel(kind)}</span><strong>{title}</strong></div>
+        {kind === "custom" ? <div className="contest-rule-fallback"><p>Chương trình này có thể lệ đặc thù, vui lòng sửa ở chế độ nâng cao.</p><button className="secondary" type="button" onClick={onUnsupportedRule}>Mở JSON nâng cao</button></div> : null}
+        {kind === "pdt" ? <>
+          <div className="pdt-reward-table-wrap"><table className="pdt-reward-table"><thead><tr><th>PĐT/HĐ từ</th><th>Thưởng SPC</th><th>Thưởng HĐ còn lại</th><th /></tr></thead><tbody>{tiers.map((tier: any, tierIndex: number) => <tr key={tierIndex}><td><input type="number" min="0" value={Number(tier.min_pdt ?? 0) / 1000000 || ""} onChange={(event) => updateReward(index, (reward) => ({ ...reward, pdt_reward_tiers: (reward.pdt_reward_tiers ?? []).map((row: any, rowIndex: number) => rowIndex === tierIndex ? { ...row, min_pdt: Number(event.target.value || 0) * 1000000 } : row) }))} /><span>trđ</span></td><td><input value={tier.spc_reward ?? ""} placeholder="VD: 8% hoặc 2800000" onChange={(event) => updateReward(index, (reward) => ({ ...reward, pdt_reward_tiers: (reward.pdt_reward_tiers ?? []).map((row: any, rowIndex: number) => rowIndex === tierIndex ? { ...row, spc_reward: event.target.value } : row) }))} /></td><td><input value={tier.other_reward ?? ""} placeholder="VD: 6% hoặc 2500000" onChange={(event) => updateReward(index, (reward) => ({ ...reward, pdt_reward_tiers: (reward.pdt_reward_tiers ?? []).map((row: any, rowIndex: number) => rowIndex === tierIndex ? { ...row, other_reward: event.target.value } : row) }))} /></td><td><button className="ghost" type="button" onClick={() => updateReward(index, (reward) => ({ ...reward, pdt_reward_tiers: (reward.pdt_reward_tiers ?? []).filter((_: any, rowIndex: number) => rowIndex !== tierIndex) }))}>Xóa dòng</button></td></tr>)}</tbody></table></div>
+          <button className="secondary" type="button" onClick={() => updateReward(index, (reward) => ({ ...reward, pdt_reward_tiers: [...(reward.pdt_reward_tiers ?? []), { min_pdt: 0, spc_reward: "", other_reward: "" }] }))}>Thêm dòng thưởng</button>
+          <div className="contest-rule-general-grid"><DynamicTextField label="Sản phẩm SPC" value={(item.spc_products ?? []).join(", ")} onChange={(value) => updateReward(index, (reward) => ({ ...reward, spc_products: value.split(",").map((part) => part.trim()).filter(Boolean) }))} /></div>
+        </> : null}
+        {kind === "contract" ? <div className="contest-rule-general-grid">
+          <DynamicNumberField label="Số HĐ/mốc chọn" value={item.top_n ?? item.condition?.limit} onChange={(value) => updateReward(index, (reward) => reward.condition ? setNestedValue(setNestedValue(reward, ["condition", "limit"], value), ["top_n"], value) : setNestedValue(reward, ["top_n"], value))} />
+          <DynamicNumberField label="IP/AFYP tối thiểu" value={item.min_policy_ip ?? item.condition?.policy_filters?.min_policy_ip} onChange={(value) => updateReward(index, (reward) => reward.condition?.policy_filters ? setNestedValue(reward, ["condition", "policy_filters", "min_policy_ip"], value) : setNestedValue(reward, ["min_policy_ip"], value))} suffix="đ" />
+          <DynamicTextField label="Mốc đạt" value={item.condition_text || item.condition?.description || item.condition?.text} onChange={(value) => updateReward(index, (reward) => reward.condition ? setNestedValue(reward, ["condition", "description"], value) : setNestedValue(reward, ["condition_text"], value))} />
+          <DynamicNumberField label="Thưởng/HĐ" value={amount} onChange={(value) => updateReward(index, (reward) => reward.reward ? setNestedValue(reward, ["reward", "amount"], value) : setNestedValue(reward, ["reward_amount"], value))} suffix="đ" />
+        </div> : null}
+        {kind === "tvv" ? <div className="contest-rule-general-grid">
+          <DynamicTextField label="Điều kiện TVV" value={item.condition_text || item.condition?.description || item.condition?.text} onChange={(value) => updateReward(index, (reward) => reward.condition ? setNestedValue(reward, ["condition", "description"], value) : setNestedValue(reward, ["condition_text"], value))} />
+          <DynamicNumberField label="Số HĐ tối thiểu" value={item.min_contract_count ?? item.condition?.min_contract_count ?? item.condition?.min_policy_count} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "min_contract_count"], value))} />
+          <DynamicNumberField label="IP/AFYP tối thiểu" value={item.min_total_ip ?? item.min_total_afyp ?? item.condition?.min_total_ip ?? item.condition?.min_total_afyp} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "min_total_ip"], value))} suffix="đ" />
+          <DynamicTextField label="Mốc đạt" value={item.tier_name ?? item.achieved_tier ?? item.condition?.tier_name} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "tier_name"], value))} />
+          <DynamicNumberField label="Thưởng/TVV" value={amount} onChange={(value) => updateReward(index, (reward) => reward.reward ? setNestedValue(reward, ["reward", "amount"], value) : setNestedValue(reward, ["reward_amount"], value))} suffix="đ" />
+        </div> : null}
+        {kind === "group" ? <div className="contest-rule-general-grid">
+          <DynamicNumberField label="Số TVV hoạt động" value={item.min_active_advisors ?? item.condition?.min_active_advisors ?? item.condition?.active_agent_definition?.min_valid_policy_count} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "min_active_advisors"], value))} />
+          <DynamicNumberField label="Số HĐ đạt" value={item.min_contract_count ?? item.condition?.min_contract_count} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "min_contract_count"], value))} />
+          <DynamicNumberField label="Tổng IP/AFYP" value={item.min_group_revenue ?? item.condition?.min_group_revenue ?? tiers?.[0]?.min_group_revenue} onChange={(value) => updateReward(index, (reward) => setNestedValue(reward, ["condition", "min_group_revenue"], value))} suffix="đ" />
+          <DynamicTextField label="Mốc đạt" value={item.condition_text || item.condition?.description || item.condition?.text || tiers?.map((tier: any) => `${formatCompactVnd(tier.min_group_revenue ?? tier.min_revenue ?? 0)}: ${formatCompactVnd(tier.reward_per_active_agent ?? tier.reward_amount ?? 0)}`).join(", ")} onChange={(value) => updateReward(index, (reward) => reward.condition ? setNestedValue(reward, ["condition", "description"], value) : setNestedValue(reward, ["condition_text"], value))} />
+          <DynamicNumberField label="Thưởng nhóm" value={amount ?? item.reward_per_group ?? item.reward?.amount ?? tiers?.[0]?.reward_amount ?? tiers?.[0]?.reward_per_active_agent} onChange={(value) => updateReward(index, (reward) => reward.reward ? setNestedValue(reward, ["reward", "amount"], value) : setNestedValue(reward, ["reward_amount"], value))} suffix="đ" />
+        </div> : null}
+        {kind === "gift" ? <div className="contest-rule-general-grid">
+          <DynamicTextField label="Điều kiện nhận quà" value={item.condition_text || item.condition?.description || item.condition?.text} onChange={(value) => updateReward(index, (reward) => reward.condition ? setNestedValue(reward, ["condition", "description"], value) : setNestedValue(reward, ["condition_text"], value))} />
+          <DynamicNumberField label="Số lượng quà" value={item.gift_quantity ?? item.quantity ?? item.reward?.quantity} onChange={(value) => updateReward(index, (reward) => reward.reward ? setNestedValue(reward, ["reward", "quantity"], value) : setNestedValue(reward, ["gift_quantity"], value))} />
+          <DynamicNumberField label="Giá trị quà" value={item.gift_value ?? item.reward_value ?? item.reward?.value ?? amount} onChange={(value) => updateReward(index, (reward) => reward.reward ? setNestedValue(reward, ["reward", "value"], value) : setNestedValue(reward, ["gift_value"], value))} suffix="đ" />
+          <DynamicTextField label="Đối tượng nhận thưởng" value={item.reward_recipient_type || item.recipient_type || item.recipient || item.condition?.recipient} onChange={(value) => updateReward(index, (reward) => ({ ...reward, reward_recipient_type: value }))} />
+          <DynamicTextField label="Tab kết quả" value={item.result_tab || item.condition?.result_tab} onChange={(value) => updateReward(index, (reward) => ({ ...reward, result_tab: value }))} />
+        </div> : null}
+      </article>;
+    })}
+  </div>;
+}
+
 function CompetitionRuleModal({ program, month, onClose, onChanged, inline = false }: { program: any; month: string; onClose: () => void; onChanged: () => void; inline?: boolean }) {
-  const initialRule = program.confirmedRule || program.confirmed_rule || program.aiRule || program.ai_rule || {};
+  const initialRule = shouldPreferAiRuleStructure(program) ? (program.aiRule || program.ai_rule || {}) : (program.confirmedRule || program.confirmed_rule || program.aiRule || program.ai_rule || {});
   const [jsonText, setJsonText] = useState(JSON.stringify(initialRule, null, 2));
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [isEditingRule, setIsEditingRule] = useState(false);
+  const [isAdvancedJsonOpen, setIsAdvancedJsonOpen] = useState(false);
 
   function parsedRule() {
     return JSON.parse(jsonText);
+  }
+
+  function validationMessage(rule: any) {
+    if (!rule || typeof rule !== "object") return "Thể lệ chưa đúng định dạng.";
+    if (!String(rule.program_name || "").trim()) return "Thiếu tên chương trình.";
+    if (!String(rule.start_date || "").trim()) return "Thiếu ngày bắt đầu chương trình.";
+    if (!String(rule.end_date || "").trim()) return "Thiếu ngày kết thúc chương trình.";
+    if (!Array.isArray(rule.reward_rules)) return "Danh sách giải thưởng chưa hợp lệ.";
+    for (const item of rule.reward_rules) {
+      if (!String(item?.reward_name || item?.prize_name || "").trim()) return "Mỗi giải thưởng cần có tên.";
+      const amount = item?.reward_amount ?? item?.reward?.amount;
+      if (amount !== undefined && amount !== null && amount !== "" && !Number.isFinite(Number(amount))) return "Mức thưởng phải là số.";
+    }
+    return "";
+  }
+
+  function updateRule(mutator: (rule: any) => any) {
+    try { setJsonText(JSON.stringify(mutator(parsedRule()), null, 2)); setMessage(""); }
+    catch { setMessage("JSON nâng cao đang lỗi. Hãy kiểm tra và format lại trước khi sửa bằng form."); }
+  }
+
+  function updateReward(index: number, mutator: (reward: any) => any) {
+    updateRule((rule) => ({ ...rule, reward_rules: (rule.reward_rules ?? []).map((item: any, itemIndex: number) => itemIndex === index ? mutator(item) : item) }));
   }
 
   async function confirmRule(shouldCalculate = false) {
@@ -2327,6 +2655,8 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
     setMessage("");
     try {
       const confirmedRule = parsedRule();
+      const validationError = validationMessage(confirmedRule);
+      if (validationError) throw new Error(validationError);
       const response = await fetch("/api/competition/confirm-rule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2354,6 +2684,11 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
   let preview: any = {};
   try { preview = JSON.parse(jsonText); } catch { preview = {}; }
   const extractedRuleText = program.extractedText || program.extracted_text;
+  const shouldOpenAdvancedJson = !hasEditableDynamicRules(preview);
+
+  useEffect(() => {
+    if (shouldOpenAdvancedJson) setIsAdvancedJsonOpen(true);
+  }, [shouldOpenAdvancedJson]);
 
   function formatRuleJson() {
     try {
@@ -2370,6 +2705,10 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
     setMessage("Đã khôi phục rule AI ban đầu.");
   }
 
+  function addReward() {
+    updateRule((rule) => ({ ...rule, reward_rules: [...(rule.reward_rules ?? []), { id: `reward-${Date.now()}`, reward_name: "Giải thưởng mới", target_type: "policy", reward_recipient_type: "Hợp đồng", reward_type: "reward_per_contract", eligible_products: Array.isArray(rule.eligible_products) ? [...rule.eligible_products] : [], reward_amount: 0, reward_formula: "", condition_text: "" }] }));
+  }
+
   const content = (
     <>
         <div className="contract-modal-header">
@@ -2381,14 +2720,13 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
           <section className="contest-rule-editor">
             <div className="contest-rule-editor-head">
               <div>
-                <h3>Sửa rule thủ công</h3>
-                <p>Chỉnh trực tiếp JSON bên dưới trước khi xác nhận. Bản trực quan phía trên sẽ đọc theo nội dung JSON hiện tại.</p>
+                <h3>Chỉnh sửa thể lệ theo cấu trúc chương trình</h3>
+                <p>Form bên dưới tự đổi theo từng loại giải. Rule đặc thù sẽ dùng JSON nâng cao để tránh sửa sai công thức.</p>
               </div>
-              <button className="secondary" type="button" onClick={() => setIsEditingRule((current) => !current)}>
-                {isEditingRule ? "Ẩn phần sửa" : "Sửa rule thủ công"}
-              </button>
             </div>
-            {isEditingRule && (
+            <CompetitionRuleForm rule={preview} onUpdateRule={updateRule} onUnsupportedRule={() => setIsAdvancedJsonOpen(true)} />
+            <details className="contest-rule-advanced" open={isAdvancedJsonOpen} onToggle={(event) => setIsAdvancedJsonOpen((event.target as HTMLDetailsElement).open)}>
+              <summary>Dành cho kỹ thuật · Xem JSON nâng cao</summary>
               <div className="contest-rule-editor-body">
                 <div className="contest-rule-editor-actions">
                   <button className="secondary" type="button" onClick={formatRuleJson}>Kiểm tra & format JSON</button>
@@ -2404,11 +2742,11 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
                   }}
                 />
               </div>
-            )}
+            </details>
           </section>
           {message && <p className="error-list">{message}</p>}
           <div className="contest-run-row">
-            <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>Xác nhận thể lệ</button>
+            <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>{isPdtRewardTable(preview) ? "Lưu bảng thưởng" : "Xác nhận thể lệ"}</button>
             <button type="button" disabled={busy} onClick={() => confirmRule(true)}>Xác nhận & tính thưởng</button>
           </div>
         </div>
@@ -2470,10 +2808,11 @@ function CompetitionRuleVisualPreview({ rule, extractedText }: { rule: any; extr
               <em>{ruleMoney(item.reward_amount ?? item.reward?.amount)}</em>
             </div>
             <div className="contest-rule-reward-grid">
-              <span><b>Đối tượng</b>{item.target_type || item.condition?.target_type || "-"}</span>
-              <span><b>Kiểu tính</b>{item.reward_type || item.type || "-"}</span>
-              <span><b>Điều kiện</b>{item.condition_text || item.condition?.description || item.condition?.text || "-"}</span>
-              <span><b>Công thức</b>{item.calculation_logic || item.reward_formula || "-"}</span>
+              <span><b>Loại giải</b>{dynamicRewardLabel(dynamicRewardKind(item))}</span>
+              <span><b>Đối tượng nhận thưởng</b>{item.reward_recipient_type || item.recipient_type || item.recipient || item.condition?.recipient || "-"}</span>
+              <span><b>Tab kết quả</b>{item.result_tab || item.condition?.result_tab || "-"}</span>
+              <span><b>Điều kiện</b>{item.condition_text || item.condition?.description || item.condition?.text || item.calculation_logic || item.reward_formula || "-"}</span>
+              <span><b>Thưởng / mốc</b>{ruleMoney(item.reward_amount ?? item.reward?.amount) !== "-" ? ruleMoney(item.reward_amount ?? item.reward?.amount) : ruleListText((item.pdt_reward_tiers ?? item.thresholds ?? item.tiers ?? item.condition?.tiers)?.map((tier: any) => tier.reward_name || tier.name || tier.label || ruleMoney(tier.reward_amount ?? tier.reward_per_active_agent)), "-")}</span>
             </div>
           </article>
         ))}
@@ -2546,17 +2885,32 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   }, [programId, refreshKey]);
 
   const program: CompetitionProgramView | undefined = detail?.program;
-  const eligibleContracts = (detail?.rewardContracts ?? []).filter((row: any) => row.is_eligible);
-  const groupRows = normalizeCompetitionRewardGroups(detail?.rewardGroups ?? []);
+  const qualifiedRewardContracts = dedupeRewardContracts(detail?.contractRewardResults ?? detail?.rewardContracts ?? []);
+  const tvvRewardResults = detail?.tvvRewardResults ?? detail?.rewardAdvisors ?? [];
+  const groupRewardResults = detail?.groupRewardResults ?? detail?.rewardGroups ?? [];
+  const eligibleContracts = qualifiedRewardContracts;
+  const groupRows = normalizeCompetitionRewardGroups(groupRewardResults).filter((row) => Number(row.totalReward ?? 0) > 0);
   const flowStatus = competitionFlowMessage(program, detail, month, isCalculating);
-  const sortedContracts = [...eligibleContracts].sort((a: any, b: any) =>
-    String(b.collection_date ?? "").localeCompare(String(a.collection_date ?? ""))
-    || Number(b.ip ?? 0) - Number(a.ip ?? 0)
-  );
   const achievedGroupRows = groupRows.filter((row) => Number(row.totalReward ?? 0) > 0);
-  const topGroups = achievedGroupRows.slice(0, 5);
-  const topAdvisors = [...(detail?.rewardAdvisors ?? [])].sort((a: any, b: any) => Number(b.total_ip ?? 0) - Number(a.total_ip ?? 0)).slice(0, 5);
-  const topContracts = sortedContracts.slice(0, 5);
+  const resultTargets = competitionResultTargets(program);
+  const visibleTabs: Array<{ id: "overview" | CompetitionResultTarget; label: string; icon: LucideIcon }> = [
+    { id: "overview", label: "Tổng quan", icon: LayoutGrid },
+    ...(resultTargets.includes("groups") ? [{ id: "groups" as const, label: "Nhóm đạt", icon: Users }] : []),
+    ...(resultTargets.includes("advisors") ? [{ id: "advisors" as const, label: "TVV đạt", icon: UserRound }] : []),
+    ...(resultTargets.includes("contracts") ? [{ id: "contracts" as const, label: "HĐ đạt", icon: ClipboardList }] : [])
+  ];
+  const hasGroupTarget = resultTargets.includes("groups");
+  const hasAdvisorTarget = resultTargets.includes("advisors");
+  const hasContractTarget = resultTargets.includes("contracts");
+
+  useEffect(() => {
+    if (tab !== "overview" && !resultTargets.includes(tab)) setTab("overview");
+  }, [resultTargets.join("|"), tab]);
+
+  useEffect(() => {
+    if (!detail) return;
+    console.log("[CTTD reward scopes]", { program: program?.programName, contractRewardResults: qualifiedRewardContracts.length, tvvRewardResults: tvvRewardResults.length, groupRewardResults: groupRows.length, contractRewardTotal: qualifiedRewardContracts.reduce((sum, row) => sum + Number(row.reward_amount ?? row.rewardAmount ?? 0), 0), tvvRewardTotal: tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.reward_amount ?? row.rewardAmount ?? 0), 0), groupRewardTotal: groupRows.reduce((sum, row) => sum + Number(row.totalReward ?? 0), 0) });
+  }, [detail]);
 
   return (
     <section className="competition-detail-panel">
@@ -2573,14 +2927,8 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
         <button className="competition-mobile-back" type="button" onClick={onClose}>Danh sách</button>
       </div>
         <div className="contest-detail-tabs" role="tablist">
-          {[
-            ["overview", "Tổng quan", LayoutGrid],
-            ["groups", "Nhóm đạt", Users],
-            ["advisors", "TVV đạt", UserRound],
-            ["contracts", "HĐ đạt", ClipboardList]
-          ].map(([id, label, Icon]) => {
-            const TabIcon = Icon as LucideIcon;
-            return <button key={id as string} className={tab === id ? "active" : ""} type="button" onClick={() => setTab(id as any)}><TabIcon size={16} />{label as string}</button>;
+          {visibleTabs.map(({ id, label, icon: TabIcon }) => {
+            return <button key={id} className={tab === id ? "active" : ""} type="button" onClick={() => setTab(id)}><TabIcon size={16} />{label}</button>;
           })}
         </div>
         <div className="competition-detail-content contest-detail-body">
@@ -2595,23 +2943,12 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                     <CompetitionKpiCard label="Phát hành đến" value={formatDateVi(program.issueDeadline) || "-"} icon={Megaphone} />
                     <div className="contest-kpi-card"><span className="contest-kpi-icon"><CalendarDays size={20} /></span><span>Còn lại</span><strong><CompetitionRemainingBadge endDate={program.endDate} /></strong></div>
                     <CompetitionKpiCard label="Đối tượng" value={targetTypesText(program.targetTypes)} icon={Target} />
-                    <CompetitionKpiCard label="Tổng nhóm đạt" value={formatNumber(achievedGroupRows.length)} icon={Users} />
-                    <CompetitionKpiCard label="Tổng TVV đạt" value={formatNumber(program.totalEligibleAdvisors ?? 0)} icon={UserRound} />
-                    <CompetitionKpiCard label="Tổng HĐ đạt" value={formatNumber(program.totalEligibleContracts ?? 0)} icon={ClipboardList} />
-                    <CompetitionKpiCard label="Tổng IP đạt" value={formatCompactVnd(program.totalIP ?? 0)} icon={Coins} />
-                    <CompetitionKpiCard label="Tổng AFYP đạt" value={formatCompactVnd(program.totalAFYP ?? 0)} icon={TrendingUp} />
+                    {hasGroupTarget && <CompetitionKpiCard label="Tổng nhóm đạt" value={formatNumber(achievedGroupRows.length)} icon={Users} />}
+                    {hasAdvisorTarget && <CompetitionKpiCard label="Tổng TVV đạt" value={formatNumber(tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0).length)} icon={UserRound} />}
+                    {hasContractTarget && <CompetitionKpiCard label="Tổng HĐ đạt" value={formatNumber(qualifiedRewardContracts.length)} icon={ClipboardList} />}
+                    <CompetitionKpiCard label="Tổng IP đạt" value={formatCompactVnd(qualifiedRewardContracts.reduce((sum, row) => sum + Number(row.ip ?? 0), 0))} icon={Coins} />
+                    <CompetitionKpiCard label="Tổng AFYP đạt" value={formatCompactVnd(qualifiedRewardContracts.reduce((sum, row) => sum + Number(row.afyp ?? 0), 0))} icon={TrendingUp} />
                     <CompetitionKpiCard label="Tổng thưởng" value={formatVnd(program.totalReward ?? 0)} icon={Trophy} highlight />
-                  </div>
-                  <div className="contest-top-grid">
-                    <CompetitionTopPanel title="Top 5 nhóm đạt" actionTab="groups" onOpen={setTab as any} headers={["#", "Nhóm", "Tổng IP", "Mốc đạt", "Tổng thưởng"]} rows={topGroups.map((row, index) => (
-                      <tr key={row.group || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td></tr>
-                    ))} />
-                    <CompetitionTopPanel title="Top 5 TVV đạt" actionTab="advisors" onOpen={setTab as any} headers={["#", "TVV", "HĐ đạt", "Tổng IP", "Thưởng"]} rows={topAdvisors.map((row: any, index: number) => (
-                      <tr key={row.id || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.tvv}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td></tr>
-                    ))} />
-                    <CompetitionTopPanel title="Top 5 HĐ đạt" actionTab="contracts" onOpen={setTab as any} headers={["#", "Số GYC", "TVV", "IP", "Thưởng"]} rows={topContracts.map((row: any, index: number) => (
-                      <tr key={row.id || index}><td><span className={`rank-badge rank-${index + 1}`}>{rankLabel(index)}</span></td><td>{row.gyc_no}</td><td>{row.tvv}</td><td>{formatCompactVnd(row.ip ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td></tr>
-                    ))} />
                   </div>
                   <div className="contest-note-grid">
                     <div className="contest-note-box"><span>i</span><p><strong>Ghi chú</strong>Hợp đồng chỉ tính thưởng khi thỏa điều kiện: IP/HĐ ≥ 15 triệu, trong thời gian thi đua và không thuộc trạng thái loại trừ.</p></div>
@@ -2619,9 +2956,9 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                   </div>
                 </>
               )}
-              {tab === "groups" && <CompetitionGroupsTable rows={groupRows} />}
-              {tab === "advisors" && <CompetitionAdvisorsTable rows={detail.rewardAdvisors ?? []} />}
-              {tab === "contracts" && <CompetitionContractsTable rows={eligibleContracts} />}
+              {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} />}
+              {tab === "advisors" && hasAdvisorTarget && <CompetitionAdvisorsTable rows={tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)} />}
+              {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={eligibleContracts} />}
             </>
           )}
         </div>
@@ -2678,10 +3015,10 @@ function CompetitionAdvisorsTable({ rows }: { rows: any[] }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có TVV đạt thưởng.</p>;
   return (
     <>
-      <DataTable className="desktop-table contest-mini-table" headers={["STT", "TVV", "Nhóm", "ADS", "Số HĐ đạt", "Tổng IP", "Tổng AFYP", "Thưởng đạt", "Đạt giải nào"]}>
+      <DataTable className="desktop-table contest-mini-table" headers={["STT", "TVV", "Nhóm", "Số HĐ đạt", "Tổng IP", "Tổng AFYP", "Thưởng đạt", "Đạt giải nào"]} colWidths={["5%", "17%", "14%", "10%", "13%", "13%", "14%", "14%"]}>
         {rows.map((row, index) => (
           <tr key={row.id || index}>
-            <td>{index + 1}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.ads}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.total_afyp ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td><td>{row.note}</td>
+            <td>{index + 1}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.total_afyp ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td><td>{row.note}</td>
           </tr>
         ))}
       </DataTable>
@@ -2691,7 +3028,6 @@ function CompetitionAdvisorsTable({ rows }: { rows: any[] }) {
             <div className="contest-result-card-head"><strong>{index + 1}. {row.tvv}</strong><span>{formatCompactVnd(row.reward_amount ?? 0)}</span></div>
             <div className="mobile-info-grid">
               <span><b>Nhóm</b>{row.team || "-"}</span>
-              <span><b>ADS</b>{row.ads || "-"}</span>
               <span><b>HĐ đạt</b>{formatNumber(row.eligible_contract_count ?? 0)}</span>
               <span><b>Tổng IP</b>{formatCompactVnd(row.total_ip ?? 0)}</span>
               <span><b>Tổng AFYP</b>{formatCompactVnd(row.total_afyp ?? 0)}</span>
@@ -2793,7 +3129,7 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
         />
         {error && <div className="login-error">{error}</div>}
         <div className="upload-auth-actions">
-          <button className="secondary" type="button" onClick={onCancel}>Hủy</button>
+          <button className="secondary" type="button" onClick={onCancel}>Há»§y</button>
           <button type="button" onClick={authenticate}>Xác nhận</button>
         </div>
       </form>
@@ -3115,14 +3451,14 @@ function safeText(value: unknown) {
   return text || "-";
 }
 
-function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "agent"; title: string; rows: any[]; onClose: () => void }) {
+function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "agent" | "ads"; title: string; rows: any[]; onClose: () => void }) {
   const sortedRows = sortContracts(rows);
   const afyp = sortedRows.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0);
   const contractCount = new Set(sortedRows.map((row, index) => String(row.contract_no ?? "").trim() || `row-${index}`)).size;
   const agentCount = new Set(sortedRows.map((row) => String(row.agent_name ?? "").trim()).filter(Boolean)).size;
   const groupNames = Array.from(new Set(sortedRows.map((row) => groupNameForRecord(row)).filter(Boolean)));
   const isAgentDetail = type === "agent";
-  const titlePrefix = isAgentDetail ? "Chi tiết TVV" : "Chi tiết nhóm";
+  const titlePrefix = type === "ads" ? "Chi tiết ADS" : isAgentDetail ? "Chi tiết TVV" : "Chi tiết nhóm";
   const groupSummary = groupNames.length > 3 ? `Số nhóm: ${formatNumber(groupNames.length)}` : `Nhóm: ${groupNames.join(", ") || "-"}`;
   const emptyMessage = isAgentDetail
     ? "Không có hợp đồng thuộc TVV này trong bộ l?c hiện tại."
@@ -3243,7 +3579,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
       <DataTable className="desktop-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`}>
-            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>
@@ -3253,7 +3589,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
-              {isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}
+              {isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}
               {showStatus && <span className="status-badge">{contractStatusLabel(row.policy_status)}</span>}
             </div>
             <div className="mobile-contract-main">

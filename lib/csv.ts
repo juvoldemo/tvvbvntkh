@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { findAdsByBanGroup, findAdsMasterName, getAdsPlan, normalizeAdsName, resolveAdsName } from "./ads-plan";
 import { parseDateValue, parseMoney, toMonthStart } from "./format";
 import type { ParsedRevenueCsv, RevenueRecord, ValidationError } from "./types";
 
@@ -41,9 +42,6 @@ const REQUIRED_KEYS: Array<keyof RevenueRecord> = [
 ];
 
 const DEFAULT_BAN_NAME = "Banca";
-const DEFAULT_BANCA_ADS_NAME = "Nguyễn Thị Mai Trang";
-const DEFAULT_NGUYEN_PHAT_ADS_NAME = "Nguyễn Thành Nhân";
-
 function isAgentCodeLike(value: unknown) {
   return /^D\d+/i.test(String(value ?? "").trim());
 }
@@ -166,13 +164,7 @@ function mapRow(headers: string[], row: unknown[], dataMonth: string, rowNumber:
   }
 
   const adsName = String(record.ads_name ?? "").trim();
-  if (record.ban_name === DEFAULT_BAN_NAME) {
-    record.ads_name = DEFAULT_BANCA_ADS_NAME;
-  } else if (record.ban_name === "Nguyên Phát" && !adsName) {
-    record.ads_name = DEFAULT_NGUYEN_PHAT_ADS_NAME;
-  } else {
-    record.ads_name = adsName || null;
-  }
+  record.ads_name = resolveAdsName(adsName, record.ban_name, record.group_name) || null;
 
   record.raw_data = raw;
 
@@ -184,6 +176,32 @@ function mapRow(headers: string[], row: unknown[], dataMonth: string, rowNumber:
   });
 
   return { record: record as RevenueRecord, errors };
+}
+
+function buildAdsParseDebug(records: RevenueRecord[], month: string) {
+  return records.map((record) => {
+    const ads = String(record.ads_name ?? "").trim();
+    const matchedAds = findAdsMasterName(ads) || findAdsByBanGroup(record.ban_name, record.group_name);
+    return {
+      ban: record.ban_name,
+      nhom: record.group_name,
+      ads,
+      tvv: record.agent_name,
+      adsNormalized: normalizeAdsName(ads),
+      matchedAds,
+      kpi: matchedAds ? getAdsPlan(matchedAds, month) : null
+    };
+  });
+}
+
+function buildAdsParseSummary(records: RevenueRecord[]) {
+  const withoutAds = records.filter((record) => !String(record.ads_name ?? "").trim());
+  return {
+    totalRecords: records.length,
+    recordsWithAds: records.length - withoutAds.length,
+    recordsWithoutAds: withoutAds.length,
+    missingGroups: [...new Set(withoutAds.map((record) => `${record.ban_name} / ${record.group_name}`))].sort()
+  };
 }
 
 export function parseRevenueCsv(csvText: string, dataMonth: string): ParsedRevenueCsv {
@@ -235,11 +253,27 @@ export function parseRevenueCsv(csvText: string, dataMonth: string): ParsedReven
     }
   });
 
+  const adsDebugRows = buildAdsParseDebug(records, dataMonth);
+  const adsSummary = buildAdsParseSummary(records);
+
+  console.table(adsDebugRows.map(({ ban, nhom, ads, tvv, adsNormalized, matchedAds, kpi }) => ({
+    ban,
+    nhom,
+    ads,
+    tvv,
+    adsNormalized,
+    matchedAds,
+    kpi
+  })));
+  console.log("[ADS parse summary]", adsSummary);
+
   return {
     records,
     preview: records.slice(0, 10),
     errors,
     totalAfyp: records.reduce((sum, record) => sum + (record.afyp || 0), 0),
-    totalIp: records.reduce((sum, record) => sum + (record.ip || 0), 0)
+    totalIp: records.reduce((sum, record) => sum + (record.ip || 0), 0),
+    adsDebugRows,
+    adsSummary
   };
 }

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "@/lib/types";
 import { buildAfypPlanSummary, buildAfypPlanTable } from "@/lib/afyp-plan";
-import { applyFilters, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
+import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { buildStarVietReport, type StarVietRecord } from "@/lib/star-viet";
-import { getAdsMonthlyTarget } from "@/lib/ads-plan";
+import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads-plan";
 
 function visibleName(value: unknown, codePattern: RegExp) {
   const name = String(value ?? "").trim();
@@ -23,7 +23,7 @@ function buildAdsPlanActuals(records: RevenueRecord[], filters: DashboardFilters
     if (filters.ban && record.ban_name !== filters.ban) return false;
     if (filters.group && record.group_name !== filters.group) return false;
     if (filters.agent && visibleName(record.agent_name, /^D\d+/i) !== filters.agent) return false;
-    if (visibleName(record.ads_name, /^L\d+/i) !== filters.ads) return false;
+    if (normalizeAdsName(resolveAdsName(record.ads_name, record.ban_name, record.group_name)) !== normalizeAdsName(filters.ads)) return false;
     if (filters.status && record.policy_status !== filters.status) return false;
     return Number.isFinite(recordMonth);
   }).filter(isCountedRevenueRecord);
@@ -146,6 +146,7 @@ export async function GET(request: NextRequest) {
     const companyTarget = target as MonthlyTarget | null;
     const planTable = buildAfypPlanTable(countedYearRecords);
     const adsMonthlyTarget = filters.ads ? getAdsMonthlyTarget(filters.ads, month) : 0;
+    const adsDebug = buildAdsDebugReport(countedRecords, month);
     const overview = buildOverview(countedRecords, month, companyTarget);
     if (filters.ads) {
       overview.monthlyTargetAfyp = adsMonthlyTarget;
@@ -164,6 +165,7 @@ export async function GET(request: NextRequest) {
       overviewTimeSeries: buildTimeSeries(countedRecords, month, companyTarget),
       overviewContracts: countedRecords.slice(0, 500),
       adsPlanActuals: buildAdsPlanActuals(countedYearRecords, filters),
+      adsDebug,
       planSummary: buildAfypPlanSummary(month, countedYearRecords, companyTarget),
       planTable,
       groups: buildGroupRanking(countedRecords),

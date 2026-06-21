@@ -101,7 +101,9 @@ export async function POST(request: NextRequest) {
         outOfMonthCount,
         rowCount: parsed.records.length,
         totalAfyp: parsed.totalAfyp,
-        totalIp: parsed.totalIp
+        totalIp: parsed.totalIp,
+        adsDebugRows: parsed.adsDebugRows,
+        adsSummary: parsed.adsSummary
       }, { status: hasErrors ? 422 : 200 });
     }
 
@@ -241,6 +243,8 @@ export async function POST(request: NextRequest) {
       rowCount: parsed.records.length,
       totalAfyp: parsed.totalAfyp,
       totalIp: parsed.totalIp,
+      adsDebugRows: parsed.adsDebugRows,
+      adsSummary: parsed.adsSummary,
       snapshotSync,
       competitionRecalculate,
       competitionNotice

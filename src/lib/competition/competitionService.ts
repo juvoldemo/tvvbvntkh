@@ -55,7 +55,8 @@ function normalizeProgram(row: any, result?: any) {
     totalExcludedContracts: Number(result?.total_excluded_contracts ?? summary.totalExcludedContracts ?? 0),
     totalIP: Number(result?.total_ip ?? summary.totalIP ?? 0),
     totalAFYP: Number(result?.total_afyp ?? summary.totalAFYP ?? 0),
-    totalReward: Number(result?.total_reward ?? summary.totalReward ?? 0)
+    totalReward: Number(result?.total_reward ?? summary.totalReward ?? 0),
+    recipientTypes: Array.isArray(summary.recipientTypes) ? summary.recipientTypes : []
   };
 }
 
@@ -97,17 +98,68 @@ function normalizeRuleText(value: unknown) {
     .toLowerCase();
 }
 
+function inferRewardRecipientType(rewardRule: any) {
+  const explicit = String(rewardRule.reward_recipient_type || rewardRule.recipient_type || rewardRule.recipient || rewardRule.condition?.reward_recipient_type || rewardRule.condition?.recipient_type || rewardRule.condition?.recipient || "").trim();
+  if (explicit) return explicit;
+  const text = normalizeRuleText([
+    rewardRule.reward_name,
+    rewardRule.prize_name,
+    rewardRule.condition_text,
+    rewardRule.calculation_logic,
+    rewardRule.reward_formula,
+    rewardRule.reward_type,
+    rewardRule.condition?.type,
+    rewardRule.condition?.text,
+    rewardRule.condition?.description
+  ].join(" "));
+  if (isGroupRuleText(text)) return "Nhóm";
+  if (text.includes("/tvv") || text.includes("tvv hoat dong") || text.includes("moi tvv") || text.includes("tu van vien")) return "TVV";
+  if (text.includes("/hd") || text.includes("/hop dong") || text.includes("moi hd") || text.includes("moi hop dong") || text.includes("pdt/hd")) return "Hợp đồng";
+  if (text.includes("/nhom") || text.includes("thuong nhom") || text.includes("moi nhom")) return "Nhóm";
+  if (text.includes("/ads") || text.includes("thuong ads")) return "ADS";
+  if (text.includes("active_advisor")) return "TVV";
+  if (text.includes("per_contract") || text.includes("per_policy") || text.includes("policy_pdt") || text.includes("top_n")) return "Hợp đồng";
+  return rewardRule.target_type || "Hợp đồng";
+}
+
+function isGroupRuleText(text: string) {
+  return [
+    "tong doanh thu/nhom",
+    "tong doanh thu nhom",
+    "doanh thu nhom",
+    "tong ip nhom",
+    "tong afyp nhom",
+    "chi tieu nhom",
+    "kpi nhom",
+    "nhom dat",
+    "theo nhom",
+    "moi nhom",
+    "nhom co doanh thu",
+    "so hd/nhom",
+    "so hop dong/nhom",
+    "tvv hoat dong trong nhom"
+  ].some((phrase) => text.includes(phrase));
+}
+
 function normalizeCompetitionRuleForNewlySeenContracts(rule: CompetitionRuleInput) {
   const nextRule = { ...rule, reward_rules: [...(rule.reward_rules ?? [])] };
   nextRule.reward_rules = nextRule.reward_rules.map((rewardRule: any) => {
     const text = normalizeRuleText([
+      rewardRule.target_type,
+      rewardRule.result_tab,
       rewardRule.reward_name,
       rewardRule.prize_name,
       rewardRule.condition_text,
       rewardRule.calculation_logic,
+      rewardRule.reward_formula,
       rewardRule.reward_type,
-      rewardRule.condition?.type
+      rewardRule.condition?.type,
+      rewardRule.condition?.text,
+      rewardRule.condition?.description,
+      rewardRule.condition?.metric
     ].join(" "));
+    const isGroup = isGroupRuleText(text);
+    const reward_recipient_type = isGroup ? "Nhóm" : inferRewardRecipientType(rewardRule);
     const shouldUseSnapshotOrdering = text.includes("chien binh toc do")
       || text.includes("nop phi som nhat")
       || text.includes("nop phi moi nhat")
@@ -115,10 +167,11 @@ function normalizeCompetitionRuleForNewlySeenContracts(rule: CompetitionRuleInpu
       || text.includes("top hop dong nop phi")
       || text.includes("ho so nop phi som nhat")
       || text.includes("hop dong phat sinh moi");
-    if (!shouldUseSnapshotOrdering) return rewardRule;
+    if (!shouldUseSnapshotOrdering) return { ...rewardRule, target_type: isGroup ? "Nhóm" : rewardRule.target_type, reward_recipient_type, result_tab: isGroup ? "Nhóm đạt" : rewardRule.result_tab };
     const newest = text.includes("moi nhat");
     return {
       ...rewardRule,
+      reward_recipient_type: "Hợp đồng",
       reward_name: rewardRule.reward_name || rewardRule.prize_name || "Chiến binh tốc độ",
       reward_type: "top_n_newly_seen_contracts",
       target_type: rewardRule.target_type || "Hợp đồng",
@@ -337,7 +390,10 @@ export async function getCompetitionProgramDetail(programId: string) {
     result: result ?? null,
     rewardContracts: contracts ?? [],
     rewardAdvisors: advisors ?? [],
-    rewardGroups
+    rewardGroups,
+    contractRewardResults: contracts ?? [],
+    tvvRewardResults: advisors ?? [],
+    groupRewardResults: rewardGroups
   };
 }
 
@@ -391,7 +447,7 @@ async function calculateAndSaveCompetitionFromContracts(supabase: SupabaseClient
   const { error: updateError } = await supabase
     .from("competition_programs")
     .update({
-      status: result.summary.totalEligibleContracts > 0 || result.summary.totalEligibleAdvisors > 0
+      status: result.summary.totalEligibleContracts > 0 || result.summary.totalEligibleAdvisors > 0 || result.summary.totalEligibleGroups > 0
         ? "Đã tính có kết quả"
         : "Đã tính nhưng không có hợp đồng đạt",
       last_calculated_at: savedResult.calculated_at,

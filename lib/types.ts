@@ -84,4 +84,19 @@ export type ParsedRevenueCsv = {
   errors: ValidationError[];
   totalAfyp: number;
   totalIp: number;
+  adsDebugRows?: Array<{
+    ban: string;
+    nhom: string;
+    ads: string;
+    tvv: string;
+    adsNormalized: string;
+    matchedAds: string;
+    kpi: number | null;
+  }>;
+  adsSummary?: {
+    totalRecords: number;
+    recordsWithAds: number;
+    recordsWithoutAds: number;
+    missingGroups: string[];
+  };
 };
