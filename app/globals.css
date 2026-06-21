@@ -1430,6 +1430,20 @@ tr.clickable:hover {
   color: #005bc5;
 }
 
+.contest-column-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 10px;
+}
+
+.contest-column-actions .ghost {
+  min-width: 64px;
+}
+
+.contest-mini-table thead th {
+  cursor: pointer;
+}
+
 .competition-detail-content {
   display: grid;
   gap: 16px;
@@ -2656,6 +2670,33 @@ tr.clickable:hover {
   color: #ffd257;
   font-size: 38px;
   font-style: normal;
+}
+
+.contest-result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.competition-show-columns-button {
+  min-width: 84px;
+  font-weight: 850;
+}
+
+.contest-hideable-table table {
+  width: 100%;
+  table-layout: auto;
+}
+
+.contest-hideable-table .hideable-column-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.contest-hideable-table .hideable-column-header:hover {
+  background: #fff2b8;
+  color: #06418f;
 }
 
 .mobile-card-list {

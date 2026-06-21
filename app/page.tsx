@@ -197,7 +197,7 @@ function formatMoney(value: number) {
 function formatHeaderCompactMoney(value: number) {
   const abs = Math.abs(value || 0);
   if (abs >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tá»·`;
+    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
   }
   if (abs >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tr`;
@@ -296,9 +296,7 @@ function buildHeaderPlanProgress(month: string, planRows: any[] = []) {
 
 function formatShortCompactVnd(value: number) {
   return formatCompactVnd(value)
-    .replace(" triệu", "tr")
-    .replace(" tá»·", " tá»·")
-    .replace(" â'«", "Ä'");
+    .replace(" triệu", "tr");
 }
 
 function formatDailyCompactVnd(value: number) {
@@ -408,10 +406,10 @@ function calculateMonthlyPlanProgress(month: string, overview: any, timeRows: an
     { text: overPlan ? `Vượt kế hoạch: ${formatMoney(Math.abs(remainingRaw))}` : `Còn thiếu: ${formatMoney(Math.max(remainingRaw, 0))}`, tone: overPlan ? "positive" : "muted" },
     {
       text: overPlan
-        ? "ã hoàn thành kế hoạch"
+        ? "Đã hoàn thành kế hoạch"
         : remainingDays > 0
           ? `Cần TB/ngày còn lại: ${formatMoney(remainingRaw / remainingDays)}`
-          : "ã hết kỳ theo dõi",
+          : "Đã hết kỳ theo dõi",
       tone: overPlan ? "positive" : "muted"
     }
   ];
@@ -453,7 +451,7 @@ function todayRevenueMobileLines(overview: any) {
   const lines: KpiDetailLine[] = [];
   if (todayValue === 0) lines.push({ text: "Chưa phát sinh", tone: "muted" });
   if (yesterdayValue <= 0 && diff === 0) lines.push({ text: "So với qua: Chưa có dữ liệu", tone: "muted" });
-  else lines.push({ text: `So vá»›i qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
+  else lines.push({ text: `So với qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
   return lines;
 }
 
@@ -486,7 +484,7 @@ function monthlyPlanMobileLines(plan: { actual: number; plan: number; remainingR
   const remaining = Number(plan.remainingRaw ?? plan.plan - plan.actual);
   const needPerDay = remaining > 0 && Number(plan.remainingDays ?? 0) > 0 ? remaining / Number(plan.remainingDays) : null;
   const shortageText = remaining > 0
-    ? `Thiếu: ${formatShortCompactVnd(remaining)} (${needPerDay ? `Cần: ${formatDailyCompactVnd(needPerDay)}/ngày` : "ã hết kỳ"})`
+    ? `Thiếu: ${formatShortCompactVnd(remaining)} (${needPerDay ? `Cần: ${formatDailyCompactVnd(needPerDay)}/ngày` : "Đã hết kỳ"})`
     : "Hoàn thành KH";
   return [
     { text: `Đạt: ${formatShortCompactVnd(plan.actual)}/${formatShortCompactVnd(plan.plan)}`, tone: "muted" as const },
@@ -985,21 +983,21 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
       countLabel: "Số HĐ",
       subtitle: visibleDayCount > 0
         ? `Hiển thị từ ngày 1 đến ngày ${visibleDayCount}, ngày đã qua không phát sinh sẽ bằng 0.`
-        : "Chưa có ngày nào trong tháng được chn để hiển thị."
+        : "Chưa có ngày nào trong tháng được chọn để hiển thị."
     },
     group: {
       label: "Theo nhóm",
       section: "Biểu đồ theo nhóm",
       title: `Top nhóm theo AFYP / Số TVV - ${monthOnlyLabel(month)}`,
       countLabel: "Số TVV",
-      subtitle: "Hiển thị các nhóm dẫn đầu theo dữ liệu sau bộ l?c."
+      subtitle: "Hiển thị các nhóm dẫn đầu theo dữ liệu sau bộ lọc."
     },
     agent: {
       label: "Theo TVV",
       section: "Biểu đồ theo TVV",
       title: `Top TVV theo AFYP / Số hợp đồng - ${monthOnlyLabel(month)}`,
       countLabel: "Số HĐ",
-      subtitle: "Hiển thị các TVV dẫn đầu theo dữ liệu sau bộ l?c."
+      subtitle: "Hiển thị các TVV dẫn đầu theo dữ liệu sau bộ lọc."
     }
   }[chartMode];
   const chartRows = useMemo(() => {
@@ -1794,7 +1792,7 @@ function TimeReport({ report }: { report: any }) {
             <LineChart data={report.yearPlanRows ?? []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="monthLabel" />
-              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tá»·`} />
+              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tỷ`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
               <Line type="monotone" dataKey="actual" name="AFYP thực hiện" stroke="#0759a3" strokeWidth={2} />
@@ -1971,7 +1969,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
                     <p><span>Còn thiếu:</span><strong>{formatCompactVnd(row.remainingToNext)}</strong></p>
                   </>
                 ) : (
-                  <p><span>Mốc tiếp theo:</span><strong>ã đạt mốc cao nhất</strong></p>
+                  <p><span>Mốc tiếp theo:</span><strong>Đã đạt mốc cao nhất</strong></p>
                 )}
                 <StarProgress row={row} />
               </div>
@@ -2018,7 +2016,7 @@ function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any
     const payload = await response.json();
     if (!response.ok) setMessage(payload.error || "Không lưu được chỉ tiêu.");
     else {
-      setMessage("ã lưu chỉ tiêu tháng.");
+      setMessage("Đã lưu chỉ tiêu tháng.");
       onSaved();
     }
   }
@@ -2031,7 +2029,7 @@ function AdminPanel({ month, planRows, onSaved }: { month: string; planRows: any
           <label><span className="label">Chỉ tiêu AFYP</span><input inputMode="numeric" value={value} onChange={(event) => setValue(event.target.value)} placeholder="Ví dụ: 5000000000" /></label>
           <button onClick={save}>Lưu chỉ tiêu</button>
         </div>
-        {message && <p className={message.startsWith("ã") ? "success" : "error-list"}>{message}</p>}
+        {message && <p className={message.startsWith("Đ") ? "success" : "error-list"}>{message}</p>}
       </div>
       <div className="panel">
         <div className="panel-header"><h2>Kế hoạch AFYP năm 2026</h2><span>Tổng 54 tỷ</span></div>
@@ -2312,10 +2310,10 @@ function competitionFlowMessage(program: CompetitionProgramView | undefined, det
     };
   }
   if (String(detail?.result?.result_summary?.error || "").includes("Chưa có dữ liệu")) {
-    return { tone: "warning", text: "Chưa có dữ liệu hợp đồng trong thi gian thi đua. Vui lòng upload CSV có chứa khoảng thi gian chương trình trước." };
+    return { tone: "warning", text: "Chưa có dữ liệu hợp đồng trong thời gian thi đua. Vui lòng upload CSV có chứa khoảng thời gian chương trình trước." };
   }
   if (!program.lastCalculatedAt) {
-    return { tone: "info", text: "ã xác nhận rule. Có thể tính thưởng từ dữ liệu CSV theo thi gian chương trình." };
+    return { tone: "info", text: "Chưa xác nhận rule. Có thể tính thưởng từ dữ liệu CSV theo thời gian chương trình." };
   }
   if ((program.totalEligibleContracts ?? 0) === 0 && (program.totalEligibleAdvisors ?? 0) === 0) {
     return { tone: "warning", text: "Đã tính thưởng nhưng không có hợp đồng nào thỏa điều kiện." };
@@ -2870,6 +2868,11 @@ const COMPETITION_STATUS_LEGEND = [
 function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChanged }: { programId: string; month: string; refreshKey: number; onClose: () => void; onChanged: () => void }) {
   const [detail, setDetail] = useState<any | null>(null);
   const [tab, setTab] = useState<"overview" | "groups" | "advisors" | "contracts">("overview");
+  const [hiddenColumnsByTable, setHiddenColumnsByTable] = useState<Record<CompetitionResultTarget, string[]>>({
+    contracts: [],
+    advisors: [],
+    groups: []
+  });
   const [message, setMessage] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -2902,6 +2905,21 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   const hasGroupTarget = resultTargets.includes("groups");
   const hasAdvisorTarget = resultTargets.includes("advisors");
   const hasContractTarget = resultTargets.includes("contracts");
+
+  function hideColumn(table: CompetitionResultTarget, columnKey: string) {
+    console.log("COLUMN CLICK:", columnKey);
+    setHiddenColumnsByTable((previous) => {
+      const hiddenColumns = previous[table];
+      console.log("HIDDEN BEFORE:", hiddenColumns);
+      const nextHiddenColumns = hiddenColumns.includes(columnKey) ? hiddenColumns : [...hiddenColumns, columnKey];
+      console.log("HIDDEN AFTER:", nextHiddenColumns);
+      return { ...previous, [table]: nextHiddenColumns };
+    });
+  }
+
+  function showAllColumns(table: CompetitionResultTarget) {
+    setHiddenColumnsByTable((previous) => ({ ...previous, [table]: [] }));
+  }
 
   useEffect(() => {
     if (tab !== "overview" && !resultTargets.includes(tab)) setTab("overview");
@@ -2956,9 +2974,9 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                   </div>
                 </>
               )}
-              {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} />}
-              {tab === "advisors" && hasAdvisorTarget && <CompetitionAdvisorsTable rows={tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)} />}
-              {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={eligibleContracts} />}
+              {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} hiddenColumns={hiddenColumnsByTable.groups} onHideColumn={(key) => hideColumn("groups", key)} onShowAllColumns={() => showAllColumns("groups")} />}
+              {tab === "advisors" && hasAdvisorTarget && <CompetitionAdvisorsTable rows={tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)} hiddenColumns={hiddenColumnsByTable.advisors} onHideColumn={(key) => hideColumn("advisors", key)} onShowAllColumns={() => showAllColumns("advisors")} />}
+              {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={eligibleContracts} hiddenColumns={hiddenColumnsByTable.contracts} onHideColumn={(key) => hideColumn("contracts", key)} onShowAllColumns={() => showAllColumns("contracts")} />}
             </>
           )}
         </div>
@@ -2966,17 +2984,24 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   );
 }
 
-function CompetitionGroupsTable({ rows }: { rows: any[] }) {
+type HideableColumn = { key: string; header: string; render: (row: any, index: number) => ReactNode };
+
+function CompetitionHideableTable({ table, rows, columns, hiddenColumns, onHideColumn, onShowAllColumns, className = "" }: { table: CompetitionResultTarget; rows: any[]; columns: HideableColumn[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void; className?: string }) {
+  const visibleColumns = columns.filter((column) => !hiddenColumns.includes(column.key));
+  useEffect(() => { console.log("VISIBLE COLUMNS:", table, visibleColumns.map((column) => column.key)); }, [table, hiddenColumns, columns]);
+  return <>
+    {hiddenColumns.length > 0 && <div className="contest-column-actions"><button className="ghost" type="button" onClick={onShowAllColumns}>Hiện</button></div>}
+    <div className={`table-wrap ${className}`}><table><thead><tr>{visibleColumns.map((column) => <th key={column.key} onClick={() => onHideColumn(column.key)}>{column.header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.id || row.group || `${table}-${index}`}>{visibleColumns.map((column) => <td key={column.key} data-label={column.header}>{column.render(row, index)}</td>)}</tr>)}</tbody></table></div>
+  </>;
+}
+
+function CompetitionGroupsTable({ rows, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có nhóm đạt mốc thưởng.</p>;
   return (
     <>
-      <DataTable className="desktop-table contest-mini-table contest-wide-table" headers={["STT", "Nhóm", "Tổng IP", "Tổng AFYP", "Số TVV hoạt động", "Số HĐ đạt", "Mốc đạt", "Thưởng/TVV", "Tổng thưởng nhóm", "Ghi chú"]}>
-        {rows.map((row, index) => (
-          <tr key={row.group || index}>
-            <td>{index + 1}</td><td>{row.group}</td><td>{formatCompactVnd(row.totalIP ?? 0)}</td><td>{formatCompactVnd(row.totalAFYP ?? 0)}</td><td>{formatNumber(row.activeAdvisorCount ?? 0)}</td><td>{formatNumber(row.contractCount ?? 0)}</td><td>{row.milestone}</td><td>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</td><td>{formatCompactVnd(row.totalReward ?? 0)}</td><td><CompetitionGroupNote note={row.note} /></td>
-          </tr>
-        ))}
-      </DataTable>
+      <CompetitionHideableTable table="groups" rows={rows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "group", header: "Nhóm", render: (row) => row.group }, { key: "total_ip", header: "Tổng IP", render: (row) => formatCompactVnd(row.totalIP ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatCompactVnd(row.totalAFYP ?? 0) }, { key: "active_advisors", header: "Số TVV hoạt động", render: (row) => formatNumber(row.activeAdvisorCount ?? 0) }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => formatNumber(row.contractCount ?? 0) }, { key: "milestone", header: "Mốc đạt", render: (row) => row.milestone }, { key: "reward_per_advisor", header: "Thưởng/TVV", render: (row) => formatCompactVnd(row.rewardPerAdvisor ?? 0) }, { key: "total_reward", header: "Tổng thưởng nhóm", render: (row) => formatCompactVnd(row.totalReward ?? 0) }, { key: "note", header: "Ghi chú", render: (row) => <CompetitionGroupNote note={row.note} /> }
+      ]} />
       <div className="contest-detail-card-list">
         {rows.map((row, index) => (
           <article className="contest-result-card" key={`${row.group || index}-mobile`}>
@@ -3011,17 +3036,13 @@ function CompetitionGroupNote({ note }: { note: unknown }) {
   );
 }
 
-function CompetitionAdvisorsTable({ rows }: { rows: any[] }) {
+function CompetitionAdvisorsTable({ rows, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có TVV đạt thưởng.</p>;
   return (
     <>
-      <DataTable className="desktop-table contest-mini-table" headers={["STT", "TVV", "Nhóm", "Số HĐ đạt", "Tổng IP", "Tổng AFYP", "Thưởng đạt", "Đạt giải nào"]} colWidths={["5%", "17%", "14%", "10%", "13%", "13%", "14%", "14%"]}>
-        {rows.map((row, index) => (
-          <tr key={row.id || index}>
-            <td>{index + 1}</td><td>{row.tvv}</td><td>{row.team}</td><td>{row.eligible_contract_count}</td><td>{formatCompactVnd(row.total_ip ?? 0)}</td><td>{formatCompactVnd(row.total_afyp ?? 0)}</td><td>{formatCompactVnd(row.reward_amount ?? 0)}</td><td>{row.note}</td>
-          </tr>
-        ))}
-      </DataTable>
+      <CompetitionHideableTable table="advisors" rows={rows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table" columns={[
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => row.eligible_contract_count }, { key: "total_ip", header: "Tổng IP", render: (row) => formatCompactVnd(row.total_ip ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatCompactVnd(row.total_afyp ?? 0) }, { key: "reward_amount", header: "Thưởng đạt", render: (row) => formatCompactVnd(row.reward_amount ?? 0) }, { key: "note", header: "Đạt giải nào", render: (row) => row.note }
+      ]} />
       <div className="contest-detail-card-list">
         {rows.map((row, index) => (
           <article className="contest-result-card" key={`${row.id || index}-advisor-mobile`}>
@@ -3040,7 +3061,7 @@ function CompetitionAdvisorsTable({ rows }: { rows: any[] }) {
   );
 }
 
-function CompetitionContractsTable({ rows }: { rows: any[] }) {
+function CompetitionContractsTable({ rows, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có hợp đồng đạt điu kiện.</p>;
   const sortedRows = [...rows].sort((a, b) =>
     String(b.collection_date ?? "").localeCompare(String(a.collection_date ?? ""))
@@ -3048,13 +3069,9 @@ function CompetitionContractsTable({ rows }: { rows: any[] }) {
   );
   return (
     <>
-      <DataTable className="desktop-table contest-mini-table contest-wide-table" headers={["STT", "Ngày thu", "Số GYC", "Nhóm", "TVV", "BMBH", "NĐBH", "Trạng thái hợp đồng", "IP", "AFYP", "Giải thưởng", "Tiền thưởng"]}>
-        {sortedRows.map((row, index) => (
-          <tr key={row.id || index}>
-            <td>{index + 1}</td><td>{formatDateVi(row.collection_date)}</td><td>{row.gyc_no}</td><td>{row.team}</td><td>{row.tvv}</td><td>{row.customer_name}</td><td>{row.insured_name || "-"}</td><td><span className="contract-status-pill">{row.status || "-"}</span></td><td className="numeric-cell">{formatCompactVnd(row.ip ?? 0)}</td><td className="numeric-cell">{formatCompactVnd(row.afyp ?? 0)}</td><td>{row.reward_name}</td><td className="numeric-cell">{formatCompactVnd(row.reward_amount ?? 0)}</td>
-          </tr>
-        ))}
-      </DataTable>
+      <CompetitionHideableTable table="contracts" rows={sortedRows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "collection_date", header: "Ngày thu", render: (row) => formatDateVi(row.collection_date) }, { key: "policy_no", header: "Số GYC", render: (row) => row.gyc_no }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "policy_owner", header: "BMBH", render: (row) => row.customer_name }, { key: "insured_name", header: "NĐBH", render: (row) => row.insured_name || "-" }, { key: "status", header: "Trạng thái hợp đồng", render: (row) => <span className="contract-status-pill">{row.status || "-"}</span> }, { key: "ip", header: "IP", render: (row) => formatCompactVnd(row.ip ?? 0) }, { key: "afyp", header: "AFYP", render: (row) => formatCompactVnd(row.afyp ?? 0) }, { key: "reward_name", header: "Giải thưởng", render: (row) => row.reward_name }, { key: "reward_amount", header: "Tiền thưởng", render: (row) => formatCompactVnd(row.reward_amount ?? 0) }
+      ]} />
       <div className="contest-detail-card-list">
         {sortedRows.map((row, index) => (
           <article className="contest-result-card" key={`${row.id || index}-contract-mobile`}>
@@ -3129,7 +3146,7 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
         />
         {error && <div className="login-error">{error}</div>}
         <div className="upload-auth-actions">
-          <button className="secondary" type="button" onClick={onCancel}>Há»§y</button>
+          <button className="secondary" type="button" onClick={onCancel}>Hủy</button>
           <button type="button" onClick={authenticate}>Xác nhận</button>
         </div>
       </form>
@@ -3402,7 +3419,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
     <div className="panel star-upload-panel">
       <div className="panel-header"><h2>Upload dữ liệu Sao Việt</h2><span>Năm {year}</span></div>
       <div className="star-upload-grid">
-        {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng lin trước. Toàn bộ AFYP được tính.")}
+        {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng liền trước. Sao Việt tính theo cột FYP.")}
         {uploadBlock("bc02", "File BC02 tháng hiện tại", "Dữ liệu tạm tháng hiện tại. Tự loại trừ hồ sơ hoàn/hủy theo trạng thái.")}
       </div>
     </div>
@@ -3413,7 +3430,7 @@ function UploadHistory({ rows }: { rows: any[] }) {
   return (
     <div className="panel">
       <div className="panel-header"><h2>Lịch sử upload</h2><span>{rows.length} lần gần nhất</span></div>
-      <DataTable className="desktop-table" headers={["Thi gian upload", "Ngưi upload", "Tháng dữ liệu", "Tên file", "Số dòng", "Kết quả"]}>
+      <DataTable className="desktop-table" headers={["Thời gian upload", "Người upload", "Tháng dữ liệu", "Tên file", "Số dòng", "Kết quả"]}>
         {rows.map((row) => (
           <tr key={row.id}>
             <td>{new Date(row.uploaded_at).toLocaleString("vi-VN")}</td>
@@ -3433,7 +3450,7 @@ function UploadHistory({ rows }: { rows: any[] }) {
               <span className={`upload-status ${row.status === "success" ? "success" : "failed"}`}>{row.status === "success" ? "Thành công" : "Lỗi"}</span>
             </div>
             <div className="mobile-info-grid">
-              <span><b>Ngưi upload</b>{row.uploaded_by_name || row.uploaded_by || "-"}</span>
+              <span><b>Người upload</b>{row.uploaded_by_name || row.uploaded_by || "-"}</span>
               <span><b>Tháng dữ liệu</b>{String(row.data_month ?? "").slice(0, 7)}</span>
               <span><b>Tên file</b>{row.file_name || "-"}</span>
               <span><b>Số dòng</b>{Number(row.row_count ?? 0).toLocaleString("vi-VN")} dòng</span>
@@ -3461,8 +3478,8 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
   const titlePrefix = type === "ads" ? "Chi tiết ADS" : isAgentDetail ? "Chi tiết TVV" : "Chi tiết nhóm";
   const groupSummary = groupNames.length > 3 ? `Số nhóm: ${formatNumber(groupNames.length)}` : `Nhóm: ${groupNames.join(", ") || "-"}`;
   const emptyMessage = isAgentDetail
-    ? "Không có hợp đồng thuộc TVV này trong bộ l?c hiện tại."
-    : "Không có hợp đồng thuộc nhóm này trong bộ l?c hiện tại.";
+    ? "Không có hợp đồng thuộc TVV này trong bộ lọc hiện tại."
+    : "Không có hợp đồng thuộc nhóm này trong bộ lọc hiện tại.";
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -3579,7 +3596,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
       <DataTable className="desktop-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`}>
-            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>
@@ -3589,7 +3606,7 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
-              {isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}
+              {isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}
               {showStatus && <span className="status-badge">{contractStatusLabel(row.policy_status)}</span>}
             </div>
             <div className="mobile-contract-main">

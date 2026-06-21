@@ -25,12 +25,16 @@ type ParserConfig = {
   groupAliases: string[];
   fallbackGroupAliases: string[];
   statusAliases?: string[];
+  valueAliases: string[];
+  valueLabel: string;
 };
 
 const DEFAULT_GROUP_NAME = "Chưa có nhóm";
 const AFYP_COLUMN_ALIASES = ["afyp"];
+const FYP_COLUMN_ALIASES = ["fyp"];
 const TOPUP_COLUMN_ALIASES = ["phi dong them", "phi dong them ngay"];
-const PAID_DATE_COLUMN_ALIASES = ["ngay thu", "ngay phat hanh", "ngay cap nhat"];
+// Chương trình nhân đôi xét ngày hiệu lực hợp đồng, không xét ngày phát hành.
+const KPI04_CONTRACT_DATE_COLUMN_ALIASES = ["ngay hieu luc"];
 const DOUBLE_BONUS_START = new Date(2026, 2, 5);
 const DOUBLE_BONUS_END = new Date(2026, 2, 26);
 const DOUBLE_BONUS_CAP = 200_000_000;
@@ -96,12 +100,14 @@ function columnIndex(headers: unknown[], aliases: string[]) {
 function sheetRowsFromFile(buffer: ArrayBuffer, fileName: string) {
   const workbook = XLSX.read(buffer, {
     type: "array",
-    raw: false,
+    // Preserve source values. In particular, do not reinterpret dd-mm-yyyy text
+    // as the US mm-dd-yyyy format during CSV imports.
+    raw: true,
     cellDates: false
   });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   if (!sheet) return [];
-  return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "" });
+  return XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true });
 }
 
 function buildTwoRowHeaders(rows: unknown[][]) {
@@ -154,11 +160,11 @@ function parseSaoVietRows(buffer: ArrayBuffer, fileName: string, year: number, c
 
   const headers = buildTwoRowHeaders(rawRows);
   const agentIndex = columnIndex(headers, config.agentAliases);
-  const afypIndex = columnIndex(headers, AFYP_COLUMN_ALIASES);
+  const valueIndex = columnIndex(headers, config.valueAliases);
   const statusIndex = config.statusAliases ? columnIndex(headers, config.statusAliases) : -1;
   const missing = [
     agentIndex < 0 ? "tên TVV" : "",
-    afypIndex < 0 ? "cột afyp" : "",
+    valueIndex < 0 ? config.valueLabel : "",
     config.statusAliases && statusIndex < 0 ? "trạng thái hồ sơ" : ""
   ].filter(Boolean);
 
@@ -176,10 +182,10 @@ function parseSaoVietRows(buffer: ArrayBuffer, fileName: string, year: number, c
     const rowNumber = offset + 3;
     const agentName = firstValue(row, headers, config.agentAliases);
     const groupName = firstValue(row, headers, [...config.groupAliases, ...config.fallbackGroupAliases]) || DEFAULT_GROUP_NAME;
-    const afyp = parseMoney(row[afypIndex]);
+    const value = parseMoney(row[valueIndex]);
     const status = statusIndex >= 0 ? String(row[statusIndex] ?? "").trim() : "";
 
-    if (!agentName && afyp === 0 && !status) return;
+    if (!agentName && value === 0 && !status) return;
     if (!agentName) {
       errors.push({ row: rowNumber, message: `File đang lỗi: ${config.source.toUpperCase()}. Đang thiếu: tên TVV.` });
       return;
@@ -196,7 +202,7 @@ function parseSaoVietRows(buffer: ArrayBuffer, fileName: string, year: number, c
       source: config.source,
       agent_name: agentName,
       group_name: groupName,
-      afyp,
+      afyp: config.source === "bc02" ? value : 0,
       policy_status: status || null,
       raw_data: rawData
     });
@@ -215,7 +221,9 @@ export function parseSaoVietKPI04(buffer: ArrayBuffer, fileName: string, year: n
     source: "kpi04",
     agentAliases: ["ten tvv hoat dong", "ten dai ly"],
     groupAliases: ["ten nhom"],
-    fallbackGroupAliases: ["ten ban", "phong gd tvv hoat dong", "phong kinh doanh"]
+    fallbackGroupAliases: ["ten ban", "phong gd tvv hoat dong", "phong kinh doanh"],
+    valueAliases: FYP_COLUMN_ALIASES,
+    valueLabel: "cột FYP để tính Sao Việt"
   });
 }
 
@@ -225,7 +233,9 @@ export function parseSaoVietBC02(buffer: ArrayBuffer, fileName: string, year: nu
     agentAliases: ["ten dai ly"],
     groupAliases: ["ten nhom"],
     fallbackGroupAliases: ["ten ban"],
-    statusAliases: ["tinh trang ho so"]
+    statusAliases: ["tinh trang ho so"],
+    valueAliases: AFYP_COLUMN_ALIASES,
+    valueLabel: "cột AFYP"
   });
 }
 
@@ -287,16 +297,14 @@ function isDateInDoubleBonusPeriod(value: unknown) {
   return !!date && date >= DOUBLE_BONUS_START && date <= DOUBLE_BONUS_END;
 }
 
-export function calculateBaseSaoVietAfyp(records: StarVietRecord[]) {
-  return records.reduce((sum, record) => sum + Number(record.afyp || 0), 0);
+function getKpi04Fyp(record: StarVietRecord) {
+  return parseMoney(rawValue(record, FYP_COLUMN_ALIASES));
 }
 
-export function calculateDoubleSaoVietBonus(records: StarVietRecord[]) {
-  const eligibleAfyp = records.reduce((sum, record) => {
-    const paidDate = rawValue(record, PAID_DATE_COLUMN_ALIASES);
-    return isDateInDoubleBonusPeriod(paidDate) ? sum + Number(record.afyp || 0) : sum;
-  }, 0);
-  return Math.min(eligibleAfyp, DOUBLE_BONUS_CAP);
+function competitionMultiplier(competitionFyp: number) {
+  if (competitionFyp >= 50_000_000) return 2;
+  if (competitionFyp >= 30_000_000) return 1.5;
+  return 1;
 }
 
 export function calculateTopupBonus(records: StarVietRecord[]) {
@@ -305,9 +313,12 @@ export function calculateTopupBonus(records: StarVietRecord[]) {
 }
 
 export function calculateTotalSaoVietAfyp(records: StarVietRecord[]) {
-  return calculateBaseSaoVietAfyp(records)
-    + calculateDoubleSaoVietBonus(records)
-    + calculateTopupBonus(records);
+  const kpi04Items = records.filter((record) => record.source === "kpi04");
+  const bc02Afyp = records.filter((record) => record.source === "bc02").reduce((sum, record) => sum + Number(record.afyp || 0), 0);
+  const competitionFyp = kpi04Items.reduce((sum, record) => isDateInDoubleBonusPeriod(rawValue(record, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(record) : sum, 0);
+  const kpi04FypTotal = kpi04Items.reduce((sum, record) => sum + getKpi04Fyp(record), 0);
+  const doubledBonus = Math.min(competitionFyp * (competitionMultiplier(competitionFyp) - 1), DOUBLE_BONUS_CAP);
+  return kpi04FypTotal + doubledBonus + bc02Afyp + calculateTopupBonus(records);
 }
 
 export function buildStarVietReport(records: StarVietRecord[]) {
@@ -321,12 +332,15 @@ export function buildStarVietReport(records: StarVietRecord[]) {
   const rows = [...grouped.values()]
     .map((items) => {
       const bc02Items = items.filter((item) => item.source === "bc02");
-      const kpi04Afyp = items.filter((item) => item.source === "kpi04").reduce((sum, item) => sum + Number(item.afyp || 0), 0);
+      const kpi04Items = items.filter((item) => item.source === "kpi04");
+      const kpi04Fyp = kpi04Items.reduce((sum, item) => sum + getKpi04Fyp(item), 0);
+      const competitionFyp = kpi04Items.reduce((sum, item) => isDateInDoubleBonusPeriod(rawValue(item, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(item) : sum, 0);
+      const competitionFactor = competitionMultiplier(competitionFyp);
+      const doubleBonusAfyp = Math.min(competitionFyp * (competitionFactor - 1), DOUBLE_BONUS_CAP);
+      const kpi04SaoVietFyp = kpi04Fyp + doubleBonusAfyp;
       const bc02Afyp = bc02Items.reduce((sum, item) => sum + Number(item.afyp || 0), 0);
-      const baseAfyp = calculateBaseSaoVietAfyp(items);
-      const doubleBonusAfyp = calculateDoubleSaoVietBonus(items);
       const topupBonusAfyp = calculateTopupBonus(items);
-      const totalAfyp = calculateTotalSaoVietAfyp(items);
+      const totalAfyp = kpi04SaoVietFyp + bc02Afyp + topupBonusAfyp;
       const level = currentLevel(totalAfyp);
       const next = nextLevel(totalAfyp);
       const nextThreshold = next?.threshold ?? totalAfyp;
@@ -334,9 +348,12 @@ export function buildStarVietReport(records: StarVietRecord[]) {
       return {
         agentName: items[0]?.agent_name ?? "",
         groupName: bc02Items.find((item) => item.group_name)?.group_name ?? items.find((item) => item.group_name)?.group_name ?? "",
-        kpi04Afyp,
+        kpi04Afyp: kpi04SaoVietFyp,
+        kpi04Fyp,
+        competitionFyp,
+        competitionFactor,
+        kpi04SaoVietFyp,
         bc02Afyp,
-        baseAfyp,
         doubleBonusAfyp,
         topupBonusAfyp,
         totalAfyp,
