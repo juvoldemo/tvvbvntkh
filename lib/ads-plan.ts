@@ -51,6 +51,10 @@ function assignmentKey(banName: unknown, groupName: unknown) {
 }
 
 const NORMALIZED_ADS_NAMES = new Map(ADS_MASTER_NAMES.map((name) => [normalizeKey(name), name]));
+const ADO_NAME_ALIASES = new Map<string, string>([
+  [normalizeKey("Nguyễn Thị Tr�m"), "Nguyễn Thị Trầm"],
+  [normalizeKey("Nguyễn Thị Trầm"), "Nguyễn Thị Trầm"]
+]);
 const NORMALIZED_GROUP_ASSIGNMENTS = new Map(Object.entries(ADS_GROUP_ASSIGNMENTS).map(([key, adsName]) => {
   const [banName, groupName] = key.split("__");
   return [assignmentKey(banName, groupName), adsName];
@@ -61,7 +65,10 @@ export function normalizeAdsName(value: unknown) {
 }
 
 export function findAdsMasterName(value: unknown) {
-  return NORMALIZED_ADS_NAMES.get(normalizeAdsName(value)) ?? "";
+  const text = String(value ?? "").normalize("NFC").trim().replace(/\s+/g, " ");
+  const namePart = text.includes("-") ? text.slice(text.lastIndexOf("-") + 1).trim() : text;
+  const normalized = normalizeAdsName(namePart);
+  return ADO_NAME_ALIASES.get(normalized) ?? NORMALIZED_ADS_NAMES.get(normalized) ?? "";
 }
 
 export function resolveAdsName(value: unknown, banName?: unknown, groupName?: unknown) {

@@ -65,8 +65,18 @@ function adsIdentity(record: RevenueRecord) {
   };
 }
 
-function normalizeStatusText(status: unknown) {
-  return String(status ?? "")
+function repairMojibake(value: unknown) {
+  const text = String(value ?? "");
+  if (!/[ÃÄÆáºá»]/.test(text)) return text;
+  try {
+    return Buffer.from(text, "latin1").toString("utf8");
+  } catch {
+    return text;
+  }
+}
+
+export function normalizeStatusText(status: unknown) {
+  return repairMojibake(status)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\u0111/g, "d")

@@ -6,7 +6,7 @@ import type { ParsedRevenueCsv, RevenueRecord, ValidationError } from "./types";
 const IMPORTANT_COLUMNS: Record<string, keyof RevenueRecord> = {
   "TÊN BAN": "ban_name",
   "TÊN NHÓM": "group_name",
-  "MÃ TVV": "agent_code",
+  "M� TVV": "agent_code",
   "MÃ ĐL": "agent_code",
   "MÃ ĐẠI LÝ": "agent_code",
   "MÃ TƯ VẤN VIÊN": "agent_code",
@@ -24,7 +24,7 @@ const IMPORTANT_COLUMNS: Record<string, keyof RevenueRecord> = {
   "NGÀY PHÁT HÀNH": "issued_date",
   "BÊN MUA BẢO HIỂM (BMBH)": "policy_owner",
   "NGƯỜI ĐƯỢC BẢO HIỂM": "insured_name",
-  "MÃ ADS": "ads_code",
+  "M� ADS": "ads_code",
   "CODE ADS": "ads_code",
   "ADS CODE": "ads_code",
   ADS: "ads_name",

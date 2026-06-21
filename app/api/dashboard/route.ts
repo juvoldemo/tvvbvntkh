@@ -6,6 +6,7 @@ import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, b
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { buildStarVietReport, type StarVietRecord } from "@/lib/star-viet";
 import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads-plan";
+import { buildAdoReport } from "@/lib/ado-report";
 
 function visibleName(value: unknown, codePattern: RegExp) {
   const name = String(value ?? "").trim();
@@ -176,6 +177,7 @@ export async function GET(request: NextRequest) {
         yearPlanRows: buildYearPlanSeries(planTable)
       },
       ads: buildAdsReport(countedRecords),
+      ado: buildAdoReport(allYearRecords, month, filters),
       starViet: buildStarVietReport(starVietError ? [] : (starVietRecords ?? []) as StarVietRecord[]),
       starVietWarning: starVietError ? "Chưa có bảng dữ liệu Sao Việt. Vui lòng chạy schema mới trước khi upload." : null,
       competitionContracts: allRecords,

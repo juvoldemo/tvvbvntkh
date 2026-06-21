@@ -3,9 +3,9 @@
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, Coins, Download, Eye, EyeOff, Filter, LockKeyhole, Medal, Megaphone, MoreHorizontal, Search, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
+import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
 import { formatCompactVnd, formatPercent, formatVnd } from "@/lib/format";
 import { getUploadUserName } from "@/lib/upload-users";
@@ -75,8 +75,8 @@ const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIco
   { id: "status", label: "Hợp đồng", mobileLabel: "Hợp đồng", icon: ClipboardList },
   { id: "groups", label: "Nhóm", mobileLabel: "Nhóm", icon: Users },
   { id: "agents", label: "TVV", mobileLabel: "TVV", icon: UserRound },
-  { id: "ads", label: "ADS", mobileLabel: "ADS", icon: Sparkles },
-  { id: "contests", label: "Chương trình thi đua", mobileLabel: "Thi đua", icon: Trophy },
+  { id: "ads", label: "ADO", mobileLabel: "ADO", icon: Sparkles },
+  { id: "contests", label: "CTTĐ", mobileLabel: "CTTĐ", icon: Trophy },
   { id: "starviet", label: "Sao Việt", mobileLabel: "SV", icon: Trophy },
   { id: "upload", label: "Quản trị", mobileLabel: "Quản trị", icon: Download }
 ];
@@ -167,6 +167,18 @@ function formatDateTimeVi(value: string | null | undefined) {
   }).format(date);
 }
 
+function formatSidebarDateTimeVi(value: string | null | undefined) {
+  if (!value) return "chưa có dữ liệu";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "chưa có dữ liệu";
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${hours}:${minutes} ${day}/${month}/${year}`;
+}
+
 function formatShortDateTimeVi(value: string | null | undefined) {
   if (!value) return "chưa có dữ liệu";
   const date = new Date(value);
@@ -197,7 +209,7 @@ function formatMoney(value: number) {
 function formatHeaderCompactMoney(value: number) {
   const abs = Math.abs(value || 0);
   if (abs >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
+    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tá»·`;
   }
   if (abs >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tr`;
@@ -309,18 +321,40 @@ function truncateChartLabel(value: unknown, maxLength = 16) {
 }
 
 function normalizeViText(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  return repairMojibake(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("vi-VN")
+    .replace(/[\u0111\u0110]/g, "d")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function repairMojibake(value: unknown) {
   const text = String(value ?? "");
-  if (!/[ÃÄÆáºá»]/.test(text) || typeof TextDecoder === "undefined") return text;
+  if (!/[\u00c3\u00c4\u00c6\u00e1]/.test(text) || typeof TextDecoder === "undefined") return text;
   try {
     const bytes = Uint8Array.from([...text].map((char) => char.charCodeAt(0) & 255));
     return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
   } catch {
     return text;
   }
+}
+
+const ADO_COLORS_BY_KEY: Record<string, string> = {
+  "nguyen thi mai trang": "#1677ff",
+  "nguyen thi tram": "#f59e0b",
+  "dinh quoc tien": "#7c3aed",
+  "nguyen thoc": "#16a34a",
+  "tran xuan thu": "#f97316",
+  "nguyen thanh nhan": "#06b6d4"
+};
+
+const ADO_FALLBACK_COLORS = ["#e11d48", "#0ea5e9", "#84cc16", "#a855f7", "#f59e0b", "#14b8a6"];
+
+function adoColor(name: unknown, index = 0) {
+  return ADO_COLORS_BY_KEY[normalizeViText(String(name ?? ""))]
+    ?? ADO_FALLBACK_COLORS[index % ADO_FALLBACK_COLORS.length];
 }
 
 function abbreviateGroupName(value: unknown) {
@@ -434,12 +468,14 @@ function todayRevenueCompareLine(overview: any) {
   if (yesterdayValue <= 0) {
     return {
       text: diff !== 0 ? `So với hôm qua: ${formatSignedVnd(diff)}` : "So với hôm qua: Chưa có dữ liệu",
-      tone: diff !== 0 ? tone : "muted" as const
+      tone: diff !== 0 ? tone : "muted" as const,
+      trend: diff > 0 ? "up" as const : diff < 0 ? "down" as const : undefined
     };
   }
   return {
     text: `So với hôm qua: ${formatSignedVnd(diff)} / ${formatPercent((diff / yesterdayValue) * 100)}`,
-    tone
+    tone,
+    trend: diff > 0 ? "up" as const : diff < 0 ? "down" as const : undefined
   };
 }
 
@@ -451,7 +487,7 @@ function todayRevenueMobileLines(overview: any) {
   const lines: KpiDetailLine[] = [];
   if (todayValue === 0) lines.push({ text: "Chưa phát sinh", tone: "muted" });
   if (yesterdayValue <= 0 && diff === 0) lines.push({ text: "So với qua: Chưa có dữ liệu", tone: "muted" });
-  else lines.push({ text: `So với qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
+  else lines.push({ text: `So vá»›i qua: ${formatShortCompactVnd(diff > 0 ? diff : -Math.abs(diff)).replace("--", "-")}`, tone });
   return lines;
 }
 
@@ -511,7 +547,37 @@ function contractStatusLabel(value: unknown) {
 }
 
 function normalizedContractStatus(value: unknown) {
-  return contractStatusLabel(value).toLocaleLowerCase("vi-VN");
+  return repairMojibake(contractStatusLabel(value))
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("vi-VN")
+    .replace(/[\u0111\u0110]/g, "d")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const STATUS_COLOR_BY_NORMALIZED_LABEL: Record<string, string> = {
+  "cho kiem tra ycbh": "#0f6fff",
+  "cnbh chuan": "#22a447",
+  "cho dgrr": "#f59e0b",
+  "cnbh co dieu kien": "#8b5cf6",
+  "dang dgrr": "#14b8a6",
+  "co hieu luc": "#22a447",
+  "cho xu ly": "#f59e0b",
+  "hoan phi": "#8b5cf6",
+  "tu choi": "#ef4444",
+  "huy": "#64748b",
+  "khong xac dinh": "#64748b"
+};
+
+const STATUS_FALLBACK_COLORS = ["#0f6fff", "#22a447", "#f59e0b", "#8b5cf6", "#14b8a6", "#ef4444", "#64748b"];
+
+function getStatusColor(status: unknown) {
+  const normalized = normalizedContractStatus(status);
+  const mappedColor = STATUS_COLOR_BY_NORMALIZED_LABEL[normalized];
+  if (mappedColor) return mappedColor;
+  const hash = [...normalized].reduce((total, char) => total + char.charCodeAt(0), 0);
+  return STATUS_FALLBACK_COLORS[hash % STATUS_FALLBACK_COLORS.length];
 }
 
 function compactStatusLabel(value: unknown) {
@@ -569,6 +635,7 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState("Chi tiết hợp đồng");
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [selectedContracts, setSelectedContracts] = useState<any[]>([]);
   const [selectedGroupDetail, setSelectedGroupDetail] = useState<{ title: string; rows: any[] } | null>(null);
   const [selectedAgentDetail, setSelectedAgentDetail] = useState<{ title: string; rows: any[] } | null>(null);
@@ -600,6 +667,7 @@ export default function HomePage() {
       setData(payload);
       setSelectedContracts([]);
       setSelectedTitle("Chi tiết hợp đồng");
+      setSelectedStatus(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không tải được dữ liệu.");
     } finally {
@@ -627,12 +695,35 @@ export default function HomePage() {
 
   const overview = data?.overview;
   const headerPlanProgress = useMemo(() => buildHeaderPlanProgress(month, data?.planTable ?? []), [data?.planTable, month]);
-  const statusDetailRows = tab === "status" && selectedContracts.length > 0 ? selectedContracts : data?.contracts ?? [];
-  const statusDetailTitle = tab === "status" && selectedContracts.length > 0 ? selectedTitle : "Chi tiết hợp đồng";
+  const hasSelectedStatus = tab === "status" && selectedStatus !== null;
+  const statusDetailRows = useMemo(() => {
+    const allContracts = data?.contracts ?? [];
+    if (selectedStatus === null) return allContracts;
+
+    const selectedLabel = normalizedContractStatus(selectedStatus);
+    return allContracts.filter((item: any) => {
+      const itemStatus = item.policy_status ?? item.status ?? item.contract_status ?? "";
+      return normalizedContractStatus(itemStatus) === selectedLabel;
+    });
+  }, [data?.contracts, selectedStatus]);
+  const statusDetailTitle = hasSelectedStatus ? selectedTitle : "Chi tiết hợp đồng";
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const activeFilterChips = useMemo(() => getActiveFilterChips(filters), [filters]);
   const mobileOptionTabs = tabs.filter((item) => item.id !== "overview" && item.id !== "status");
   const isMobileOptionTabActive = tab !== "overview" && tab !== "status";
+  const headerCopy: Record<Tab, { title: string; subtitle: string }> = {
+    overview: { title: `Tổng quan doanh thu ${monthLabel(month).toLowerCase()}`, subtitle: `Cập nhật gần nhất: ${formatDateTimeVi(data?.updatedAt ?? null)}` },
+    status: { title: "Hợp đồng", subtitle: "Quản lý và theo dõi hiệu quả hợp đồng" },
+    groups: { title: "Nhóm", subtitle: "Theo dõi hiệu quả hoạt động của các nhóm" },
+    agents: { title: "TVV", subtitle: "Theo dõi hiệu quả hoạt động của tư vấn viên" },
+    ads: { title: "ADO", subtitle: "Theo dõi và quản lý hiệu quả ADO theo phòng kinh doanh" },
+    contests: { title: "Chương trình thi đua", subtitle: "Theo dõi và quản lý hiệu quả các chương trình thi đua" },
+    starviet: { title: "Sao Việt cá nhân", subtitle: "Theo dõi danh hiệu Sao Việt năm 2026" },
+    admin: { title: "Quản trị", subtitle: "Quản lý dữ liệu và hệ thống" },
+    upload: { title: "Quản trị", subtitle: "Quản lý dữ liệu và hệ thống" },
+    time: { title: "Theo dõi thời gian", subtitle: "Diễn biến doanh thu theo thời gian" }
+  };
+  const currentHeader = headerCopy[tab];
 
   function switchTab(nextTab: Tab) {
     setMobileOptionsOpen(false);
@@ -645,6 +736,7 @@ export default function HomePage() {
     setTab(nextTab);
     setSelectedContracts([]);
     setSelectedTitle("Chi tiết hợp đồng");
+    setSelectedStatus(null);
     setSelectedGroupDetail(null);
     setSelectedAgentDetail(null);
   }
@@ -655,6 +747,7 @@ export default function HomePage() {
     setTab("upload");
     setSelectedContracts([]);
     setSelectedTitle("Chi tiết hợp đồng");
+    setSelectedStatus(null);
     setSelectedGroupDetail(null);
     setSelectedAgentDetail(null);
   }
@@ -681,18 +774,14 @@ export default function HomePage() {
   }
 
   return (
-    <main className="app dashboard-page">
+    <main className={`app dashboard-page tab-${tab}`}>
       <header className="topbar dashboard-header">
         <div className="topbar-inner">
           <div className="topbar-copy">
             <h1>
-              <span className="desktop-header-title">Tổng quan doanh thu {monthLabel(month).toLowerCase()}</span>
+              <span className="desktop-header-title">{currentHeader.title}</span>
               <span className="mobile-header-title">Doanh thu T{selectedMonthNumber(month)}/{month.slice(0, 4)}</span>
             </h1>
-            <p className="topbar-meta">
-              <span className="desktop-header-meta">Cập nhật gần nhất: {formatDateTimeVi(data?.updatedAt ?? null)}</span>
-              <span className="mobile-header-meta">Cập nhật: {formatShortDateTimeVi(data?.updatedAt ?? null)}</span>
-            </p>
           </div>
           {tab === "overview" && data && <HeaderPlanProgress items={headerPlanProgress} />}
           <label className="month-switcher">
@@ -712,6 +801,10 @@ export default function HomePage() {
       </header>
 
       <nav className="tabs dashboard-tabs" aria-label="Dashboard tabs">
+        <div className="sidebar-brand" aria-label="Dashboard doanh thu">
+          <span className="sidebar-brand-mark"><BarChart3 size={22} /></span>
+          <span><strong>Dashboard</strong><small>Doanh thu</small></span>
+        </div>
         {tabs.map((item) => (
           <button key={item.id} className={`tab ${tab === item.id ? "active" : ""} ${item.id !== "overview" && item.id !== "status" ? "mobile-hidden-tab" : ""}`} onClick={() => switchTab(item.id)}>
             <item.icon size={16} />
@@ -724,6 +817,7 @@ export default function HomePage() {
           <span className="tab-label-full">Tùy chọn</span>
           <span className="tab-label-short">Tùy chọn</span>
         </button>
+        <LastUpdatedBox updatedAt={data?.updatedAt ?? null} />
       </nav>
 
       {mobileOptionsOpen && (
@@ -790,15 +884,15 @@ export default function HomePage() {
             {tab === "overview" && <Overview data={data} month={month} selectedAds={filters.ads} onViewDetails={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} onGoGroups={() => switchTab("groups")} onGoAgents={() => switchTab("agents")} />}
             {tab === "groups" && <GroupTable month={month} rows={data.groups} contracts={data.contracts} openContracts={(title, rows) => setSelectedGroupDetail({ title, rows })} />}
             {tab === "agents" && <AgentTable month={month} rows={data.agents} contracts={data.contracts} openContracts={(title, rows) => setSelectedAgentDetail({ title, rows })} />}
-            {tab === "status" && <StatusReport report={data.statuses} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
+            {tab === "status" && <StatusReport report={data.statuses} contracts={data.contracts} openContracts={(status, title, rows) => { setSelectedStatus(status); setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "time" && <TimeReport report={data.timeSeries} />}
-            {tab === "ads" && <AdsTable rows={data.ads} month={month} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
+            {tab === "ads" && <AdsTable report={data.ado} rows={data.ads} month={month} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "contests" && <CompetitionPanel month={month} refreshKey={competitionRefreshKey} onChanged={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
             {tab === "starviet" && <StarVietPanel report={data.starViet} warning={data.starVietWarning} />}
             {tab === "admin" && <AdminPanel month={month} planRows={data.planTable ?? []} onSaved={loadDashboard} />}
             {tab === "upload" && <UploadPanel month={month} uploader={currentUploader} onUploaded={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
 
-            {tab === "status" && <ContractDetails title={statusDetailTitle} rows={statusDetailRows} showStatus />}
+            {tab === "status" && <ContractDetails title={statusDetailTitle} rows={statusDetailRows} showStatus emptyMessage={hasSelectedStatus ? "Không có hồ sơ thuộc trạng thái này" : undefined} />}
           </>
         )}
         {tab === "groups" && selectedGroupDetail && (
@@ -909,14 +1003,26 @@ function Select({ icon: Icon, label, value, options, onChange }: { icon: LucideI
   );
 }
 
+function LastUpdatedBox({ updatedAt }: { updatedAt?: string | null }) {
+  return (
+    <div className="last-updated-box" aria-label="Cập nhật gần nhất">
+      <span className="last-updated-icon"><Clock3 size={16} /></span>
+      <span>
+        <strong>Cập nhật gần nhất</strong>
+        <small>{formatSidebarDateTimeVi(updatedAt)}</small>
+      </span>
+    </div>
+  );
+}
+
 function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAgents }: { data: DashboardData; month: string; selectedAds?: string; onViewDetails: (title: string, rows: any[]) => void; onGoGroups: () => void; onGoAgents: () => void }) {
   const [chartMode, setChartMode] = useState<"day" | "group" | "agent">("day");
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [isMobileChart, setIsMobileChart] = useState(false);
   const overview = data?.overview ?? {};
   const timeRows = data?.overviewTimeSeries?.rows ?? [];
-  const groupRows = (data?.overviewGroups ?? []).slice(0, 5);
-  const agentRows = (data?.overviewAgents ?? []).slice(0, 5);
+  const groupRows = (data?.overviewGroups ?? []).slice(0, 3);
+  const agentRows = (data?.overviewAgents ?? []).slice(0, 3);
   const overviewContracts = data?.overviewContracts ?? [];
   const dashboardToday = String(overview.todayDate ?? localIsoDate(data?.updatedAt ?? null));
   const visibleTimeRows = useMemo(() => {
@@ -1087,7 +1193,6 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
           <KpiCard key={item.title} {...item} />
         ))}
         <OverviewPlanCard items={desktopPlanItems} />
-        <KpiCard {...kpis[4]} />
         <KpiCard {...kpis[5]} />
       </section>
 
@@ -1180,7 +1285,7 @@ function OverviewPlanCard({ items }: { items: OverviewPlanItem[] }) {
           const percent = item.percent ?? 0;
           const clampedPercent = Math.min(100, Math.max(0, percent));
           return (
-            <section className="overview-plan-column" key={label}>
+            <section className={`overview-plan-column ${tone}`} key={label}>
               <span className="overview-plan-title">{label}</span>
               <strong>{formatPercent(percent)}</strong>
               <p>Đạt: {formatMoney(item.actual)} / {formatMoney(item.plan)}</p>
@@ -1269,6 +1374,60 @@ function RankBadge({ rank }: { rank: number }) {
   const { className, icon: Icon } = medalTone(rank);
   if (Icon) return <span className={className}><Icon size={14} /> {rank}</span>;
   return <span className={className}>{rank}</span>;
+}
+
+function TemplateProgress({ value, max, tone = "blue" }: { value: number; max: number; tone?: "blue" | "green" | "purple" | "gold" }) {
+  const percent = max > 0 ? Math.min(100, Math.max(0, (Number(value ?? 0) / max) * 100)) : 0;
+  return (
+    <span className={`template-progress template-progress-${tone}`}>
+      <i><em style={{ width: `${percent}%` }} /></i>
+    </span>
+  );
+}
+
+function TemplatePager({ total, label }: { total: number; label: string }) {
+  const pageCount = Math.max(1, Math.ceil(total / 10));
+  const last = Math.min(10, total);
+  return (
+    <div className="template-pager">
+      <div className="template-page-size">Hiển thị <span>10 <ChevronDown size={14} /></span> dòng/trang</div>
+      <div className="template-page-buttons">
+        <button type="button" disabled><ChevronLeft size={16} /></button>
+        <button type="button" className="active">1</button>
+        {pageCount >= 2 && <button type="button">2</button>}
+        {pageCount >= 3 && <button type="button">3</button>}
+        {pageCount > 4 && <span>...</span>}
+        {pageCount > 3 && <button type="button">{pageCount}</button>}
+        <button type="button"><ChevronRight size={16} /></button>
+      </div>
+      <div className="template-page-summary">1 - {last} trong tổng số {formatNumber(total)} {label}</div>
+    </div>
+  );
+}
+
+function GroupAgentKpiRow({ type, rows, contracts }: { type: "group" | "agent"; rows: any[]; contracts: any[] }) {
+  const totalAfyp = rows.reduce((sum, row) => sum + Number(row.afyp ?? 0), 0);
+  const totalIp = rows.reduce((sum, row) => sum + Number(row.ip ?? 0), 0);
+  const totalContracts = rows.reduce((sum, row) => sum + Number(row.contractCount ?? 0), 0);
+  const totalAgents = type === "agent"
+    ? rows.length
+    : rows.reduce((sum, row) => sum + Number(row.agentCount ?? 0), 0);
+  const activeCount = type === "agent"
+    ? rows.filter((row) => Number(row.contractCount ?? 0) > 0 || Number(row.afyp ?? 0) > 0).length
+    : rows.filter((row) => Number(row.contractCount ?? 0) > 0 || Number(row.afyp ?? 0) > 0).length;
+  const averageShare = rows.length ? rows.reduce((sum, row) => sum + Number(row.afypShare ?? 0), 0) / rows.length : 0;
+  const totalLabel = type === "agent" ? "Tổng số TVV" : "Tổng số nhóm";
+  const activeLabel = type === "agent" ? "Có hiệu lực" : "Có hiệu lực";
+  return (
+    <section className={`kpi-grid kpi-grid-6 template-kpi-row ${type === "agent" ? "agent-kpi-row" : ""}`}>
+      <KpiCard title={totalLabel} value={formatNumber(type === "agent" ? rows.length : rows.length)} icon={type === "agent" ? Users : ClipboardList} tone="blue" detailLines={[{ text: type === "agent" ? "TVV trong dữ liệu hiện tại" : "Nhóm trong dữ liệu hiện tại", tone: "muted" }]} />
+      <KpiCard title={activeLabel} value={formatNumber(activeCount)} icon={Target} tone="green" detailLines={[{ text: "Có phát sinh doanh thu", tone: "positive" }]} />
+      <KpiCard title="Chờ xử lý" value={formatNumber(Math.max(0, contracts.length - totalContracts))} icon={TrendingUp} tone="orange" detailLines={[{ text: "Theo dữ liệu hợp đồng", tone: "muted" }]} />
+      <KpiCard title="Hoàn phí" value={formatNumber(contracts.filter((item) => normalizeViText(String(item.policy_status ?? item.status ?? "")).includes("hoan phi")).length)} icon={Link2} tone="purple" detailLines={[{ text: "Theo trạng thái hợp đồng", tone: "muted" }]} />
+      <KpiCard title={type === "agent" ? "Tổng AFYP" : "Tổng TVV"} value={type === "agent" ? formatCompactVnd(totalAfyp) : formatNumber(totalAgents)} icon={type === "agent" ? PieChart : Users} tone="gold" detailLines={[{ text: type === "agent" ? `IP: ${formatCompactVnd(totalIp)}` : `AFYP: ${formatCompactVnd(totalAfyp)}`, tone: "positive" }]} />
+      <KpiCard title="Tỷ trọng TB" value={formatPercent(averageShare)} icon={PieChart} tone="neutral" detailLines={[{ text: "Trung bình theo bảng", tone: "positive" }]} />
+    </section>
+  );
 }
 
 function MobileRankBadge({ rank }: { rank: number }) {
@@ -1409,7 +1568,7 @@ function OverviewRankingCard({ title, icon: Icon, rows, columns, onViewMore, onR
       <MobileRankingList rows={rows} type={type} onRowClick={onRowClick} />
       {rows.length === 0 && <p className="empty-state">Không có dữ liệu</p>}
       <div className="card-footer-link">
-        <button className="ghost link-button" type="button" onClick={onViewMore}>Xem chi tiết {title.toLowerCase().includes("tvv") ? "TVV" : "nhóm"} <ArrowDownRight size={16} /></button>
+        <button className="ghost link-button" type="button" onClick={onViewMore}>Xem tất cả <ArrowDownRight size={16} /></button>
       </div>
     </div>
   );
@@ -1430,7 +1589,7 @@ function PlanCard({ title, plan, actual, remaining, over, percent, status, note 
 
 function OverviewGroupTable({ rows, contracts, openContracts }: { rows: any[]; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
   return (
-    <div className="panel">
+    <div className="panel contract-details-panel">
       <div className="panel-header"><h2>Xếp hạng nhóm</h2></div>
       <DataTable headers={["#", "Nhóm", "AFYP", "HĐ", "TVV", "Tỷ trọng"]}>
         {rows.map((row) => (
@@ -1650,8 +1809,14 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
   const posterRef = useRef<HTMLDivElement>(null);
   const date = posterDateText();
   const xlsxRows = useMemo(() => buildGroupXlsxRows(rows), [rows]);
+  const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
+  const maxIp = Math.max(...rows.map((row) => Number(row.ip ?? 0)), 0);
+  const maxShare = Math.max(...rows.map((row) => Number(row.afypShare ?? 0)), 0);
+  const maxAverage = Math.max(...rows.map((row) => Number(row.averageAfypPerContract ?? 0)), 0);
   return (
-    <div className="panel">
+    <>
+    <GroupAgentKpiRow type="group" rows={rows} contracts={contracts} />
+    <div className="panel template-ranking-panel">
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng nhóm</h2>
         <div className="poster-actions">
@@ -1659,16 +1824,27 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng nhóm" fileName={`xep-hang-nhom-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Ban", "Nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]}>
+      <DataTable className="desktop-table template-ranking-table group-ranking-table" headers={["#", "Ban", "Nhóm", "Trưởng nhóm", "AFYP", "IP", "HĐ", "TVV", "Tỷ trọng", "BQ/HĐ"]} colWidths={["50px", "130px", "150px", "150px", "180px", "180px", "60px", "60px", "140px", "160px"]}>
         {rows.map((row) => (
           <tr key={`${row.banName}-${row.groupName}`} className="clickable" onClick={() => openContracts(row.groupName, contracts.filter((item) => groupNameForRecord(item) === row.groupName))}>
-            <td>{row.rank}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
+            <td><RankBadge rank={row.rank} /></td>
+            <td>{row.banName}</td>
+            <td>{row.groupName}</td>
+            <td>{row.leaderName ?? row.managerName ?? row.banName ?? "-"}</td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{moneyCell(row.afyp)}</span><TemplateProgress value={Number(row.afyp ?? 0)} max={maxAfyp} tone="blue" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
+            <td className="count-cell">{row.contractCount}</td>
+            <td className="count-cell">{row.agentCount}</td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatPercent(row.afypShare)}</span><TemplateProgress value={Number(row.afypShare ?? 0)} max={maxShare} tone="blue" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.averageAfypPerContract)}</span><TemplateProgress value={Number(row.averageAfypPerContract ?? 0)} max={maxAverage} tone="purple" /></td>
           </tr>
         ))}
       </DataTable>
       <MobileGroupRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
+      <TemplatePager total={rows.length} label="nhóm" />
       <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="group" rows={rows} /></div></div>
     </div>
+    </>
   );
 }
 
@@ -1676,8 +1852,12 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
   const posterRef = useRef<HTMLDivElement>(null);
   const date = posterDateText();
   const xlsxRows = useMemo(() => buildAgentXlsxRows(rows), [rows]);
+  const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
+  const maxIp = Math.max(...rows.map((row) => Number(row.ip ?? 0)), 0);
   return (
-    <div className="panel">
+    <>
+    <GroupAgentKpiRow type="agent" rows={rows} contracts={contracts} />
+    <div className="panel template-ranking-panel">
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng tư vấn viên</h2>
         <div className="poster-actions">
@@ -1685,29 +1865,54 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng TVV" fileName={`xep-hang-tvv-${month}.xlsx`} />
         </div>
       </div>
-      <DataTable className="desktop-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"]}>
+      <DataTable className="desktop-table template-ranking-table agent-ranking-table" headers={["#", "Mã TVV", "Tên TVV", "Ban", "Nhóm", "ADS", "AFYP", "IP", "HĐ", "BQ/HĐ"]} colWidths={["50px", "120px", "190px", "130px", "130px", "170px", "180px", "180px", "60px", "140px"]}>
         {rows.map((row) => (
           <tr key={`${row.agentName}-${row.agentCode}`} className="clickable" onClick={() => openContracts(row.agentName, contracts.filter((item) => item.agent_name === row.agentName))}>
-            <td>{row.rank}</td><td>{row.agentCode}</td><td>{row.agentName}</td><td>{row.banName}</td><td>{row.groupName}</td><td>{row.adsName}</td><td>{moneyCell(row.afyp)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.averageAfypPerContract)}</td>
+            <td><RankBadge rank={row.rank} /></td>
+            <td>{row.agentCode}</td>
+            <td>{row.agentName}</td>
+            <td>{row.banName}</td>
+            <td>{row.groupName}</td>
+            <td>{row.adsName}</td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{moneyCell(row.afyp)}</span><TemplateProgress value={Number(row.afyp ?? 0)} max={maxAfyp} tone="blue" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
+            <td className="count-cell">{row.contractCount}</td>
+            <td className="number-cell"><span className="ranking-metric-value">{formatCompactVnd(row.averageAfypPerContract)}</span></td>
           </tr>
         ))}
       </DataTable>
       <MobileAgentRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
+      <TemplatePager total={rows.length} label="TVV" />
       <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="agent" rows={rows} /></div></div>
     </div>
+    </>
   );
 }
 
-function StatusReport({ report, contracts, openContracts }: { report: any; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
-  const hiddenStatusLabels = new Set(["có hiệu lực", "hoàn phí"]);
+function StatusReport({ report, contracts, openContracts }: { report: any; contracts: any[]; openContracts: (status: string, title: string, rows: any[]) => void }) {
+  const hiddenStatusLabels = new Set(["co hieu luc", "hoan phi"]);
   const tableRows = (report.statusTableRows ?? report.groupedStatusRows ?? []).filter((row: any) => !hiddenStatusLabels.has(normalizedContractStatus(row.label)));
   const mobileStatusRows = tableRows;
+  const contractsByStatus = (row: any) => {
+    const rowLabel = normalizedContractStatus(row.label);
+    return contracts.filter((item) => {
+      const itemStatus = item.policy_status ?? item.status ?? item.contract_status ?? "";
+      return normalizedContractStatus(itemStatus) === rowLabel;
+    });
+  };
+  const openStatusContracts = (row: any) => openContracts(String(row.label), `Danh sách hồ sơ: ${row.label}`, contractsByStatus(row));
   const cards = [
     { title: "Tổng hồ sơ", mobileTitle: "Tổng HS", count: report.totalPolicies ?? 0, afyp: report.totalAfyp ?? 0, icon: ClipboardList, tone: "blue" },
     { title: "Có hiệu lực", mobileTitle: "Hiệu lực", count: report.activePolicyCount ?? 0, afyp: report.activePolicyAfyp ?? 0, icon: Target, tone: "green" },
-    { title: "Ch xử lý", mobileTitle: "Ch XL", count: report.pendingPolicyCount ?? 0, afyp: report.pendingPolicyAfyp ?? 0, icon: TrendingUp, tone: "orange" },
+    { title: "Chờ xử lý", mobileTitle: "Chờ XL", count: report.pendingPolicyCount ?? 0, afyp: report.pendingPolicyAfyp ?? 0, icon: TrendingUp, tone: "orange" },
     { title: "Hoàn phí", mobileTitle: "Hoàn phí", count: report.refundPolicyCount ?? 0, afyp: report.refundPolicyAfyp ?? 0, icon: Coins, tone: "purple" }
   ];
+  const pieRows = tableRows.map((row: any) => ({
+    name: row.label,
+    value: Number(row.count ?? 0),
+    rate: row.rate,
+    color: getStatusColor(row.label)
+  })).filter((row: any) => row.value > 0);
 
   return (
     <>
@@ -1738,24 +1943,52 @@ function StatusReport({ report, contracts, openContracts }: { report: any; contr
           );
         })}
       </div>
-      <div className="panel status-table-panel">
-        <DataTable className="desktop-table" headers={["Nhóm trạng thái", "Số hồ sơ", "AFYP", "Tỷ lệ"]}>
-          {tableRows.map((row: any) => (
-            <tr key={row.key ?? row.label} className="clickable" onClick={() => openContracts(row.label, contracts.filter((item) => row.statuses?.includes(normalizedContractStatus(item.policy_status))))}>
-              <td>{row.label}</td><td>{formatNumber(row.count)}</td><td>{formatCompactVnd(row.afyp)}</td><td>{formatPercent(row.rate)}</td>
-            </tr>
-          ))}
-        </DataTable>
-        <div className="mobile-card-list status-mobile-list">
-          {mobileStatusRows.map((row: any) => (
-            <button className="mobile-status-card" key={row.key ?? row.label} type="button" onClick={() => openContracts(row.label, contracts.filter((item) => row.statuses?.includes(normalizedContractStatus(item.policy_status))))}>
-              <strong>{compactStatusLabel(row.label)}</strong>
-              <div className="mobile-metric-grid compact">
-                <MobileMetric label="HS" value={formatNumber(row.count)} />
-                <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
-              </div>
-            </button>
-          ))}
+      <div className="status-two-column">
+        <div className="panel status-table-panel">
+          <div className="panel-header"><h2>Nhóm trạng thái</h2></div>
+          <DataTable className="desktop-table template-yellow-head" headers={["Nhóm trạng thái", "Số hồ sơ", "AFYP", "Tỷ lệ"]}>
+            {tableRows.map((row: any) => (
+              <tr key={row.key ?? row.label} className="clickable status-clickable-row" onClick={() => openStatusContracts(row)}>
+                <td>{row.label}</td><td>{formatNumber(row.count)}</td><td>{formatCompactVnd(row.afyp)}</td><td>{formatPercent(row.rate)}</td>
+              </tr>
+            ))}
+          </DataTable>
+          <div className="mobile-card-list status-mobile-list">
+            {mobileStatusRows.map((row: any) => (
+              <button className="mobile-status-card" key={row.key ?? row.label} type="button" onClick={() => openStatusContracts(row)}>
+                <strong>{compactStatusLabel(row.label)}</strong>
+                <div className="mobile-metric-grid compact">
+                  <MobileMetric label="HS" value={formatNumber(row.count)} />
+                  <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="panel status-donut-panel">
+          <div className="panel-header"><h2>Phân bổ theo trạng thái</h2></div>
+          <div className="status-donut-layout">
+            <div className="status-donut-chart">
+              <ResponsiveContainer width="100%" height={230}>
+                <RechartsPieChart>
+                  <Pie data={pieRows} dataKey="value" nameKey="name" innerRadius={64} outerRadius={94} paddingAngle={1}>
+                    {pieRows.map((entry: any) => <Cell key={entry.name} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(value: any, name: any) => [`${formatNumber(Number(value))} hồ sơ`, name]} />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+              <div className="status-donut-center"><strong>{formatNumber(report.totalPolicies ?? 0)}</strong><span>Tổng hồ sơ</span></div>
+            </div>
+            <div className="status-donut-legend">
+              {pieRows.map((row: any) => (
+                <button key={row.name} type="button" onClick={() => openStatusContracts({ label: row.name })}>
+                  <i style={{ backgroundColor: row.color }} />
+                  <span>{row.name}</span>
+                  <b>{formatPercent(row.rate)} ({formatNumber(row.value)})</b>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </>
@@ -1792,7 +2025,7 @@ function TimeReport({ report }: { report: any }) {
             <LineChart data={report.yearPlanRows ?? []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="monthLabel" />
-              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tỷ`} />
+              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tá»·`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
               <Line type="monotone" dataKey="actual" name="AFYP thực hiện" stroke="#0759a3" strokeWidth={2} />
@@ -1846,30 +2079,70 @@ function adsRowContracts(row: any, contracts: any[]) {
   });
 }
 
-function AdsTable({ rows, month, contracts, openContracts }: { rows: any[]; month: string; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
-  const adsColWidths = ["24%", "12%", "14%", "12%", "12%", "7%", "7%", "12%"];
+function AdsTable({ report, rows, month, contracts, openContracts }: { report?: any; rows: any[]; month: string; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
+  const [detailPeriod, setDetailPeriod] = useState<"month" | "quarter" | "year">("month");
+  const adoRows = report?.rows ?? [];
+  const departmentRows = report?.departments ?? [];
+  useEffect(() => {
+    const sourceAdos = rows.map((row) => String(row.adsName ?? row.adsDisplayName ?? "")).filter(Boolean);
+    console.log("[ADO] Danh sách đ�c được từ BC02:", sourceAdos);
+    console.log("[ADO] Danh sách sau chuẩn hóa alias:", adoRows.map((row: any) => row.sourceName ?? row.adoName));
+    console.log("[ADO] Danh sách cuối cùng hiển thị:", adoRows.map((row: any) => row.adoName));
+    if (!adoRows.some((row: any) => row.adoName === "Nguyễn Thị Trầm")) console.warn("[ADO] Nguyễn Thị Trầm không xuất hiện: kiểm tra mapping ADO/KPI.");
+  }, [rows, adoRows]);
+  const tone = (value: number) => value >= 100 ? "good" : value >= 80 ? "blue" : value >= 50 ? "warn" : "bad";
+  const kpiDonut = (value: number, color = "#1677ff") => <div className="ado-donut ado-kpi-donut" style={{ background: `conic-gradient(${color} ${Math.min(value, 100)}%, #e8f1fb 0)` }}><div><strong>{formatPercent(value)}</strong><small>Hoàn thành KPI tháng</small></div></div>;
+  const revenueDonut = (items: any[], total: number) => {
+    let cursor = 0;
+    const slices = items.map((row, index) => {
+      const start = cursor;
+      const share = total ? Number(row.monthlyAfyp ?? 0) / total * 100 : 0;
+      cursor += share;
+      return `${adoColor(row.adoName, index)} ${start}% ${cursor}%`;
+    });
+    return <div className="ado-donut ado-revenue-donut" style={{ background: `conic-gradient(${slices.length ? slices.join(", ") : "#e8f1fb 0 100%"})` }}><div><strong>{formatCompactVnd(total)}</strong></div></div>;
+  };
+  const periodLabel = detailPeriod === "month" ? "tháng" : detailPeriod === "quarter" ? "quý" : "năm";
+  const periodOptions: Array<{ key: "month" | "quarter" | "year"; label: string }> = [{ key: "month", label: "Tháng" }, { key: "quarter", label: "Quý" }, { key: "year", label: "Năm" }];
+  const periodMetrics = (row: any) => {
+    const metric = detailPeriod === "quarter"
+      ? { afyp: row.quarterAfyp, kpi: row.quarterKpi, rate: row.quarterRate, ip: row.quarterIp, contractCount: row.quarterContractCount, agentCount: row.quarterAgentCount }
+      : detailPeriod === "year"
+        ? { afyp: row.yearAfyp, kpi: row.yearKpi, rate: row.yearRate, ip: row.yearIp, contractCount: row.yearContractCount, agentCount: row.yearAgentCount }
+        : { afyp: row.monthlyAfyp, kpi: row.monthlyKpi, rate: row.monthlyRate, ip: row.ip, contractCount: row.contractCount, agentCount: row.agentCount };
+    return {
+      afyp: Number(metric.afyp ?? 0),
+      kpi: Number(metric.kpi ?? 0),
+      rate: Number(metric.rate ?? 0),
+      ip: Number(metric.ip ?? 0),
+      contractCount: Number(metric.contractCount ?? 0),
+      agentCount: Number(metric.agentCount ?? 0)
+    };
+  };
+  useEffect(() => {
+    [...adoRows, ...departmentRows].forEach((row: any) => {
+      const metric = periodMetrics(row);
+      console.log("[ADO period debug]", {
+        currentPeriodMode: detailPeriod,
+        recordsUsedForPeriod: row.periodRecordCounts?.[detailPeriod] ?? null,
+        adoName: row.adoName ?? row.department,
+        afypTotal: metric.afyp,
+        ipTotal: metric.ip,
+        contractCount: metric.contractCount,
+        tvvCount: metric.agentCount
+      });
+    });
+  }, [detailPeriod, adoRows, departmentRows]);
+  const adoColWidths = ["28%", "12%", "12%", "16%", "13%", "10%", "9%"];
+  const periodButtons = <div className="ado-period-toggle">{periodOptions.map((option) => <button key={option.key} type="button" className={detailPeriod === option.key ? "active" : ""} onClick={() => setDetailPeriod(option.key)}>{option.label}</button>)}</div>;
+  const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatCompactVnd(metric.afyp)}</td><td>{formatCompactVnd(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(delta))}` : formatCompactVnd(delta)}</td><td>{formatCompactVnd(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
   return (
-    <div className="panel">
-      <div className="panel-header"><h2>Báo cáo ADS</h2></div>
-      <DataTable className="desktop-table ads-table" headers={["Tên ADS", "AFYP", "Kế hoạch tháng", "HT kế hoạch", "IP", "HĐ", "TVV", "Tỷ trọng"]} colWidths={adsColWidths}>
-        {rows.map((row) => {
-          const planMillion = row.kpi ?? getAdsPlan(row.adsName, month);
-          const planVnd = planMillion ? planMillion * 1_000_000 : 0;
-          const achievement = planVnd > 0 ? (Number(row.afyp ?? 0) / planVnd) * 100 : null;
-          const title = adsRowTitle(row);
-          return (
-            <tr key={`${row.adsName}-${row.adsCode}-${row.adsSubtitle}`} className="clickable" onClick={() => openContracts(title, adsRowContracts(row, contracts))}>
-              <td>
-                <div className="ads-name-cell">
-                  <strong>{title}</strong>
-                  {row.adsSubtitle && <span>{row.adsSubtitle}</span>}
-                </div>
-              </td><td>{moneyCell(row.afyp)}</td><td>{formatPlanMillion(planMillion)}</td><td>{formatPercent(achievement)}</td><td>{formatCompactVnd(row.ip)}</td><td>{row.contractCount}</td><td>{row.agentCount}</td><td>{formatPercent(row.afypShare)}</td>
-            </tr>
-          );
-        })}
-      </DataTable>
-      <MobileAdsCards rows={rows} month={month} contracts={contracts} openContracts={openContracts} />
+    <div className="panel ado-page">
+      <div className="panel-header"><h2>Tổng quan KPI theo phòng</h2></div>
+      <div className="ado-departments">{departmentRows.map((row: any, index: number) => <section className="ado-department summary" key={row.department}><div><h3>{row.department}</h3><strong>{formatCompactVnd(row.monthlyAfyp)}</strong></div>{kpiDonut(row.monthlyRate, index ? "#16a34a" : "#1677ff")}<aside><span>Hoàn thành<b>{formatPercent(row.monthlyRate)}</b></span><span>Còn thiếu<b>{formatCompactVnd(Math.max(row.monthlyKpi-row.monthlyAfyp,0))}</b></span></aside></section>)}</div>
+      <div className="ado-composition">{departmentRows.map((department: any) => { const items=adoRows.filter((row:any)=>row.department===department.department); const total = Number(department.monthlyAfyp ?? 0); return <section key={department.department} className={department.department === "PTKD 2" ? "ptkd-2" : "ptkd-1"}><h3>Cơ cấu doanh thu {department.department} (AFYP tháng)</h3>{revenueDonut(items,total)}<div className="ado-composition-list">{items.map((row:any,index:number)=>{ const share = total ? Number(row.monthlyAfyp ?? 0) / total * 100 : 0; return <p key={row.adoName} style={{ "--ado-color": adoColor(row.adoName, index) } as React.CSSProperties}><span>{row.adoName}</span><b>{formatCompactVnd(row.monthlyAfyp)}</b><strong>{formatPercent(share)}</strong></p>;})}</div></section>;})}</div>
+      <div className="panel-header ado-detail-header"><h2>Chi tiết ADO</h2></div>
+      <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatCompactVnd(total.afyp)}</td><td>{formatCompactVnd(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(totalDelta))}` : formatCompactVnd(totalDelta)}</td><td>{formatCompactVnd(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable></section>; })}</div>
     </div>
   );
 }
@@ -1898,7 +2171,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
       <section className="star-viet-hero">
         <div>
           <p>Sao Việt cá nhân</p>
-          <h2>SAO VIỆT C NHÂN</h2>
+          <h2>SAO VIỆT CÁ NHÂN</h2>
           <span>Theo dõi danh hiệu Sao Việt năm 2026</span>
         </div>
         <div className="star-viet-highlight">
@@ -1910,7 +2183,7 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
       {warning && <p className="warning-list">{warning}</p>}
       <section className="kpi-grid star-viet-kpis">
         <KpiCard tone="blue" icon={Users} title="TVV theo dõi" value={formatNumber(summary.totalAgents ?? 0)} />
-        <KpiCard tone="gold" icon={Trophy} title="ạt Sao Việt" value={formatNumber(summary.achievedAgents ?? 0)} />
+        <KpiCard tone="gold" icon={Trophy} title="TVV đạt Sao Việt" value={formatNumber(summary.achievedAgents ?? 0)} />
         <KpiCard tone="green" icon={Coins} title="Tổng AFYP Sao Việt" value={formatCompactVnd(summary.totalAfyp ?? 0)} />
         <KpiCard tone="purple" icon={Medal} title="Gần đạt mốc" value={formatNumber(summary.nearNextAgents ?? 0)} />
       </section>
@@ -3070,7 +3343,7 @@ function CompetitionContractsTable({ rows, hiddenColumns, onHideColumn, onShowAl
   return (
     <>
       <CompetitionHideableTable table="contracts" rows={sortedRows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
-        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "collection_date", header: "Ngày thu", render: (row) => formatDateVi(row.collection_date) }, { key: "policy_no", header: "Số GYC", render: (row) => row.gyc_no }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "policy_owner", header: "BMBH", render: (row) => row.customer_name }, { key: "insured_name", header: "NĐBH", render: (row) => row.insured_name || "-" }, { key: "status", header: "Trạng thái hợp đồng", render: (row) => <span className="contract-status-pill">{row.status || "-"}</span> }, { key: "ip", header: "IP", render: (row) => formatCompactVnd(row.ip ?? 0) }, { key: "afyp", header: "AFYP", render: (row) => formatCompactVnd(row.afyp ?? 0) }, { key: "reward_name", header: "Giải thưởng", render: (row) => row.reward_name }, { key: "reward_amount", header: "Tiền thưởng", render: (row) => formatCompactVnd(row.reward_amount ?? 0) }
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "collection_date", header: "Ngày thu", render: (row) => formatDateVi(row.collection_date) }, { key: "policy_no", header: "Số GYC", render: (row) => row.gyc_no }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "policy_owner", header: "BMBH", render: (row) => row.customer_name }, { key: "insured_name", header: "NĐBH", render: (row) => row.insured_name || "-" }, { key: "status", header: "Trạng thái hợp đồng", render: (row) => <span className="contract-status-pill" style={{ color: getStatusColor(row.status), borderColor: getStatusColor(row.status) }}>{row.status || "-"}</span> }, { key: "ip", header: "IP", render: (row) => formatCompactVnd(row.ip ?? 0) }, { key: "afyp", header: "AFYP", render: (row) => formatCompactVnd(row.afyp ?? 0) }, { key: "reward_name", header: "Giải thưởng", render: (row) => row.reward_name }, { key: "reward_amount", header: "Tiền thưởng", render: (row) => formatCompactVnd(row.reward_amount ?? 0) }
       ]} />
       <div className="contest-detail-card-list">
         {sortedRows.map((row, index) => (
@@ -3146,7 +3419,7 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
         />
         {error && <div className="login-error">{error}</div>}
         <div className="upload-auth-actions">
-          <button className="secondary" type="button" onClick={onCancel}>Hủy</button>
+          <button className="secondary" type="button" onClick={onCancel}>Há»§y</button>
           <button type="button" onClick={authenticate}>Xác nhận</button>
         </div>
       </form>
@@ -3555,7 +3828,7 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
   );
 }
 
-function ContractDetails({ title, rows, showStatus = false }: { title: string; rows: any[]; showStatus?: boolean }) {
+function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { title: string; rows: any[]; showStatus?: boolean; emptyMessage?: string }) {
   const [searchTerm, setSearchTerm] = useState("");
   const sortedRows = sortContracts(rows);
   const normalizedSearchTerm = normalizeViText(searchTerm.trim());
@@ -3593,21 +3866,22 @@ function ContractDetails({ title, rows, showStatus = false }: { title: string; r
           <span>{visibleRows.length} dòng</span>
         </div>
       </div>
-      <DataTable className="desktop-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]}>
+      <DataTable className="desktop-table contract-details-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]} colWidths={showStatus ? ["110px", "130px", "15%", "15%", "17%", "17%", "190px", "110px", "110px"] : undefined}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`}>
-            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td>{contractStatusLabel(row.policy_status)}</td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>
+      {visibleRows.length === 0 && <p className="empty-state">{emptyMessage ?? "Không có hồ sơ."}</p>}
       <div className="mobile-card-list contract-mobile-list">
         {visibleRows.map((row, index) => (
           <article className="mobile-contract-card" key={`${row.contract_no}-mobile-${index}`}>
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
-              {isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}
-              {showStatus && <span className="status-badge">{contractStatusLabel(row.policy_status)}</span>}
+              {isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}
+              {showStatus && <span className="status-badge" style={{ color: getStatusColor(row.policy_status), borderColor: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span>}
             </div>
             <div className="mobile-contract-main">
               <strong>{row.group_name || "Không xác định"}</strong>
