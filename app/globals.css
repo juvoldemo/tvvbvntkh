@@ -7376,9 +7376,61 @@ body,
 /* The status-group list is redundant on the compact Contracts mobile view. */
 @media (max-width: 767px) {
   .tab-status .status-table-panel { display: none !important; }
+  /* Restore the plan-progress block as a compact three-row mobile summary. */
+  body .dashboard-page.tab-overview .overview-plan-card {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    order: 5 !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+  body .dashboard-page.tab-overview .kpi-today-revenue { order: 6 !important; }
+  body .dashboard-page.tab-overview .overview-plan-card h3 {
+    margin: 0 0 8px !important;
+    font-size: 15px !important;
+    line-height: 1.2 !important;
+  }
+  body .dashboard-page.tab-overview .overview-plan-columns {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+  body .dashboard-page.tab-overview .overview-plan-column {
+    display: grid !important;
+    grid-template-columns: minmax(74px, 1fr) auto !important;
+    align-items: center !important;
+    gap: 2px 8px !important;
+    min-height: 52px !important;
+    padding: 7px 8px !important;
+    border: 1px solid #dbe8f6 !important;
+    border-radius: 10px !important;
+    background: #f9fbff !important;
+  }
+  body .dashboard-page.tab-overview .overview-plan-column .overview-plan-title { font-size: 12px !important; font-weight: 700 !important; }
+  body .dashboard-page.tab-overview .overview-plan-column > strong { font-size: 18px !important; font-weight: 700 !important; line-height: 1 !important; }
+  body .dashboard-page.tab-overview .overview-plan-column p { grid-column: 1 / -1 !important; margin: 0 !important; font-size: 10px !important; line-height: 1.2 !important; }
+  body .dashboard-page.tab-overview .overview-plan-column p:nth-of-type(2) { display: none !important; }
+  body .dashboard-page.tab-overview .overview-plan-bar { grid-column: 1 / -1 !important; height: 4px !important; margin-top: 1px !important; }
+  body .dashboard-page.tab-overview .overview-plan-required-box { display: none !important; }
+  body .dashboard-page .month-switcher select {
+    font-size: 11px !important;
+    letter-spacing: -0.02em !important;
+  }
 
   /* ADO: replace visual-heavy blocks and hidden tables with compact figures. */
   body .dashboard-page.tab-ads .ado-page { overflow: hidden !important; }
+  body .dashboard-page.tab-ads .ado-page > .panel-header {
+    min-width: 0 !important;
+    overflow: visible !important;
+    padding: 0 2px !important;
+  }
+  body .dashboard-page.tab-ads .ado-page > .panel-header h2 {
+    overflow: visible !important;
+    white-space: nowrap !important;
+    font-size: 19px !important;
+    line-height: 1.2 !important;
+  }
   body .dashboard-page.tab-ads .ado-department.summary {
     min-height: 0 !important;
     display: grid !important;
@@ -7394,18 +7446,28 @@ body,
   body .dashboard-page.tab-ads .ado-department.summary aside b { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important; }
 
   body .dashboard-page.tab-ads .ado-composition { gap: 10px !important; margin: 8px 0 14px !important; }
-  body .dashboard-page.tab-ads .ado-composition section { grid-template-columns: 88px minmax(0, 1fr) !important; gap: 8px !important; padding: 10px !important; }
+  body .dashboard-page.tab-ads .ado-composition section {
+    min-height: 0 !important;
+    grid-template-columns: 76px minmax(0, 1fr) !important;
+    gap: 7px !important;
+    padding: 9px !important;
+  }
   body .dashboard-page.tab-ads .ado-composition h3 {
     min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;
     font-size: 12px !important; line-height: 1.2 !important;
   }
-  body .dashboard-page.tab-ads .ado-composition .ado-revenue-donut { width: 82px !important; }
+  body .dashboard-page.tab-ads .ado-composition .ado-revenue-donut { width: 72px !important; }
   body .dashboard-page.tab-ads .ado-composition .ado-donut strong { font-size: 11px !important; }
   body .dashboard-page.tab-ads .ado-composition-list { gap: 5px !important; }
   body .dashboard-page.tab-ads .ado-composition-list p { grid-template-columns: minmax(0, 1fr) auto auto !important; gap: 5px !important; margin: 0 !important; font-size: 10px !important; }
   body .dashboard-page.tab-ads .ado-composition-list p span { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 10px !important; }
   body .dashboard-page.tab-ads .ado-composition-list p span:before { width: 7px !important; height: 7px !important; margin-right: 4px !important; }
-  body .dashboard-page.tab-ads .ado-composition-list p b, body .dashboard-page.tab-ads .ado-composition-list p strong { font-size: 10px !important; }
+  body .dashboard-page.tab-ads .ado-composition-list p b, body .dashboard-page.tab-ads .ado-composition-list p strong {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    align-self: center !important;
+    font-size: 10px !important;
+  }
 
   body .dashboard-page.tab-ads .ado-detail-sections { display: grid !important; gap: 10px !important; padding: 0 !important; overflow: visible !important; }
   body .dashboard-page.tab-ads .ado-room { min-width: 0 !important; overflow: hidden !important; }
@@ -7587,6 +7649,7 @@ body,
   body .dashboard-page.tab-groups .template-kpi-row .kpi-detail-lines,
   body .dashboard-page.tab-groups .template-kpi-row .progress-shell,
   body .dashboard-page.tab-groups .poster-actions { display: none !important; }
+  body .dashboard-page.tab-groups .template-kpi-row > .kpi:nth-child(n + 3) { display: none !important; }
 
   body .dashboard-page.tab-agents .poster-actions { display: none !important; }
 
