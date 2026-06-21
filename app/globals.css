@@ -7376,6 +7376,77 @@ body,
 /* The status-group list is redundant on the compact Contracts mobile view. */
 @media (max-width: 767px) {
   .tab-status .status-table-panel { display: none !important; }
+  /* Mobile type scale: consistent hierarchy without sacrificing fit. */
+  body .dashboard-page .content {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+  }
+  body .dashboard-page .content .panel-header h2,
+  body .dashboard-page .content .ado-page > .panel-header h2 {
+    font-size: 17px !important;
+    line-height: 1.2 !important;
+    font-weight: 700 !important;
+  }
+  body .dashboard-page .content .panel-header h3,
+  body .dashboard-page .content .overview-plan-card h3,
+  body .dashboard-page .content .ado-composition h3 {
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+    font-weight: 700 !important;
+  }
+  body .dashboard-page .content .section-label,
+  body .dashboard-page .content .filter-toggle-title,
+  body .dashboard-page .content .filter-field .label,
+  body .dashboard-page .content .mobile-rank-title,
+  body .dashboard-page .content .mobile-status-card > strong {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+  }
+  body .dashboard-page .content .panel-subtitle,
+  body .dashboard-page .content .mobile-rank-subtitle,
+  body .dashboard-page .content .filter-toggle-summary,
+  body .dashboard-page .content .mini-line,
+  body .dashboard-page .content .mobile-metric span {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    line-height: 1.25 !important;
+  }
+  body .dashboard-page .content .mobile-metric strong,
+  body .dashboard-page .content .mobile-status-card .mobile-metric strong {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+  }
+  body .dashboard-page .content button,
+  body .dashboard-page .content select,
+  body .dashboard-page .content input {
+    font-size: 12px !important;
+  }
+  body .dashboard-page .content .kpi-left,
+  body .dashboard-page .content .kpi-main-row,
+  body .dashboard-page .content .mobile-rank-main,
+  body .dashboard-page .content .mobile-status-card,
+  body .dashboard-page .content .contest-mobile-head,
+  body .dashboard-page .content .ado-mobile-detail-row {
+    min-width: 0 !important;
+  }
+  body .dashboard-page .content .kpi-left > span,
+  body .dashboard-page .content .mobile-rank-title,
+  body .dashboard-page .content .mobile-rank-subtitle,
+  body .dashboard-page .content .contest-mobile-head strong,
+  body .dashboard-page .content .contest-mobile-head span,
+  body .dashboard-page .content .ado-mobile-name {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  body .dashboard-page .content .kpi-main-row > strong,
+  body .dashboard-page .content .today-mobile-value {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
   /* Restore the plan-progress block as a compact three-row mobile summary. */
   body .dashboard-page.tab-overview .overview-plan-card {
     display: block !important;
