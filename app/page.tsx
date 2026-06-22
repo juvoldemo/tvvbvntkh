@@ -105,7 +105,7 @@ function saveHiddenCompetitionProgramIds(ids: Set<string>) {
 }
 
 function moneyCell(value: number) {
-  return <strong>{formatCompactVnd(value)}</strong>;
+  return <strong>{formatFullMoney(value)}</strong>;
 }
 
 function sortContracts(rows: any[]) {
@@ -195,6 +195,10 @@ function formatShortDateTimeVi(value: string | null | undefined) {
 
 function formatNumber(value: number) {
   return value.toLocaleString("vi-VN");
+}
+
+function formatFullMoney(value: number | null | undefined) {
+  return Number(value ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
 function formatSignedVnd(value: number) {
@@ -1719,6 +1723,14 @@ type XlsxRow = Record<string, XlsxCell>;
 function exportToXlsx({ rows, sheetName, fileName }: { rows: XlsxRow[]; sheetName: string; fileName: string }) {
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+  const fullMoneyColumns = new Set(["IP", "AFYP", "BQ/HĐ"]);
+  headers.forEach((header, columnIndex) => {
+    if (!fullMoneyColumns.has(header)) return;
+    for (let rowIndex = 1; rowIndex <= rows.length; rowIndex += 1) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+      if (cell && typeof cell.v === "number") cell.z = "#,##0";
+    }
+  });
   worksheet["!cols"] = headers.map((header) => ({
     wch: Math.max(header.length + 2, ...rows.map((row) => String(row[header] ?? "").length + 2))
   }));
@@ -1732,12 +1744,12 @@ function buildGroupXlsxRows(rows: any[]): XlsxRow[] {
     "#": row.rank,
     "Ban": row.banName || "",
     "Nhóm": row.groupName || "",
-    "AFYP": formatCompactVnd(row.afyp),
-    "IP": formatCompactVnd(row.ip),
+    "AFYP": Number(row.afyp ?? 0),
+    "IP": Number(row.ip ?? 0),
     "HĐ": row.contractCount,
     "TVV": row.agentCount,
     "Tỷ trọng": formatPercent(row.afypShare),
-    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
+    "BQ/HĐ": Number(row.averageAfypPerContract ?? 0)
   }));
 }
 
@@ -1749,10 +1761,10 @@ function buildAgentXlsxRows(rows: any[]): XlsxRow[] {
     "Ban": row.banName || "",
     "Nhóm": row.groupName || "",
     "ADS": row.adsName || "",
-    "AFYP": formatCompactVnd(row.afyp),
-    "IP": formatCompactVnd(row.ip),
+    "AFYP": Number(row.afyp ?? 0),
+    "IP": Number(row.ip ?? 0),
     "HĐ": row.contractCount,
-    "BQ/HĐ": formatCompactVnd(row.averageAfypPerContract)
+    "BQ/HĐ": Number(row.averageAfypPerContract ?? 0)
   }));
 }
 
@@ -1855,11 +1867,11 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
             <td>{row.groupName}</td>
             <td>{row.leaderName ?? row.managerName ?? row.banName ?? "-"}</td>
             <td className="number-cell metric-cell"><span className="ranking-metric-value">{moneyCell(row.afyp)}</span><TemplateProgress value={Number(row.afyp ?? 0)} max={maxAfyp} tone="blue" /></td>
-            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatFullMoney(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
             <td className="count-cell">{row.contractCount}</td>
             <td className="count-cell">{row.agentCount}</td>
             <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatPercent(row.afypShare)}</span><TemplateProgress value={Number(row.afypShare ?? 0)} max={maxShare} tone="blue" /></td>
-            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.averageAfypPerContract)}</span><TemplateProgress value={Number(row.averageAfypPerContract ?? 0)} max={maxAverage} tone="purple" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatFullMoney(row.averageAfypPerContract)}</span><TemplateProgress value={Number(row.averageAfypPerContract ?? 0)} max={maxAverage} tone="purple" /></td>
           </tr>
         ))}
       </DataTable>
@@ -1898,9 +1910,9 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
             <td>{row.groupName}</td>
             <td>{row.adsName}</td>
             <td className="number-cell metric-cell"><span className="ranking-metric-value">{moneyCell(row.afyp)}</span><TemplateProgress value={Number(row.afyp ?? 0)} max={maxAfyp} tone="blue" /></td>
-            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatCompactVnd(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
+            <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatFullMoney(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
             <td className="count-cell">{row.contractCount}</td>
-            <td className="number-cell"><span className="ranking-metric-value">{formatCompactVnd(row.averageAfypPerContract)}</span></td>
+            <td className="number-cell"><span className="ranking-metric-value">{formatFullMoney(row.averageAfypPerContract)}</span></td>
           </tr>
         ))}
       </DataTable>
@@ -2158,7 +2170,7 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
   }, [detailPeriod, adoRows, departmentRows]);
   const adoColWidths = ["28%", "12%", "12%", "16%", "13%", "10%", "9%"];
   const periodButtons = <div className="ado-period-toggle">{periodOptions.map((option) => <button key={option.key} type="button" className={detailPeriod === option.key ? "active" : ""} onClick={() => setDetailPeriod(option.key)}>{option.label}</button>)}</div>;
-  const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatCompactVnd(metric.afyp)}</td><td>{formatCompactVnd(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(delta))}` : formatCompactVnd(delta)}</td><td>{formatCompactVnd(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
+  const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatFullMoney(metric.afyp)}</td><td>{formatFullMoney(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatFullMoney(Math.abs(delta))}` : formatFullMoney(delta)}</td><td>{formatFullMoney(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
   const mobileDetailRow = (row: any, index = 0) => {
     const metric = periodMetrics(row);
     return (
@@ -2181,7 +2193,7 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
       <div className="ado-departments">{departmentRows.map((row: any, index: number) => <section className="ado-department summary" key={row.department}><div><h3>{row.department}</h3><strong>{formatCompactVnd(row.monthlyAfyp)}</strong></div>{kpiDonut(row.monthlyRate, index ? "#16a34a" : "#1677ff")}<aside><span>Hoàn thành<b>{formatPercent(row.monthlyRate)}</b></span><span>Còn thiếu<b>{formatCompactVnd(Math.max(row.monthlyKpi-row.monthlyAfyp,0))}</b></span></aside></section>)}</div>
       <div className="ado-composition">{departmentRows.map((department: any) => { const items=adoRows.filter((row:any)=>row.department===department.department); const total = Number(department.monthlyAfyp ?? 0); return <section key={department.department} className={department.department === "PTKD 2" ? "ptkd-2" : "ptkd-1"}><h3>Cơ cấu doanh thu {department.department} (AFYP tháng)</h3>{revenueDonut(items,total)}<div className="ado-composition-list">{items.map((row:any,index:number)=>{ const share = total ? Number(row.monthlyAfyp ?? 0) / total * 100 : 0; return <p key={row.adoName} style={{ "--ado-color": adoColor(row.adoName, index) } as React.CSSProperties}><span>{row.adoName}</span><b>{formatCompactVnd(row.monthlyAfyp)}</b><strong>{formatPercent(share)}</strong></p>;})}</div></section>;})}</div>
       <div className="panel-header ado-detail-header"><h2>Chi tiết ADO</h2></div>
-      <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatCompactVnd(total.afyp)}</td><td>{formatCompactVnd(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatCompactVnd(Math.abs(totalDelta))}` : formatCompactVnd(totalDelta)}</td><td>{formatCompactVnd(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable><div className="ado-mobile-detail-list">{items.map(mobileDetailRow)}</div></section>; })}</div>
+      <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatFullMoney(total.afyp)}</td><td>{formatFullMoney(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatFullMoney(Math.abs(totalDelta))}` : formatFullMoney(totalDelta)}</td><td>{formatFullMoney(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable><div className="ado-mobile-detail-list">{items.map(mobileDetailRow)}</div></section>; })}</div>
     </div>
   );
 }
@@ -2252,11 +2264,11 @@ function StarVietPanel({ report, warning }: { report: any; warning?: string | nu
               <td>{row.rank}</td>
               <td>{row.agentName}</td>
               <td>{row.groupName || "-"}</td>
-              <td><strong>{formatCompactVnd(row.totalAfyp)}</strong></td>
+              <td><strong>{formatFullMoney(row.totalAfyp)}</strong></td>
               <td><span className={`star-rank-badge ${row.rankTone}`}>{row.currentRank}</span></td>
               <td>{ticketLabel(row.currentTickets)}</td>
               <td>{row.nextRank}</td>
-              <td>{formatCompactVnd(row.remainingToNext)}</td>
+              <td>{formatFullMoney(row.remainingToNext)}</td>
               <td><StarProgress row={row} /></td>
             </tr>
           ))}
@@ -2605,6 +2617,16 @@ function normalizeCompetitionRewardGroups(rows: any[] = []) {
       Number(a.totalReward > 0) - Number(b.totalReward > 0)
       || (a.totalReward > 0 ? b.totalReward - a.totalReward : b.totalIP - a.totalIP)
     );
+}
+
+function competitionMissingGroupThreshold(program?: CompetitionProgramView) {
+  const rule = program?.confirmedRule ?? program?.aiRule ?? {};
+  const rewardRules = Array.isArray(rule.reward_rules) ? rule.reward_rules : Array.isArray(rule.rewards) ? rule.rewards : [];
+  const thresholds = rewardRules.flatMap((reward: any) => reward.thresholds ?? reward.tiers ?? reward.condition?.tiers ?? []);
+  const values = thresholds
+    .map((tier: any) => Number(tier.min_group_revenue ?? tier.min_revenue ?? tier.threshold ?? tier.min_amount ?? 0))
+    .filter((value: number) => value > 0);
+  return values.length ? Math.min(...values) : 0;
 }
 
 function isWaitingRuleConfirmation(program?: CompetitionProgramView | null) {
@@ -3187,6 +3209,7 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   });
   const [message, setMessage] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
+  const [selectedGroupContracts, setSelectedGroupContracts] = useState<{ title: string; rows: any[] } | null>(null);
 
   async function loadDetail() {
     const response = await fetch(`/api/competition?id=${programId}`, { cache: "no-store" });
@@ -3203,8 +3226,27 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   const qualifiedRewardContracts = dedupeRewardContracts(detail?.contractRewardResults ?? detail?.rewardContracts ?? []);
   const tvvRewardResults = detail?.tvvRewardResults ?? detail?.rewardAdvisors ?? [];
   const groupRewardResults = detail?.groupRewardResults ?? detail?.rewardGroups ?? [];
+  const groupContracts = detail?.groupContracts ?? [];
+  const groupRoster = detail?.groupRoster ?? [];
   const eligibleContracts = qualifiedRewardContracts;
-  const groupRows = normalizeCompetitionRewardGroups(groupRewardResults).filter((row) => Number(row.totalReward ?? 0) > 0);
+  const calculatedGroupRows = normalizeCompetitionRewardGroups(groupRewardResults);
+  const groupThreshold = competitionMissingGroupThreshold(program);
+  const groupRows = [
+    ...calculatedGroupRows,
+    ...Array.from(new Set<string>(groupRoster.map((row: any) => groupNameForRecord(row)).filter(Boolean)))
+      .filter((group) => !calculatedGroupRows.some((row) => normalizeViText(row.group) === normalizeViText(group)))
+      .map((group) => ({
+        group,
+        totalIP: 0,
+        totalAFYP: 0,
+        activeAdvisorCount: 0,
+        contractCount: 0,
+        milestone: "Chưa đạt",
+        rewardPerAdvisor: 0,
+        totalReward: 0,
+        note: groupThreshold > 0 ? `Chưa đạt - Thiếu ${formatFullMoney(groupThreshold)}` : "Chưa có hợp đồng trong thời gian thi đua"
+      }))
+  ].sort((a, b) => Number(b.totalReward > 0) - Number(a.totalReward > 0) || b.totalIP - a.totalIP);
   const flowStatus = competitionFlowMessage(program, detail, month, isCalculating);
   const achievedGroupRows = groupRows.filter((row) => Number(row.totalReward ?? 0) > 0);
   const resultTargets = competitionResultTargets(program);
@@ -3286,12 +3328,13 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                   </div>
                 </>
               )}
-              {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} hiddenColumns={hiddenColumnsByTable.groups} onHideColumn={(key) => hideColumn("groups", key)} onShowAllColumns={() => showAllColumns("groups")} />}
+              {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} groupContracts={groupContracts} onOpenGroup={(title, rows) => setSelectedGroupContracts({ title, rows })} hiddenColumns={hiddenColumnsByTable.groups} onHideColumn={(key) => hideColumn("groups", key)} onShowAllColumns={() => showAllColumns("groups")} />}
               {tab === "advisors" && hasAdvisorTarget && <CompetitionAdvisorsTable rows={tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)} hiddenColumns={hiddenColumnsByTable.advisors} onHideColumn={(key) => hideColumn("advisors", key)} onShowAllColumns={() => showAllColumns("advisors")} />}
               {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={eligibleContracts} hiddenColumns={hiddenColumnsByTable.contracts} onHideColumn={(key) => hideColumn("contracts", key)} onShowAllColumns={() => showAllColumns("contracts")} />}
             </>
           )}
         </div>
+        {selectedGroupContracts && <ContractDetailModal type="group" title={selectedGroupContracts.title} rows={selectedGroupContracts.rows} onClose={() => setSelectedGroupContracts(null)} />}
     </section>
   );
 }
@@ -3307,16 +3350,17 @@ function CompetitionHideableTable({ table, rows, columns, hiddenColumns, onHideC
   </>;
 }
 
-function CompetitionGroupsTable({ rows, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
+function CompetitionGroupsTable({ rows, groupContracts, onOpenGroup, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; groupContracts: any[]; onOpenGroup: (title: string, rows: any[]) => void; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có nhóm đạt mốc thưởng.</p>;
+  const openGroupContracts = (row: any) => onOpenGroup(row.group, groupContracts.filter((contract) => normalizeViText(groupNameForRecord(contract)) === normalizeViText(row.group)));
   return (
     <>
       <CompetitionHideableTable table="groups" rows={rows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
-        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "group", header: "Nhóm", render: (row) => row.group }, { key: "total_ip", header: "Tổng IP", render: (row) => formatCompactVnd(row.totalIP ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatCompactVnd(row.totalAFYP ?? 0) }, { key: "active_advisors", header: "Số TVV hoạt động", render: (row) => formatNumber(row.activeAdvisorCount ?? 0) }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => formatNumber(row.contractCount ?? 0) }, { key: "milestone", header: "Mốc đạt", render: (row) => row.milestone }, { key: "reward_per_advisor", header: "Thưởng/TVV", render: (row) => formatCompactVnd(row.rewardPerAdvisor ?? 0) }, { key: "total_reward", header: "Tổng thưởng nhóm", render: (row) => formatCompactVnd(row.totalReward ?? 0) }, { key: "note", header: "Ghi chú", render: (row) => <CompetitionGroupNote note={row.note} /> }
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "group", header: "Nhóm", render: (row) => <button className="contest-group-link" type="button" onClick={() => openGroupContracts(row)}>{row.group}</button> }, { key: "total_ip", header: "Tổng IP", render: (row) => formatFullMoney(row.totalIP ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatFullMoney(row.totalAFYP ?? 0) }, { key: "active_advisors", header: "Số TVV hoạt động", render: (row) => formatNumber(row.activeAdvisorCount ?? 0) }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => formatNumber(row.contractCount ?? 0) }, { key: "milestone", header: "Mốc đạt", render: (row) => row.milestone }, { key: "reward_per_advisor", header: "Thưởng/TVV", render: (row) => formatFullMoney(row.rewardPerAdvisor ?? 0) }, { key: "total_reward", header: "Tổng thưởng nhóm", render: (row) => formatFullMoney(row.totalReward ?? 0) }, { key: "note", header: "Ghi chú", render: (row) => <CompetitionGroupNote note={row.note} /> }
       ]} />
       <div className="contest-detail-card-list">
         {rows.map((row, index) => (
-          <article className="contest-result-card" key={`${row.group || index}-mobile`}>
+          <article className="contest-result-card clickable" key={`${row.group || index}-mobile`} onClick={() => openGroupContracts(row)}>
             <div className="contest-result-card-head"><strong>{index + 1}. {row.group}</strong><span>{formatCompactVnd(row.totalReward ?? 0)}</span></div>
             <div className="mobile-info-grid">
               <span><b>Tổng IP</b>{formatCompactVnd(row.totalIP ?? 0)}</span>
@@ -3336,16 +3380,11 @@ function CompetitionGroupsTable({ rows, hiddenColumns, onHideColumn, onShowAllCo
 
 function CompetitionGroupNote({ note }: { note: unknown }) {
   const text = String(note ?? "-").trim() || "-";
-  const markers = [" - Thiếu ", " - Còn thiếu "];
-  const markerIndex = markers.map((marker) => text.indexOf(marker)).find((index) => index >= 0) ?? -1;
-  if (markerIndex < 0) return <>{text}</>;
-
-  return (
-    <span className="contest-group-note">
-      {text.slice(0, markerIndex)}
-      <strong>{text.slice(markerIndex)}</strong>
-    </span>
-  );
+  const missingAmount = /(Thiếu|Còn thiếu)\s+([\d.,]+)/i.exec(text);
+  if (!missingAmount?.[2]) return <>{text}</>;
+  const amountStart = (missingAmount.index ?? 0) + missingAmount[0].length - missingAmount[2].length;
+  const amountEnd = amountStart + missingAmount[2].length;
+  return <span className="contest-group-note">{text.slice(0, amountStart)}<strong>{missingAmount[2]}</strong>{text.slice(amountEnd)}</span>;
 }
 
 function CompetitionAdvisorsTable({ rows, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
@@ -3382,7 +3421,7 @@ function CompetitionContractsTable({ rows, hiddenColumns, onHideColumn, onShowAl
   return (
     <>
       <CompetitionHideableTable table="contracts" rows={sortedRows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
-        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "collection_date", header: "Ngày thu", render: (row) => formatDateVi(row.collection_date) }, { key: "policy_no", header: "Số GYC", render: (row) => row.gyc_no }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "policy_owner", header: "BMBH", render: (row) => row.customer_name }, { key: "insured_name", header: "NĐBH", render: (row) => row.insured_name || "-" }, { key: "status", header: "Trạng thái hợp đồng", render: (row) => <span className="contract-status-pill" style={{ color: getStatusColor(row.status), borderColor: getStatusColor(row.status) }}>{row.status || "-"}</span> }, { key: "ip", header: "IP", render: (row) => formatCompactVnd(row.ip ?? 0) }, { key: "afyp", header: "AFYP", render: (row) => formatCompactVnd(row.afyp ?? 0) }, { key: "reward_name", header: "Giải thưởng", render: (row) => row.reward_name }, { key: "reward_amount", header: "Tiền thưởng", render: (row) => formatCompactVnd(row.reward_amount ?? 0) }
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "collection_date", header: "Ngày thu", render: (row) => formatDateVi(row.collection_date) }, { key: "policy_no", header: "Số GYC", render: (row) => row.gyc_no }, { key: "group", header: "Nhóm", render: (row) => row.team }, { key: "advisor", header: "TVV", render: (row) => row.tvv }, { key: "policy_owner", header: "BMBH", render: (row) => row.customer_name }, { key: "insured_name", header: "NĐBH", render: (row) => row.insured_name || "-" }, { key: "status", header: "Trạng thái hợp đồng", render: (row) => <span className="contract-status-pill" style={{ color: getStatusColor(row.status), borderColor: getStatusColor(row.status) }}>{row.status || "-"}</span> }, { key: "ip", header: "IP", render: (row) => formatFullMoney(row.ip ?? 0) }, { key: "afyp", header: "AFYP", render: (row) => formatFullMoney(row.afyp ?? 0) }, { key: "reward_name", header: "Giải thưởng", render: (row) => row.reward_name }, { key: "reward_amount", header: "Tiền thưởng", render: (row) => formatFullMoney(row.reward_amount ?? 0) }
       ]} />
       <div className="contest-detail-card-list">
         {sortedRows.map((row, index) => (
@@ -3908,7 +3947,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
       <DataTable className="desktop-table contract-details-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]} colWidths={showStatus ? ["110px", "130px", "15%", "15%", "17%", "17%", "190px", "110px", "110px"] : undefined}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`}>
-            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatCompactVnd(row.ip)}</td><td>{formatCompactVnd(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatFullMoney(row.ip)}</td><td>{formatFullMoney(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>

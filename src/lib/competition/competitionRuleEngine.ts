@@ -733,7 +733,7 @@ function calculateGroupRewards(rule: CompetitionRewardRule, contracts: Normalize
       prizeName: rewardName(rule),
       note: tier
         ? rewardName(rule)
-        : `${rewardName(rule)} - Thi\u1ebfu ${(missingAmount / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u \u0111\u1ec3 nh\u1eadn ${upcomingRewardPerAdvisor > 0 ? `${(upcomingRewardPerAdvisor / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u/TVV` : "th\u01b0\u1edfng"}${upcomingTotalReward > 0 ? ` (t\u1ed5ng ${(upcomingTotalReward / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tri\u1ec7u)` : ""}`,
+        : `${rewardName(rule)} - Thi\u1ebfu ${missingAmount.toLocaleString("en-US")} \u0111\u1ec3 nh\u1eadn ${upcomingRewardPerAdvisor > 0 ? `${upcomingRewardPerAdvisor.toLocaleString("en-US")}/TVV` : "th\u01b0\u1edfng"}${upcomingTotalReward > 0 ? ` (t\u1ed5ng ${upcomingTotalReward.toLocaleString("en-US")})` : ""}`,
       advisors: advisorRows
     };
   }).sort((a, b) =>
@@ -999,10 +999,10 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     const rewardContracts = recipientScope === "contract" ? calculateContractRewards(rewardRule, uniqueEligibleBaseContracts, rule.metric_type) : [];
     eligibleContracts.push(...rewardContracts.map((contract) => ({ ...contract, rulePriority })));
     const groupRewards = shouldOutputGroupRows ? calculateGroupRewards(rewardRule, uniqueEligibleBaseContracts) : [];
-    for (const group of groupRewards.filter((row) => Number(row.totalReward) > 0)) {
-      const candidate = { ...group, rulePriority, prizeName: rewardName(rewardRule), note: rewardName(rewardRule) };
+    for (const group of groupRewards) {
+      const candidate = { ...group, rulePriority, prizeName: rewardName(rewardRule), note: group.note || rewardName(rewardRule) };
       const key = groupRewardKey(candidate);
-      if (rewardRule.allow_multiple_rewards) {
+      if (Number(candidate.totalReward) > 0 && rewardRule.allow_multiple_rewards) {
         eligibleGroups.push(candidate);
       } else if (key && preferHigherReward(candidate, groupRewardMap.get(key))) {
         groupRewardMap.set(key, candidate);
@@ -1053,7 +1053,8 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
   const uniqueContracts = dedupeRewardContracts(eligibleContracts);
   const eligibleAdvisors = [...advisorRewardMap.values()].sort((a, b) => b.rewardAmount - a.rewardAmount || b.totalIP - a.totalIP);
   const qualifiedAdvisorKeys = new Set(eligibleAdvisors.map((advisor) => `${normalizeText(advisor.advisor)}__${normalizeText(advisor.group)}`).filter((key) => key !== "__"));
-  const achievedGroups = [...eligibleGroups, ...groupRewardMap.values()].filter((group) => group.totalReward > 0);
+  const allGroupResults = [...eligibleGroups, ...groupRewardMap.values()];
+  const achievedGroups = allGroupResults.filter((group) => group.totalReward > 0);
   const qualifiedGroupKeys = new Set(achievedGroups.map((group) => normalizeText(group.group)).filter(Boolean));
   const contractRewardTotal = uniqueContracts.reduce((sum, contract) => sum + (Number(contract.rewardAmount) || 0), 0);
   const tvvRewardTotal = eligibleAdvisors.reduce((sum, advisor) => sum + (Number(advisor.rewardAmount) || 0), 0);
@@ -1183,16 +1184,16 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
 
   return {
     summary,
-    eligibleGroups: achievedGroups,
+    eligibleGroups: allGroupResults,
     eligibleAdvisors,
     eligibleContracts: uniqueContracts,
     rewardByContracts: uniqueContracts,
     rewardByAdvisors: eligibleAdvisors,
-    rewardByGroups: achievedGroups,
+    rewardByGroups: allGroupResults,
     rewardByAds: [],
     contractRewardResults: uniqueContracts,
     tvvRewardResults: eligibleAdvisors,
-    groupRewardResults: achievedGroups,
+    groupRewardResults: allGroupResults,
     excludedContracts,
     warnings
   };

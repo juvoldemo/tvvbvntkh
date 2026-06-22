@@ -15,6 +15,27 @@
   --shadow: 0 8px 24px rgba(15, 35, 66, 0.08);
 }
 
+/* Keep the group name in the competition table a text link, not a primary button. */
+.contest-mini-table .contest-group-link {
+  display: inline !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #075fe7 !important;
+  font: inherit !important;
+  font-weight: 700 !important;
+  line-height: inherit !important;
+}
+
+.contest-mini-table .contest-group-link:hover {
+  background: transparent !important;
+  color: #0643b5 !important;
+}
+
 /* Dashboard visual system: shared presentation layer, intentionally independent of data logic. */
 :root {
   --shell-blue: #0759d8;
@@ -2077,7 +2098,23 @@ tr.clickable:hover {
 
 .contest-group-note strong {
   color: #b42318;
-  font-weight: 900;
+  font-weight: 650;
+}
+
+.contest-group-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #075fe7;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.contest-group-link:hover {
+  color: #0643b5;
+  text-decoration: underline;
 }
 
 .contest-mini-table th:last-child,

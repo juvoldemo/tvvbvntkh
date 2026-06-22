@@ -358,7 +358,8 @@ export async function getCompetitionProgramDetail(programId: string) {
     .maybeSingle();
 
   const resultId = result?.id;
-  const [{ data: contracts }, { data: advisors }, { data: groups }] = await Promise.all([
+  const range = competitionDateRange(program, String(program.start_date || program.confirmed_rule?.start_date || "").slice(0, 7));
+  const [{ data: contracts }, { data: advisors }, { data: groups }, { data: groupContracts }, { data: groupRoster }] = await Promise.all([
     resultId
       ? supabase.from("competition_reward_contracts").select("*").eq("result_id", resultId).order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
@@ -367,22 +368,16 @@ export async function getCompetitionProgramDetail(programId: string) {
       : Promise.resolve({ data: [] }),
     resultId
       ? supabase.from("competition_reward_groups").select("*").eq("result_id", resultId).order("total_reward", { ascending: false })
-      : Promise.resolve({ data: [] })
+      : Promise.resolve({ data: [] }),
+    supabase.from("revenue_records").select("*").gte("paid_date", range.start).lte("paid_date", range.end),
+    supabase.from("revenue_records").select("group_name, ban_name").eq("data_month", toMonthStart(range.start.slice(0, 7)))
   ]);
 
   let rewardGroups = groups ?? [];
-  if (rewardGroups.length === 0 && program?.confirmed_rule) {
-    const range = competitionDateRange(program, String(program.start_date || program.confirmed_rule?.start_date || "").slice(0, 7));
-    const { data: sourceContracts } = await supabase
-      .from("revenue_records")
-      .select("*")
-      .gte("paid_date", range.start)
-      .lte("paid_date", range.end);
-    if ((sourceContracts ?? []).length > 0) {
-      const normalizedRule = normalizeCompetitionRuleForNewlySeenContracts(program.confirmed_rule as CompetitionRuleInput);
-      const liveRewardResult = calculateCompetitionReward(normalizedRule, dedupeCompetitionContracts(sourceContracts ?? []));
-      rewardGroups = groupRowsFromRewardResult(program.id, resultId ?? null, liveRewardResult);
-    }
+  if (program?.confirmed_rule && (groupContracts ?? []).length > 0) {
+    const normalizedRule = normalizeCompetitionRuleForNewlySeenContracts(program.confirmed_rule as CompetitionRuleInput);
+    const liveRewardResult = calculateCompetitionReward(normalizedRule, dedupeCompetitionContracts(groupContracts ?? []));
+    rewardGroups = groupRowsFromRewardResult(program.id, resultId ?? null, liveRewardResult);
   }
 
   return {
@@ -393,7 +388,9 @@ export async function getCompetitionProgramDetail(programId: string) {
     rewardGroups,
     contractRewardResults: contracts ?? [],
     tvvRewardResults: advisors ?? [],
-    groupRewardResults: rewardGroups
+    groupRewardResults: rewardGroups,
+    groupContracts: groupContracts ?? [],
+    groupRoster: groupRoster ?? []
   };
 }
 
