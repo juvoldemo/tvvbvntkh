@@ -40,3 +40,20 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: errorMessage(error) }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const programId = String(request.nextUrl.searchParams.get("id") || "").trim();
+    if (!programId) return NextResponse.json({ error: "Thiáº¿u program_id." }, { status: 400 });
+
+    const { error } = await getSupabaseAdmin()
+      .from("competition_programs")
+      .delete()
+      .eq("id", programId);
+
+    if (error) throw error;
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ error: errorMessage(error) }, { status: 500 });
+  }
+}

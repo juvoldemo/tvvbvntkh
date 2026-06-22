@@ -336,10 +336,18 @@ function normalizeViText(value: string) {
 
 function repairMojibake(value: unknown) {
   const text = String(value ?? "");
+  const knownReplacementText: Record<string, string> = {
+    "Ho\uFFFDng Ph\uFFFDt": "Ho\u00e0ng Ph\u00e1t",
+    "T\uFFFDm Ph\uFFFDt": "T\u00e2m Ph\u00e1t",
+    "Duy\uFFFDn Ph\uFFFDt": "Duy\u00ean Ph\u00e1t",
+    "T\uFFFDi Ph\uFFFDt": "T\u00e0i Ph\u00e1t"
+  };
+  if (knownReplacementText[text]) return knownReplacementText[text];
   if (!/[\u00c3\u00c4\u00c6\u00e1]/.test(text) || typeof TextDecoder === "undefined") return text;
   try {
     const bytes = Uint8Array.from([...text].map((char) => char.charCodeAt(0) & 255));
-    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    const repaired = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+    return knownReplacementText[repaired] ?? repaired;
   } catch {
     return text;
   }
@@ -3272,6 +3280,8 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   const hasGroupTarget = resultTargets.includes("groups");
   const hasAdvisorTarget = resultTargets.includes("advisors");
   const hasContractTarget = resultTargets.includes("contracts");
+  const activeResultTable = tab === "groups" || tab === "advisors" || tab === "contracts" ? tab : null;
+  const activeHiddenColumns = activeResultTable ? hiddenColumnsByTable[activeResultTable] : [];
 
   function hideColumn(table: CompetitionResultTarget, columnKey: string) {
     console.log("COLUMN CLICK:", columnKey);
@@ -3315,6 +3325,9 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
           {visibleTabs.map(({ id, label, icon: TabIcon }) => {
             return <button key={id} className={tab === id ? "active" : ""} type="button" onClick={() => setTab(id)}><TabIcon size={16} />{label}</button>;
           })}
+          {activeResultTable && activeHiddenColumns.length > 0 && (
+            <button className="contest-show-columns-button" type="button" onClick={() => showAllColumns(activeResultTable)}>{"Hi\u1ec7n"}</button>
+          )}
         </div>
         <div className="competition-detail-content contest-detail-body">
           {message && <p className={message.includes("ã") || message.includes("ang") ? "success" : "error-list"}>{message}</p>}
@@ -3365,7 +3378,8 @@ function CompetitionHideableTable({ table, rows, columns, hiddenColumns, onHideC
 
 function CompetitionGroupsTable({ rows, groupContracts, onOpenGroup, hiddenColumns, onHideColumn, onShowAllColumns }: { rows: any[]; groupContracts: any[]; onOpenGroup: (title: string, rows: any[]) => void; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void }) {
   if (rows.length === 0) return <p className="empty-state">Chưa có nhóm đạt mốc thưởng.</p>;
-  const openGroupContracts = (row: any) => onOpenGroup(row.group, groupContracts.filter((contract) => normalizeViText(groupNameForRecord(contract)) === normalizeViText(row.group)));
+  const groupLabel = (row: any) => repairMojibake(row.group);
+  const openGroupContracts = (row: any) => onOpenGroup(groupLabel(row), groupContracts.filter((contract) => normalizeViText(groupNameForRecord(contract)) === normalizeViText(row.group) || normalizeViText(groupNameForRecord(contract)) === normalizeViText(groupLabel(row))));
   return (
     <>
       <CompetitionHideableTable table="groups" rows={rows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
@@ -3518,12 +3532,9 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
   );
 }
 
-function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onToggleHidden }: { programs: CompetitionProgramView[]; selectedProgramId?: string; onOpenRule: (program: CompetitionProgramView) => void; onToggleHidden: (program: CompetitionProgramView) => void }) {
-  if (programs.length === 0 || programs.every((program) => program.isHidden)) {
-    return <div className="admin-contest-empty"><span>+</span><strong>Chưa có chương trình thi đua nào</strong><small>Bấm “+ Thêm CTTĐ” để tạo chương trình thi đua.</small></div>;
-  }
+function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onToggleHidden, onDelete }: { programs: CompetitionProgramView[]; selectedProgramId?: string; onOpenRule: (program: CompetitionProgramView) => void; onToggleHidden: (program: CompetitionProgramView) => void; onDelete: (program: CompetitionProgramView) => void }) {
   if (programs.length === 0) {
-    return <p className="empty-state">Chưa có CTTĐ nào. Bấm Thêm CTTĐ để upload poster và tạo thể lệ AI.</p>;
+    return <div className="admin-contest-empty"><span>+</span><strong>Chưa có chương trình thi đua nào</strong><small>Bấm “+ Thêm CTTĐ” để tạo chương trình thi đua.</small></div>;
   }
 
   return (
@@ -3547,6 +3558,9 @@ function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onT
                   <button className="small-button secondary" type="button" onClick={(event) => { event.stopPropagation(); onToggleHidden(program); }}>
                     {program.isHidden ? "Hiện" : "Ẩn"}
                   </button>
+                  <button className="small-button danger" type="button" onClick={(event) => { event.stopPropagation(); onDelete(program); }}>
+                    Xóa
+                  </button>
                 </div>
               </td>
             </tr>
@@ -3567,6 +3581,7 @@ function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onT
               <div className="admin-contest-actions">
                 <button className={waiting ? "" : "secondary"} type="button" onClick={(event) => { event.stopPropagation(); onOpenRule(program); }}>{waiting ? "Kiểm tra & xác nhận" : "Xem thể lệ"}</button>
                 <button className="secondary" type="button" onClick={(event) => { event.stopPropagation(); onToggleHidden(program); }}>{program.isHidden ? "Hiện CTTĐ" : "Ẩn CTTĐ"}</button>
+                <button className="danger" type="button" onClick={(event) => { event.stopPropagation(); onDelete(program); }}>Xóa CTTĐ</button>
               </div>
             </article>
           );
@@ -3602,11 +3617,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
     const response = await fetch("/api/competition?includeHidden=1", { cache: "no-store" });
     const payload = await response.json();
     if (response.ok) {
-      const hiddenIds = hiddenCompetitionProgramIds();
-      setCompetitionPrograms((payload.programs ?? []).map((program: CompetitionProgramView) => ({
-        ...program,
-        isHidden: Boolean(program.isHidden || hiddenIds.has(program.id))
-      })));
+      setCompetitionPrograms(payload.programs ?? []);
     }
   }
 
@@ -3629,6 +3640,23 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
     if (nextHidden) hiddenIds.add(program.id);
     else hiddenIds.delete(program.id);
     saveHiddenCompetitionProgramIds(hiddenIds);
+    await loadCompetitionPrograms();
+    onUploaded();
+  }
+
+  async function deleteCompetitionProgram(program: CompetitionProgramView) {
+    const confirmed = window.confirm(`Xóa sạch CTTĐ "${program.programName}"?`);
+    if (!confirmed) return;
+    const response = await fetch(`/api/competition?id=${encodeURIComponent(program.id)}`, { method: "DELETE" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setResult({ error: payload.error || "Không xóa được CTTĐ." });
+      return;
+    }
+    const hiddenIds = hiddenCompetitionProgramIds();
+    hiddenIds.delete(program.id);
+    saveHiddenCompetitionProgramIds(hiddenIds);
+    setRuleProgram((current: any) => current?.id === program.id ? null : current);
     await loadCompetitionPrograms();
     onUploaded();
   }
@@ -3680,6 +3708,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
           selectedProgramId={ruleProgram?.id}
           onOpenRule={(program) => setRuleProgram((current: any) => current?.id === program.id ? null : program)}
           onToggleHidden={toggleCompetitionHidden}
+          onDelete={deleteCompetitionProgram}
         />
         {ruleProgram && (
           <CompetitionRuleModal

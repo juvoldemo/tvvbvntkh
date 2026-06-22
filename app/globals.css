@@ -2254,6 +2254,20 @@ tr.clickable:hover {
   justify-content: flex-end;
 }
 
+.admin-contest-actions .danger {
+  border-color: #fecaca !important;
+  background: #dc2626 !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: 0 10px 18px rgba(220, 38, 38, .16) !important;
+}
+
+.admin-contest-actions .danger:hover {
+  border-color: #b91c1c !important;
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+
 .admin-rule-inline {
   width: 100%;
   margin-top: 14px;
@@ -6528,6 +6542,23 @@ body,
   color: #fff !important;
 }
 
+.competition-detail-panel .contest-detail-tabs .contest-show-columns-button {
+  border-color: #075fe7 !important;
+  background: #075fe7 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 16px rgba(7, 95, 231, .22) !important;
+}
+
+.competition-detail-panel .contest-detail-tabs .contest-show-columns-button:hover {
+  border-color: #0643b5 !important;
+  background: #0643b5 !important;
+  color: #fff !important;
+}
+
+.competition-detail-panel .competition-detail-content > .contest-column-actions {
+  display: none !important;
+}
+
 @media (max-width: 700px) {
   .competition-detail-panel .contest-detail-tabs {
     gap: 8px !important;
@@ -7719,6 +7750,16 @@ body,
     border-color: #f2c43d !important;
     background: #f7c948 !important;
     color: #062b73 !important;
+  }
+  body .dashboard-page.tab-contests .competition-detail-panel .contest-detail-tabs .contest-show-columns-button {
+    border-color: #075fe7 !important;
+    background: #075fe7 !important;
+    color: #fff !important;
+  }
+  body .dashboard-page.tab-contests .competition-detail-panel .contest-detail-tabs .contest-show-columns-button:hover {
+    border-color: #0643b5 !important;
+    background: #0643b5 !important;
+    color: #fff !important;
   }
   body .dashboard-page.tab-contests .competition-detail-panel .contest-detail-tabs button svg { color: currentColor !important; }
 

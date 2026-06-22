@@ -56,7 +56,7 @@ function normalizeProgram(row: any, result?: any) {
     totalIP: Number(result?.total_ip ?? summary.totalIP ?? 0),
     totalAFYP: Number(result?.total_afyp ?? summary.totalAFYP ?? 0),
     totalReward: Number(result?.total_reward ?? summary.totalReward ?? 0),
-    recipientTypes: Array.isArray(summary.recipientTypes) ? summary.recipientTypes : []
+    recipientTypes: Array.isArray(summary.recipientTypes) ? summary.recipientTypes : recipientTypesFromRule(rule)
   };
 }
 
@@ -120,6 +120,11 @@ function inferRewardRecipientType(rewardRule: any) {
   if (text.includes("active_advisor")) return "TVV";
   if (text.includes("per_contract") || text.includes("per_policy") || text.includes("policy_pdt") || text.includes("top_n")) return "Hợp đồng";
   return rewardRule.target_type || "Hợp đồng";
+}
+
+function recipientTypesFromRule(rule: any) {
+  const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
+  return [...new Set(rewardRules.map(inferRewardRecipientType).filter(Boolean))];
 }
 
 function isGroupRuleText(text: string) {
@@ -327,8 +332,14 @@ async function enrichContractsWithCompetitionSnapshots(supabase: SupabaseClient,
 export async function listCompetitionPrograms(options: { includeHidden?: boolean } = {}) {
   const supabase = getSupabaseAdmin();
   const [{ data: programs, error: programError }, { data: results, error: resultError }] = await Promise.all([
-    supabase.from("competition_programs").select("*").order("created_at", { ascending: false }),
-    supabase.from("competition_results").select("*").order("calculated_at", { ascending: false })
+    supabase
+      .from("competition_programs")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("competition_results")
+      .select("id,program_id,total_eligible_advisors,total_eligible_contracts,total_excluded_contracts,total_ip,total_afyp,total_reward,calculated_at")
+      .order("calculated_at", { ascending: false })
   ]);
 
   if (programError) throw new Error(messageFromError(programError));

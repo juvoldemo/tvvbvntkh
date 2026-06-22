@@ -66,12 +66,12 @@ function samePeriodPreviousFilters(filters: DashboardFilters) {
   };
 }
 
-function buildOverviewComparisons(current: ReturnType<typeof buildOverview>, previousRecords: RevenueRecord[]) {
+function buildOverviewComparisons(current: ReturnType<typeof buildOverview>, previousRecords: RevenueRecord[], previousActiveAgentRecords = previousRecords) {
   const metrics = {
     monthlyAfyp: sumAfyp(previousRecords),
     monthlyIp: sumIp(previousRecords),
     totalContracts: countDistinct(previousRecords, "contract_no"),
-    activeAgents: countDistinctActiveAgents(previousRecords)
+    activeAgents: countDistinctActiveAgents(previousActiveAgentRecords)
   };
   const build = (currentValue: number, previousValue: number) => {
     if (previousValue <= 0) return { percent: null, direction: "none" as const, hasPrevious: false };
@@ -110,9 +110,10 @@ export async function GET(request: NextRequest) {
     const previousEnd = `${previousFilters.month}-${String(previousCutoffDay).padStart(2, "0")}`;
     const supabase = getSupabaseAdmin();
 
-    const [{ data: records, error: recordsError }, { data: previousRecords, error: previousRecordsError }, { data: yearRecords, error: yearRecordsError }, { data: target, error: targetError }, { data: latestUpload }, { data: uploadsByMonth }] = await Promise.all([
+    const [{ data: records, error: recordsError }, { data: previousRecords, error: previousRecordsError }, { data: previousMonthRecords, error: previousMonthRecordsError }, { data: yearRecords, error: yearRecordsError }, { data: target, error: targetError }, { data: latestUpload }, { data: uploadsByMonth }] = await Promise.all([
       supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end),
       supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousEnd),
+      supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousBounds.end),
       supabase.from("revenue_records").select("*").gte("paid_date", "2026-01-01").lte("paid_date", "2026-12-31"),
       supabase.from("monthly_targets").select("*").eq("target_month", toMonthStart(month)).eq("target_level", "company").is("target_code", null).maybeSingle(),
       supabase.from("upload_batches").select("*").eq("data_month", toMonthStart(month)).order("uploaded_at", { ascending: false }).limit(1).maybeSingle(),
@@ -121,6 +122,7 @@ export async function GET(request: NextRequest) {
 
     if (recordsError) throw recordsError;
     if (previousRecordsError) throw previousRecordsError;
+    if (previousMonthRecordsError) throw previousMonthRecordsError;
     if (yearRecordsError) throw yearRecordsError;
     if (targetError) throw targetError;
 
@@ -133,6 +135,7 @@ export async function GET(request: NextRequest) {
     }));
     const allRecords = withDisplayContractNo((records ?? []) as RevenueRecord[]);
     const allPreviousRecords = withDisplayContractNo((previousRecords ?? []) as RevenueRecord[]);
+    const allPreviousMonthRecords = withDisplayContractNo((previousMonthRecords ?? []) as RevenueRecord[]);
     const allYearRecords = withDisplayContractNo((yearRecords ?? []) as RevenueRecord[]);
     const starYear = Number(month.slice(0, 4)) || new Date().getFullYear();
     const { data: starVietRecords, error: starVietError } = await supabase
@@ -141,8 +144,11 @@ export async function GET(request: NextRequest) {
       .eq("data_year", starYear);
     const filteredRecords = sortContractDetails(applyFilters(allRecords, filters));
     const previousFilteredRecords = sortContractDetails(applyFilters(allPreviousRecords, previousFilters));
+    const previousMonthActiveAgentFilters = { ...previousFilters, paidDate: undefined };
+    const previousMonthFilteredRecords = sortContractDetails(applyFilters(allPreviousMonthRecords, previousMonthActiveAgentFilters));
     const countedRecords = sortContractDetails(filteredRecords.filter(isCountedRevenueRecord));
     const previousCountedRecords = sortContractDetails(previousFilteredRecords.filter(isCountedRevenueRecord));
+    const previousMonthCountedRecords = sortContractDetails(previousMonthFilteredRecords.filter(isCountedRevenueRecord));
     const countedYearRecords = sortContractDetails(allYearRecords.filter(isCountedRevenueRecord));
     const companyTarget = target as MonthlyTarget | null;
     const planTable = buildAfypPlanTable(countedYearRecords);
@@ -160,7 +166,7 @@ export async function GET(request: NextRequest) {
       updatedAt: latestUpload?.uploaded_at ?? null,
       options: filterOptions(allRecords),
       overview,
-      overviewComparisons: buildOverviewComparisons(overview, previousCountedRecords),
+      overviewComparisons: buildOverviewComparisons(overview, previousCountedRecords, previousMonthCountedRecords),
       overviewGroups: buildGroupRanking(countedRecords),
       overviewAgents: buildAgentRanking(countedRecords),
       overviewTimeSeries: buildTimeSeries(countedRecords, month, companyTarget),
