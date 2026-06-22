@@ -12,6 +12,7 @@ export type CompetitionRule = {
   included_statuses: string[];
   reward_rules: Array<
     | {
+        [key: string]: unknown;
         id: string;
         prize_name: string;
         target_type: "policy";
@@ -32,6 +33,7 @@ export type CompetitionRule = {
         };
       }
     | {
+        [key: string]: unknown;
         id: string;
         prize_name: string;
         target_type: "group";
@@ -102,6 +104,15 @@ export const nguocSongVuonLenRule: CompetitionRule = {
       prize_name: "Biệt đội toàn diện",
       target_type: "group",
       metric_type: "ip",
+      priority: 1,
+      threshold_value: 100_000_000,
+      threshold_operator: ">=",
+      reward_amount: 500_000,
+      payout_scope: "per_group",
+      payout_target: "group",
+      split_method: "none",
+      display_columns: ["reward_per_tvv", "group_reward_amount", "qualified_tvv_count", "active_tvv_count", "reward_note"],
+      note_template: "Nhóm {{group}} đạt {{group_metric}} IP, thưởng nhóm {{reward_amount}}đ.",
       condition: {
         type: "reward_per_active_advisor_by_group_revenue_tier",
         revenue_metric: "ip",

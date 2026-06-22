@@ -21,6 +21,15 @@ export type CompetitionRewardRule = {
   min_policy_ip?: number | null;
   reward_amount?: number;
   reward_formula?: string;
+  /** Declarative payout contract.  Old rule fields are kept for backwards compatibility. */
+  payout_scope?: "per_contract" | "per_tvv" | "per_group" | "shared_group" | "custom";
+  payout_target?: "contract" | "tvv" | "group";
+  split_method?: "none" | "equal_per_active_tvv" | "equal_per_qualified_tvv" | "by_metric_ratio";
+  threshold_value?: number;
+  threshold_operator?: ">=" | ">" | "=" | "<=" | "<";
+  display_columns?: string[];
+  note_template?: string;
+  unachieved_note_template?: string;
   max_reward?: number | null;
   priority?: number;
   condition?: AnyRecord;
@@ -145,6 +154,13 @@ export type EligibleGroupReward = {
   achievedTier: string;
   rewardPerAdvisor: number;
   totalReward: number;
+  /** JSON-rule names retained alongside the existing UI names. */
+  group_reward_amount?: number;
+  reward_per_tvv?: number;
+  qualified_tvv_count?: number;
+  active_tvv_count?: number;
+  reward_note?: string;
+  displayColumns?: string[];
   prizeName: string;
   rulePriority?: number;
   note?: string;
@@ -674,6 +690,44 @@ function groupFixedReward(rule: CompetitionRewardRule, tier: AnyRecord | null | 
   return Number(tier?.reward_per_group ?? tier?.group_reward ?? tier?.reward_amount ?? tier?.amount ?? rule.reward_amount ?? rule.reward?.amount ?? 0) || 0;
 }
 
+type FormulaVariables = Record<"reward_amount" | "group_metric" | "tvv_metric" | "contract_metric" | "threshold_value" | "active_tvv_count" | "qualified_tvv_count" | "contract_count" | "ip" | "afyp" | "fyp", number>;
+const FORMULA_VARIABLES = new Set<keyof FormulaVariables>(["reward_amount", "group_metric", "tvv_metric", "contract_metric", "threshold_value", "active_tvv_count", "qualified_tvv_count", "contract_count", "ip", "afyp", "fyp"]);
+
+/**
+ * Formula is deliberately a tiny, whitelist-only arithmetic language.  It rejects
+ * property access, calls and every identifier outside FORMULA_VARIABLES before a
+ * compiled expression is ever created; this is not an unrestricted eval surface.
+ */
+function calculateRewardFormula(formula: string | undefined, vars: FormulaVariables) {
+  if (!formula?.trim()) return null;
+  const expression = formula.trim();
+  if (!/^[\d\s_a-zA-Z+\-*/%().<>=!?:&|]+$/.test(expression)) throw new Error("Ký tự không được phép trong reward_formula");
+  const names = expression.match(/[a-zA-Z_]\w*/g) ?? [];
+  if (names.some((name) => !FORMULA_VARIABLES.has(name as keyof FormulaVariables))) throw new Error("Biến không nằm trong whitelist");
+  // The grammar above contains only numeric operators, ternary and known variables.
+  const values = [...FORMULA_VARIABLES].map((name) => Number(vars[name]) || 0);
+  const compiled = Function(...FORMULA_VARIABLES, `"use strict"; return (${expression});`);
+  const result = Number(compiled(...values));
+  if (!Number.isFinite(result)) throw new Error("Kết quả formula không hợp lệ");
+  return result;
+}
+
+function passesThreshold(value: number, rule: CompetitionRewardRule) {
+  const threshold = Number(rule.threshold_value ?? rule.condition?.threshold_value ?? 0);
+  switch (rule.threshold_operator ?? rule.condition?.threshold_operator ?? ">=") {
+    case ">": return value > threshold;
+    case "=": return value === threshold;
+    case "<=": return value <= threshold;
+    case "<": return value < threshold;
+    default: return value >= threshold;
+  }
+}
+
+function renderRewardNote(template: string | undefined, values: Record<string, unknown>) {
+  if (!template) return "";
+  return template.replace(/{{\s*([\w_]+)\s*}}/g, (_, key) => String(values[key] ?? ""));
+}
+
 function sortEarliestContracts(contracts: NormalizedCompetitionContract[]) {
   return [...contracts].sort((a, b) =>
     a.collection_date.localeCompare(b.collection_date)
@@ -692,15 +746,13 @@ function contractPaymentOrderValue(contract: NormalizedCompetitionContract) {
 
 function calculateGroupRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[]) {
   const tiers = rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [];
-  if (!tiers.length) return [];
-
   return [...groupBy(contracts, (contract) => contract.team).entries()].map(([group, rows]) => {
     const totalIP = rows.reduce((sum, row) => sum + row.ip, 0);
     const totalAFYP = rows.reduce((sum, row) => sum + row.afyp, 0);
     const metricKind = groupMetricKind(rule);
     const metricValue = metricKind === "afyp" ? totalAFYP : totalIP;
-    const tier = findTier(tiers, metricValue);
-    const upcomingTier = tier ? null : nextTier(tiers, metricValue);
+    const tier = tiers.length ? findTier(tiers, metricValue) : (passesThreshold(metricValue, rule) ? rule : null);
+    const upcomingTier = tier || !tiers.length ? null : nextTier(tiers, metricValue);
     const advisorRows = [...groupBy(rows, (row) => row.tvv).entries()].map(([advisor, advisorContracts]) => ({
       advisor,
       group,
@@ -709,31 +761,62 @@ function calculateGroupRewards(rule: CompetitionRewardRule, contracts: Normalize
       totalIP: advisorContracts.reduce((sum, contract) => sum + contract.ip, 0),
       totalAFYP: advisorContracts.reduce((sum, contract) => sum + contract.afyp, 0)
     })).filter((advisor) => advisor.advisor);
-    const mode = groupRewardMode(rule, tier);
-    const rewardPerAdvisor = tier && mode === "per_advisor" ? tierRewardPerAdvisor(tier, rewardAmount(rule)) : 0;
-    const totalReward = tier
-      ? mode === "group_percent"
-        ? groupPercentReward(rule, tier, metricValue)
-        : mode === "group_fixed"
-          ? groupFixedReward(rule, tier)
-          : advisorRows.length * rewardPerAdvisor
-      : 0;
+    const activeTvvCount = advisorRows.length;
+    const minQualifiedContracts = Number(rule.condition?.min_policy_count ?? rule.condition?.active_agent_definition?.min_valid_policy_count ?? 1);
+    const qualifiedTvvCount = advisorRows.filter((advisor) => advisor.contractCount >= minQualifiedContracts).length;
+    const tierRule = tier ? { ...rule, ...tier } : rule;
+    const payoutScope = tierRule.payout_scope;
+    const splitMethod = tierRule.split_method ?? "none";
+    const baseAmount = tier ? tierRewardPerAdvisor(tier, rewardAmount(rule)) : rewardAmount(rule);
+    const formulaVars: FormulaVariables = { reward_amount: baseAmount, group_metric: metricValue, tvv_metric: 0, contract_metric: 0, threshold_value: Number(tierRule.threshold_value ?? tierThreshold(tierRule)), active_tvv_count: activeTvvCount, qualified_tvv_count: qualifiedTvvCount, contract_count: new Set(rows.map(getRewardContractKey).filter(Boolean)).size, ip: totalIP, afyp: totalAFYP, fyp: totalAFYP };
+    let formulaAmount: number | null = null;
+    if (tier && tierRule.reward_formula) {
+      try { formulaAmount = calculateRewardFormula(tierRule.reward_formula, formulaVars); }
+      catch (error) { console.warn("[CTTD Reward Formula]", rule.id, error); }
+    }
+    let rewardPerAdvisor = 0;
+    let totalReward = 0;
+    if (tier) {
+      if (formulaAmount !== null) {
+        totalReward = formulaAmount;
+        if (payoutScope === "per_tvv") rewardPerAdvisor = baseAmount;
+        else if (payoutScope === "shared_group" && splitMethod === "equal_per_active_tvv") rewardPerAdvisor = activeTvvCount ? formulaAmount / activeTvvCount : 0;
+        else if (payoutScope === "shared_group" && splitMethod === "equal_per_qualified_tvv") rewardPerAdvisor = qualifiedTvvCount ? formulaAmount / qualifiedTvvCount : 0;
+      } else if (payoutScope === "per_group") totalReward = baseAmount;
+      else if (payoutScope === "per_tvv") { rewardPerAdvisor = baseAmount; totalReward = baseAmount * qualifiedTvvCount; }
+      else if (payoutScope === "shared_group" && splitMethod === "equal_per_active_tvv") { totalReward = baseAmount; rewardPerAdvisor = activeTvvCount ? baseAmount / activeTvvCount : 0; }
+      else if (payoutScope === "shared_group" && splitMethod === "equal_per_qualified_tvv") { totalReward = baseAmount; rewardPerAdvisor = qualifiedTvvCount ? baseAmount / qualifiedTvvCount : 0; }
+      else {
+        const mode = groupRewardMode(rule, tier);
+        rewardPerAdvisor = mode === "per_advisor" ? tierRewardPerAdvisor(tier, rewardAmount(rule)) : 0;
+        totalReward = mode === "group_percent" ? groupPercentReward(rule, tier, metricValue) : mode === "group_fixed" ? groupFixedReward(rule, tier) : qualifiedTvvCount * rewardPerAdvisor;
+      }
+    }
     const upcomingRewardPerAdvisor = upcomingTier ? tierRewardPerAdvisor(upcomingTier, rewardAmount(rule)) : 0;
-    const upcomingTotalReward = advisorRows.length * upcomingRewardPerAdvisor;
-    const missingAmount = upcomingTier ? Math.max(0, tierThreshold(upcomingTier) - metricValue) : 0;
+    const upcomingTotalReward = qualifiedTvvCount * upcomingRewardPerAdvisor;
+    const nextThreshold = upcomingTier ? tierThreshold(upcomingTier) : Number(rule.threshold_value ?? 0);
+    const missingAmount = !tier && nextThreshold > 0 ? Math.max(0, nextThreshold - metricValue) : 0;
+    const noteValues = { group, group_metric: metricValue, threshold_value: nextThreshold, missing_amount: missingAmount, missing_amount_vnd: missingAmount.toLocaleString("vi-VN"), reward_amount: totalReward, reward_per_tvv: rewardPerAdvisor, active_tvv_count: activeTvvCount, qualified_tvv_count: qualifiedTvvCount, metric_type: metricKind.toUpperCase() };
+    const note = tier
+      ? renderRewardNote(tierRule.note_template, noteValues) || rewardName(rule)
+      : renderRewardNote(rule.unachieved_note_template ?? rule.note_template, noteValues) || `${rewardName(rule)} - Thiếu ${missingAmount.toLocaleString("vi-VN")} ${metricKind.toUpperCase()} để đạt thưởng`;
     return {
       group,
       totalIP,
       totalAFYP,
-      activeAdvisorCount: advisorRows.length,
+      activeAdvisorCount: activeTvvCount,
       eligibleContractCount: new Set(rows.map(getRewardContractKey).filter(Boolean)).size,
       achievedTier: tier ? tierLabel(tier) : (upcomingTier ? `Ch\u01b0a \u0111\u1ea1t ${tierLabel(upcomingTier)}` : "Ch\u01b0a \u0111\u1ea1t"),
       rewardPerAdvisor,
       totalReward,
+      group_reward_amount: totalReward,
+      reward_per_tvv: rewardPerAdvisor,
+      qualified_tvv_count: qualifiedTvvCount,
+      active_tvv_count: activeTvvCount,
+      reward_note: note,
+      displayColumns: rule.display_columns,
       prizeName: rewardName(rule),
-      note: tier
-        ? rewardName(rule)
-        : `${rewardName(rule)} - Thi\u1ebfu ${missingAmount.toLocaleString("en-US")} \u0111\u1ec3 nh\u1eadn ${upcomingRewardPerAdvisor > 0 ? `${upcomingRewardPerAdvisor.toLocaleString("en-US")}/TVV` : "th\u01b0\u1edfng"}${upcomingTotalReward > 0 ? ` (t\u1ed5ng ${upcomingTotalReward.toLocaleString("en-US")})` : ""}`,
+      note,
       advisors: advisorRows
     };
   }).sort((a, b) =>
@@ -1000,6 +1083,11 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     eligibleContracts.push(...rewardContracts.map((contract) => ({ ...contract, rulePriority })));
     const groupRewards = shouldOutputGroupRows ? calculateGroupRewards(rewardRule, uniqueEligibleBaseContracts) : [];
     for (const group of groupRewards) {
+      console.log("[CTTD Reward]", rule.program_name, rewardRule.id, rewardRule.target_type, {
+        calculatedReward: group.totalReward,
+        group_reward_amount: group.group_reward_amount,
+        reward_per_tvv: group.reward_per_tvv
+      });
       const candidate = { ...group, rulePriority, prizeName: rewardName(rewardRule), note: group.note || rewardName(rewardRule) };
       const key = groupRewardKey(candidate);
       if (Number(candidate.totalReward) > 0 && rewardRule.allow_multiple_rewards) {

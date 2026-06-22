@@ -1412,6 +1412,16 @@ function TemplateProgress({ value, max, tone = "blue" }: { value: number; max: n
   );
 }
 
+type DashboardHideableColumn = { key: string; header: string; width?: string; render: (row: any) => ReactNode };
+
+function DashboardHideableTable({ rows, columns, hiddenColumns, onHideColumn, onShowAllColumns, className = "", rowKey, onRowClick }: { rows: any[]; columns: DashboardHideableColumn[]; hiddenColumns: string[]; onHideColumn: (key: string) => void; onShowAllColumns: () => void; className?: string; rowKey: (row: any, index: number) => string; onRowClick?: (row: any) => void }) {
+  const visibleColumns = columns.filter((column) => !hiddenColumns.includes(column.key));
+  return <>
+    {hiddenColumns.length > 0 && <div className="contest-column-actions"><button className="ghost" type="button" onClick={onShowAllColumns}>Hiện</button></div>}
+    <div className={`table-wrap ${className}`}><table><thead><tr>{visibleColumns.map((column) => <th key={column.key} style={column.width ? { width: column.width } : undefined} onClick={() => onHideColumn(column.key)} title="Bấm để ẩn cột">{column.header}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={rowKey(row, index)} className={onRowClick ? "clickable" : undefined} onClick={() => onRowClick?.(row)}>{visibleColumns.map((column) => <td key={column.key} data-label={column.header}>{column.render(row)}</td>)}</tr>)}</tbody></table></div>
+  </>;
+}
+
 function TemplatePager({ total, label }: { total: number; label: string }) {
   const pageCount = Math.max(1, Math.ceil(total / 10));
   const last = Math.min(10, total);
@@ -1631,7 +1641,7 @@ function OverviewGroupTable({ rows, contracts, openContracts }: { rows: any[]; c
 
 function OverviewAgentTable({ rows, contracts, openContracts }: { rows: any[]; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
   return (
-    <div className="panel">
+    <div className="panel contract-details-panel">
       <div className="panel-header"><h2>Xếp hạng TVV</h2></div>
       <DataTable headers={["#", "Tên TVV", "Nhóm", "AFYP", "HĐ"]}>
         {rows.map((row) => (
@@ -1842,6 +1852,7 @@ function RankingPoster({ type, rows }: { type: "group" | "agent"; rows: any[] })
 
 function GroupTable({ month, rows, contracts, openContracts }: { month: string; rows: any[]; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const date = posterDateText();
   const xlsxRows = useMemo(() => buildGroupXlsxRows(rows), [rows]);
   const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
@@ -1855,6 +1866,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng nhóm</h2>
         <div className="poster-actions">
+          {hiddenColumns.length > 0 && <button className="ghost" type="button" onClick={() => setHiddenColumns([])}>Hiện</button>}
           <PosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-nhom-thang-${date.fileMonth}.jpg`} />
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng nhóm" fileName={`xep-hang-nhom-${month}.xlsx`} />
         </div>
@@ -1885,6 +1897,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
 
 function AgentTable({ month, rows, contracts, openContracts }: { month: string; rows: any[]; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
   const posterRef = useRef<HTMLDivElement>(null);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const date = posterDateText();
   const xlsxRows = useMemo(() => buildAgentXlsxRows(rows), [rows]);
   const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
@@ -1896,6 +1909,7 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng tư vấn viên</h2>
         <div className="poster-actions">
+          {hiddenColumns.length > 0 && <button className="ghost" type="button" onClick={() => setHiddenColumns([])}>Hiện</button>}
           <PosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-tu-van-vien-thang-${date.fileMonth}.jpg`} />
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng TVV" fileName={`xep-hang-tvv-${month}.xlsx`} />
         </div>
@@ -2601,7 +2615,7 @@ function buildCompetitionGroupRows(advisors: any[] = [], contracts: any[] = []) 
 function normalizeCompetitionRewardGroups(rows: any[] = []) {
   return rows
     .map((row) => ({
-      group: String(row.team || row.group || "-").trim() || "-",
+      group: repairMojibake(String(row.team || row.group || "-").trim() || "-"),
       totalIP: Number(row.total_ip ?? row.totalIP ?? 0),
       totalAFYP: Number(row.total_afyp ?? row.totalAFYP ?? 0),
       activeAdvisorCount: Number(row.active_advisor_count ?? row.activeAdvisorCount ?? 0),
@@ -2953,7 +2967,7 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
   const [jsonText, setJsonText] = useState(JSON.stringify(initialRule, null, 2));
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const [isAdvancedJsonOpen, setIsAdvancedJsonOpen] = useState(false);
+  const [isAdvancedJsonOpen, setIsAdvancedJsonOpen] = useState(true);
 
   function parsedRule() {
     return JSON.parse(jsonText);
@@ -3048,7 +3062,6 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
           <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
         </div>
         <div className="contract-modal-body contest-rule-content">
-          <CompetitionRuleVisualPreview rule={preview} extractedText={extractedRuleText} />
           <section className="contest-rule-editor">
             <div className="contest-rule-editor-head">
               <div>
@@ -3356,21 +3369,21 @@ function CompetitionGroupsTable({ rows, groupContracts, onOpenGroup, hiddenColum
   return (
     <>
       <CompetitionHideableTable table="groups" rows={rows} hiddenColumns={hiddenColumns} onHideColumn={onHideColumn} onShowAllColumns={onShowAllColumns} className="desktop-table contest-mini-table contest-wide-table" columns={[
-        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "group", header: "Nhóm", render: (row) => <button className="contest-group-link" type="button" onClick={() => openGroupContracts(row)}>{row.group}</button> }, { key: "total_ip", header: "Tổng IP", render: (row) => formatFullMoney(row.totalIP ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatFullMoney(row.totalAFYP ?? 0) }, { key: "active_advisors", header: "Số TVV hoạt động", render: (row) => formatNumber(row.activeAdvisorCount ?? 0) }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => formatNumber(row.contractCount ?? 0) }, { key: "milestone", header: "Mốc đạt", render: (row) => row.milestone }, { key: "reward_per_advisor", header: "Thưởng/TVV", render: (row) => formatFullMoney(row.rewardPerAdvisor ?? 0) }, { key: "total_reward", header: "Tổng thưởng nhóm", render: (row) => formatFullMoney(row.totalReward ?? 0) }, { key: "note", header: "Ghi chú", render: (row) => <CompetitionGroupNote note={row.note} /> }
+        { key: "index", header: "STT", render: (_, index) => index + 1 }, { key: "group", header: "Nhóm", render: (row) => <button className="contest-group-link" type="button" onClick={() => openGroupContracts(row)}>{row.group}</button> }, { key: "total_ip", header: "Tổng IP", render: (row) => formatFullMoney(row.totalIP ?? 0) }, { key: "total_afyp", header: "Tổng AFYP", render: (row) => formatFullMoney(row.totalAFYP ?? 0) }, { key: "active_advisors", header: "Số TVV hoạt động", render: (row) => formatNumber(row.activeAdvisorCount ?? row.active_tvv_count ?? 0) }, { key: "contract_count", header: "Số HĐ đạt", render: (row) => formatNumber(row.contractCount ?? 0) }, { key: "milestone", header: "Mốc đạt", render: (row) => row.milestone }, { key: "reward_per_advisor", header: "Thưởng/TVV", render: (row) => formatFullMoney(row.reward_per_tvv ?? row.rewardPerAdvisor ?? 0) }, { key: "total_reward", header: "Tổng thưởng nhóm", render: (row) => formatFullMoney(row.group_reward_amount ?? row.totalReward ?? 0) }, { key: "note", header: "Ghi chú", render: (row) => <CompetitionGroupNote note={row.reward_note ?? row.note} /> }
       ]} />
       <div className="contest-detail-card-list">
         {rows.map((row, index) => (
           <article className="contest-result-card clickable" key={`${row.group || index}-mobile`} onClick={() => openGroupContracts(row)}>
-            <div className="contest-result-card-head"><strong>{index + 1}. {row.group}</strong><span>{formatCompactVnd(row.totalReward ?? 0)}</span></div>
+            <div className="contest-result-card-head"><strong>{index + 1}. {row.group}</strong><span>{formatCompactVnd(row.group_reward_amount ?? row.totalReward ?? 0)}</span></div>
             <div className="mobile-info-grid">
               <span><b>Tổng IP</b>{formatCompactVnd(row.totalIP ?? 0)}</span>
               <span><b>Tổng AFYP</b>{formatCompactVnd(row.totalAFYP ?? 0)}</span>
               <span><b>TVV hoạt động</b>{formatNumber(row.activeAdvisorCount ?? 0)}</span>
               <span><b>HĐ đạt</b>{formatNumber(row.contractCount ?? 0)}</span>
               <span><b>Mốc đạt</b>{row.milestone}</span>
-              <span><b>Thưởng/TVV</b>{formatCompactVnd(row.rewardPerAdvisor ?? 0)}</span>
+              <span><b>Thưởng/TVV</b>{formatCompactVnd(row.reward_per_tvv ?? row.rewardPerAdvisor ?? 0)}</span>
             </div>
-            <small><CompetitionGroupNote note={row.note} /></small>
+            <small><CompetitionGroupNote note={row.reward_note ?? row.note} /></small>
           </article>
         ))}
       </div>
@@ -3497,7 +3510,7 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
         />
         {error && <div className="login-error">{error}</div>}
         <div className="upload-auth-actions">
-          <button className="secondary" type="button" onClick={onCancel}>Há»§y</button>
+          <button className="secondary" type="button" onClick={onCancel}>Hủy</button>
           <button type="button" onClick={authenticate}>Xác nhận</button>
         </div>
       </form>
@@ -3506,6 +3519,9 @@ function UploadAuthModal({ onCancel, onSuccess }: { onCancel: () => void; onSucc
 }
 
 function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onToggleHidden }: { programs: CompetitionProgramView[]; selectedProgramId?: string; onOpenRule: (program: CompetitionProgramView) => void; onToggleHidden: (program: CompetitionProgramView) => void }) {
+  if (programs.length === 0 || programs.every((program) => program.isHidden)) {
+    return <div className="admin-contest-empty"><span>+</span><strong>Chưa có chương trình thi đua nào</strong><small>Bấm “+ Thêm CTTĐ” để tạo chương trình thi đua.</small></div>;
+  }
   if (programs.length === 0) {
     return <p className="empty-state">Chưa có CTTĐ nào. Bấm Thêm CTTĐ để upload poster và tạo thể lệ AI.</p>;
   }
@@ -3654,7 +3670,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
 
   return (
     <>
-      <div className="panel">
+      <div className="panel admin-contest-panel">
         <div className="panel-header">
           <h2>Quản trị Chương trình thi đua</h2>
           <button className="contest-add-button" type="button" onClick={() => setCompetitionUploadOpen(true)}>+ Thêm CTTĐ</button>
@@ -3675,9 +3691,9 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
           />
         )}
       </div>
-      <div className="panel">
+      <div className="panel admin-revenue-panel">
         <div className="panel-header"><h2>Upload dữ liệu doanh thu theo tháng</h2><span>{uploader?.name || "-"}</span></div>
-        <div className="month-button-grid">
+        <div className="month-button-grid admin-month-tabs">
           {Array.from({ length: 12 }, (_, index) => {
             const monthNo = index + 1;
             const key = monthKey(selectedYear, monthNo);
@@ -3697,7 +3713,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
         </div>
         <p className="selected-upload-month">ang chn: Tháng {selectedMonthNumber}/{selectedYear}</p>
         <div className="panel-header"><h2>Upload CSV lũy kế tháng {uploadMonth}</h2></div>
-        <div className="form-row">
+        <div className="form-row admin-upload-row">
           <label><span className="label">File CSV</span><input type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
           <button disabled={!file || busy} onClick={() => send("preview")}>Kiểm tra dữ liệu</button>
           <button disabled={!file || busy || result?.errors?.length} onClick={() => send("commit")}>Ghi đè dữ liệu tháng {selectedMonthNumber}/{selectedYear}</button>
@@ -3767,7 +3783,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
   }
 
   return (
-    <div className="panel star-upload-panel">
+    <div className="panel star-upload-panel admin-star-panel">
       <div className="panel-header"><h2>Upload dữ liệu Sao Việt</h2><span>Năm {year}</span></div>
       <div className="star-upload-grid">
         {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng liền trước. Sao Việt tính theo cột FYP.")}
@@ -3779,7 +3795,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
 
 function UploadHistory({ rows }: { rows: any[] }) {
   return (
-    <div className="panel">
+    <div className="panel admin-history-panel">
       <div className="panel-header"><h2>Lịch sử upload</h2><span>{rows.length} lần gần nhất</span></div>
       <DataTable className="desktop-table" headers={["Thời gian upload", "Người upload", "Tháng dữ liệu", "Tên file", "Số dòng", "Kết quả"]}>
         {rows.map((row) => (
@@ -3926,7 +3942,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
     ? ["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "Trạng thái hợp đồng", "IP", "AFYP"]
     : ["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "IP", "AFYP"];
   return (
-    <div className="panel">
+    <div className="panel contract-details-panel">
       <div className="panel-header contract-details-header">
         <div className="contract-details-title">
           <h2>{title}</h2>
@@ -3981,7 +3997,10 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
   );
 }
 
-function DataTable({ headers, children, className = "", colWidths }: { headers: string[]; children: React.ReactNode; className?: string; colWidths?: string[] }) {
+function DataTable({ headers, children, className = "", colWidths, hiddenColumns = [], onHeaderClick }: { headers: string[]; children: React.ReactNode; className?: string; colWidths?: string[]; hiddenColumns?: number[]; onHeaderClick?: (index: number) => void }) {
+  const [localHiddenColumns, setLocalHiddenColumns] = useState<number[]>([]);
+  const activeHiddenColumns = onHeaderClick ? hiddenColumns : localHiddenColumns;
+  const hidden = new Set(activeHiddenColumns);
   const rows = Children.map(children, (row) => {
     if (!isValidElement(row)) return row;
     let cellIndex = 0;
@@ -3989,24 +4008,27 @@ function DataTable({ headers, children, className = "", colWidths }: { headers: 
       if (!isValidElement(cell)) return cell;
       const label = headers[cellIndex] ?? "";
       cellIndex += 1;
-      return cloneElement(cell as React.ReactElement<{ "data-label"?: string }>, {
-        "data-label": label
+      const isHidden = hidden.has(cellIndex - 1);
+      return cloneElement(cell as React.ReactElement<{ "data-label"?: string; style?: React.CSSProperties; className?: string }>, {
+        "data-label": label,
+        className: `${(cell.props as any).className ?? ""}${isHidden ? " is-hidden-column" : ""}`,
+        style: isHidden ? { ...(cell.props as any).style, display: "none" } : (cell.props as any).style
       });
     });
     return cloneElement(row as React.ReactElement<{ children?: React.ReactNode }>, { children: cells });
   });
 
   return (
-    <div className={`table-wrap ${className}`}>
+    <>{localHiddenColumns.length > 0 && !onHeaderClick && <div className="contest-column-actions"><button className="ghost" type="button" onClick={() => setLocalHiddenColumns([])}>Hiện</button></div>}<div className={`table-wrap ${className}${hidden.size > 0 ? " has-hidden-columns" : ""}`}>
       <table>
-        {colWidths && (
+        {colWidths && hidden.size === 0 && (
           <colgroup>
             {colWidths.map((width, index) => <col key={`${width}-${index}`} style={{ width }} />)}
           </colgroup>
         )}
-        <thead><tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr></thead>
+        <thead><tr>{headers.map((header, index) => hidden.has(index) ? null : <th key={header} onClick={() => onHeaderClick ? onHeaderClick(index) : setLocalHiddenColumns((current) => current.includes(index) ? current : [...current, index])} title="Bấm để ẩn cột">{header}</th>)}</tr></thead>
         <tbody>{rows}</tbody>
       </table>
-    </div>
+    </div></>
   );
 }

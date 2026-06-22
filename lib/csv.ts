@@ -42,6 +42,23 @@ const REQUIRED_KEYS: Array<keyof RevenueRecord> = [
 ];
 
 const DEFAULT_BAN_NAME = "Banca";
+
+/**
+ * Excel exports in Vietnam are commonly Windows-1258, while File.text() always
+ * assumes UTF-8 and permanently turns invalid bytes into U+FFFD. Decode bytes
+ * before parsing so names such as "Tâm Phát Lộc" reach the database intact.
+ */
+export function decodeRevenueCsv(bytes: ArrayBuffer) {
+  const raw = new Uint8Array(bytes);
+  const startsWith = (...prefix: number[]) => prefix.every((byte, index) => raw[index] === byte);
+  if (startsWith(0xff, 0xfe)) return new TextDecoder("utf-16le").decode(raw);
+  if (startsWith(0xfe, 0xff)) return new TextDecoder("utf-16be").decode(raw);
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(raw);
+  } catch {
+    return new TextDecoder("windows-1258").decode(raw);
+  }
+}
 function isAgentCodeLike(value: unknown) {
   return /^D\d+/i.test(String(value ?? "").trim());
 }

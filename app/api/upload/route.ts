@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseRevenueCsv } from "@/lib/csv";
+import { decodeRevenueCsv, parseRevenueCsv } from "@/lib/csv";
 import { toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getUploadUserName } from "@/lib/upload-users";
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Không xác định được ngưi upload. Vui lòng nhập lại mật khẩu upload." }, { status: 401 });
     }
 
-    const text = await file.text();
+    const text = decodeRevenueCsv(await file.arrayBuffer());
     const parsed = parseRevenueCsv(text, month);
     const duplicateContracts = new Map<string, number[]>();
     parsed.records.forEach((record, index) => {
