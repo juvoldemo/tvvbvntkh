@@ -3917,7 +3917,6 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
             );
           })}
         </div>
-        <p className="selected-upload-month">ang chn: Tháng {selectedMonthNumber}/{selectedYear}</p>
         <div className="panel-header"><h2>Upload CSV lũy kế tháng {uploadMonth}</h2></div>
         <div className="form-row admin-upload-row">
           <label><span className="label">File CSV</span><input type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
