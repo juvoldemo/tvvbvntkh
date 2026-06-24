@@ -90,7 +90,8 @@ export const EXCLUDED_REVENUE_STATUSES = new Set([
   "het hieu luc",
   "tri hoan",
   "tu choi",
-  "ycbh het hieu luc"
+  "ycbh het hieu luc",
+  "hoan phi"
 ]);
 
 function rawStatusValue(record: RevenueRecord) {
@@ -191,7 +192,8 @@ const REFUND_STATUSES = new Set([
   "het hieu luc",
   "ycbh het hieu luc",
   "tu choi",
-  "tri hoan"
+  "tri hoan",
+  "hoan phi"
 ]);
 
 const STATUS_TABLE_DEFINITIONS = [

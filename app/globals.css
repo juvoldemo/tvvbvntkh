@@ -1553,14 +1553,15 @@ tr.clickable:hover {
 }
 
 .contract-modal-close {
-  width: 36px;
-  min-height: 36px;
+  width: 40px;
+  min-height: 40px;
   flex: 0 0 auto;
   border-radius: 999px;
-  background: var(--blue-100);
-  color: var(--blue-900);
+  background: #0868f7;
+  color: #fff;
   padding: 0;
-  font-size: 22px;
+  font-size: 28px;
+  font-weight: 500;
   line-height: 1;
 }
 
@@ -5997,6 +5998,94 @@ body { background: var(--template-bg); }
 button,.small-button,.poster-download-button,.contest-add-button,.login-submit { border-radius: 12px; }
 button:not(.ghost):not(.secondary):not(.tab):not(.filter-toggle):not(.login-eye-button),.small-button,.poster-download-button,.contest-add-button { background: linear-gradient(135deg,var(--template-blue),var(--template-blue-bright)); box-shadow: 0 10px 20px rgba(0,87,217,.18); }
 
+@media (max-width: 767px) {
+  .status-donut-layout {
+    display: block !important;
+  }
+
+  .status-donut-chart {
+    display: none !important;
+  }
+
+  .contract-modal-list-header {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .contract-modal-list-header h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .contract-modal-list-header .poster-action {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .contract-modal-list-header .poster-download-button {
+    width: auto;
+    min-height: 32px;
+    padding: 6px 12px;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .contract-modal-list-header .poster-download-button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .mobile-group-rank-card {
+    height: auto !important;
+    min-height: 104px !important;
+    align-items: start !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .mobile-group-rank-card .mobile-rank-main {
+    display: block !important;
+  }
+
+  .mobile-group-rank-card .mobile-rank-subtitle {
+    margin-top: 3px;
+  }
+
+  .mobile-group-rank-card .mobile-metric-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-top: 9px;
+  }
+
+  .mobile-group-rank-card .mobile-metric {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 42px !important;
+    display: grid !important;
+    justify-items: center;
+    gap: 2px !important;
+    padding: 5px 3px !important;
+    border-radius: 9px !important;
+  }
+
+  .mobile-group-rank-card .mobile-metric span {
+    font-size: 9px !important;
+    white-space: nowrap;
+  }
+
+  .mobile-group-rank-card .mobile-metric strong {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .kpi-grid { gap: 18px; }
 .kpi,.kpi-card { min-height: 136px; padding: 20px; }
 .kpi-desktop-layout { align-items: center; gap: 16px; }
@@ -7469,6 +7558,38 @@ body,
   }
 }
 
+/* Keep the three group metrics visible after the final mobile density rules. */
+@media (max-width: 767px) {
+  .mobile-rank-card.mobile-group-rank-card {
+    height: auto !important;
+    min-height: 104px !important;
+    align-items: start !important;
+    padding: 10px 8px !important;
+  }
+
+  .mobile-rank-card.mobile-group-rank-card .mobile-rank-main {
+    display: block !important;
+  }
+
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-top: 9px !important;
+  }
+
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric-grid .mobile-metric {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    height: auto !important;
+    display: grid !important;
+    justify-items: center !important;
+    gap: 2px !important;
+    padding: 5px 3px !important;
+  }
+}
+
 /* The dedicated today layout is hidden outside its mobile breakpoint. */
 .today-mobile-card { display: none; }
 .ado-mobile-detail-list { display: none; }
@@ -8768,6 +8889,46 @@ body,
   .mobile-rank-title { grid-column: 1 !important; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important; line-height: 1.15 !important; }
   .mobile-rank-subtitle { grid-column: 1 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 10px !important; line-height: 1.1 !important; }
   .mobile-rank-card .mobile-metric-grid, .mobile-rank-card .mobile-info-grid { display: none !important; }
+  .mobile-rank-card.mobile-group-rank-card {
+    min-height: 82px !important;
+    height: auto !important;
+    align-items: center !important;
+    padding: 8px !important;
+  }
+  .mobile-rank-card.mobile-group-rank-card .mobile-rank-main { display: block !important; }
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric-grid {
+    display: grid !important;
+    grid-template-columns: minmax(94px, 1.25fr) minmax(70px, .9fr) minmax(70px, .9fr) !important;
+    gap: 5px !important;
+    margin-top: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric-grid .mobile-metric {
+    min-height: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    padding: 3px 4px !important;
+    border-radius: 8px !important;
+  }
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric span {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 8px !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .mobile-rank-card.mobile-group-rank-card .mobile-metric strong {
+    flex: 0 0 auto;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+  }
   .mobile-card-chevron { width: 15px !important; height: 15px !important; }
 }
 

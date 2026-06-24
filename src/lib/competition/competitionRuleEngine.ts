@@ -890,6 +890,8 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
   const excludedStatuses = new Set((rule.excluded_statuses ?? []).map(normalizeText).filter(Boolean));
   const includedStatuses = new Set((rule.included_statuses ?? []).map(normalizeText).filter(Boolean));
   const status = normalizeText(contract.status);
+  const refundStatuses = new Set(["het hieu luc", "ycbh het hieu luc", "tu choi", "tri hoan", "hoan phi"]);
+  if (refundStatuses.has(status)) reasons.push("Hợp đồng hoàn phí chỉ hiển thị, không tính thi đua");
   if (excludedStatuses.has(status)) reasons.push("Trạng thái bị loại");
   if (!status && includedStatuses.size > 0 && !rule.allow_empty_status) reasons.push("Trạng thái trống không được phép");
   if (status && includedStatuses.size > 0 && !includedStatuses.has(status)) reasons.push("Trạng thái không thuộc danh sách được tính");

@@ -5,9 +5,12 @@ import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
+import LeaderboardPoster from "./LeaderboardPoster";
 import { formatCompactVnd, formatPercent, formatVnd } from "@/lib/format";
+import { groupLeaderName } from "@/lib/group-leaders";
 import { getUploadUserName } from "@/lib/upload-users";
 import { getAdsPlan, getAdsMonthlyTarget, getAdsQuarterTarget, getAdsYearTarget } from "@/lib/ads-plan";
 
@@ -128,45 +131,6 @@ function isNewUploadContract(row: any) {
 
 function groupNameForRecord(record: any) {
   return String(record?.group_name || record?.ban_name || "").trim();
-}
-
-const GROUP_LEADER_BY_NORMALIZED_NAME: Record<string, string> = {
-  "tam phat": "Lưu Thanh Sơn",
-  "hoang phat": "Huỳnh Thị Vân Anh",
-  "nha trang 5": "Lương Thị Thái",
-  "quyet thang": "Phạm Thu",
-  "thanh phu": "Lê Thị Tình",
-  "hong duc": "Lê Thị Thành",
-  "tan phat": "Nguyễn Thị Thu Thảo",
-  "nguyen phat": "Nguyễn Thị Minh Trang",
-  "hung thinh": "Trần Thị Xuân Thu",
-  "sao mai": "Hoàng Huyền Trang",
-  "thuan phat": "Nguyễn Thị Nga",
-  "nha trang 4": "Thái Thị Tứ",
-  "sen vang": "Đoàn Thị Mỹ Châu",
-  "anh duong": "Đoàn Thị Kim Thúy",
-  "tam an": "Nguyễn Võ Thanh Thúy",
-  "hung phat": "Nguyễn Thiện Tín",
-  "hong phat": "Trần Thị Ngọc Anh",
-  "tai phat": "Nguyễn Thị Thu Diệu",
-  "nha trang 5 sao": "Trần Thị Mỹ Vân",
-  "thu phat": "Nguyễn Thị Minh Thư",
-  "duyen phat": "Nguyễn Thị Ngọc Duyên",
-  "phat thang": "Đoàn Thị Bích",
-  "tam nhien": "Lê Thị Hồng Đào",
-  "hiep phat": "Nguyễn Thị Mỹ Loan",
-  "dai thang": "Nguyễn Thị Trang Châu"
-};
-
-function groupLeaderName(groupName: unknown) {
-  const normalizedGroupName = String(groupName ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[đĐ]/g, "d")
-    .toLocaleLowerCase("vi-VN")
-    .replace(/\s+/g, " ")
-    .trim();
-  return GROUP_LEADER_BY_NORMALIZED_NAME[normalizedGroupName] ?? "-";
 }
 
 function formatDateVi(value: string | null | undefined) {
@@ -612,6 +576,16 @@ function normalizedContractStatus(value: unknown) {
     .replace(/[\u0111\u0110]/g, "d")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function isCountedContract(value: unknown) {
+  return !new Set([
+    "het hieu luc",
+    "ycbh het hieu luc",
+    "tu choi",
+    "tri hoan",
+    "hoan phi"
+  ]).has(normalizedContractStatus(value));
 }
 
 const STATUS_COLOR_BY_NORMALIZED_LABEL: Record<string, string> = {
@@ -1534,18 +1508,15 @@ function MobileGroupRankingCards({ rows, contracts, openContracts }: { rows: any
   return (
     <div className="mobile-card-list mobile-ranking-list">
       {rows.map((row) => (
-        <button className="mobile-rank-card full" key={`${row.banName}-${row.groupName}`} type="button" onClick={() => openContracts(row.groupName, contracts.filter((item) => groupNameForRecord(item) === row.groupName))}>
+        <button className="mobile-rank-card full mobile-group-rank-card" key={`${row.banName}-${row.groupName}`} type="button" onClick={() => openContracts(row.groupName, contracts.filter((item) => groupNameForRecord(item) === row.groupName))}>
           <MobileRankBadge rank={row.rank} />
           <div className="mobile-rank-main">
             <div className="mobile-rank-title">{row.groupName}</div>
-            <div className="mobile-rank-subtitle">{row.banName}</div>
+            <div className="mobile-rank-subtitle">{groupLeaderName(row.groupName)}</div>
             <div className="mobile-metric-grid">
               <MobileMetric label="AFYP" value={formatCompactVnd(row.afyp)} />
-              <MobileMetric label="IP" value={formatCompactVnd(row.ip)} />
-              <MobileMetric label="H" value={row.contractCount} />
-              <MobileMetric label="TVV" value={row.agentCount} />
-              <MobileMetric label="TT" value={formatPercent(row.afypShare)} />
-              <MobileMetric label="BQ/H" value={formatCompactVnd(row.averageAfypPerContract)} />
+              <MobileMetric label="Số HĐ" value={row.contractCount} />
+              <MobileMetric label="Số TVV" value={row.agentCount} />
             </div>
           </div>
           <ChevronDown className="mobile-card-chevron" size={18} />
@@ -1754,6 +1725,53 @@ function PosterDownloadButton({ rows, posterRef, fileName }: { rows: any[]; post
   );
 }
 
+function GroupPosterDownloadButton({
+  rows,
+  posterRef,
+  fileName
+}: {
+  rows: any[];
+  posterRef: RefObject<HTMLDivElement>;
+  fileName: string;
+}) {
+  const [message, setMessage] = useState("");
+
+  async function downloadPoster() {
+    setMessage("");
+    if (!rows.length) {
+      setMessage("Không có dữ liệu để xuất poster");
+      return;
+    }
+    if (!posterRef.current) return;
+
+    try {
+      await document.fonts?.ready;
+      const dataUrl = await toPng(posterRef.current, {
+        cacheBust: true,
+        pixelRatio: 1,
+        backgroundColor: "#031a4e",
+        width: 1400,
+        height: posterRef.current.offsetHeight
+      });
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = fileName;
+      link.click();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể xuất poster.");
+    }
+  }
+
+  return (
+    <div className="poster-action">
+      <button className="small-button poster-download-button" type="button" onClick={downloadPoster}>
+        <Download size={16} /> Tải ảnh
+      </button>
+      {message && <span className="poster-error">{message}</span>}
+    </div>
+  );
+}
+
 type XlsxCell = string | number;
 type XlsxRow = Record<string, XlsxCell>;
 
@@ -1881,8 +1899,8 @@ function RankingPoster({ type, rows }: { type: "group" | "agent"; rows: any[] })
 function GroupTable({ month, rows, contracts, openContracts }: { month: string; rows: any[]; contracts: any[]; openContracts: (title: string, rows: any[]) => void }) {
   const posterRef = useRef<HTMLDivElement>(null);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
-  const date = posterDateText();
   const xlsxRows = useMemo(() => buildGroupXlsxRows(rows), [rows]);
+  const [year, monthNumber] = month.slice(0, 7).split("-");
   const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
   const maxIp = Math.max(...rows.map((row) => Number(row.ip ?? 0)), 0);
   const maxShare = Math.max(...rows.map((row) => Number(row.afypShare ?? 0)), 0);
@@ -1895,7 +1913,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
         <h2>Xếp hạng nhóm</h2>
         <div className="poster-actions">
           {hiddenColumns.length > 0 && <button className="ghost" type="button" onClick={() => setHiddenColumns([])}>Hiện</button>}
-          <PosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-nhom-thang-${date.fileMonth}.jpg`} />
+          <GroupPosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-nhom-${monthNumber}-${year}.png`} />
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng nhóm" fileName={`xep-hang-nhom-${month}.xlsx`} />
         </div>
       </div>
@@ -1916,7 +1934,11 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
         ))}
       </DataTable>
       <MobileGroupRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
-      <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="group" rows={rows} /></div></div>
+      <div className="poster-offscreen" aria-hidden="true">
+        <div ref={posterRef} style={{ width: 1400 }}>
+          <LeaderboardPoster month={month} rows={rows} />
+        </div>
+      </div>
     </div>
     </>
   );
@@ -3896,6 +3918,7 @@ function safeText(value: unknown) {
 
 function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "agent" | "ads"; title: string; rows: any[]; onClose: () => void }) {
   const sortedRows = sortContracts(rows);
+  const countedRows = sortedRows.filter((row) => isCountedContract(row.policy_status));
   const xlsxRows = sortedRows.map((row) => ({
     "Ngày thu": formatDateVi(row.paid_date) || "",
     "Số GYC": safeText(row.application_no),
@@ -3908,9 +3931,9 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
     "AFYP": Number(row.afyp) || 0
   }));
   const xlsxFileName = `chi-tiet-${type}-${normalizeViText(title).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "hop-dong"}.xlsx`;
-  const afyp = sortedRows.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0);
-  const contractCount = new Set(sortedRows.map((row, index) => String(row.contract_no ?? "").trim() || `row-${index}`)).size;
-  const agentCount = new Set(sortedRows.map((row) => String(row.agent_name ?? "").trim()).filter(Boolean)).size;
+  const afyp = countedRows.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0);
+  const contractCount = new Set(countedRows.map((row, index) => String(row.contract_no ?? "").trim() || `row-${index}`)).size;
+  const agentCount = new Set(countedRows.map((row) => String(row.agent_name ?? "").trim()).filter(Boolean)).size;
   const groupNames = Array.from(new Set(sortedRows.map((row) => groupNameForRecord(row)).filter(Boolean)));
   const isAgentDetail = type === "agent";
   const titlePrefix = type === "ads" ? "Chi tiết ADS" : isAgentDetail ? "Chi tiết TVV" : "Chi tiết nhóm";
