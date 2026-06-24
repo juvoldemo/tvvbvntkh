@@ -118,8 +118,17 @@ function isUnnamedHeaderRow(row: unknown[]) {
 function resolveHeaderLayout(rows: unknown[][]) {
   const promotedHeaderIndex = rows.findIndex((row, index) => index <= 2 && isRealBc02Header(row));
   if (promotedHeaderIndex >= 0) {
+    const promotedRow = rows[promotedHeaderIndex] ?? [];
+    const precedingRows = rows.slice(0, promotedHeaderIndex);
+    const headers = promotedRow.map((value, columnIndex) => {
+      const promotedHeader = normalizeHeader(value);
+      const inheritedMeasureHeader = precedingRows
+        .map((row) => normalizeHeader(row[columnIndex]))
+        .find((header) => ["STBH", "PHÍ ĐÓNG THÊM", "PHÍ ĐỊNH KỲ", "IP", "AFYP"].includes(header));
+      return inheritedMeasureHeader || promotedHeader;
+    });
     return {
-      headers: rows[promotedHeaderIndex].map(normalizeHeader),
+      headers,
       dataStartIndex: promotedHeaderIndex + 1
     };
   }
