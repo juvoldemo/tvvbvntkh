@@ -691,6 +691,7 @@ input:focus-visible {
 }
 
 .mobile-header-title,
+.mobile-header-updated,
 .mobile-header-meta {
   display: none;
 }
@@ -7153,6 +7154,19 @@ body,
     font-weight: 900 !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+
+  .mobile-header-updated {
+    display: block !important;
+    max-width: 100%;
+    margin-top: 4px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .month-switcher {

@@ -813,6 +813,11 @@ export default function HomePage() {
               <span className="desktop-header-title">{currentHeader.title}</span>
               <span className="mobile-header-title">{mobileHeaderTitle}</span>
             </h1>
+            {tab === "overview" && (
+              <span className="mobile-header-updated">
+                Cập nhật gần nhất: {formatDateTimeVi(data?.updatedAt ?? null)}
+              </span>
+            )}
           </div>
           {tab === "overview" && data && <HeaderPlanProgress items={headerPlanProgress} />}
           <label className="month-switcher">
