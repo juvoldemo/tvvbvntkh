@@ -1814,11 +1814,7 @@ function GroupPosterShareButton({ rows, posterRef, fileName }: {
         setMessage("Thiết bị chưa hỗ trợ chia sẻ file. Ảnh bảng vàng đã được tải xuống.");
         return;
       }
-      await navigator.share({
-        files: [file],
-        title: "Bảng vàng doanh thu nhóm",
-        text: "Bảng vàng doanh thu nhóm"
-      });
+      await navigator.share({ files: [file] });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage(error instanceof Error ? error.message : "Không thể chia sẻ bảng vàng.");

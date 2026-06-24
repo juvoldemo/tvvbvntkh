@@ -58,7 +58,16 @@ export default function LeaderboardPoster({
         </div>
         <div className={styles.growth}>
           <div className={styles.bars}><i /><i /><i /><i /></div>
-          <div className={styles.arrow}>↗</div>
+          <svg className={styles.arrow} viewBox="0 0 210 145" aria-hidden="true">
+            <defs>
+              <linearGradient id="poster-growth-gold" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stopColor="#e8a92f" />
+                <stop offset="1" stopColor="#ffe786" />
+              </linearGradient>
+            </defs>
+            <path d="M18 121 C56 108 78 88 105 72 C128 58 150 45 181 24" />
+            <path d="M145 23 L185 20 L181 59" />
+          </svg>
         </div>
       </header>
 

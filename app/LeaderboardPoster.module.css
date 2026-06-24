@@ -153,14 +153,19 @@
 
 .arrow {
   position: absolute;
-  top: 4px;
-  right: 8px;
-  color: #ffd45b;
-  font-size: 118px;
-  font-weight: 900;
-  line-height: 1;
-  transform: rotate(-9deg);
-  filter: drop-shadow(0 8px 12px rgba(255, 197, 47, 0.35));
+  inset: 0;
+  width: 210px;
+  height: 145px;
+  overflow: visible;
+  filter: drop-shadow(0 7px 9px rgba(255, 197, 47, 0.32));
+}
+
+.arrow path {
+  fill: none;
+  stroke: url("#poster-growth-gold");
+  stroke-width: 11px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tableFrame {
