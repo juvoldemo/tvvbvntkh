@@ -102,11 +102,17 @@
 }
 
 .titles h1 {
-  color: #ffdc68;
-  font-size: 78px;
+  color: #ffe477;
+  font-size: 84px;
   font-weight: 950;
-  letter-spacing: 4px;
+  letter-spacing: 5px;
   line-height: 0.98;
+  -webkit-text-stroke: 2px #ffc83d;
+  text-shadow:
+    0 3px 0 #d79712,
+    0 7px 0 #9f6708,
+    0 12px 22px rgba(0, 0, 0, 0.52),
+    0 0 24px rgba(255, 219, 91, 0.42);
 }
 
 .titles h2 {
@@ -150,23 +156,6 @@
 .bars i:nth-child(2) { height: 68px; }
 .bars i:nth-child(3) { height: 94px; }
 .bars i:nth-child(4) { height: 126px; }
-
-.arrow {
-  position: absolute;
-  inset: 0;
-  width: 210px;
-  height: 145px;
-  overflow: visible;
-  filter: drop-shadow(0 7px 9px rgba(255, 197, 47, 0.32));
-}
-
-.arrow path {
-  fill: none;
-  stroke: url("#poster-growth-gold");
-  stroke-width: 11px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 
 .tableFrame {
   position: relative;
@@ -286,7 +275,7 @@
   height: 62px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 0 26px;
   color: #fff;
   font-size: 20px;
