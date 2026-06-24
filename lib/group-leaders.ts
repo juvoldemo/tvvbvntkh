@@ -19,6 +19,7 @@ const GROUP_LEADER_BY_NORMALIZED_NAME: Record<string, string> = {
   "tai phat": "Nguyễn Thị Thu Diệu",
   "nha trang 5 sao": "Trần Thị Mỹ Vân",
   "thu phat": "Nguyễn Thị Minh Thư",
+  "thu thinh": "Nguyễn Thị Minh Thư",
   "duyen phat": "Nguyễn Thị Ngọc Duyên",
   "phat thang": "Đoàn Thị Bích",
   "tam nhien": "Lê Thị Hồng Đào",

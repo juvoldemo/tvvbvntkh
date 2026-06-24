@@ -3,7 +3,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
+import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Share2, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -1777,6 +1777,66 @@ function GroupPosterDownloadButton({
   );
 }
 
+async function groupPosterFile(element: HTMLElement, fileName: string) {
+  await document.fonts?.ready;
+  const pngUrl = await toPng(element, {
+    cacheBust: true,
+    pixelRatio: 1,
+    backgroundColor: "#031a4e",
+    width: 1400,
+    height: element.offsetHeight
+  });
+  const response = await fetch(pngUrl);
+  const blob = await response.blob();
+  return new File([blob], fileName, { type: "image/png" });
+}
+
+function GroupPosterShareButton({ rows, posterRef, fileName }: {
+  rows: any[];
+  posterRef: RefObject<HTMLDivElement>;
+  fileName: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function sharePoster() {
+    setMessage("");
+    if (!rows.length || !posterRef.current || busy) return;
+    setBusy(true);
+    try {
+      const file = await groupPosterFile(posterRef.current, fileName);
+      if (!navigator.share || (navigator.canShare && !navigator.canShare({ files: [file] }))) {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(file);
+        link.download = file.name;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        setMessage("Thiết bị chưa hỗ trợ chia sẻ file. Ảnh bảng vàng đã được tải xuống.");
+        return;
+      }
+      await navigator.share({
+        files: [file],
+        title: "Bảng vàng doanh thu nhóm",
+        text: "Bảng vàng doanh thu nhóm"
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setMessage(error instanceof Error ? error.message : "Không thể chia sẻ bảng vàng.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mobile-group-share-wrap">
+      <button className="mobile-group-share-button" type="button" onClick={sharePoster} disabled={busy || !rows.length} aria-label="Chia sẻ bảng vàng nhóm qua Zalo">
+        <Share2 size={14} /> {busy ? "Đang tạo..." : "Chia sẻ"}
+      </button>
+      {message && <span className="mobile-group-share-message">{message}</span>}
+    </div>
+  );
+}
+
 type XlsxCell = string | number;
 type XlsxRow = Record<string, XlsxCell>;
 
@@ -1916,6 +1976,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
     <div className="panel template-ranking-panel">
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng nhóm</h2>
+        <GroupPosterShareButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-nhom-${monthNumber}-${year}.png`} />
         <div className="poster-actions">
           {hiddenColumns.length > 0 && <button className="ghost" type="button" onClick={() => setHiddenColumns([])}>Hiện</button>}
           <GroupPosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-nhom-${monthNumber}-${year}.png`} />

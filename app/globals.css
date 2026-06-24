@@ -3426,6 +3426,10 @@ tr.clickable:hover {
   align-items: center;
 }
 
+.mobile-group-share-wrap {
+  display: none;
+}
+
 .poster-actions {
   display: flex;
   align-items: flex-start;
@@ -8948,6 +8952,50 @@ body,
 
 /* Overview-only mobile density: four headline KPIs plus today's revenue. */
 @media (max-width: 767px) {
+  body .dashboard-page.tab-groups .poster-panel-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  body .dashboard-page.tab-groups .poster-panel-header h2 { margin: 0 !important; }
+  body .dashboard-page.tab-groups .mobile-group-share-wrap {
+    position: relative;
+    display: block;
+  }
+  body .dashboard-page.tab-groups .mobile-group-share-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 30px;
+    padding: 5px 8px;
+    border: 1px solid #bcd5f4;
+    border-radius: 8px;
+    background: #eaf3ff !important;
+    color: #0759a3 !important;
+    box-shadow: none !important;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  body .dashboard-page.tab-groups .mobile-group-share-button:disabled { opacity: .65; }
+  body .dashboard-page.tab-groups .mobile-group-share-message {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 6px);
+    right: 0;
+    width: min(280px, 75vw);
+    padding: 8px 10px;
+    border: 1px solid #d6e4f5;
+    border-radius: 8px;
+    background: #fff;
+    color: #b42318;
+    box-shadow: 0 8px 22px rgba(8, 32, 70, .16);
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
   .tab-overview .overview-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
