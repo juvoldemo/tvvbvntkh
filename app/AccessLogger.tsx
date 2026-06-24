@@ -1,15 +1,8 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import { useEffect } from "react";
 
 const SESSION_KEY = "dashboard-page-view-logged";
-
-type LocationData = {
-  ip: string;
-  city: string;
-  country: string;
-};
 
 function getDevice(userAgent: string) {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent)
@@ -25,26 +18,6 @@ function getBrowser(userAgent: string) {
   return "unknown";
 }
 
-async function getLocation(): Promise<LocationData> {
-  try {
-    const response = await fetch("https://ipapi.co/json/");
-
-    if (!response.ok) {
-      throw new Error(`ipapi returned ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      ip: data.ip || "unknown",
-      city: data.city || "unknown",
-      country: data.country_name || data.country || "unknown"
-    };
-  } catch {
-    return { ip: "unknown", city: "unknown", country: "unknown" };
-  }
-}
-
 export default function AccessLogger() {
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY)) return;
@@ -52,34 +25,30 @@ export default function AccessLogger() {
     sessionStorage.setItem(SESSION_KEY, "true");
 
     const logAccess = async () => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        console.error(
-          "Supabase page view insert failed: missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
-        );
-        return;
-      }
-
-      const location = await getLocation();
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
       const userAgent = navigator.userAgent;
-      const { error } = await supabase.from("page_views").insert({
-        page: window.location.pathname,
-        user_agent: userAgent,
-        referrer: document.referrer,
-        device: getDevice(userAgent),
-        browser: getBrowser(userAgent),
-        ...location
+      const response = await fetch("/api/access-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          page: window.location.pathname,
+          device: getDevice(userAgent),
+          browser: getBrowser(userAgent),
+          user_agent: userAgent,
+          referrer: document.referrer
+        })
       });
 
-      if (error) {
-        console.error("Supabase page view insert failed:", error);
+      if (!response.ok) {
+        console.error(
+          "Supabase page view insert failed:",
+          await response.text()
+        );
       }
     };
 
-    void logAccess();
+    void logAccess().catch((error) => {
+      console.error("Supabase page view insert failed:", error);
+    });
   }, []);
 
   return null;
