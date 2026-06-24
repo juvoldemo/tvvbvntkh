@@ -1629,6 +1629,90 @@ tr.clickable:hover {
   box-shadow: 0 8px 18px rgba(0, 91, 197, 0.2);
 }
 
+.competition-description-input {
+  width: 100%;
+  min-height: 220px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 14px 16px;
+  border: 1px solid #c9daf2;
+  border-radius: 12px;
+  background: #fff;
+  color: #08265f;
+  font: inherit;
+  line-height: 1.55;
+  outline: none;
+}
+
+.competition-description-input:focus {
+  border-color: #1670e8;
+  box-shadow: 0 0 0 3px rgba(22, 112, 232, .12);
+}
+
+.contest-rule-source-editor {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #cfe0f5;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.contest-rule-source-editor h3,
+.contest-rule-source-editor p { margin: 0; }
+.contest-rule-source-editor p { margin-top: 3px; color: #64748b; font-size: 12px; }
+.contest-rule-source-editor > button { justify-self: end; }
+
+.contest-rule-top-editors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+}
+
+.contest-rule-top-editors .contest-rule-source-editor,
+.contest-rule-top-editors .contest-rule-editor {
+  min-width: 0;
+  padding: 10px;
+}
+
+.contest-rule-top-editors .competition-description-input {
+  min-height: 150px;
+  max-height: 230px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.contest-rule-top-editors .contest-rule-editor-head {
+  display: none;
+}
+
+.contest-rule-top-editors .contest-rule-advanced {
+  margin: 0;
+}
+
+.contest-rule-top-editors .contest-rule-editor-actions {
+  gap: 6px;
+}
+
+.contest-rule-top-editors .contest-rule-editor-actions button,
+.contest-rule-top-editors .contest-rule-source-editor > button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.contest-rule-top-editors .contest-rule-textarea {
+  min-height: 190px;
+  max-height: 230px;
+}
+
+@media (max-width: 900px) {
+  .contest-rule-top-editors {
+    grid-template-columns: 1fr;
+  }
+}
+
 .contest-eyebrow {
   margin: 0 0 4px;
   color: #b7791f;
@@ -2265,6 +2349,20 @@ tr.clickable:hover {
   gap: 12px;
 }
 
+.admin-contest-table th:first-child,
+.admin-contest-table td:first-child {
+  width: 40%;
+}
+
+.admin-contest-program-name {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .admin-contest-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2662,6 +2760,7 @@ tr.clickable:hover {
 
 /* Admin upload workspace: presentation only; upload handlers and data stay unchanged. */
 .admin-contest-panel,.admin-revenue-panel,.admin-star-panel,.admin-history-panel{border:1px solid #d8e6ff!important;border-radius:16px!important;background:#fff!important;box-shadow:0 8px 24px rgba(0,87,217,.07)!important;padding:14px!important;margin-bottom:14px!important}
+.admin-contest-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .admin-section-header{align-items:flex-start!important}.admin-section-header h2,.admin-star-panel h2,.admin-history-panel h2{color:#003f8f!important;font-size:17px!important;margin:0!important}.admin-section-header p{margin:4px 0 0;color:#64748b;font-size:12px;font-weight:600}.admin-uploader{font-size:13px;color:#64748b}.admin-uploader b{color:#0057d9}.admin-contest-panel .contest-add-button{border-radius:9px!important;background:#0057d9!important;color:#fff!important;padding:10px 16px!important;box-shadow:none!important}
 .admin-contest-empty{min-height:92px;border:1px dashed #78a8ff;border-radius:10px;background:#fbfdff;display:grid;place-content:center;justify-items:center;gap:3px;color:#003f8f}.admin-contest-empty span{width:30px;height:30px;border:2px solid #1769ff;border-radius:50%;display:grid;place-items:center;font-size:25px;line-height:20px}.admin-contest-empty strong{font-size:14px}.admin-contest-empty small{color:#64748b}
 /* CTTĐ is edited exclusively as JSON; the legacy/manual rule form is intentionally hidden. */

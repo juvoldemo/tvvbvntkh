@@ -2857,7 +2857,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
         {loading ? (
           <p>Đang tải chương trình thi đua...</p>
         ) : programs.length === 0 ? (
-          <p className="empty-state">Chưa có chương trình thi đua. Hãy upload poster để AI tạo rule.</p>
+          <p className="empty-state">Chưa có chương trình thi đua. Hãy nhập thể lệ để AI tạo rule.</p>
         ) : (
           <>
             <DataTable className="desktop-table contest-table" headers={["Tên chương trình", "Thời gian", "Phát hành đến", "Còn lại", "TVV đạt", "HĐ đạt", "Thưởng dự kiến", "Thao tác"]}>
@@ -2904,23 +2904,26 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
 }
 
 function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; onAnalyzed: (program: any) => void }) {
-  const [file, setFile] = useState<File | null>(null);
+  const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function submit() {
-    if (!file) return;
+    const competitionText = description.trim();
+    if (!competitionText) return;
     setBusy(true);
     setError("");
     try {
-      const body = new FormData();
-      body.set("file", file);
-      const response = await fetch("/api/competition/analyze-poster", { method: "POST", body });
+      const response = await fetch("/api/competition/analyze-poster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ competitionText })
+      });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "AI không phân tích được poster.");
+      if (!response.ok) throw new Error(payload.error || "AI không tạo được rule.");
       onAnalyzed(payload.program);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "AI không phân tích được poster.");
+      setError(err instanceof Error ? err.message : "AI không tạo được rule.");
     } finally {
       setBusy(false);
     }
@@ -2930,14 +2933,23 @@ function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; 
     <div className="contract-modal-backdrop">
       <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
         <div className="contract-modal-header">
-          <div><h2>Thêm CTTĐ</h2><p>Upload poster JPG/PNG, AI sẽ đc nội dung và tạo rule nháp.</p></div>
-          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
+          <div><h2>Thêm CTTĐ</h2><p>Nhập thể lệ chương trình bằng câu văn, AI sẽ chuyển thành rule nháp để bạn kiểm tra.</p></div>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="Đóng">×</button>
         </div>
         <div className="contract-modal-body contest-rule-content">
-          <label><span className="label">Poster chương trình</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
+          <label>
+            <span className="label">Nội dung chương trình thi đua</span>
+            <textarea
+              className="competition-description-input"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Ví dụ: Từ ngày 01/06/2026 đến 30/06/2026, TVV có AFYP từ 50 triệu đồng được thưởng 500.000 đồng..."
+              rows={10}
+            />
+          </label>
           {error && <p className="error-list">{error}</p>}
           <div className="contest-run-row">
-            <button type="button" disabled={!file || busy} onClick={submit}>{busy ? "AI đang đc poster..." : "Phân tích bằng AI"}</button>
+            <button type="button" disabled={!description.trim() || busy} onClick={submit}>{busy ? "AI đang tạo rule..." : "Tạo rule bằng AI"}</button>
           </div>
         </div>
       </div>
@@ -3095,6 +3107,7 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
   const [jsonText, setJsonText] = useState(JSON.stringify(initialRule, null, 2));
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ruleSourceText, setRuleSourceText] = useState(String(program.extractedText || program.extracted_text || ""));
   const [isAdvancedJsonOpen, setIsAdvancedJsonOpen] = useState(true);
 
   function parsedRule() {
@@ -3179,6 +3192,28 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
     setMessage("Đã khôi phục rule AI ban đầu.");
   }
 
+  async function regenerateRuleFromText() {
+    const competitionText = ruleSourceText.trim();
+    if (!competitionText) return setMessage("Hãy nhập nội dung chương trình thi đua.");
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/competition/analyze-poster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ programId: program.id, competitionText })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "AI không tạo lại được rule.");
+      setJsonText(JSON.stringify(payload.aiRule, null, 2));
+      setMessage("AI đã tạo lại rule. Hãy kiểm tra trước khi xác nhận.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "AI không tạo lại được rule.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function addReward() {
     updateRule((rule) => ({ ...rule, reward_rules: [...(rule.reward_rules ?? []), { id: `reward-${Date.now()}`, reward_name: "Giải thưởng mới", target_type: "policy", reward_recipient_type: "Hợp đồng", reward_type: "reward_per_contract", eligible_products: Array.isArray(rule.eligible_products) ? [...rule.eligible_products] : [], reward_amount: 0, reward_formula: "", condition_text: "" }] }));
   }
@@ -3190,6 +3225,20 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
           <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
         </div>
         <div className="contract-modal-body contest-rule-content">
+          <div className="contest-rule-top-editors">
+          <section className="contest-rule-source-editor">
+            <div><h3>Thể lệ chương trình bằng câu văn</h3><p>Sửa nội dung bên dưới rồi yêu cầu AI tạo lại rule.</p></div>
+            <textarea
+              className="competition-description-input"
+              value={ruleSourceText}
+              onChange={(event) => setRuleSourceText(event.target.value)}
+              placeholder="Nhập đầy đủ thời gian, đối tượng, điều kiện và mức thưởng..."
+              rows={5}
+            />
+            <button type="button" disabled={busy || !ruleSourceText.trim()} onClick={regenerateRuleFromText}>
+              {busy ? "AI đang tạo lại rule..." : "Tạo lại rule bằng AI"}
+            </button>
+          </section>
           <section className="contest-rule-editor">
             <div className="contest-rule-editor-head">
               <div>
@@ -3217,6 +3266,7 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
               </div>
             </details>
           </section>
+          </div>
           {message && <p className="error-list">{message}</p>}
           <div className="contest-run-row">
             <button className="secondary" type="button" disabled={busy} onClick={() => confirmRule(false)}>{isPdtRewardTable(preview) ? "Lưu bảng thưởng" : "Xác nhận thể lệ"}</button>
@@ -3659,17 +3709,15 @@ function AdminCompetitionPrograms({ programs, selectedProgramId, onOpenRule, onT
 
   return (
     <div className="admin-contest-list">
-      <DataTable className="desktop-table contest-mini-table" headers={["Tên chương trình", "Trạng thái", "Thời gian", "Phát hành đến", "Hiển thị", "AI", "Thao tác"]}>
+      <DataTable className="desktop-table contest-mini-table admin-contest-table" headers={["Tên chương trình", "Trạng thái", "Thời gian", "Phát hành đến", "Thao tác"]}>
         {programs.map((program) => {
           const waiting = isWaitingRuleConfirmation(program);
           return (
             <tr key={program.id} className={`clickable ${selectedProgramId === program.id ? "selected" : ""}`} onClick={() => onOpenRule(program)}>
-              <td><strong>{program.programName}</strong></td>
+              <td><strong className="admin-contest-program-name">{program.programName}</strong></td>
               <td><span className={`contest-status ${competitionStatusClass(program.status)}`}>{competitionStatusText(program.status)}</span></td>
               <td>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</td>
               <td>{formatDateVi(program.issueDeadline) || "-"}</td>
-              <td>{program.isHidden ? "Đang ẩn" : "Đang hiện"}</td>
-              <td>{program.aiRule ? "Đã có rule AI" : "-"}</td>
               <td>
                 <div className="admin-contest-actions">
                   <button className={waiting ? "small-button" : "small-button secondary"} type="button" onClick={(event) => { event.stopPropagation(); onOpenRule(program); }}>
@@ -3718,6 +3766,7 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
   const [history, setHistory] = useState<any[]>([]);
   const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgramView[]>([]);
   const [competitionUploadOpen, setCompetitionUploadOpen] = useState(false);
+  const [competitionListOpen, setCompetitionListOpen] = useState(false);
   const [ruleProgram, setRuleProgram] = useState<any | null>(null);
   const selectedYear = Number(month.slice(0, 4)) || 2026;
   const [uploadMonth, setUploadMonth] = useState(month);
@@ -3821,16 +3870,24 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
       <div className="panel admin-contest-panel">
         <div className="panel-header">
           <h2>Quản trị Chương trình thi đua</h2>
-          <button className="contest-add-button" type="button" onClick={() => setCompetitionUploadOpen(true)}>+ Thêm CTTĐ</button>
+          <div className="admin-contest-header-actions">
+            <button className="small-button secondary" type="button" onClick={() => {
+              setCompetitionListOpen((current) => !current);
+              if (competitionListOpen) setRuleProgram(null);
+            }}>
+              {competitionListOpen ? "Ẩn danh sách" : `Hiện danh sách (${competitionPrograms.length})`}
+            </button>
+            <button className="contest-add-button" type="button" onClick={() => setCompetitionUploadOpen(true)}>+ Thêm CTTĐ</button>
+          </div>
         </div>
-        <AdminCompetitionPrograms
+        {competitionListOpen && <AdminCompetitionPrograms
           programs={competitionPrograms}
           selectedProgramId={ruleProgram?.id}
           onOpenRule={(program) => setRuleProgram((current: any) => current?.id === program.id ? null : program)}
           onToggleHidden={toggleCompetitionHidden}
           onDelete={deleteCompetitionProgram}
-        />
-        {ruleProgram && (
+        />}
+        {competitionListOpen && ruleProgram && (
           <CompetitionRuleModal
             inline
             program={ruleProgram}

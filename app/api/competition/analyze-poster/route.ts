@@ -179,20 +179,7 @@ function getOpenAIConfig() {
   return { baseUrl, model, provider };
 }
 
-async function uploadPosterToStorage(file: File, programName: string) {
-  const supabase = getSupabaseAdmin();
-  const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-  const path = `${Date.now()}-${programName.slice(0, 48).replace(/[^\w\-]+/g, "_") || "poster"}-${safeName}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { error } = await supabase.storage
-    .from("competition-posters")
-    .upload(path, buffer, { contentType: file.type || "application/octet-stream", upsert: true });
-  if (error) return { url: "", path, error: errorMessage(error) };
-  const { data } = supabase.storage.from("competition-posters").getPublicUrl(path);
-  return { url: data.publicUrl || "", path, error: "" };
-}
-
-async function analyzeWithOpenAI(file: File) {
+async function analyzeWithOpenAI(competitionText: string) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("Chưa cấu hình OpenAI API key.");
   const openAIConfig = getOpenAIConfig();
@@ -201,15 +188,17 @@ async function analyzeWithOpenAI(file: File) {
   console.info("[OpenAI] model:", openAIConfig.model);
   console.info("[OpenAI] Đang dùng:", openAIConfig.provider);
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const dataUrl = `data:${file.type || "image/png"};base64,${bytes.toString("base64")}`;
   const prompt = [
-    "Bạn là chuyên gia đọc poster chương trình thi đua bảo hiểm.",
-    "Hãy OCR toàn bộ poster, trích xuất điều kiện và tạo rule JSON hợp lệ.",
+    "Bạn là chuyên gia chuyển thể lệ chương trình thi đua bảo hiểm từ câu văn thành rule có cấu trúc.",
+    "Hãy đọc kỹ nội dung người dùng nhập, trích xuất đầy đủ điều kiện và tạo rule JSON hợp lệ.",
+    "Không tự thêm điều kiện, mức thưởng hoặc thời gian không có trong nội dung.",
     "Chỉ trả về JSON, không thêm markdown.",
     "Nếu không chắc phần nào, đặt needs_review=true, confidence thấp và ghi warning trong notes.",
+    "Đặt extracted_text bằng nguyên văn nội dung người dùng cung cấp.",
     "Schema bắt buộc:",
-    RULE_SCHEMA_HINT
+    RULE_SCHEMA_HINT,
+    "NỘI DUNG CHƯƠNG TRÌNH DO NGƯỜI DÙNG NHẬP:",
+    competitionText
   ].join("\n\n");
 
   const response = await fetch(`${openAIConfig.baseUrl}/responses`, {
@@ -223,47 +212,43 @@ async function analyzeWithOpenAI(file: File) {
       input: [
         {
           role: "user",
-          content: [
-            { type: "input_text", text: prompt },
-            { type: "input_image", image_url: dataUrl, detail: "high" }
-          ]
+          content: [{ type: "input_text", text: prompt }]
         }
       ]
     })
   });
 
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload?.error?.message || "AI không đọc được ảnh poster.");
+  if (!response.ok) throw new Error(payload?.error?.message || "AI không tạo được rule từ nội dung.");
   const text = payload.output_text || payload.output?.flatMap((item: any) => item.content ?? []).map((part: any) => part.text ?? "").join("\n") || "";
-  if (!text.trim()) throw new Error("AI không trả về nội dung phân tích poster.");
+  if (!text.trim()) throw new Error("AI không trả về rule phân tích.");
   return safeJsonParse(text);
 }
 
 export async function POST(request: NextRequest) {
   let programId: string | null = null;
   try {
-    const formData = await request.formData();
-    const file = formData.get("file");
-    const createdBy = String(formData.get("createdBy") || "dashboard").trim();
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Chưa chọn ảnh poster JPG/PNG." }, { status: 400 });
+    const body = await request.json();
+    const competitionText = String(body.competitionText || body.competition_text || "").trim();
+    const existingProgramId = String(body.programId || body.program_id || "").trim();
+    const createdBy = String(body.createdBy || "dashboard").trim();
+    if (!competitionText) {
+      return NextResponse.json({ error: "Chưa nhập nội dung chương trình thi đua." }, { status: 400 });
     }
-    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type || "")) {
-      return NextResponse.json({ error: "Poster phải là ảnh JPG, PNG hoặc WEBP." }, { status: 400 });
+    if (competitionText.length < 20) {
+      return NextResponse.json({ error: "Nội dung chương trình quá ngắn để tạo rule." }, { status: 400 });
     }
 
-    const aiRule = normalizeRewardRecipientTypes(await analyzeWithOpenAI(file));
+    const aiRule = normalizeRewardRecipientTypes(await analyzeWithOpenAI(competitionText));
+    aiRule.extracted_text = competitionText;
     const programName = String(aiRule.program_name || "Chương trình thi đua").trim();
-    const upload = await uploadPosterToStorage(file, programName);
     const supabase = getSupabaseAdmin();
 
-    const { data: program, error } = await supabase
-      .from("competition_programs")
-      .insert({
+    const programPayload = {
         program_name: programName,
-        original_file_url: upload.url || null,
-        original_file_name: file.name,
-        extracted_text: aiRule.extracted_text || aiRule.extractedText || "",
+        original_file_url: null,
+        original_file_name: null,
+        extracted_text: competitionText,
         ai_summary: aiRule.ai_summary || "",
         ai_rule: aiRule,
         status: "Chờ xác nhận",
@@ -273,8 +258,13 @@ export async function POST(request: NextRequest) {
         target_types: aiRule.target_types || [],
         confidence: Number(aiRule.confidence ?? 0),
         needs_review: Boolean(aiRule.needs_review ?? true),
-        created_by: createdBy || null
-      })
+        created_by: createdBy || null,
+        updated_at: new Date().toISOString()
+      };
+    const query = existingProgramId
+      ? supabase.from("competition_programs").update(programPayload).eq("id", existingProgramId)
+      : supabase.from("competition_programs").insert(programPayload);
+    const { data: program, error } = await query
       .select("*")
       .single();
     if (error) throw new Error(errorMessage(error));
@@ -282,12 +272,12 @@ export async function POST(request: NextRequest) {
 
     await supabase.from("competition_ai_logs").insert({
       program_id: program.id,
-      prompt: "analyze-poster",
+      prompt: competitionText,
       ai_response: aiRule,
-      error: upload.error || null
+      error: null
     });
 
-    return NextResponse.json({ program, aiRule, storageWarning: upload.error || null });
+    return NextResponse.json({ program, aiRule });
   } catch (error) {
     try {
       if (programId) {
