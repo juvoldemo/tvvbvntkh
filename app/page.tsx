@@ -8,7 +8,7 @@ import html2canvas from "html2canvas";
 import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
-import LeaderboardPoster from "./LeaderboardPoster";
+import LeaderboardPoster, { AgentLeaderboardPoster } from "./LeaderboardPoster";
 import { formatCompactVnd, formatPercent, formatVnd } from "@/lib/format";
 import { groupLeaderName } from "@/lib/group-leaders";
 import { getUploadUserName } from "@/lib/upload-users";
@@ -2010,6 +2010,7 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
   const posterRef = useRef<HTMLDivElement>(null);
   const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
   const date = posterDateText();
+  const [year, monthNumber] = month.slice(0, 7).split("-");
   const xlsxRows = useMemo(() => buildAgentXlsxRows(rows), [rows]);
   const maxAfyp = Math.max(...rows.map((row) => Number(row.afyp ?? 0)), 0);
   const maxIp = Math.max(...rows.map((row) => Number(row.ip ?? 0)), 0);
@@ -2019,9 +2020,10 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
     <div className="panel template-ranking-panel">
       <div className="panel-header poster-panel-header">
         <h2>Xếp hạng tư vấn viên</h2>
+        <GroupPosterShareButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-tu-van-vien-${monthNumber}-${year}.png`} />
         <div className="poster-actions">
           {hiddenColumns.length > 0 && <button className="ghost" type="button" onClick={() => setHiddenColumns([])}>Hiện</button>}
-          <PosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-tu-van-vien-thang-${date.fileMonth}.jpg`} />
+          <GroupPosterDownloadButton rows={rows} posterRef={posterRef} fileName={`bang-vang-doanh-thu-tu-van-vien-${monthNumber}-${year}.png`} />
           <XlsxDownloadButton rows={xlsxRows} sheetName="Xếp hạng TVV" fileName={`xep-hang-tvv-${month}.xlsx`} />
         </div>
       </div>
@@ -2042,7 +2044,11 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
         ))}
       </DataTable>
       <MobileAgentRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
-      <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="agent" rows={rows} /></div></div>
+      <div className="poster-offscreen" aria-hidden="true">
+        <div ref={posterRef} style={{ width: 1400 }}>
+          <AgentLeaderboardPoster month={month} rows={rows} />
+        </div>
+      </div>
     </div>
     </>
   );

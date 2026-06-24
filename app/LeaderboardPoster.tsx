@@ -13,6 +13,19 @@ export type LeaderboardPosterRow = {
   averageAfypPerContract: number;
 };
 
+export type AgentLeaderboardPosterRow = {
+  rank: number;
+  agentCode: string;
+  agentName: string;
+  banName: string;
+  groupName: string;
+  adsName: string;
+  afyp: number;
+  ip: number;
+  contractCount: number;
+  averageAfypPerContract: number;
+};
+
 function formatMillion(value: number) {
   return (Number(value || 0) / 1_000_000).toLocaleString("vi-VN", {
     minimumFractionDigits: 1,
@@ -91,7 +104,7 @@ export default function LeaderboardPoster({
                 <td className={styles.rankCell}><Rank rank={row.rank} /></td>
                 <td className={styles.nameCell}>{row.groupName}</td>
                 <td className={styles.nameCell}>{groupLeaderName(row.groupName)}</td>
-                <td className={styles.moneyCell}>{formatMillion(row.afyp)}</td>
+                <td className={`${styles.moneyCell} ${styles.agentAfypCell}`}>{formatMillion(row.afyp)}</td>
                 <td className={styles.countCell}>{row.contractCount}</td>
                 <td className={styles.countCell}>{row.agentCount}</td>
                 <td className={styles.percentCell}>{formatPercent(row.afypShare)}</td>
@@ -104,6 +117,84 @@ export default function LeaderboardPoster({
 
       <footer className={styles.footer}>
         <span><b>★</b> Chúc mừng các nhóm xuất sắc!</span>
+      </footer>
+    </div>
+  );
+}
+
+export function AgentLeaderboardPoster({
+  month,
+  rows
+}: {
+  month: string;
+  rows: AgentLeaderboardPosterRow[];
+}) {
+  const [year, monthNumber] = month.slice(0, 7).split("-");
+  const posterRows = rows
+    .filter((row) => {
+      const banName = row.banName.trim().toLocaleLowerCase("vi-VN");
+      const groupName = row.groupName.trim().toLocaleLowerCase("vi-VN");
+      return banName !== "banca" && groupName !== "banca";
+    })
+    .slice(0, 20)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
+  const height = Math.max(900, 294 + 64 + posterRows.length * 58 + 100);
+
+  return (
+    <div className={styles.poster} style={{ height }}>
+      <div className={styles.sparkles} />
+      <header className={styles.hero}>
+        <div className={styles.laurel}>★</div>
+        <div className={styles.titles}>
+          <h1>BẢNG VÀNG</h1>
+          <h2>DOANH THU TƯ VẤN VIÊN</h2>
+          <p>T{monthNumber.padStart(2, "0")}/{year}</p>
+        </div>
+        <div className={styles.growth}>
+          <div className={styles.bars}><i /><i /><i /><i /></div>
+        </div>
+      </header>
+
+      <div className={styles.tableFrame}>
+        <table className={`${styles.table} ${styles.agentTable}`}>
+          <colgroup>
+            <col style={{ width: "60px" }} />
+            <col style={{ width: "175px" }} />
+            <col style={{ width: "315px" }} />
+            <col style={{ width: "255px" }} />
+            <col style={{ width: "155px" }} />
+            <col style={{ width: "80px" }} />
+            <col style={{ width: "190px" }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>MÃ TVV</th>
+              <th>TÊN TVV</th>
+              <th>NHÓM</th>
+              <th>AFYP<br />(triệu)</th>
+              <th>HĐ</th>
+              <th>BQ/HĐ<br />(triệu)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {posterRows.map((row) => (
+              <tr key={`${row.rank}-${row.agentCode}-${row.agentName}`}>
+                <td className={styles.rankCell}><Rank rank={row.rank} /></td>
+                <td className={styles.agentCodeCell}>{row.agentCode}</td>
+                <td className={styles.agentNameCell}>{row.agentName}</td>
+                <td className={styles.agentTextCell}>{row.groupName}</td>
+                <td className={styles.moneyCell}>{formatMillion(row.afyp)}</td>
+                <td className={styles.countCell}>{row.contractCount}</td>
+                <td className={styles.moneyCell}>{formatMillion(row.averageAfypPerContract)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <footer className={styles.footer}>
+        <span><b>★</b> Chúc mừng các tư vấn viên xuất sắc!</span>
       </footer>
     </div>
   );

@@ -8952,18 +8952,22 @@ body,
 
 /* Overview-only mobile density: four headline KPIs plus today's revenue. */
 @media (max-width: 767px) {
-  body .dashboard-page.tab-groups .poster-panel-header {
+  body .dashboard-page.tab-groups .poster-panel-header,
+  body .dashboard-page.tab-agents .poster-panel-header {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto !important;
     align-items: center !important;
     gap: 10px !important;
   }
-  body .dashboard-page.tab-groups .poster-panel-header h2 { margin: 0 !important; }
-  body .dashboard-page.tab-groups .mobile-group-share-wrap {
+  body .dashboard-page.tab-groups .poster-panel-header h2,
+  body .dashboard-page.tab-agents .poster-panel-header h2 { margin: 0 !important; }
+  body .dashboard-page.tab-groups .mobile-group-share-wrap,
+  body .dashboard-page.tab-agents .mobile-group-share-wrap {
     position: relative;
     display: block;
   }
-  body .dashboard-page.tab-groups .mobile-group-share-button {
+  body .dashboard-page.tab-groups .mobile-group-share-button,
+  body .dashboard-page.tab-agents .mobile-group-share-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -8979,8 +8983,10 @@ body,
     font-weight: 800;
     white-space: nowrap;
   }
-  body .dashboard-page.tab-groups .mobile-group-share-button:disabled { opacity: .65; }
-  body .dashboard-page.tab-groups .mobile-group-share-message {
+  body .dashboard-page.tab-groups .mobile-group-share-button:disabled,
+  body .dashboard-page.tab-agents .mobile-group-share-button:disabled { opacity: .65; }
+  body .dashboard-page.tab-groups .mobile-group-share-message,
+  body .dashboard-page.tab-agents .mobile-group-share-message {
     position: absolute;
     z-index: 5;
     top: calc(100% + 6px);

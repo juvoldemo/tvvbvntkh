@@ -231,6 +231,53 @@
   font-weight: 400;
 }
 
+.agentTable {
+  font-size: 16px;
+}
+
+.agentTable th {
+  padding-right: 6px;
+  padding-left: 6px;
+  font-size: 13px;
+}
+
+.agentCodeCell,
+.agentNameCell,
+.agentTextCell {
+  overflow: hidden;
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agentCodeCell {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.agentNameCell {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.agentTextCell {
+  font-size: 16px;
+}
+
+.agentTable .moneyCell,
+.agentTable .countCell {
+  padding-right: 6px;
+  padding-left: 6px;
+  font-size: 18px;
+}
+
+.agentTable .agentAfypCell {
+  font-size: 17px;
+  font-weight: 600;
+}
+
 .countCell,
 .percentCell {
   font-size: 22px;
