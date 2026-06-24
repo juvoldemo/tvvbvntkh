@@ -69,6 +69,7 @@ const QUARTER_PLAN_VND: Record<number, number> = {
 };
 const YEAR_PLAN_VND = 54_000_000_000;
 const HIDDEN_COMPETITION_PROGRAMS_KEY = "dashboard.hiddenCompetitionProgramIds";
+const HIDDEN_COMPETITION_PROGRAMS_EVENT = "dashboard:hidden-competition-programs-changed";
 
 const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIcon }> = [
   { id: "overview", label: "Tổng quan", mobileLabel: "Tổng quan", icon: LayoutGrid },
@@ -102,6 +103,7 @@ function hiddenCompetitionProgramIds() {
 function saveHiddenCompetitionProgramIds(ids: Set<string>) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(HIDDEN_COMPETITION_PROGRAMS_KEY, JSON.stringify([...ids]));
+  window.dispatchEvent(new CustomEvent(HIDDEN_COMPETITION_PROGRAMS_EVENT));
 }
 
 function moneyCell(value: number) {
@@ -126,6 +128,45 @@ function isNewUploadContract(row: any) {
 
 function groupNameForRecord(record: any) {
   return String(record?.group_name || record?.ban_name || "").trim();
+}
+
+const GROUP_LEADER_BY_NORMALIZED_NAME: Record<string, string> = {
+  "tam phat": "Lưu Thanh Sơn",
+  "hoang phat": "Huỳnh Thị Vân Anh",
+  "nha trang 5": "Lương Thị Thái",
+  "quyet thang": "Phạm Thu",
+  "thanh phu": "Lê Thị Tình",
+  "hong duc": "Lê Thị Thành",
+  "tan phat": "Nguyễn Thị Thu Thảo",
+  "nguyen phat": "Nguyễn Thị Minh Trang",
+  "hung thinh": "Trần Thị Xuân Thu",
+  "sao mai": "Hoàng Huyền Trang",
+  "thuan phat": "Nguyễn Thị Nga",
+  "nha trang 4": "Thái Thị Tứ",
+  "sen vang": "Đoàn Thị Mỹ Châu",
+  "anh duong": "Đoàn Thị Kim Thúy",
+  "tam an": "Nguyễn Võ Thanh Thúy",
+  "hung phat": "Nguyễn Thiện Tín",
+  "hong phat": "Trần Thị Ngọc Anh",
+  "tai phat": "Nguyễn Thị Thu Diệu",
+  "nha trang 5 sao": "Trần Thị Mỹ Vân",
+  "thu phat": "Nguyễn Thị Minh Thư",
+  "duyen phat": "Nguyễn Thị Ngọc Duyên",
+  "phat thang": "Đoàn Thị Bích",
+  "tam nhien": "Lê Thị Hồng Đào",
+  "hiep phat": "Nguyễn Thị Mỹ Loan",
+  "dai thang": "Nguyễn Thị Trang Châu"
+};
+
+function groupLeaderName(groupName: unknown) {
+  const normalizedGroupName = String(groupName ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLocaleLowerCase("vi-VN")
+    .replace(/\s+/g, " ")
+    .trim();
+  return GROUP_LEADER_BY_NORMALIZED_NAME[normalizedGroupName] ?? "-";
 }
 
 function formatDateVi(value: string | null | undefined) {
@@ -581,9 +622,12 @@ const STATUS_COLOR_BY_NORMALIZED_LABEL: Record<string, string> = {
   "dang dgrr": "#14b8a6",
   "co hieu luc": "#22a447",
   "cho xu ly": "#f59e0b",
-  "hoan phi": "#8b5cf6",
+  "hoan phi": "#ef4444",
   "tu choi": "#ef4444",
-  "huy": "#64748b",
+  "het hieu luc": "#ef4444",
+  "ycbh het hieu luc": "#ef4444",
+  "tri hoan": "#ef4444",
+  "huy": "#ef4444",
   "khong xac dinh": "#64748b"
 };
 
@@ -716,13 +760,8 @@ export default function HomePage() {
   const statusDetailRows = useMemo(() => {
     const allContracts = data?.contracts ?? [];
     if (selectedStatus === null) return allContracts;
-
-    const selectedLabel = normalizedContractStatus(selectedStatus);
-    return allContracts.filter((item: any) => {
-      const itemStatus = item.policy_status ?? item.status ?? item.contract_status ?? "";
-      return normalizedContractStatus(itemStatus) === selectedLabel;
-    });
-  }, [data?.contracts, selectedStatus]);
+    return selectedContracts;
+  }, [data?.contracts, selectedContracts, selectedStatus]);
   const statusDetailTitle = hasSelectedStatus ? selectedTitle : "Chi tiết hợp đồng";
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const activeFilterChips = useMemo(() => getActiveFilterChips(filters), [filters]);
@@ -900,9 +939,9 @@ export default function HomePage() {
         {!loading && !error && data && (
           <>
             {tab === "overview" && <Overview data={data} month={month} selectedAds={filters.ads} onViewDetails={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} onGoGroups={() => switchTab("groups")} onGoAgents={() => switchTab("agents")} />}
-            {tab === "groups" && <GroupTable month={month} rows={data.groups} contracts={data.contracts} openContracts={(title, rows) => setSelectedGroupDetail({ title, rows })} />}
-            {tab === "agents" && <AgentTable month={month} rows={data.agents} contracts={data.contracts} openContracts={(title, rows) => setSelectedAgentDetail({ title, rows })} />}
-            {tab === "status" && <StatusReport report={data.statuses} contracts={data.contracts} openContracts={(status, title, rows) => { setSelectedStatus(status); setSelectedTitle(title); setSelectedContracts(rows); }} />}
+            {tab === "groups" && <GroupTable month={month} rows={data.groups} contracts={data.statusContracts ?? data.contracts} openContracts={(title, rows) => setSelectedGroupDetail({ title, rows })} />}
+            {tab === "agents" && <AgentTable month={month} rows={data.agents} contracts={data.statusContracts ?? data.contracts} openContracts={(title, rows) => setSelectedAgentDetail({ title, rows })} />}
+            {tab === "status" && <StatusReport report={data.statuses} contracts={data.statusContracts ?? data.contracts} openContracts={(status, title, rows) => { setSelectedStatus(status); setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "time" && <TimeReport report={data.timeSeries} />}
             {tab === "ads" && <AdsTable report={data.ado} rows={data.ads} month={month} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "contests" && <CompetitionPanel month={month} refreshKey={competitionRefreshKey} onChanged={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
@@ -1430,26 +1469,6 @@ function DashboardHideableTable({ rows, columns, hiddenColumns, onHideColumn, on
   </>;
 }
 
-function TemplatePager({ total, label }: { total: number; label: string }) {
-  const pageCount = Math.max(1, Math.ceil(total / 10));
-  const last = Math.min(10, total);
-  return (
-    <div className="template-pager">
-      <div className="template-page-size">Hiển thị <span>10 <ChevronDown size={14} /></span> dòng/trang</div>
-      <div className="template-page-buttons">
-        <button type="button" disabled><ChevronLeft size={16} /></button>
-        <button type="button" className="active">1</button>
-        {pageCount >= 2 && <button type="button">2</button>}
-        {pageCount >= 3 && <button type="button">3</button>}
-        {pageCount > 4 && <span>...</span>}
-        {pageCount > 3 && <button type="button">{pageCount}</button>}
-        <button type="button"><ChevronRight size={16} /></button>
-      </div>
-      <div className="template-page-summary">1 - {last} trong tổng số {formatNumber(total)} {label}</div>
-    </div>
-  );
-}
-
 function GroupAgentKpiRow({ type, rows, contracts }: { type: "group" | "agent"; rows: any[]; contracts: any[] }) {
   const totalAfyp = rows.reduce((sum, row) => sum + Number(row.afyp ?? 0), 0);
   const totalIp = rows.reduce((sum, row) => sum + Number(row.ip ?? 0), 0);
@@ -1762,6 +1781,7 @@ function buildGroupXlsxRows(rows: any[]): XlsxRow[] {
     "#": row.rank,
     "Ban": row.banName || "",
     "Nhóm": row.groupName || "",
+    "Trưởng nhóm": groupLeaderName(row.groupName),
     "AFYP": Number(row.afyp ?? 0),
     "IP": Number(row.ip ?? 0),
     "HĐ": row.contractCount,
@@ -1885,7 +1905,7 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
             <td><RankBadge rank={row.rank} /></td>
             <td>{row.banName}</td>
             <td>{row.groupName}</td>
-            <td>{row.leaderName ?? row.managerName ?? row.banName ?? "-"}</td>
+            <td>{groupLeaderName(row.groupName)}</td>
             <td className="number-cell metric-cell"><span className="ranking-metric-value">{moneyCell(row.afyp)}</span><TemplateProgress value={Number(row.afyp ?? 0)} max={maxAfyp} tone="blue" /></td>
             <td className="number-cell metric-cell"><span className="ranking-metric-value">{formatFullMoney(row.ip)}</span><TemplateProgress value={Number(row.ip ?? 0)} max={maxIp} tone="green" /></td>
             <td className="count-cell">{row.contractCount}</td>
@@ -1896,7 +1916,6 @@ function GroupTable({ month, rows, contracts, openContracts }: { month: string; 
         ))}
       </DataTable>
       <MobileGroupRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
-      <TemplatePager total={rows.length} label="nhóm" />
       <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="group" rows={rows} /></div></div>
     </div>
     </>
@@ -1939,7 +1958,6 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
         ))}
       </DataTable>
       <MobileAgentRankingCards rows={rows} contracts={contracts} openContracts={openContracts} />
-      <TemplatePager total={rows.length} label="TVV" />
       <div className="poster-offscreen" aria-hidden="true"><div ref={posterRef}><RankingPoster type="agent" rows={rows} /></div></div>
     </div>
     </>
@@ -1947,14 +1965,15 @@ function AgentTable({ month, rows, contracts, openContracts }: { month: string; 
 }
 
 function StatusReport({ report, contracts, openContracts }: { report: any; contracts: any[]; openContracts: (status: string, title: string, rows: any[]) => void }) {
-  const hiddenStatusLabels = new Set(["co hieu luc", "hoan phi"]);
+  const hiddenStatusLabels = new Set(["co hieu luc"]);
   const tableRows = (report.statusTableRows ?? report.groupedStatusRows ?? []).filter((row: any) => !hiddenStatusLabels.has(normalizedContractStatus(row.label)));
   const mobileStatusRows = tableRows;
   const contractsByStatus = (row: any) => {
-    const rowLabel = normalizedContractStatus(row.label);
+    const rowStatuses = Array.isArray(row.statuses) && row.statuses.length > 0 ? row.statuses : [row.label];
+    const normalizedRowStatuses = new Set(rowStatuses.map((status: unknown) => normalizedContractStatus(status)));
     return contracts.filter((item) => {
       const itemStatus = item.policy_status ?? item.status ?? item.contract_status ?? "";
-      return normalizedContractStatus(itemStatus) === rowLabel;
+      return normalizedRowStatuses.has(normalizedContractStatus(itemStatus));
     });
   };
   const openStatusContracts = (row: any) => openContracts(String(row.label), `Danh sách hồ sơ: ${row.label}`, contractsByStatus(row));
@@ -1968,7 +1987,8 @@ function StatusReport({ report, contracts, openContracts }: { report: any; contr
     name: row.label,
     value: Number(row.count ?? 0),
     rate: row.rate,
-    color: getStatusColor(row.label)
+    color: getStatusColor(row.label),
+    statuses: row.statuses
   })).filter((row: any) => row.value > 0);
 
   return (
@@ -2038,7 +2058,7 @@ function StatusReport({ report, contracts, openContracts }: { report: any; contr
             </div>
             <div className="status-donut-legend">
               {pieRows.map((row: any) => (
-                <button key={row.name} type="button" onClick={() => openStatusContracts({ label: row.name })}>
+                <button key={row.name} type="button" onClick={() => openStatusContracts({ label: row.name, statuses: row.statuses })}>
                   <i style={{ backgroundColor: row.color }} />
                   <span>{row.name}</span>
                   <b>{formatPercent(row.rate)} ({formatNumber(row.value)})</b>
@@ -2724,6 +2744,16 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
   useEffect(() => {
     loadPrograms();
   }, [refreshKey]);
+
+  useEffect(() => {
+    const syncHiddenPrograms = () => loadPrograms();
+    window.addEventListener(HIDDEN_COMPETITION_PROGRAMS_EVENT, syncHiddenPrograms);
+    window.addEventListener("storage", syncHiddenPrograms);
+    return () => {
+      window.removeEventListener(HIDDEN_COMPETITION_PROGRAMS_EVENT, syncHiddenPrograms);
+      window.removeEventListener("storage", syncHiddenPrograms);
+    };
+  }, []);
 
   return (
     <div className={`competition-panel-stack ${selectedProgramId ? "has-selected-program" : ""}`}>
@@ -3866,6 +3896,18 @@ function safeText(value: unknown) {
 
 function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "agent" | "ads"; title: string; rows: any[]; onClose: () => void }) {
   const sortedRows = sortContracts(rows);
+  const xlsxRows = sortedRows.map((row) => ({
+    "Ngày thu": formatDateVi(row.paid_date) || "",
+    "Số GYC": safeText(row.application_no),
+    "Nhóm": safeText(groupNameForRecord(row)),
+    "TVV": safeText(row.agent_name),
+    "BMBH": safeText(row.policy_owner),
+    "NĐBH": safeText(row.insured_name),
+    "Trạng thái hợp đồng": contractStatusLabel(row.policy_status),
+    "IP": Number(row.ip) || 0,
+    "AFYP": Number(row.afyp) || 0
+  }));
+  const xlsxFileName = `chi-tiet-${type}-${normalizeViText(title).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "hop-dong"}.xlsx`;
   const afyp = sortedRows.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0);
   const contractCount = new Set(sortedRows.map((row, index) => String(row.contract_no ?? "").trim() || `row-${index}`)).size;
   const agentCount = new Set(sortedRows.map((row) => String(row.agent_name ?? "").trim()).filter(Boolean)).size;
@@ -3905,12 +3947,15 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
           <button className="contract-modal-close" type="button" onClick={onClose} aria-label={`óng ${titlePrefix.toLowerCase()}`}>×</button>
         </div>
         <div className="contract-modal-body">
-          <h3>Danh sách hợp đồng</h3>
+          <div className="contract-modal-list-header">
+            <h3>Danh sách hợp đồng</h3>
+            <XlsxDownloadButton rows={xlsxRows} fileName={xlsxFileName} sheetName="Danh sách hợp đồng" />
+          </div>
           {sortedRows.length === 0 ? (
             <p className="empty-state">{emptyMessage}</p>
           ) : (
             <>
-              <DataTable className="desktop-table contract-modal-table" headers={["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "IP", "AFYP"]}>
+              <DataTable className="desktop-table contract-modal-table" headers={["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "Trạng thái hợp đồng", "IP", "AFYP"]}>
                 {sortedRows.map((row, index) => (
                   <tr key={`${row.contract_no || "contract"}-${index}`}>
                     <td>{formatDateVi(row.paid_date) || "-"}</td>
@@ -3918,8 +3963,9 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
                     <td>{safeText(row.agent_name)}</td>
                     <td>{safeText(row.policy_owner)}</td>
                     <td>{safeText(row.insured_name)}</td>
-                    <td>{formatCompactVnd(Number(row.ip) || 0)}</td>
-                    <td>{formatCompactVnd(Number(row.afyp) || 0)}</td>
+                    <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>
+                    <td>{formatFullMoney(Number(row.ip) || 0)}</td>
+                    <td>{formatFullMoney(Number(row.afyp) || 0)}</td>
                   </tr>
                 ))}
               </DataTable>
@@ -3929,6 +3975,7 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
                     <div className="mobile-contract-date">
                       <CalendarDays size={18} />
                       <strong>Ngày thu: {formatDateVi(row.paid_date) || "-"}</strong>
+                      <span className="status-badge" style={{ color: getStatusColor(row.policy_status), borderColor: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span>
                     </div>
                     <div className="mobile-info-grid">
                       <span><b>Nhóm</b>{safeText(groupNameForRecord(row))}</span>
@@ -3937,8 +3984,8 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
                       <span><b>NĐBH</b>{safeText(row.insured_name)}</span>
                     </div>
                     <div className="mobile-metric-grid compact">
-                      <MobileMetric label="IP" value={formatCompactVnd(Number(row.ip) || 0)} />
-                      <MobileMetric label="AFYP" value={formatCompactVnd(Number(row.afyp) || 0)} />
+                      <MobileMetric label="IP" value={formatFullMoney(Number(row.ip) || 0)} />
+                      <MobileMetric label="AFYP" value={formatFullMoney(Number(row.afyp) || 0)} />
                     </div>
                   </article>
                 ))}

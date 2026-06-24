@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fetch:data": "tsx scripts/fetch-bc02.ts"
+    "fetch:data": "tsx scripts/fetch-bc02.ts",
+    "test:competition-bc02": "tsx scripts/test-competition-bc02.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

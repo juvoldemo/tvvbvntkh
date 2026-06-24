@@ -54,6 +54,9 @@ export type CompetitionRuleInput = {
   eligible_products?: string[];
   excluded_statuses?: string[];
   included_statuses?: string[];
+  allow_empty_status?: boolean;
+  issue_date_optional?: boolean;
+  allow_pending_issue?: boolean;
   reward_rules?: CompetitionRewardRule[];
   max_reward?: number | null;
   notes?: string | string[];
@@ -236,6 +239,8 @@ function valueFrom(record: AnyRecord, aliases: string[]) {
 }
 
 const PRODUCT_CODE_ALIASES = ["product_code", "productCode", "product_id", "ma_san_pham", "ma_sp", "Mã sản phẩm", "Mã SP", "product", "Sản phẩm chính", "SAN PHAM CHINH", "SẢN PHẨM CHÍNH"];
+const PDT_ALIASES = ["pdt", "PDT", "PĐT", "phí đóng thêm", "phi dong them", "PHÍ ĐÓNG THÊM"];
+const PERIODIC_PREMIUM_ALIASES = ["periodic_premium", "premium_due", "phí định kỳ", "phi dinh ky", "PHÍ ĐỊNH KỲ"];
 
 function rawContractProductCode(contract: NormalizedCompetitionContract | AnyRecord) {
   const source = (contract as NormalizedCompetitionContract).source ?? contract;
@@ -244,6 +249,13 @@ function rawContractProductCode(contract: NormalizedCompetitionContract | AnyRec
 
 export function getContractProductCode(contract: NormalizedCompetitionContract | AnyRecord) {
   return String(rawContractProductCode(contract) ?? "").trim().toUpperCase();
+}
+
+function competitionMetricValue(contract: NormalizedCompetitionContract) {
+  const pdt = parseCompetitionMoney(valueFrom(contract.source, PDT_ALIASES));
+  if (pdt > 0) return pdt;
+  if (contract.ip > 0) return contract.ip;
+  return parseCompetitionMoney(valueFrom(contract.source, PERIODIC_PREMIUM_ALIASES));
 }
 
 function countSpbkProducts(value: unknown) {
@@ -316,7 +328,7 @@ export function normalizeContract(row: AnyRecord, sourceIndex = 0): NormalizedCo
   const team = String(valueFrom(row, ["team", "group", "group_name", "groupName", "Nhóm", "Nhom", "nhom"]) ?? "").trim();
   const tvv = String(valueFrom(row, ["tvv", "advisor", "agent_name", "agentName", "Tên TVV", "ten_tvv", "TVV"]) ?? "").trim();
   const gycNo = String(valueFrom(row, ["gyc_no", "application_no", "applicationNo", "Số GYC", "so_gyc", "gyc"]) ?? "").trim();
-  const contractNo = String(valueFrom(row, ["contract_no", "contractNo", "policy_no", "policyNo", "Số HĐ", "Số hợp đồng", "so_hop_dong"]) ?? "").trim();
+  const contractNo = String(valueFrom(row, ["contract_no", "contractNo", "policy_no", "policyNo", "Số HĐ", "Số hợp đồng", "so_hop_dong", "Số GYC", "SỐ GYC"]) ?? gycNo).trim();
   const customer = String(valueFrom(row, ["customer_name", "customer", "policy_owner", "insured_name", "Khách hàng", "BMBH", "NĐBH"]) ?? "").trim();
   const product = String(valueFrom(row, ["product_name", "product", "Sản phẩm", "san_pham", "SẢN PHẨM CHÍNH", "SAN PHAM CHINH", "Sáº¢N PHáº¨M CHÃNH"]) ?? "").trim();
   const spbkProducts = String(valueFrom(row, ["spbk", "SPBK", "SẢN PHẨM BỔ TRỢ", "SAN PHAM BO TRO", "Sản phẩm bổ trợ", "san_pham_bo_tro", "Sáº¢N PHáº¨M Bá» TRá»¢"]) ?? "").trim();
@@ -347,7 +359,7 @@ export function normalizeContract(row: AnyRecord, sourceIndex = 0): NormalizedCo
     spbkCount: countSpbkProducts(spbkProducts),
     ip: parseCompetitionMoney(valueFrom(row, ["ip", "IP", "Phí thực thu", "Phi thuc thu"])),
     afyp: parseCompetitionMoney(valueFrom(row, ["afyp", "AFYP", "Phí quy năm", "Phi quy nam"])),
-    status: String(valueFrom(row, ["status", "policy_status", "policyStatus", "Trạng thái", "Tình trạng"]) ?? "").trim(),
+    status: String(valueFrom(row, ["status", "policy_status", "policyStatus", "Trạng thái", "Tình trạng", "Tình trạng hồ sơ", "TÌNH TRẠNG HỒ SƠ"]) ?? "").trim(),
     first_seen_at: firstSeenAt,
     firstSeenAt,
     payment_datetime: paymentDateTime,
@@ -873,10 +885,14 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
   if (contract.collection_date && rule.start_date && contract.collection_date < rule.start_date) reasons.push("Ngoài thời gian thi đua");
   if (contract.collection_date && rule.end_date && contract.collection_date > rule.end_date) reasons.push("Ngoài thời gian thi đua");
   if (rule.issue_deadline && contract.issue_date && contract.issue_date > rule.issue_deadline) reasons.push("Ngày phát hành quá hạn");
+  if (rule.issue_deadline && !contract.issue_date && !rule.issue_date_optional && !rule.allow_pending_issue) reasons.push("Thiếu ngày phát hành");
 
   const excludedStatuses = new Set((rule.excluded_statuses ?? []).map(normalizeText).filter(Boolean));
+  const includedStatuses = new Set((rule.included_statuses ?? []).map(normalizeText).filter(Boolean));
   const status = normalizeText(contract.status);
   if (excludedStatuses.has(status)) reasons.push("Trạng thái bị loại");
+  if (!status && includedStatuses.size > 0 && !rule.allow_empty_status) reasons.push("Trạng thái trống không được phép");
+  if (status && includedStatuses.size > 0 && !includedStatuses.has(status)) reasons.push("Trạng thái không thuộc danh sách được tính");
 
   if (Number(rule.min_policy_ip ?? 0) > 0 && contract.ip < Number(rule.min_policy_ip)) reasons.push(`IP dưới ${(Number(rule.min_policy_ip) / 1_000_000).toLocaleString("vi-VN")} triệu`);
   if (Number(rule.min_policy_afyp ?? 0) > 0 && contract.afyp < Number(rule.min_policy_afyp)) reasons.push("AFYP/HĐ dưới điều kiện tối thiểu");
@@ -901,15 +917,19 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       .filter((tier) => Number(tier.min_pdt) > 0)
       .sort((a, b) => Number(b.min_pdt) - Number(a.min_pdt));
     const spcProducts = new Set((rule.spc_products ?? []).map((product) => String(product ?? "").trim().toUpperCase()).filter(Boolean));
-    const metricText = normalizeText(Array.isArray(programMetric) ? programMetric.join(" ") : programMetric ?? "");
-    const usesAfyp = metricText.includes("afyp") || metricText.includes("pdt");
     return contracts.flatMap((contract) => {
-      const metricValue = usesAfyp ? contract.afyp : contract.ip;
+      const metricValue = competitionMetricValue(contract);
       const tier = tiers.find((item) => metricValue >= Number(item.min_pdt));
-      if (!tier) return [];
+      if (!tier) {
+        console.log("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "metric", metric_value: metricValue, result: "excluded" });
+        return [];
+      }
       const rawProductField = rawContractProductCode(contract);
       const productCode = getContractProductCode(contract);
       const isSpc = spcProducts.has(productCode);
+      if (spcProducts.size > 0 && !productCode) {
+        console.log("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "product", raw_product_field: rawProductField, result: "missing_product" });
+      }
       const rawReward = isSpc ? tier.spc_reward : tier.other_reward;
       const text = String(rawReward ?? "").trim();
       const percent = text.endsWith("%") ? parseCompetitionMoney(text.slice(0, -1)) : 0;
@@ -1051,8 +1071,23 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
 
   for (const contract of normalizedContracts) {
     const reasons = passesBaseFilters(rule, contract);
-    if (reasons.length > 0) excludedContracts.push(toExcluded(contract, [...new Set(reasons)].join("; ")));
-    else eligibleBaseContracts.push(contract);
+    if (reasons.length > 0) {
+      const uniqueReasons = [...new Set(reasons)];
+      excludedContracts.push(toExcluded(contract, uniqueReasons.join("; ")));
+      console.log("[CTTD FILTER]", {
+        gyc_no: contract.gyc_no || contract.contract_no,
+        steps: uniqueReasons.map((reason) => {
+          const normalized = normalizeText(reason);
+          if (normalized.includes("san pham")) return "product";
+          if (normalized.includes("ngay phat hanh")) return "issue_date";
+          if (normalized.includes("ngay thu") || normalized.includes("thoi gian")) return "date";
+          if (normalized.includes("trang thai")) return "status";
+          if (normalized.includes("ip") || normalized.includes("afyp")) return "metric";
+          return "other";
+        }),
+        reasons: uniqueReasons
+      });
+    } else eligibleBaseContracts.push(contract);
   }
   if (rule.issue_deadline && eligibleBaseContracts.some((contract) => !contract.issue_date)) {
     warnings.push("Một số hợp đồng chưa có ngày phát hành, chưa loại theo điều kiện phát hành đến.");

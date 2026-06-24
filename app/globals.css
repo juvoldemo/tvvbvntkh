@@ -1576,6 +1576,22 @@ tr.clickable:hover {
   font-size: 16px;
 }
 
+.contract-modal-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.contract-modal-list-header h3 {
+  margin: 0;
+}
+
+.contract-modal-list-header .poster-action {
+  flex: 0 0 auto;
+}
+
 .contract-modal-table {
   box-shadow: none;
 }
@@ -6341,13 +6357,6 @@ body,
 .template-progress-gold em { background: #f4b400 !important; }
 
 .template-ranking-panel { max-width: 1560px !important; margin: 16px auto !important; padding: 18px !important; }
-.template-pager { display: grid !important; grid-template-columns: 1fr auto 1fr !important; align-items: center !important; gap: 16px !important; padding: 18px 4px 4px !important; color: var(--template-text) !important; font-weight: 700 !important; }
-.template-page-size { display: flex !important; align-items: center !important; gap: 10px !important; }
-.template-page-size span,
-.template-page-buttons button { min-width: 38px !important; height: 38px !important; border-radius: 8px !important; border: 1px solid #d8e6f7 !important; background: #fff !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; color: var(--template-text) !important; font-weight: 800 !important; }
-.template-page-buttons { display: flex !important; align-items: center !important; gap: 10px !important; }
-.template-page-buttons button.active { background: #0b66f0 !important; color: #fff !important; box-shadow: 0 10px 18px rgba(11, 102, 240, 0.25) !important; }
-.template-page-summary { justify-self: end !important; }
 
 .ado-page { max-width: 1560px !important; margin: 0 auto !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
 .ado-departments,
@@ -6392,7 +6401,6 @@ body,
   .star-viet-upload-grid,
   .upload-month-buttons { grid-template-columns: 1fr !important; }
   .status-donut-layout { grid-template-columns: 1fr !important; }
-  .template-pager { grid-template-columns: 1fr !important; justify-items: start !important; }
 }
 
 /* ADO period selector: single source of visual truth for Thang / Quy / Nam. */

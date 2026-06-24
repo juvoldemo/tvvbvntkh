@@ -177,7 +177,8 @@ export async function GET(request: NextRequest) {
       planTable,
       groups: buildGroupRanking(countedRecords),
       agents: buildAgentRanking(countedRecords),
-      statuses: buildStatusReport(countedRecords),
+      statuses: buildStatusReport(countedRecords, filteredRecords),
+      statusContracts: filteredRecords,
       timeSeries: {
         ...buildTimeSeries(countedRecords, month, companyTarget),
         yearPlanRows: buildYearPlanSeries(planTable)

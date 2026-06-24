@@ -74,6 +74,58 @@ function normalizeHeader(value: unknown) {
     .toUpperCase();
 }
 
+function canonicalHeader(value: unknown) {
+  return normalizeHeader(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[Đđ]/g, "D");
+}
+
+const CANONICAL_IMPORTANT_COLUMNS = new Map(
+  Object.entries(IMPORTANT_COLUMNS).map(([header, key]) => [canonicalHeader(header), key])
+);
+
+[
+  ["SỐ GYC", "application_no"],
+  ["TÌNH TRẠNG HỒ SƠ", "policy_status"],
+  ["NGÀY THU", "paid_date"],
+  ["NGÀY CẬP NHẬT", "updated_date"],
+  ["NGÀY PHÁT HÀNH", "issued_date"],
+  ["TÊN BAN", "ban_name"],
+  ["TÊN NHÓM", "group_name"],
+  ["TÊN TVV", "agent_name"],
+  ["MÃ TVV", "agent_code"],
+  ["BÊN MUA BẢO HIỂM (BMBH)", "policy_owner"],
+  ["NGƯỜI ĐƯỢC BẢO HIỂM", "insured_name"],
+  ["IP", "ip"],
+  ["AFYP", "afyp"]
+].forEach(([header, key]) => CANONICAL_IMPORTANT_COLUMNS.set(canonicalHeader(header), key as keyof RevenueRecord));
+
+function mappedHeaderKey(header: string) {
+  return IMPORTANT_COLUMNS[header] ?? CANONICAL_IMPORTANT_COLUMNS.get(canonicalHeader(header));
+}
+
+function isRealBc02Header(row: unknown[]) {
+  const headers = new Set(row.map(canonicalHeader));
+  return headers.has("SO GYC") && headers.has("NGAY THU") && headers.has("SAN PHAM CHINH");
+}
+
+function isUnnamedHeaderRow(row: unknown[]) {
+  const nonEmpty = row.map((value) => String(value ?? "").trim()).filter(Boolean);
+  return nonEmpty.length > 0 && nonEmpty.filter((value) => /^UNNAMED(?::\s*\d+)?$/i.test(value)).length >= Math.ceil(nonEmpty.length / 2);
+}
+
+function resolveHeaderLayout(rows: unknown[][]) {
+  const promotedHeaderIndex = rows.findIndex((row, index) => index <= 2 && isRealBc02Header(row));
+  if (promotedHeaderIndex >= 0) {
+    return {
+      headers: rows[promotedHeaderIndex].map(normalizeHeader),
+      dataStartIndex: promotedHeaderIndex + 1
+    };
+  }
+  return { headers: buildHeaders(rows), dataStartIndex: 2 };
+}
+
 function buildHeaders(rows: unknown[][]) {
   const measureRow = rows[0] ?? [];
   const infoRow = rows[1] ?? [];
@@ -100,7 +152,7 @@ function mapRow(headers: string[], row: unknown[], dataMonth: string, rowNumber:
 
   headers.forEach((header, index) => {
     raw[header || `column_${index}`] = row[index] ?? "";
-    const key = IMPORTANT_COLUMNS[header];
+    const key = mappedHeaderKey(header);
     if (!key) return;
 
     const value = row[index];
@@ -175,6 +227,9 @@ function mapRow(headers: string[], row: unknown[], dataMonth: string, rowNumber:
   if (contractNo) {
     record.contract_no = contractNo;
     record.contract_no_display = contractNo;
+  } else if (String(record.application_no ?? "").trim()) {
+    record.contract_no = String(record.application_no).trim();
+    record.contract_no_display = record.contract_no;
   } else {
     record.contract_no = `Num-${rowNumber}`;
     record.contract_no_display = "Num";
@@ -233,12 +288,12 @@ export function parseRevenueCsv(csvText: string, dataMonth: string): ParsedReven
     parsed.errors.slice(0, 10).forEach((error) => errors.push({ message: error.message }));
   }
 
-  if (rows.length < 3) {
+  if (rows.length < 2) {
     return { records: [], preview: [], errors: [{ message: "CSV phải có ít nhất 2 dòng header và 1 dòng dữ liệu." }], totalAfyp: 0, totalIp: 0 };
   }
 
-  const headers = buildHeaders(rows);
-  const availableKeys = new Set(headers.map((header) => IMPORTANT_COLUMNS[header]).filter(Boolean));
+  const { headers, dataStartIndex } = resolveHeaderLayout(rows);
+  const availableKeys = new Set(headers.map(mappedHeaderKey).filter(Boolean));
   REQUIRED_KEYS.forEach((key) => {
     if (!availableKeys.has(key)) errors.push({ field: key, message: `Thiếu cột bắt buộc: ${String(key)}.` });
   });
@@ -250,8 +305,8 @@ export function parseRevenueCsv(csvText: string, dataMonth: string): ParsedReven
   const records: RevenueRecord[] = [];
   const contractRows = new Map<string, number>();
 
-  rows.slice(2).forEach((row, index) => {
-    const rowNumber = index + 3;
+  rows.slice(dataStartIndex).forEach((row, index) => {
+    const rowNumber = index + dataStartIndex + 1;
     const { record, errors: rowErrors } = mapRow(headers, row, dataMonth, rowNumber);
     records.push(record);
     errors.push(...rowErrors);

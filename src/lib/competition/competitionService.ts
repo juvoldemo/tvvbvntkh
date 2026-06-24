@@ -45,7 +45,7 @@ function normalizeProgram(row: any, result?: any) {
     targetTypes: row.target_types || rule.target_types || rule.target_type || [],
     confidence: Number(row.confidence ?? rule.confidence ?? 0),
     needsReview: Boolean(row.needs_review ?? rule.needs_review ?? true),
-    isHidden: Boolean(row.is_hidden ?? false),
+    isHidden: row.is_hidden === true || row.is_hidden === "true" || row.is_hidden === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastCalculatedAt: row.last_calculated_at || result?.calculated_at || null,
@@ -347,7 +347,7 @@ export async function listCompetitionPrograms(options: { includeHidden?: boolean
 
   const latest = latestResultByProgram(results ?? []);
   return (programs ?? [])
-    .filter((program) => options.includeHidden || !program.is_hidden)
+    .filter((program) => options.includeHidden || !(program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1))
     .map((program) => normalizeProgram(program, latest.get(program.id)));
 }
 

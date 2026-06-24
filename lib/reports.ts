@@ -187,7 +187,12 @@ const PENDING_PROCESS_STATUSES = new Set([
   "dang dgrr"
 ]);
 
-const REFUND_STATUSES = EXCLUDED_REVENUE_STATUSES;
+const REFUND_STATUSES = new Set([
+  "het hieu luc",
+  "ycbh het hieu luc",
+  "tu choi",
+  "tri hoan"
+]);
 
 const STATUS_TABLE_DEFINITIONS = [
   { key: "active", label: "Có hiệu lực", statuses: ["co hieu luc"] },
@@ -363,7 +368,7 @@ export function buildAdsDebugReport(records: RevenueRecord[], month: string) {
   return { rows, summary };
 }
 
-export function buildStatusReport(records: RevenueRecord[]) {
+export function buildStatusReport(records: RevenueRecord[], allStatusRecords: RevenueRecord[] = records) {
   const total = records.length;
   const totalAfyp = sumAfyp(records);
   const grouped = new Map<string, RevenueRecord[]>();
@@ -384,7 +389,7 @@ export function buildStatusReport(records: RevenueRecord[]) {
 
   const activeRecords = records.filter((record) => normalizePolicyStatus(record.policy_status) === "co hieu luc");
   const pendingRecords = records.filter((record) => PENDING_PROCESS_STATUSES.has(normalizePolicyStatus(record.policy_status)));
-  const refundRecords = records.filter((record) => REFUND_STATUSES.has(normalizePolicyStatus(record.policy_status)));
+  const refundRecords = allStatusRecords.filter((record) => REFUND_STATUSES.has(normalizePolicyStatus(record.policy_status)));
   const groupedStatusRows = [
     {
       key: "active",
@@ -413,7 +418,8 @@ export function buildStatusReport(records: RevenueRecord[]) {
   ];
   const statusTableRows = STATUS_TABLE_DEFINITIONS.map((definition) => {
     const statusSet = new Set(definition.statuses);
-    const items = records.filter((record) => statusSet.has(normalizePolicyStatus(record.policy_status)));
+    const sourceRecords = definition.key === "refund" ? allStatusRecords : records;
+    const items = sourceRecords.filter((record) => statusSet.has(normalizePolicyStatus(record.policy_status)));
     return {
       ...definition,
       count: items.length,
