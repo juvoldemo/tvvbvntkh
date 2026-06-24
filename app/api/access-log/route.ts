@@ -18,7 +18,9 @@ export async function POST(request: Request) {
       requestHeaders.get("x-forwarded-for") ||
       requestHeaders.get("x-real-ip") ||
       "unknown";
-    const city = requestHeaders.get("x-vercel-ip-city") || "unknown";
+    const rawCity = requestHeaders.get("x-vercel-ip-city") || "unknown";
+    const city =
+      rawCity === "unknown" ? "unknown" : decodeURIComponent(rawCity);
     const country = requestHeaders.get("x-vercel-ip-country") || "unknown";
 
     console.log({
