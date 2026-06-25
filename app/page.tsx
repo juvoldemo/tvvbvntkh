@@ -4356,7 +4356,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
   const [searchTerm, setSearchTerm] = useState("");
   const [competitionRewards, setCompetitionRewards] = useState<any[]>([]);
   const [rewardLoading, setRewardLoading] = useState(false);
-  const [selectedRewardContract, setSelectedRewardContract] = useState<{ contract: any; rewards: any[] } | null>(null);
+  const [selectedRewardContract, setSelectedRewardContract] = useState<any | null>(null);
   const sortedRows = sortContracts(rows);
   const normalizedSearchTerm = normalizeViText(searchTerm.trim());
   const visibleRows = normalizedSearchTerm
@@ -4380,7 +4380,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
     async function loadCompetitionRewards() {
       setRewardLoading(true);
       try {
-        const response = await fetch("/api/competition", { cache: "no-store" });
+        const response = await fetch("/api/competition?includeHidden=1", { cache: "no-store" });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Không tải được chương trình thi đua.");
         const programs: CompetitionProgramView[] = payload.programs ?? [];
@@ -4408,8 +4408,10 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
   }
 
   function openContractRewards(row: any) {
-    setSelectedRewardContract({ contract: row, rewards: rewardsForContract(row) });
+    setSelectedRewardContract(row);
   }
+
+  const selectedContractRewards = selectedRewardContract ? rewardsForContract(selectedRewardContract) : [];
 
   return (
     <div className="panel contract-details-panel">
@@ -4469,11 +4471,11 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
             <div className="contract-reward-modal-head">
               <div>
                 <span>Hợp đồng</span>
-                <h3>{selectedRewardContract.contract.application_no || selectedRewardContract.contract.contract_no || "-"}</h3>
+                <h3>{selectedRewardContract.application_no || selectedRewardContract.contract_no || "-"}</h3>
                 <p>
-                  {selectedRewardContract.contract.policy_owner || "-"} · {selectedRewardContract.contract.agent_name || "-"}
-                  {selectedRewardContract.rewards.length > 0 && (
-                    <em>Tổng thưởng dự kiến: {formatFullMoney(selectedRewardContract.rewards.reduce((sum, reward) => sum + Number(reward.reward_amount ?? reward.rewardAmount ?? 0), 0))}</em>
+                  {selectedRewardContract.policy_owner || "-"} · {selectedRewardContract.agent_name || "-"}
+                  {selectedContractRewards.length > 0 && (
+                    <em>Tổng thưởng dự kiến: {formatFullMoney(selectedContractRewards.reduce((sum, reward) => sum + Number(reward.reward_amount ?? reward.rewardAmount ?? 0), 0))}</em>
                   )}
                 </p>
               </div>
@@ -4481,11 +4483,11 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
             </div>
             {rewardLoading ? (
               <p className="empty-state">Đang kiểm tra chương trình thưởng...</p>
-            ) : selectedRewardContract.rewards.length === 0 ? (
+            ) : selectedContractRewards.length === 0 ? (
               <p className="empty-state">Hợp đồng này chưa nằm trong chương trình thưởng nào.</p>
             ) : (
               <div className="contract-reward-program-list">
-                {selectedRewardContract.rewards.map((reward, index) => (
+                {selectedContractRewards.map((reward, index) => (
                   <article className="contract-reward-program-card" key={`${reward.program?.id || "program"}-${reward.id || index}`}>
                     <div className="contract-reward-program-title">
                       <span className="contract-reward-order">{index + 1}</span>
