@@ -559,7 +559,6 @@ export async function recalculateAllCompetitionProgramsAfterUpload(selectedMonth
     .select("*");
   if (error) throw new Error(messageFromError(error));
 
-  const enrichedContractsAfterUpload = await enrichContractsWithCompetitionSnapshots(supabase, selectedMonth.slice(0, 7), contractsAfterUpload);
   const recalculatedPrograms = [];
   const skippedPrograms = [];
   for (const program of programs ?? []) {
@@ -568,10 +567,25 @@ export async function recalculateAllCompetitionProgramsAfterUpload(selectedMonth
       continue;
     }
     try {
-      const calculated = await calculateAndSaveCompetitionFromContracts(supabase, program, enrichedContractsAfterUpload, calculatedBy);
+      const range = competitionDateRange(program, selectedMonth);
+      const { data: programContracts, error: contractError } = await supabase
+        .from("revenue_records")
+        .select("*")
+        .gte("paid_date", range.start)
+        .lte("paid_date", range.end);
+      if (contractError) throw new Error(messageFromError(contractError));
+
+      const enrichedProgramContracts = await enrichContractsWithCompetitionSnapshots(
+        supabase,
+        selectedMonth.slice(0, 7),
+        programContracts ?? []
+      );
+      const calculated = await calculateAndSaveCompetitionFromContracts(supabase, program, enrichedProgramContracts, calculatedBy);
       const summary = calculated.rewardResult.summary;
       console.log("[CTTD RESULT]", {
         programName: program.program_name,
+        dateRange: range,
+        inputContracts: programContracts?.length ?? 0,
         totalEligibleAdvisors: summary.totalEligibleAdvisors,
         totalEligibleContracts: summary.totalEligibleContracts,
         totalReward: summary.totalReward
@@ -594,7 +608,7 @@ export async function recalculateAllCompetitionProgramsAfterUpload(selectedMonth
 
   console.log("[CTTD AUTO SYNC]", {
     selectedMonth,
-    contractsCount: contractsAfterUpload.length,
+    uploadedMonthContractsCount: contractsAfterUpload.length,
     programCount: programs?.length ?? 0,
     recalculatedPrograms,
     skippedPrograms

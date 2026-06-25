@@ -272,6 +272,20 @@ function isGenericSpbkProduct(value: unknown) {
     || text.includes("rider");
 }
 
+function eligibleProductValues(value: unknown) {
+  if (typeof value === "string" || typeof value === "number") return [String(value)];
+  if (!value || typeof value !== "object") return [];
+  const product = value as AnyRecord;
+  return [
+    product.product_code,
+    product.productCode,
+    product.code,
+    product.product_name,
+    product.productName,
+    product.name
+  ].filter((item) => item !== undefined && item !== null && String(item).trim() !== "").map(String);
+}
+
 export function parseCompetitionMoney(value: unknown) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   const raw = String(value ?? "").trim();
@@ -606,12 +620,12 @@ function toExcluded(contract: NormalizedCompetitionContract, reason: string): Ex
 
 function findTier(tiers: AnyRecord[], value: number) {
   return [...(tiers ?? [])]
-    .filter((tier) => value >= Number(tier.min ?? tier.min_value ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? 0))
-    .sort((a, b) => Number(b.min ?? b.min_value ?? b.min_revenue ?? b.min_group_revenue ?? b.threshold ?? 0) - Number(a.min ?? a.min_value ?? a.min_revenue ?? a.min_group_revenue ?? a.threshold ?? 0))[0] ?? null;
+    .filter((tier) => value >= Number(tier.min ?? tier.min_value ?? tier.min_pdt ?? tier.min_ip ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? tier.threshold_value ?? 0))
+    .sort((a, b) => Number(b.min ?? b.min_value ?? b.min_pdt ?? b.min_ip ?? b.min_revenue ?? b.min_group_revenue ?? b.threshold ?? b.threshold_value ?? 0) - Number(a.min ?? a.min_value ?? a.min_pdt ?? a.min_ip ?? a.min_revenue ?? a.min_group_revenue ?? a.threshold ?? a.threshold_value ?? 0))[0] ?? null;
 }
 
 function tierThreshold(tier: AnyRecord) {
-  return Number(tier.min ?? tier.min_value ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? 0);
+  return Number(tier.min ?? tier.min_value ?? tier.min_pdt ?? tier.min_ip ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold ?? tier.threshold_value ?? 0);
 }
 
 function nextTier(tiers: AnyRecord[], value: number) {
@@ -885,7 +899,6 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
   if (contract.collection_date && rule.start_date && contract.collection_date < rule.start_date) reasons.push("Ngoài thời gian thi đua");
   if (contract.collection_date && rule.end_date && contract.collection_date > rule.end_date) reasons.push("Ngoài thời gian thi đua");
   if (rule.issue_deadline && contract.issue_date && contract.issue_date > rule.issue_deadline) reasons.push("Ngày phát hành quá hạn");
-  if (rule.issue_deadline && !contract.issue_date && !rule.issue_date_optional && !rule.allow_pending_issue) reasons.push("Thiếu ngày phát hành");
 
   const excludedStatuses = new Set((rule.excluded_statuses ?? []).map(normalizeText).filter(Boolean));
   const includedStatuses = new Set((rule.included_statuses ?? []).map(normalizeText).filter(Boolean));
@@ -899,15 +912,19 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
   if (Number(rule.min_policy_ip ?? 0) > 0 && contract.ip < Number(rule.min_policy_ip)) reasons.push(`IP dưới ${(Number(rule.min_policy_ip) / 1_000_000).toLocaleString("vi-VN")} triệu`);
   if (Number(rule.min_policy_afyp ?? 0) > 0 && contract.afyp < Number(rule.min_policy_afyp)) reasons.push("AFYP/HĐ dưới điều kiện tối thiểu");
 
-  const products = new Set((rule.eligible_products ?? []).map(normalizeText).filter(Boolean));
-  const hasGenericSpbkProduct = (rule.eligible_products ?? []).some(isGenericSpbkProduct);
+  const eligibleProductList = (rule.eligible_products ?? []).flatMap(eligibleProductValues);
+  const products = new Set(eligibleProductList.map(normalizeText).filter(Boolean));
+  const hasGenericSpbkProduct = eligibleProductList.some(isGenericSpbkProduct);
   if (hasGenericSpbkProduct) {
     const requiredSpbkCount = minSpbkCount(rule);
     if (requiredSpbkCount > 0 && contract.spbkCount < requiredSpbkCount) {
       reasons.push(`SPBK dưới ${requiredSpbkCount} sản phẩm`);
     }
   }
-  if (products.size > 0 && !hasGenericSpbkProduct && !products.has(normalizeText(contract.product_name))) reasons.push("Sản phẩm không thuộc danh sách được tính");
+  if (products.size > 0 && !hasGenericSpbkProduct) {
+    const contractProducts = [contract.product_name, contract.productCode].map(normalizeText).filter(Boolean);
+    if (!contractProducts.some((product) => products.has(product))) reasons.push("Sản phẩm không thuộc danh sách được tính");
+  }
 
   return reasons;
 }
@@ -915,7 +932,13 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
 function calculateContractRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[], programMetric?: CompetitionRuleInput["metric_type"]) {
   const kind = rewardKind(rule);
   if (kind === "reward_by_policy_pdt_table") {
-    const tiers = [...(rule.pdt_reward_tiers ?? [])]
+    const configuredPdtTiers = rule.pdt_reward_tiers ?? [];
+    const thresholdTiers = (rule.thresholds ?? []).map((tier) => ({
+      min_pdt: tier.min_pdt ?? tier.min_ip ?? tier.min_value ?? tier.threshold_value,
+      spc_reward: tier.spc_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate,
+      other_reward: tier.other_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate
+    }));
+    const tiers = [...(configuredPdtTiers.length > 0 ? configuredPdtTiers : thresholdTiers)]
       .filter((tier) => Number(tier.min_pdt) > 0)
       .sort((a, b) => Number(b.min_pdt) - Number(a.min_pdt));
     const spcProducts = new Set((rule.spc_products ?? []).map((product) => String(product ?? "").trim().toUpperCase()).filter(Boolean));
@@ -934,7 +957,12 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       }
       const rawReward = isSpc ? tier.spc_reward : tier.other_reward;
       const text = String(rawReward ?? "").trim();
-      const percent = text.endsWith("%") ? parseCompetitionMoney(text.slice(0, -1)) : 0;
+      const numericReward = Number(rawReward);
+      const percent = text.endsWith("%")
+        ? parseCompetitionMoney(text.slice(0, -1))
+        : numericReward > 0 && numericReward < 1
+          ? numericReward * 100
+          : 0;
       const amount = percent > 0 ? metricValue * percent / 100 : parseCompetitionMoney(rawReward);
       console.log("[CTTD PDT TABLE]", { gyc_no: contract.gyc_no, raw_product_field: rawProductField, normalized_product_code: productCode, expected_spc_code: [...spcProducts].join(", "), isSPC: isSpc, metric_value: metricValue, threshold_matched: tier.min_pdt, reward_type: percent > 0 ? "percent" : "fixed", reward_amount: amount });
       if (!Number.isFinite(amount) || amount <= 0) return [];
@@ -942,6 +970,28 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       eligible.prizeName = isSpc ? "HĐ SPC An Thịnh Phúc Niên" : "HĐ còn lại";
       eligible.rewardName = eligible.prizeName;
       return [eligible];
+    });
+  }
+  if (kind === "reward_by_revenue_tier" && isContractTargetRule(rule)) {
+    const tiers = rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [];
+    return contracts.flatMap((contract) => {
+      const metricText = normalizeText([programMetric, rule.metric_type, rule.calculation_logic, rule.reward_formula].flat().join(" "));
+      const metricValue = metricText.includes("afyp") ? contract.afyp : competitionMetricValue(contract);
+      const tier = findTier(tiers, metricValue);
+      if (!tier) return [];
+      const rate = Number(tier.reward_rate ?? 0);
+      const percent = parseCompetitionMoney(String(tier.reward_percent ?? "").replace("%", ""));
+      const formulaPercentMatch = String(tier.reward_formula ?? rule.reward_formula ?? "").match(/(\d+(?:[.,]\d+)?)\s*%/);
+      const formulaPercent = formulaPercentMatch ? parseCompetitionMoney(formulaPercentMatch[1]) : 0;
+      const amount = rate > 0
+        ? metricValue * rate
+        : percent > 0
+          ? metricValue * percent / 100
+          : formulaPercent > 0
+            ? metricValue * formulaPercent / 100
+          : Number(tier.reward_amount ?? tier.rewardAmount ?? tier.amount ?? rule.reward_amount ?? 0) || 0;
+      if (!(amount > 0)) return [];
+      return [toEligibleContract(contract, rule, amount, `Đạt bậc doanh thu từ ${metricValue.toLocaleString("vi-VN")}đ`)];
     });
   }
   if (kind === "top_n_newly_seen_contracts") return calculateTopNNewlySeenContracts(rule, contracts);
@@ -1092,7 +1142,7 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     } else eligibleBaseContracts.push(contract);
   }
   if (rule.issue_deadline && eligibleBaseContracts.some((contract) => !contract.issue_date)) {
-    warnings.push("Một số hợp đồng chưa có ngày phát hành, chưa loại theo điều kiện phát hành đến.");
+    warnings.push("Một số hợp đồng chưa có ngày phát hành và đang được tạm tính; khi có ngày phát hành, hệ thống sẽ đối chiếu với hạn phát hành.");
   }
 
   const eligibleContracts: EligibleContractReward[] = [];

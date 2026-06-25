@@ -3,7 +3,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Share2, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
+import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, FileText, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Share2, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -1839,7 +1839,7 @@ type XlsxRow = Record<string, XlsxCell>;
 function exportToXlsx({ rows, sheetName, fileName }: { rows: XlsxRow[]; sheetName: string; fileName: string }) {
   const worksheet = XLSX.utils.json_to_sheet(rows);
   const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-  const fullMoneyColumns = new Set(["IP", "AFYP", "BQ/HĐ"]);
+  const fullMoneyColumns = new Set(["IP", "AFYP", "BQ/HĐ", "Tổng IP", "Tổng AFYP", "Thưởng/TVV", "Tổng thưởng nhóm", "Tiền thưởng"]);
   headers.forEach((header, columnIndex) => {
     if (!fullMoneyColumns.has(header)) return;
     for (let rowIndex = 1; rowIndex <= rows.length; rowIndex += 1) {
@@ -1882,6 +1882,45 @@ function buildAgentXlsxRows(rows: any[]): XlsxRow[] {
     "IP": Number(row.ip ?? 0),
     "HĐ": row.contractCount,
     "BQ/HĐ": Number(row.averageAfypPerContract ?? 0)
+  }));
+}
+
+function xlsxFileSafeName(value: unknown) {
+  return normalizeViText(String(value ?? "chuong-trinh"))
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    || "chuong-trinh";
+}
+
+function buildCompetitionGroupXlsxRows(rows: any[]): XlsxRow[] {
+  return rows.map((row, index) => ({
+    "STT": index + 1,
+    "Nhóm": repairMojibake(row.group),
+    "Tổng IP": Number(row.totalIP ?? 0),
+    "Tổng AFYP": Number(row.totalAFYP ?? 0),
+    "Số TVV hoạt động": Number(row.activeAdvisorCount ?? row.active_tvv_count ?? 0),
+    "Số HĐ đạt": Number(row.contractCount ?? 0),
+    "Mốc đạt": String(row.milestone ?? ""),
+    "Thưởng/TVV": Number(row.reward_per_tvv ?? row.rewardPerAdvisor ?? 0),
+    "Tổng thưởng nhóm": Number(row.group_reward_amount ?? row.totalReward ?? 0),
+    "Ghi chú": String(row.reward_note ?? row.note ?? "")
+  }));
+}
+
+function buildCompetitionContractXlsxRows(rows: any[]): XlsxRow[] {
+  return rows.map((row, index) => ({
+    "STT": index + 1,
+    "Ngày thu": formatDateVi(row.collection_date),
+    "Số GYC": String(row.gyc_no ?? ""),
+    "Nhóm": String(row.team ?? ""),
+    "TVV": String(row.tvv ?? ""),
+    "BMBH": String(row.customer_name ?? ""),
+    "NĐBH": String(row.insured_name ?? ""),
+    "Trạng thái hợp đồng": String(row.status ?? ""),
+    "IP": Number(row.ip ?? 0),
+    "AFYP": Number(row.afyp ?? 0),
+    "Giải thưởng": String(row.reward_name ?? ""),
+    "Tiền thưởng": Number(row.reward_amount ?? 0)
   }));
 }
 
@@ -2814,6 +2853,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedProgramId, setSelectedProgramId] = useState("");
+  const [programListTab, setProgramListTab] = useState<"active" | "ended">("active");
 
   async function loadPrograms() {
     setLoading(true);
@@ -2845,6 +2885,10 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
     };
   }, []);
 
+  const activePrograms = programs.filter((program) => Number(competitionRemainingInfo(program.endDate).days ?? -1) >= 0);
+  const endedPrograms = programs.filter((program) => Number(competitionRemainingInfo(program.endDate).days ?? -1) < 0);
+  const visiblePrograms = programListTab === "active" ? activePrograms : endedPrograms;
+
   return (
     <div className={`competition-panel-stack ${selectedProgramId ? "has-selected-program" : ""}`}>
       <div className="panel contest-panel competition-section">
@@ -2860,8 +2904,32 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
           <p className="empty-state">Chưa có chương trình thi đua. Hãy nhập thể lệ để AI tạo rule.</p>
         ) : (
           <>
+            <div className="contest-program-tabs" role="tablist" aria-label="Lọc danh sách chương trình thi đua">
+              <button
+                className={programListTab === "active" ? "active" : ""}
+                type="button"
+                role="tab"
+                aria-selected={programListTab === "active"}
+                onClick={() => setProgramListTab("active")}
+              >
+                Đang diễn ra <span>{activePrograms.length}</span>
+              </button>
+              <button
+                className={programListTab === "ended" ? "active" : ""}
+                type="button"
+                role="tab"
+                aria-selected={programListTab === "ended"}
+                onClick={() => setProgramListTab("ended")}
+              >
+                Đã kết thúc <span>{endedPrograms.length}</span>
+              </button>
+            </div>
+            {visiblePrograms.length === 0 ? (
+              <p className="empty-state">{programListTab === "active" ? "Không có chương trình đang diễn ra." : "Không có chương trình đã kết thúc."}</p>
+            ) : (
+              <>
             <DataTable className="desktop-table contest-table" headers={["Tên chương trình", "Thời gian", "Phát hành đến", "Còn lại", "TVV đạt", "HĐ đạt", "Thưởng dự kiến", "Thao tác"]}>
-              {programs.map((program) => (
+              {visiblePrograms.map((program) => (
                 <tr key={program.id} className={selectedProgramId === program.id ? "selected" : ""}>
                   <td><strong><Trophy size={16} /> {program.programName}</strong></td>
                   <td>{formatDateVi(program.startDate)} - {formatDateVi(program.endDate)}</td>
@@ -2877,7 +2945,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
               ))}
             </DataTable>
             <div className="mobile-card-list contest-mobile-list">
-              {programs.map((program) => (
+              {visiblePrograms.map((program) => (
                 <button className="contest-mobile-card" key={`${program.id}-mobile`} type="button" onClick={() => setSelectedProgramId(program.id)}>
                   <div className="contest-mobile-head">
                     <div>
@@ -2895,6 +2963,8 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
                 </button>
               ))}
             </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -3295,54 +3365,124 @@ function ruleMoney(value: unknown) {
 }
 
 function ruleListText(values: unknown, fallback = "-") {
-  if (Array.isArray(values)) return values.filter(Boolean).join(", ") || fallback;
+  if (Array.isArray(values)) {
+    return values
+      .flatMap((value) => {
+        if (typeof value === "string" || typeof value === "number") return [String(value)];
+        if (!value || typeof value !== "object") return [];
+        const item = value as Record<string, unknown>;
+        return [item.product_name, item.product_code, item.name, item.code]
+          .filter(Boolean)
+          .map(String);
+      })
+      .filter(Boolean)
+      .join(", ") || fallback;
+  }
   return String(values ?? "").trim() || fallback;
+}
+
+function competitionContentSummary(program: CompetitionProgramView) {
+  const rule = program.confirmedRule ?? program.aiRule ?? {};
+  const storedSummary = repairMojibake(program.aiSummary);
+  if (storedSummary && !storedSummary.includes("\uFFFD")) return storedSummary;
+
+  const parts = [
+    `Chương trình thi đua từ ${formatDateVi(rule.start_date ?? program.startDate)} đến ${formatDateVi(rule.end_date ?? program.endDate)}.`,
+    Number(rule.min_policy_ip ?? 0) > 0 ? `IP tối thiểu mỗi hợp đồng là ${formatFullMoney(rule.min_policy_ip)} đồng.` : "",
+    rule.issue_deadline || program.issueDeadline ? `Hợp đồng phát hành chậm nhất ngày ${formatDateVi(rule.issue_deadline ?? program.issueDeadline)}.` : "",
+    ruleListText(rule.eligible_products) !== "-" ? `Sản phẩm áp dụng: ${ruleListText(rule.eligible_products)}.` : ""
+  ].filter(Boolean);
+  return parts.join(" ");
+}
+
+function competitionRewardTierRows(item: any) {
+  const tiers = item?.pdt_reward_tiers ?? item?.thresholds ?? item?.tiers ?? item?.condition?.tiers ?? [];
+  if (!Array.isArray(tiers) || tiers.length === 0) {
+    return [{
+      condition: item?.condition_text || item?.condition?.description || item?.condition?.text || "Đạt điều kiện chương trình",
+      reward: ruleMoney(item?.reward_amount ?? item?.reward?.amount)
+    }];
+  }
+  return tiers.map((tier: any) => {
+    const min = Number(tier.min_pdt ?? tier.min_ip ?? tier.min_value ?? tier.min_revenue ?? tier.min_group_revenue ?? tier.threshold_value ?? tier.threshold ?? 0);
+    const maxRaw = tier.max_pdt ?? tier.max_ip_exclusive ?? tier.max_value ?? tier.max_revenue;
+    const max = Number(maxRaw ?? 0);
+    const condition = tier.label || tier.name || tier.condition_text || (
+      min > 0
+        ? max > 0
+          ? `Từ ${formatFullMoney(min)} đến dưới ${formatFullMoney(max)} đồng`
+          : `Từ ${formatFullMoney(min)} đồng trở lên`
+        : item?.condition_text || "Đạt điều kiện"
+    );
+    const rewardValue = tier.reward_percent
+      ?? tier.reward
+      ?? tier.spc_reward
+      ?? tier.reward_amount
+      ?? tier.reward_per_active_agent
+      ?? tier.amount;
+    const reward = typeof rewardValue === "number" && rewardValue > 0 && rewardValue < 1
+      ? `${rewardValue * 100}%`
+      : typeof rewardValue === "number"
+        ? ruleMoney(rewardValue)
+        : String(rewardValue ?? "-");
+    const otherReward = tier.other_reward !== undefined ? `HĐ khác: ${typeof tier.other_reward === "number" ? ruleMoney(tier.other_reward) : tier.other_reward}` : "";
+    const spcReward = tier.spc_reward !== undefined ? `SPC: ${typeof tier.spc_reward === "number" ? ruleMoney(tier.spc_reward) : tier.spc_reward}` : "";
+    return {
+      condition,
+      reward: [spcReward, otherReward].filter(Boolean).join(" · ") || reward
+    };
+  });
 }
 
 function CompetitionRuleVisualPreview({ rule, extractedText }: { rule: any; extractedText?: string | null }) {
   const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
-  const excludedStatuses = ruleListText(rule?.excluded_statuses);
   const eligibleProducts = ruleListText(rule?.eligible_products);
+  const minIp = Number(rule?.min_policy_ip ?? 0);
   return (
-    <div className="contest-rule-visual">
-      <section className="contest-rule-summary">
-        <div><span>Thời gian thi đua</span><strong>{formatDateVi(rule?.start_date)} - {formatDateVi(rule?.end_date)}</strong></div>
-        <div><span>Phát hành đến</span><strong>{formatDateVi(rule?.issue_deadline) || "-"}</strong></div>
-        <div><span>Đối tượng</span><strong>{targetTypesText(rule?.target_types)}</strong></div>
-        <div><span>Độ tin cậy AI</span><strong>{Number(rule?.confidence ?? 0) ? `${Math.round(Number(rule.confidence) * 100)}%` : "-"}</strong></div>
-      </section>
-      <section className="contest-rule-flow">
-        <h3>Luồng xét thưởng</h3>
-        <div className="contest-rule-steps">
-          <div><b>1</b><span>Lọc hợp đồng trong thời gian thi đua</span></div>
-          <div><b>2</b><span>Loại trạng thái: {excludedStatuses}</span></div>
-          <div><b>3</b><span>Kiểm tra IP/HĐ tối thiểu: {ruleMoney(rule?.min_policy_ip)}</span></div>
-          <div><b>4</b><span>Áp điều kiện sản phẩm: {eligibleProducts}</span></div>
-          <div><b>5</b><span>Tính thưởng theo từng giải bên dưới</span></div>
+    <div className="contest-rule-visual contest-rule-simple">
+      <section className="contest-content-section">
+        <h3>Điều kiện tham gia</h3>
+        <div className="contest-condition-list">
+          <div><CalendarDays size={18} /><span><b>Thời gian</b>{formatDateVi(rule?.start_date)} - {formatDateVi(rule?.end_date)}</span></div>
+          <div><Megaphone size={18} /><span><b>Hạn phát hành</b>{formatDateVi(rule?.issue_deadline) || "Không giới hạn"}</span></div>
+          <div><Target size={18} /><span><b>Đối tượng</b>{targetTypesText(rule?.target_types)}</span></div>
+          {minIp > 0 && <div><Coins size={18} /><span><b>IP tối thiểu</b>{formatFullMoney(minIp)} đồng/HĐ</span></div>}
+          {eligibleProducts !== "-" && <div><ClipboardList size={18} /><span><b>Sản phẩm áp dụng</b>{eligibleProducts}</span></div>}
         </div>
       </section>
-      <section className="contest-rule-rewards">
-        <h3>Các giải thưởng AI trích xuất</h3>
-        {rewardRules.length === 0 ? <p className="empty-state">AI chưa trích xuất được giải thưởng nào.</p> : rewardRules.map((item: any, index: number) => (
-          <article className="contest-rule-reward-card" key={item.id || index}>
-            <div className="contest-rule-reward-head">
-              <span>Giải {index + 1}</span>
-              <strong>{item.reward_name || item.prize_name || "Giải thưởng"}</strong>
-              <em>{ruleMoney(item.reward_amount ?? item.reward?.amount)}</em>
+      <section className="contest-content-section">
+        <h3>Mức thưởng</h3>
+        {rewardRules.length === 0 ? <p className="empty-state">Chưa có thông tin mức thưởng.</p> : rewardRules.map((item: any, index: number) => (
+          <article className="contest-simple-reward contest-reward-table-card" key={item.id || index}>
+            <div className="contest-simple-reward-title">
+              <span>{index + 1}</span>
+              <div><strong>{item.reward_name || item.prize_name || "Giải thưởng"}</strong><small>Thưởng cho {item.reward_recipient_type || item.recipient_type || item.recipient || "đối tượng đạt điều kiện"}</small></div>
             </div>
-            <div className="contest-rule-reward-grid">
-              <span><b>Loại giải</b>{dynamicRewardLabel(dynamicRewardKind(item))}</span>
-              <span><b>Đối tượng nhận thưởng</b>{item.reward_recipient_type || item.recipient_type || item.recipient || item.condition?.recipient || "-"}</span>
-              <span><b>Tab kết quả</b>{item.result_tab || item.condition?.result_tab || "-"}</span>
-              <span><b>Điều kiện</b>{item.condition_text || item.condition?.description || item.condition?.text || item.calculation_logic || item.reward_formula || "-"}</span>
-              <span><b>Thưởng / mốc</b>{ruleMoney(item.reward_amount ?? item.reward?.amount) !== "-" ? ruleMoney(item.reward_amount ?? item.reward?.amount) : ruleListText((item.pdt_reward_tiers ?? item.thresholds ?? item.tiers ?? item.condition?.tiers)?.map((tier: any) => tier.reward_name || tier.name || tier.label || ruleMoney(tier.reward_amount ?? tier.reward_per_active_agent)), "-")}</span>
+            <div className="contest-reward-tier-table-wrap">
+              <table className="contest-reward-tier-table">
+                <thead><tr><th>Mốc / điều kiện</th><th>Mức nhận</th></tr></thead>
+                <tbody>
+                  {competitionRewardTierRows(item).map((tier, tierIndex) => (
+                    <tr key={`${item.id || index}-${tierIndex}`}>
+                      <td>
+                        <span className="contest-tier-label">Điều kiện {tierIndex + 1}</span>
+                        <strong>{tier.condition}</strong>
+                      </td>
+                      <td>
+                        <span className="contest-tier-label">Mức thưởng</span>
+                        <strong>{tier.reward}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </article>
         ))}
       </section>
       {extractedText ? (
         <details className="contest-rule-source">
-          <summary>Nội dung OCR từ poster</summary>
+          <summary>Xem nội dung thể lệ gốc</summary>
           <p>{extractedText}</p>
         </details>
       ) : null}
@@ -3392,7 +3532,7 @@ const COMPETITION_STATUS_LEGEND = [
 
 function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChanged }: { programId: string; month: string; refreshKey: number; onClose: () => void; onChanged: () => void }) {
   const [detail, setDetail] = useState<any | null>(null);
-  const [tab, setTab] = useState<"overview" | "groups" | "advisors" | "contracts">("overview");
+  const [tab, setTab] = useState<"overview" | "content" | "groups" | "advisors" | "contracts">("overview");
   const [hiddenColumnsByTable, setHiddenColumnsByTable] = useState<Record<CompetitionResultTarget, string[]>>({
     contracts: [],
     advisors: [],
@@ -3438,11 +3578,16 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
         note: groupThreshold > 0 ? `Chưa đạt - Thiếu ${formatFullMoney(groupThreshold)}` : "Chưa có hợp đồng trong thời gian thi đua"
       }))
   ].sort((a, b) => Number(b.totalReward > 0) - Number(a.totalReward > 0) || b.totalIP - a.totalIP);
+  const sortedEligibleContracts = [...eligibleContracts].sort((a, b) =>
+    String(b.collection_date ?? "").localeCompare(String(a.collection_date ?? ""))
+    || String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+  );
   const flowStatus = competitionFlowMessage(program, detail, month, isCalculating);
   const achievedGroupRows = groupRows.filter((row) => Number(row.totalReward ?? 0) > 0);
   const resultTargets = competitionResultTargets(program);
-  const visibleTabs: Array<{ id: "overview" | CompetitionResultTarget; label: string; icon: LucideIcon }> = [
+  const visibleTabs: Array<{ id: "overview" | "content" | CompetitionResultTarget; label: string; icon: LucideIcon }> = [
     { id: "overview", label: "Tổng quan", icon: LayoutGrid },
+    { id: "content", label: "Nội dung", icon: FileText },
     ...(resultTargets.includes("groups") ? [{ id: "groups" as const, label: "Nhóm đạt", icon: Users }] : []),
     ...(resultTargets.includes("advisors") ? [{ id: "advisors" as const, label: "TVV đạt", icon: UserRound }] : []),
     ...(resultTargets.includes("contracts") ? [{ id: "contracts" as const, label: "HĐ đạt", icon: ClipboardList }] : [])
@@ -3468,8 +3613,25 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
     setHiddenColumnsByTable((previous) => ({ ...previous, [table]: [] }));
   }
 
+  function downloadActiveResultXlsx() {
+    if (tab !== "groups" && tab !== "contracts") return;
+    const rows = tab === "groups"
+      ? buildCompetitionGroupXlsxRows(groupRows)
+      : buildCompetitionContractXlsxRows(sortedEligibleContracts);
+    if (!rows.length) {
+      setMessage("Không có dữ liệu để xuất XLSX.");
+      return;
+    }
+    const suffix = tab === "groups" ? "nhom-dat" : "hd-dat";
+    exportToXlsx({
+      rows,
+      sheetName: tab === "groups" ? "Nhóm đạt" : "HĐ đạt",
+      fileName: `${suffix}-${xlsxFileSafeName(program?.programName)}-${month}.xlsx`
+    });
+  }
+
   useEffect(() => {
-    if (tab !== "overview" && !resultTargets.includes(tab)) setTab("overview");
+    if (tab !== "overview" && tab !== "content" && !resultTargets.includes(tab)) setTab("overview");
   }, [resultTargets.join("|"), tab]);
 
   useEffect(() => {
@@ -3498,6 +3660,11 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
           {activeResultTable && activeHiddenColumns.length > 0 && (
             <button className="contest-show-columns-button" type="button" onClick={() => showAllColumns(activeResultTable)}>{"Hi\u1ec7n"}</button>
           )}
+          {(tab === "groups" || tab === "contracts") && (
+            <button className="contest-detail-xlsx-button" type="button" onClick={downloadActiveResultXlsx}>
+              <Download size={16} /> Tải XLSX
+            </button>
+          )}
         </div>
         <div className="competition-detail-content contest-detail-body">
           {message && <p className={message.includes("ã") || message.includes("ang") ? "success" : "error-list"}>{message}</p>}
@@ -3524,9 +3691,26 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                   </div>
                 </>
               )}
+              {tab === "content" && program && (
+                <div className="contest-program-content">
+                  {competitionContentSummary(program) && (
+                    <section className="contest-content-intro">
+                      <span className="contest-kpi-icon"><FileText size={20} /></span>
+                      <div>
+                        <h3>Tóm tắt chương trình</h3>
+                        <p>{competitionContentSummary(program)}</p>
+                      </div>
+                    </section>
+                  )}
+                  <CompetitionRuleVisualPreview
+                    rule={program.confirmedRule ?? program.aiRule ?? {}}
+                    extractedText={program.extractedText}
+                  />
+                </div>
+              )}
               {tab === "groups" && hasGroupTarget && <CompetitionGroupsTable rows={groupRows} groupContracts={groupContracts} onOpenGroup={(title, rows) => setSelectedGroupContracts({ title, rows })} hiddenColumns={hiddenColumnsByTable.groups} onHideColumn={(key) => hideColumn("groups", key)} onShowAllColumns={() => showAllColumns("groups")} />}
               {tab === "advisors" && hasAdvisorTarget && <CompetitionAdvisorsTable rows={tvvRewardResults.filter((row: any) => Number(row.reward_amount ?? row.rewardAmount ?? 0) > 0)} hiddenColumns={hiddenColumnsByTable.advisors} onHideColumn={(key) => hideColumn("advisors", key)} onShowAllColumns={() => showAllColumns("advisors")} />}
-              {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={eligibleContracts} hiddenColumns={hiddenColumnsByTable.contracts} onHideColumn={(key) => hideColumn("contracts", key)} onShowAllColumns={() => showAllColumns("contracts")} />}
+              {tab === "contracts" && hasContractTarget && <CompetitionContractsTable rows={sortedEligibleContracts} hiddenColumns={hiddenColumnsByTable.contracts} onHideColumn={(key) => hideColumn("contracts", key)} onShowAllColumns={() => showAllColumns("contracts")} />}
             </>
           )}
         </div>
