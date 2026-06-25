@@ -1924,6 +1924,29 @@ function buildCompetitionContractXlsxRows(rows: any[]): XlsxRow[] {
   }));
 }
 
+function contractLookupKeys(row: any) {
+  return [
+    row.application_no,
+    row.gyc_no,
+    row.contract_no,
+    row.policy_no,
+    row.contract_no_display
+  ]
+    .map((value) => normalizeViText(String(value ?? "").trim()))
+    .filter(Boolean);
+}
+
+function competitionRewardLookupKeys(row: any) {
+  return [
+    row.gyc_no,
+    row.contract_no,
+    row.policy_no,
+    row.application_no
+  ]
+    .map((value) => normalizeViText(String(value ?? "").trim()))
+    .filter(Boolean);
+}
+
 function XlsxDownloadButton({ rows, fileName, sheetName }: { rows: XlsxRow[]; fileName: string; sheetName: string }) {
   const [message, setMessage] = useState("");
   function downloadXlsx() {
@@ -4331,6 +4354,9 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
 
 function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { title: string; rows: any[]; showStatus?: boolean; emptyMessage?: string }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [competitionRewards, setCompetitionRewards] = useState<any[]>([]);
+  const [rewardLoading, setRewardLoading] = useState(false);
+  const [selectedRewardContract, setSelectedRewardContract] = useState<{ contract: any; rewards: any[] } | null>(null);
   const sortedRows = sortContracts(rows);
   const normalizedSearchTerm = normalizeViText(searchTerm.trim());
   const visibleRows = normalizedSearchTerm
@@ -4348,6 +4374,43 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
   const headers = showStatus
     ? ["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "Trạng thái hợp đồng", "IP", "AFYP"]
     : ["Ngày thu", "Nhóm", "TVV", "BMBH", "NĐBH", "IP", "AFYP"];
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCompetitionRewards() {
+      setRewardLoading(true);
+      try {
+        const response = await fetch("/api/competition", { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Không tải được chương trình thi đua.");
+        const programs: CompetitionProgramView[] = payload.programs ?? [];
+        const details = await Promise.all(programs.map(async (program) => {
+          const detailResponse = await fetch(`/api/competition?id=${encodeURIComponent(program.id)}`, { cache: "no-store" });
+          const detailPayload = await detailResponse.json();
+          if (!detailResponse.ok) return [];
+          const rewardContracts = dedupeRewardContracts(detailPayload.contractRewardResults ?? detailPayload.rewardContracts ?? []);
+          return rewardContracts.map((reward: any) => ({ ...reward, program: detailPayload.program ?? program }));
+        }));
+        if (!cancelled) setCompetitionRewards(details.flat());
+      } catch {
+        if (!cancelled) setCompetitionRewards([]);
+      } finally {
+        if (!cancelled) setRewardLoading(false);
+      }
+    }
+    loadCompetitionRewards();
+    return () => { cancelled = true; };
+  }, []);
+
+  function rewardsForContract(row: any) {
+    const keys = new Set(contractLookupKeys(row));
+    return competitionRewards.filter((reward) => competitionRewardLookupKeys(reward).some((key) => keys.has(key)));
+  }
+
+  function openContractRewards(row: any) {
+    setSelectedRewardContract({ contract: row, rewards: rewardsForContract(row) });
+  }
+
   return (
     <div className="panel contract-details-panel">
       <div className="panel-header contract-details-header">
@@ -4369,7 +4432,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
       </div>
       <DataTable className="desktop-table contract-details-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]} colWidths={showStatus ? ["110px", "130px", "15%", "15%", "17%", "17%", "190px", "110px", "110px"] : undefined}>
         {visibleRows.map((row, index) => (
-          <tr key={`${row.contract_no}-${index}`}>
+          <tr key={`${row.contract_no}-${index}`} className="clickable contract-reward-row" onClick={() => openContractRewards(row)}>
             <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatFullMoney(row.ip)}</td><td>{formatFullMoney(row.afyp)}</td>
           </tr>
         ))}
@@ -4377,7 +4440,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
       {visibleRows.length === 0 && <p className="empty-state">{emptyMessage ?? "Không có hồ sơ."}</p>}
       <div className="mobile-card-list contract-mobile-list">
         {visibleRows.map((row, index) => (
-          <article className="mobile-contract-card" key={`${row.contract_no}-mobile-${index}`}>
+          <article className="mobile-contract-card clickable" key={`${row.contract_no}-mobile-${index}`} onClick={() => openContractRewards(row)}>
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
@@ -4400,6 +4463,50 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
           </article>
         ))}
       </div>
+      {selectedRewardContract && (
+        <div className="contract-reward-modal-backdrop" role="presentation" onClick={() => setSelectedRewardContract(null)}>
+          <section className="contract-reward-modal" role="dialog" aria-modal="true" aria-label="Chương trình thưởng của hợp đồng" onClick={(event) => event.stopPropagation()}>
+            <div className="contract-reward-modal-head">
+              <div>
+                <span>Hợp đồng</span>
+                <h3>{selectedRewardContract.contract.application_no || selectedRewardContract.contract.contract_no || "-"}</h3>
+                <p>
+                  {selectedRewardContract.contract.policy_owner || "-"} · {selectedRewardContract.contract.agent_name || "-"}
+                  {selectedRewardContract.rewards.length > 0 && (
+                    <em>Tổng thưởng dự kiến: {formatFullMoney(selectedRewardContract.rewards.reduce((sum, reward) => sum + Number(reward.reward_amount ?? reward.rewardAmount ?? 0), 0))}</em>
+                  )}
+                </p>
+              </div>
+              <button type="button" onClick={() => setSelectedRewardContract(null)} aria-label="Đóng"><X size={18} /></button>
+            </div>
+            {rewardLoading ? (
+              <p className="empty-state">Đang kiểm tra chương trình thưởng...</p>
+            ) : selectedRewardContract.rewards.length === 0 ? (
+              <p className="empty-state">Hợp đồng này chưa nằm trong chương trình thưởng nào.</p>
+            ) : (
+              <div className="contract-reward-program-list">
+                {selectedRewardContract.rewards.map((reward, index) => (
+                  <article className="contract-reward-program-card" key={`${reward.program?.id || "program"}-${reward.id || index}`}>
+                    <div className="contract-reward-program-title">
+                      <span className="contract-reward-order">{index + 1}</span>
+                      <div>
+                        <strong>{reward.program?.programName || "Chương trình thi đua"}</strong>
+                        <span>{formatDateVi(reward.program?.startDate)} - {formatDateVi(reward.program?.endDate)}</span>
+                      </div>
+                    </div>
+                    <div className="contract-reward-meta-grid">
+                      <span><b>Phát hành đến</b>{formatDateVi(reward.program?.issueDeadline) || "-"}</span>
+                      <span><b>Tiền thưởng</b>{formatFullMoney(reward.reward_amount ?? reward.rewardAmount ?? 0)}</span>
+                    </div>
+                    <p><b>Giải thưởng</b>{reward.reward_name || reward.prize_name || reward.note || "-"}</p>
+                    {reward.reward_note || reward.note ? <p><b>Ghi chú</b>{reward.reward_note || reward.note}</p> : null}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }
