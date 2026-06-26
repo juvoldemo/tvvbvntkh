@@ -20,6 +20,11 @@ function visibleAgentName(record: RevenueRecord) {
   return name && !isAgentCodeLike(name) ? name : "";
 }
 
+function agentIdentityKey(record: RevenueRecord) {
+  const code = String(record.agent_code ?? "").trim();
+  return code || visibleAgentName(record);
+}
+
 function visibleAdsName(record: RevenueRecord) {
   const name = resolveAdsName(record.ads_name, record.ban_name, record.group_name);
   return name && !isAdsCodeLike(name) ? name : "";
@@ -169,7 +174,7 @@ export function countContracts(records: RevenueRecord[]) {
 }
 
 export function countDistinctActiveAgents(records: RevenueRecord[]) {
-  return new Set(records.map(visibleAgentName).filter(Boolean)).size;
+  return new Set(records.map(agentIdentityKey).filter(Boolean)).size;
 }
 
 function activeStatus(status?: string | null) {
@@ -262,7 +267,7 @@ export function buildGroupRanking(records: RevenueRecord[]) {
         afyp,
         ip: sumIp(items),
         contractCount: contracts,
-        agentCount: new Set(items.map(visibleAgentName).filter(Boolean)).size,
+        agentCount: new Set(items.map(agentIdentityKey).filter(Boolean)).size,
         afypShare: totalAfyp > 0 ? (afyp / totalAfyp) * 100 : 0,
         averageAfypPerContract: contracts > 0 ? afyp / contracts : 0
       };
@@ -274,7 +279,7 @@ export function buildGroupRanking(records: RevenueRecord[]) {
 export function buildAgentRanking(records: RevenueRecord[]) {
   const grouped = new Map<string, RevenueRecord[]>();
   records.forEach((record) => {
-    const key = visibleAgentName(record);
+    const key = agentIdentityKey(record);
     if (!key) return;
     grouped.set(key, [...(grouped.get(key) ?? []), record]);
   });
@@ -326,7 +331,7 @@ export function buildAdsReport(records: RevenueRecord[]) {
         afyp,
         ip: sumIp(items),
         contractCount: countDistinct(items, "contract_no"),
-        agentCount: new Set(items.map(visibleAgentName).filter(Boolean)).size,
+        agentCount: new Set(items.map(agentIdentityKey).filter(Boolean)).size,
         kpi: planMillion,
         hasKpi: planMillion !== null,
         afypShare: totalAfyp > 0 ? (afyp / totalAfyp) * 100 : 0

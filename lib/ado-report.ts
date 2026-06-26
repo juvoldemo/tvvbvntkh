@@ -20,6 +20,12 @@ const kpiSourceName = (name: string) => name;
 const EXCLUDED = ["ycbh het hieu luc", "het hieu luc", "tu choi", "tri hoan"];
 const norm = (value: unknown) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase().trim();
 const sum = (records: RevenueRecord[], key: "afyp" | "ip") => records.reduce((total, record) => total + Number(record[key] ?? 0), 0);
+const adoNameForRecord = (record: RevenueRecord) => canonicalAdoName(resolveAdsName(record.ads_name, record.ban_name, record.group_name));
+const isMaiTrangDsoKhanhHoaRevenue = (adoName: string, record: RevenueRecord) => {
+  if (norm(adoName) !== "nguyen thi mai trang") return false;
+  const location = [record.ban_name, record.group_name].map(norm).join(" ");
+  return location.includes("dso khanh hoa") || location.includes("khanh hoa 2") || location.includes("banca");
+};
 const contractKey = (record: RevenueRecord, index: number) => {
   const applicationNo = String(record.application_no ?? "").trim();
   if (applicationNo) return `application:${norm(applicationNo)}`;
@@ -51,7 +57,7 @@ export function buildAdoReport(records: RevenueRecord[], month: string, filters:
     return !filters.status || record.policy_status === filters.status;
   });
   const rawAdoNames = valid.map((record) => String(record.ads_name ?? "")).filter(Boolean);
-  const normalizedActualNames = valid.map((record) => canonicalAdoName(resolveAdsName(record.ads_name, record.ban_name, record.group_name))).filter(Boolean);
+  const normalizedActualNames = valid.map(adoNameForRecord).filter(Boolean);
   const finalAdoNames = [...new Set([...ADS_MASTER_NAMES.map(canonicalAdoName), ...normalizedActualNames])];
   console.log("ADO raw from BC02", rawAdoNames);
   console.log("ADO normalized from BC02", normalizedActualNames);
@@ -60,7 +66,7 @@ export function buildAdoReport(records: RevenueRecord[], month: string, filters:
   if (!finalAdoNames.includes("Nguyễn Thị Trầm")) console.warn("Nguyễn Thị Trầm missing from ADO final list", { rawAdoNames, normalizedActualNames });
   const rows = finalAdoNames.map((adoName) => {
     const sourceName = kpiSourceName(adoName);
-    const mine = valid.filter((record) => canonicalAdoName(resolveAdsName(record.ads_name, record.ban_name, record.group_name)) === adoName && record.paid_date <= end && record.paid_date.startsWith(year));
+    const mine = valid.filter((record) => adoNameForRecord(record) === adoName && !isMaiTrangDsoKhanhHoaRevenue(adoName, record) && record.paid_date <= end && record.paid_date.startsWith(year));
     const monthly = mine.filter((record) => record.paid_date.slice(0, 7) === month);
     const quarter = mine.filter((record) => { const n = Number(record.paid_date.slice(5, 7)); return n >= quarterStart && n <= monthNo; });
     const monthlyAfyp = sum(monthly, "afyp"), quarterAfyp = sum(quarter, "afyp"), yearAfyp = sum(mine, "afyp");
@@ -71,11 +77,13 @@ export function buildAdoReport(records: RevenueRecord[], month: string, filters:
   const departments = ["PTKD 1", "PTKD 2"].map((department) => {
     const items = rows.filter((row) => row.department === department); const aggregate = (key: keyof typeof items[number]) => items.reduce((total, row) => total + Number(row[key] ?? 0), 0);
     const monthlyAfyp = aggregate("monthlyAfyp"), quarterAfyp = aggregate("quarterAfyp"), yearAfyp = aggregate("yearAfyp"); const monthlyKpi = aggregate("monthlyKpi"), quarterKpi = aggregate("quarterKpi"), yearKpi = aggregate("yearKpi");
-    const records = valid.filter((record) => departmentForAdo(canonicalAdoName(resolveAdsName(record.ads_name, record.ban_name, record.group_name))) === department && record.paid_date <= end && record.paid_date.startsWith(year));
+    const records = valid.filter((record) => {
+      const adoName = adoNameForRecord(record);
+      return departmentForAdo(adoName) === department && !isMaiTrangDsoKhanhHoaRevenue(adoName, record) && record.paid_date <= end && record.paid_date.startsWith(year);
+    });
     const monthly = records.filter((record) => record.paid_date.slice(0, 7) === month);
     const quarter = records.filter((record) => { const n = Number(record.paid_date.slice(5, 7)); return n >= quarterStart && n <= monthNo; });
     return { department, monthlyAfyp, quarterAfyp, yearAfyp, monthlyKpi, quarterKpi, yearKpi, monthlyRate: monthlyKpi ? monthlyAfyp / monthlyKpi * 100 : 0, quarterRate: quarterKpi ? quarterAfyp / quarterKpi * 100 : 0, yearRate: yearKpi ? yearAfyp / yearKpi * 100 : 0, ip: sum(monthly, "ip"), quarterIp: sum(quarter, "ip"), yearIp: sum(records, "ip"), contractCount: countContracts(monthly), quarterContractCount: countContracts(quarter), yearContractCount: countContracts(records), agentCount: countAgents(monthly), quarterAgentCount: countAgents(quarter), yearAgentCount: countAgents(records), periodRecordCounts: { month: monthly.length, quarter: quarter.length, year: records.length } };
   });
   return { rows: rows.map((row) => ({ ...row, share: totalMonth ? row.monthlyAfyp / totalMonth * 100 : 0 })), departments };
 }
-

@@ -2294,13 +2294,20 @@ function adsRowTitle(row: any) {
   return row.adsDisplayName || row.adsName || "Chưa gán ADS";
 }
 
+function isDsoBancaRecord(record: any) {
+  const location = [record?.ban_name, record?.group_name].map((value) => normalizeViText(String(value ?? ""))).join(" ");
+  return location.includes("dso khanh hoa") || location.includes("khanh hoa 2") || location.includes("banca");
+}
+
 function adsRowContracts(row: any, contracts: any[]) {
   const name = String(row.adsName ?? "").trim();
   const code = String(row.adsCode ?? "").trim();
   const subtitle = String(row.adsSubtitle ?? "").trim();
   const hasName = Boolean(row.hasAdsName);
+  const shouldExcludeDso = Boolean(row.excludeDsoBanca) && normalizeViText(String(row.adoName ?? name)) === "nguyen thi mai trang";
 
   return contracts.filter((item) => {
+    if (shouldExcludeDso && isDsoBancaRecord(item)) return false;
     if (hasName && name) return item.ads_name === name;
     if (code) return item.ads_code === code || item.ads_name === code;
     if (subtitle && !subtitle.includes("nhóm chưa gán")) return item.group_name === subtitle || item.ban_name === subtitle;
@@ -2364,11 +2371,11 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
   }, [detailPeriod, adoRows, departmentRows]);
   const adoColWidths = ["28%", "12%", "12%", "16%", "13%", "10%", "9%"];
   const periodButtons = <div className="ado-period-toggle">{periodOptions.map((option) => <button key={option.key} type="button" className={detailPeriod === option.key ? "active" : ""} onClick={() => setDetailPeriod(option.key)}>{option.label}</button>)}</div>;
-  const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatFullMoney(metric.afyp)}</td><td>{formatFullMoney(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatFullMoney(Math.abs(delta))}` : formatFullMoney(delta)}</td><td>{formatFullMoney(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
+  const detailRow = (row: any, index = 0) => { const metric = periodMetrics(row); const delta = Number(metric.kpi ?? 0) - Number(metric.afyp ?? 0); return <tr key={row.adoName} className="clickable" onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, adoName: row.adoName, hasAdsName: true, excludeDsoBanca: true }, contracts))}><td><div className="ado-name-cell"><span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span><strong>{row.adoName}</strong></div></td><td>{formatFullMoney(metric.afyp)}</td><td>{formatFullMoney(metric.kpi)}</td><td><span className={`ado-mini-progress ${tone(metric.rate)}`}><i><em style={{ width: `${Math.min(metric.rate, 100)}%` }} /></i><b>{formatPercent(metric.rate)}</b></span></td><td className={delta <= 0 ? "positive" : "negative"}>{delta <= 0 ? `Vượt ${formatFullMoney(Math.abs(delta))}` : formatFullMoney(delta)}</td><td>{formatFullMoney(metric.ip)}</td><td>{metric.contractCount} / {metric.agentCount}</td></tr>; };
   const mobileDetailRow = (row: any, index = 0) => {
     const metric = periodMetrics(row);
     return (
-      <button className="ado-mobile-detail-row" type="button" key={`${row.adoName}-mobile`} onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, hasAdsName: true }, contracts))}>
+      <button className="ado-mobile-detail-row" type="button" key={`${row.adoName}-mobile`} onClick={() => openContracts(row.adoName, adsRowContracts({ adsName: row.sourceName, adoName: row.adoName, hasAdsName: true, excludeDsoBanca: true }, contracts))}>
         <span className="ado-avatar" style={{ backgroundColor: adoColor(row.adoName, index) }}>{row.adoName.slice(0, 1)}</span>
         <strong className="ado-mobile-name">{row.adoName}</strong>
         <span className="ado-mobile-rate">{formatPercent(metric.rate)}</span>
@@ -4548,3 +4555,4 @@ function DataTable({ headers, children, className = "", colWidths, hiddenColumns
     </div></>
   );
 }
+
