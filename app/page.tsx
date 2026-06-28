@@ -1111,11 +1111,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
   const monthlyPlanMobileDetailLines = useMemo(() => monthlyPlanMobileLines(monthlyPlan), [monthlyPlan]);
   const todayRevenueMobileDetailLines = useMemo(() => todayRevenueMobileLines(overview), [overview]);
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const sync = () => setIsMobileChart(media.matches);
-    sync();
-    media.addEventListener("change", sync);
-    return () => media.removeEventListener("change", sync);
+    setIsMobileChart(true);
   }, []);
   const chartMeta = {
     day: {
