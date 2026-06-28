@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { monthBounds, toMonthStart } from "@/lib/format";
+import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { estimateRewardsForDraftContracts, type DraftRewardContract } from "@/lib/tvv-reward-estimator";
 
@@ -45,26 +45,48 @@ export async function POST(request: NextRequest) {
       .lte("paid_date", end);
     if (contractError) throw contractError;
 
+    const competitionRules = (programs ?? []).map((program: any) => ({
+      id: program.id,
+      programName: program.program_name || program.confirmed_rule?.program_name || "Chương trình thi đua",
+      status: program.status,
+      isHidden: program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1,
+      range: programDateRange(program, month),
+      rule: {
+        ...program.confirmed_rule,
+        id: program.id,
+        program_name: program.program_name || program.confirmed_rule?.program_name,
+        start_date: program.start_date || program.confirmed_rule?.start_date,
+        end_date: program.end_date || program.confirmed_rule?.end_date,
+        issue_deadline: program.issue_deadline || program.confirmed_rule?.issue_deadline
+      }
+    }));
+
     const result = estimateRewardsForDraftContracts({
       draftContracts,
       currentContracts: contracts ?? [],
-      competitionRules: (programs ?? []).map((program: any) => ({
-        id: program.id,
-        programName: program.program_name || program.confirmed_rule?.program_name || "Chương trình thi đua",
-        status: program.status,
-        rule: {
-          ...program.confirmed_rule,
-          id: program.id,
-          program_name: program.program_name || program.confirmed_rule?.program_name,
-          start_date: program.start_date || program.confirmed_rule?.start_date,
-          end_date: program.end_date || program.confirmed_rule?.end_date,
-          issue_deadline: program.issue_deadline || program.confirmed_rule?.issue_deadline
-        }
-      })),
+      competitionRules,
       advisor
     });
 
-    return NextResponse.json({ month: toMonthStart(month).slice(0, 7), ...result });
+    const today = getVietnamToday();
+    const rewardByProgram = new Map((result.rewardByProgram ?? []).map((item: any) => [item.programId, item]));
+    const ongoingPrograms = competitionRules
+      .filter((program: any) => !program.isHidden && program.range.start <= today && program.range.end >= today)
+      .map((program: any) => {
+        const reward = rewardByProgram.get(program.id) as any;
+        return {
+          programId: program.id,
+          programName: program.programName,
+          status: program.status,
+          startDate: program.range.start,
+          endDate: program.range.end,
+          estimatedReward: Number(reward?.estimatedReward ?? 0),
+          matchedContracts: reward?.matchedContracts ?? [],
+          isEligible: Boolean(reward)
+        };
+      });
+
+    return NextResponse.json({ month: toMonthStart(month).slice(0, 7), ...result, ongoingPrograms });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Không tính được thưởng dự kiến.";
     return NextResponse.json({ error: message }, { status: 500 });

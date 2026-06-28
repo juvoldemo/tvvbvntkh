@@ -8287,6 +8287,438 @@ body,
   }
 }
 
+/* TVV mobile app polish: tab views only, no data or routing changes. */
+.tvv-app {
+  width: min(100%, 430px) !important;
+  background: linear-gradient(180deg, #eaf2fb 0, #f8fbff 260px, #f7faff 100%) !important;
+  color: #071f66 !important;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom)) !important;
+}
+
+.tvv-hero {
+  min-height: 146px !important;
+  padding: 18px 22px 30px !important;
+  border-bottom-left-radius: 18px !important;
+  border-bottom-right-radius: 18px !important;
+  background: radial-gradient(circle at 18% 120%, rgba(61, 139, 255, .35) 0 36%, transparent 37%), linear-gradient(135deg, #1269f4 0%, #0648bf 58%, #043899 100%) !important;
+  box-shadow: 0 18px 32px rgba(4, 60, 155, .18) !important;
+}
+
+.tvv-hero::after { display: none !important; }
+
+.tvv-hero-main {
+  grid-template-columns: 46px minmax(0, 1fr) 46px !important;
+  gap: 8px 12px !important;
+}
+
+.tvv-avatar,
+.tvv-icon-button {
+  width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+}
+
+.tvv-avatar {
+  background: #fff !important;
+  color: #0863f1 !important;
+  box-shadow: 0 8px 18px rgba(5, 37, 110, .14) !important;
+}
+
+.tvv-hero h1 {
+  max-width: 230px !important;
+  color: #fff !important;
+  font-size: 16px !important;
+  line-height: 1.18 !important;
+  letter-spacing: 0 !important;
+}
+
+.tvv-hero p {
+  color: rgba(255, 255, 255, .92) !important;
+  font-size: 12px !important;
+}
+
+.tvv-icon-button {
+  border-color: rgba(255, 255, 255, .35) !important;
+  background: rgba(255, 255, 255, .12) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08) !important;
+}
+
+.tvv-icon-button b {
+  top: 2px !important;
+  right: 1px !important;
+  border: 2px solid #fff !important;
+  background: #ff3347 !important;
+}
+
+.tvv-month-pill {
+  grid-column: 1 / span 2 !important;
+  width: fit-content !important;
+  min-width: 156px !important;
+  height: 36px !important;
+  margin-top: 8px !important;
+  border-radius: 999px !important;
+  border-color: rgba(255, 255, 255, .42) !important;
+  background: rgba(255, 255, 255, .14) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.tvv-content,
+.tvv-calculator {
+  gap: 12px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+
+.tvv-content { margin-top: -12px !important; }
+.tvv-subpage { padding-top: 0 !important; }
+
+.tvv-card,
+.tvv-calc-card,
+.tvv-stat-card {
+  border: 1px solid #dce8f8 !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, .98) !important;
+  box-shadow: 0 16px 34px rgba(22, 53, 99, .08) !important;
+}
+
+.tvv-card,
+.tvv-calc-card { padding: 14px 16px !important; }
+
+.tvv-section-head {
+  align-items: center !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #dfe8f6 !important;
+}
+
+.tvv-section-head h2,
+.tvv-card h2,
+.tvv-calc-card h2 {
+  color: #061b66 !important;
+  font-size: 18px !important;
+  line-height: 1.18 !important;
+  letter-spacing: 0 !important;
+}
+
+.tvv-section-head > span {
+  color: #061b66 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.tvv-contract-card { padding-top: 12px !important; }
+
+.tvv-contract-row {
+  grid-template-columns: 44px minmax(0, 1fr) auto 18px !important;
+  grid-template-areas: "icon info amount arrow" "icon info meta arrow" !important;
+  min-height: 78px !important;
+  margin-top: 0 !important;
+  border: 1px solid #dce8f8 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  padding: 10px 12px !important;
+  box-shadow: 0 8px 18px rgba(10, 47, 113, .04) !important;
+}
+
+.tvv-contract-row + .tvv-contract-row { margin-top: 8px !important; }
+
+.tvv-contract-row > span {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.tvv-contract-row b {
+  color: #002276 !important;
+  font-size: 13px !important;
+}
+
+.tvv-contract-row p {
+  color: #163879 !important;
+  font-size: 11px !important;
+}
+
+.tvv-contract-row strong {
+  color: #001f72 !important;
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+}
+
+.tvv-contract-row strong small {
+  color: #60749f !important;
+  font-size: 10px !important;
+}
+
+.tvv-contract-row em {
+  border-radius: 999px !important;
+  padding: 5px 10px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.tvv-contract-row > svg,
+.tvv-contest-row > svg {
+  color: #062b77 !important;
+  stroke-width: 2.5 !important;
+}
+
+.tvv-contest-row {
+  grid-template-columns: 74px minmax(0, 1fr) 22px !important;
+  grid-template-rows: auto auto !important;
+  gap: 0 12px !important;
+  min-height: 150px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  padding: 18px 0 8px !important;
+}
+
+.tvv-contest-icon {
+  align-self: start !important;
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 14px !important;
+  background: #fff2d7 !important;
+  color: #f5a000 !important;
+}
+
+.tvv-contest-row em {
+  margin-bottom: 6px !important;
+  border-radius: 999px !important;
+  background: #fff1f2 !important;
+  color: #ff273d !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+}
+
+.tvv-contest-row b {
+  color: #061b66 !important;
+  font-size: 15px !important;
+  line-height: 1.28 !important;
+}
+
+.tvv-contest-row p,
+.tvv-contest-row small {
+  color: #12377a !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+.tvv-contest-row small {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-weight: 850 !important;
+}
+
+.tvv-contest-row i {
+  height: 5px !important;
+  margin-top: 7px !important;
+  background: #e5ebf5 !important;
+}
+
+.tvv-progress-text {
+  margin-top: 6px !important;
+  color: #061b66 !important;
+}
+
+.tvv-contest-row > strong {
+  grid-column: 2 / span 2 !important;
+  justify-self: end !important;
+  margin-top: 10px !important;
+  color: #ed0016 !important;
+  font-size: 18px !important;
+}
+
+.tvv-profile {
+  min-height: 188px !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  gap: 8px !important;
+  padding: 12px 0 18px !important;
+  text-align: center !important;
+}
+
+.tvv-profile svg {
+  width: 52px !important;
+  height: 52px !important;
+  color: #071f66 !important;
+}
+
+.tvv-profile b,
+.tvv-profile span,
+.tvv-profile p,
+.tvv-profile strong { color: #061b66 !important; }
+
+.tvv-profile b { font-size: 14px !important; }
+
+.tvv-profile span,
+.tvv-profile p,
+.tvv-profile strong { font-size: 12px !important; }
+
+.tvv-bottom-nav {
+  left: 50% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  width: min(100%, 414px) !important;
+  min-height: calc(72px + env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%) !important;
+  justify-content: space-around !important;
+  border: 1px solid #e0e8f5 !important;
+  border-bottom: 0 !important;
+  border-radius: 18px 18px 0 0 !important;
+  background: rgba(255, 255, 255, .98) !important;
+  box-shadow: 0 -12px 28px rgba(23, 46, 83, .12) !important;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+}
+
+.tvv-bottom-nav button {
+  min-width: 0 !important;
+  min-height: 50px !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: center !important;
+  gap: 4px !important;
+  color: #5c709d !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 4px !important;
+}
+
+.tvv-bottom-nav button svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+.tvv-bottom-nav button span {
+  font-size: 10px !important;
+  line-height: 1.1 !important;
+  font-weight: 900 !important;
+}
+
+.tvv-bottom-nav button.active { color: #0069ff !important; }
+
+.tvv-calculator {
+  background: linear-gradient(180deg, #edf4ff 0, #f8fbff 180px, #f7faff 100%) !important;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.tvv-calc-header {
+  min-height: 74px !important;
+  border-radius: 0 !important;
+  padding: 12px 18px 20px !important;
+  background: linear-gradient(135deg, #1269f4 0%, #0648bf 62%, #043899 100%) !important;
+  box-shadow: 0 10px 24px rgba(4, 60, 155, .14) !important;
+}
+
+.tvv-calc-header button {
+  border-radius: 9px !important;
+  background: rgba(255, 255, 255, .11) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.tvv-calc-header h1 {
+  color: #fff !important;
+  font-size: 17px !important;
+}
+
+.tvv-calc-header span {
+  color: #fff !important;
+  font-size: 12px !important;
+}
+
+.tvv-calculator .tvv-calc-card:first-of-type { margin-top: -12px !important; }
+
+.tvv-calc-card {
+  border-radius: 9px !important;
+  padding: 14px 16px !important;
+}
+
+.tvv-calculator .tvv-section-head {
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.tvv-form-grid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
+.tvv-form-grid label {
+  color: #061b66 !important;
+  font-size: 11px !important;
+}
+
+.tvv-form-grid select,
+.tvv-form-grid input,
+.tvv-money-field,
+.tvv-date-field {
+  min-height: 48px !important;
+  border-radius: 7px !important;
+  border-color: #cbd9ef !important;
+  background: #fff !important;
+}
+
+.tvv-form-grid select,
+.tvv-form-grid input,
+.tvv-money-field input,
+.tvv-date-field span {
+  color: #061b66 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.tvv-primary {
+  min-height: 44px !important;
+  border-radius: 8px !important;
+  background: #0863f1 !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  box-shadow: none !important;
+}
+
+.tvv-result-note {
+  border-color: #a9e6c5 !important;
+  background: #eefff5 !important;
+  color: #061b66 !important;
+}
+
+.tvv-total {
+  border-color: #b3e8c9 !important;
+  background: #eafff2 !important;
+}
+
+.tvv-total strong { font-size: 22px !important; }
+
+@media (max-width: 380px) {
+  .tvv-hero {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .tvv-content {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .tvv-contract-row {
+    grid-template-columns: 38px minmax(0, 1fr) 88px 14px !important;
+    padding: 9px !important;
+  }
+
+  .tvv-contract-row strong { font-size: 11px !important; }
+  .tvv-contract-row em { padding-inline: 7px !important; }
+
+  .tvv-contest-row { grid-template-columns: 62px minmax(0, 1fr) 18px !important; }
+
+  .tvv-contest-icon {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
 /* Force the dashboard to use the mobile experience on every device. */
 @media (min-width: 0) {
   html,
@@ -12354,4 +12786,121 @@ body,
     font-size: 9px !important;
     line-height: 12px !important;
   }
+}
+
+/* Final TVV sub-tab header alignment. Keep Overview hero separate. */
+.tvv-sub-header {
+  min-height: 76px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  padding: 12px 18px 20px !important;
+  background: linear-gradient(135deg, #1269f4 0%, #0648bf 62%, #043899 100%) !important;
+}
+
+.tvv-sub-header button {
+  width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.tvv-calc-header .tvv-back-button,
+.tvv-sub-header .tvv-back-button {
+  width: 32px !important;
+  min-height: 32px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.tvv-calc-header .tvv-back-button img,
+.tvv-sub-header .tvv-back-button img {
+  width: 24px !important;
+  height: 24px !important;
+  display: block !important;
+  filter: brightness(0) invert(1) !important;
+  pointer-events: none !important;
+}
+
+.tvv-sub-header h1 {
+  color: #fff !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+}
+
+.tvv-sub-header span {
+  color: #fff !important;
+  font-size: 12px !important;
+}
+
+.tvv-after-sub-header {
+  margin-top: 0 !important;
+  padding-top: 14px !important;
+}
+
+.tvv-after-sub-header > .tvv-card:first-child {
+  margin-top: 0 !important;
+}
+
+.tvv-contest-preview .tvv-section-head > div {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+
+.tvv-contest-preview .tvv-section-head > div > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 24px !important;
+  border-radius: 999px !important;
+  background: #eef6ff !important;
+  color: #075fe7 !important;
+  padding: 0 8px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.tvv-contest-list {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.tvv-contest-row.compact {
+  grid-template-columns: 54px minmax(0, 1fr) 18px !important;
+  min-height: 88px !important;
+  gap: 0 10px !important;
+  border: 1px solid #dce8f8 !important;
+  border-radius: 13px !important;
+  padding: 10px !important;
+  box-shadow: 0 8px 18px rgba(10, 47, 113, .04) !important;
+}
+
+.tvv-contest-row.compact .tvv-contest-icon {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 13px !important;
+}
+
+.tvv-contest-row.compact b {
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+.tvv-contest-row.compact small {
+  margin-top: 4px !important;
+  font-size: 10px !important;
+}
+
+.tvv-contest-row.compact > svg {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  align-self: center !important;
 }
