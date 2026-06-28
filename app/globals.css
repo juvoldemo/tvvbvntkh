@@ -10462,6 +10462,324 @@ body,
 .tvv-content {
   margin-top: -16px !important;
 }
+
+/* Calculator screen redesign. */
+.tvv-calculator {
+  gap: 12px !important;
+  padding: 0 4px calc(86px + env(safe-area-inset-bottom)) !important;
+}
+
+.tvv-calc-header {
+  min-height: 76px !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  border-radius: 0 !important;
+  padding: 10px 18px 18px !important;
+  background: linear-gradient(135deg, #0b56d8 0%, #073ea8 100%) !important;
+}
+
+.tvv-calc-header button {
+  width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 9px !important;
+}
+
+.tvv-calc-header h1 {
+  font-size: 16px !important;
+  line-height: 1.1 !important;
+}
+
+.tvv-calc-header span {
+  gap: 4px !important;
+  font-size: 12px !important;
+}
+
+.tvv-calculator .tvv-calc-card:first-of-type {
+  margin-top: -12px !important;
+}
+
+.tvv-calc-card {
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 8px 20px rgba(15, 54, 116, .07) !important;
+}
+
+.tvv-calc-card h2 {
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+}
+
+.tvv-calculator .tvv-section-head {
+  align-items: center !important;
+  margin-bottom: 12px !important;
+}
+
+.tvv-calculator .tvv-section-head h2 {
+  font-size: 14px !important;
+}
+
+.tvv-section-head .danger {
+  gap: 4px !important;
+  color: #ff2634 !important;
+  font-size: 11px !important;
+}
+
+.tvv-form-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, .95fr) !important;
+  gap: 10px !important;
+  margin-top: 14px !important;
+}
+
+.tvv-form-grid label {
+  gap: 7px !important;
+  font-size: 11px !important;
+}
+
+.tvv-form-grid select,
+.tvv-form-grid input,
+.tvv-money-field,
+.tvv-date-field {
+  min-height: 40px !important;
+  border-radius: 7px !important;
+}
+
+.tvv-form-grid select,
+.tvv-form-grid input,
+.tvv-money-field input,
+.tvv-date-field span {
+  font-size: 12px !important;
+}
+
+.tvv-money-field {
+  padding-right: 10px !important;
+}
+
+.tvv-money-field span {
+  font-size: 12px !important;
+}
+
+.tvv-date-field {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 18px !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: 1px solid #cbd8ef !important;
+  background: #fff !important;
+  color: #061b66 !important;
+  padding: 0 9px !important;
+}
+
+.tvv-date-field input {
+  position: absolute !important;
+  inset: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+}
+
+.tvv-primary {
+  min-height: 44px !important;
+  margin-top: 14px !important;
+  border-radius: 7px !important;
+  font-size: 14px !important;
+}
+
+.tvv-draft-row {
+  grid-template-columns: 16px 28px minmax(0, 1fr) 96px 24px !important;
+  gap: 8px !important;
+  min-height: 70px !important;
+  border-color: #e2e9f6 !important;
+  border-radius: 9px !important;
+  padding: 9px !important;
+}
+
+.tvv-draft-row > svg {
+  color: #7281a6 !important;
+}
+
+.tvv-draft-row > i {
+  width: 28px !important;
+  height: 28px !important;
+  background: #eaf2ff !important;
+  color: #075fe7 !important;
+  font-size: 14px !important;
+}
+
+.tvv-draft-row b {
+  font-size: 12px !important;
+}
+
+.tvv-draft-row p,
+.tvv-draft-row small {
+  font-size: 10px !important;
+}
+
+.tvv-draft-row p {
+  color: #075fe7 !important;
+}
+
+.tvv-draft-row > strong {
+  min-height: 48px !important;
+  align-content: center !important;
+  border: 1px solid #dce7f7 !important;
+  border-radius: 7px !important;
+  background: #f3f7ff !important;
+  color: #061b66 !important;
+  padding: 6px !important;
+  font-size: 10px !important;
+}
+
+.tvv-draft-row > strong span {
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+
+.tvv-draft-row > strong b {
+  color: #075fe7 !important;
+  font-size: 13px !important;
+}
+
+.tvv-draft-row button {
+  color: #ff2634 !important;
+}
+
+.tvv-result-note {
+  display: grid !important;
+  grid-template-columns: 20px minmax(0, 1fr) auto !important;
+  min-height: 38px !important;
+  margin-top: 14px !important;
+  border-radius: 7px 7px 0 0 !important;
+  padding: 8px 10px !important;
+  font-size: 11px !important;
+}
+
+.tvv-result-note span {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+}
+
+.tvv-result-note b {
+  color: #04954c !important;
+  font-size: 12px !important;
+}
+
+.tvv-result-table {
+  overflow: hidden !important;
+  border: 1px solid #dce7f7 !important;
+  border-top: 0 !important;
+  border-radius: 0 0 7px 7px !important;
+}
+
+.tvv-result-head,
+.tvv-result-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 86px !important;
+  align-items: center !important;
+}
+
+.tvv-result-head {
+  min-height: 34px !important;
+  background: #f7f9fe !important;
+  color: #41517d !important;
+}
+
+.tvv-result-head span {
+  border-right: 1px solid #e4ebf7 !important;
+  padding: 0 10px !important;
+  font-size: 10px !important;
+}
+
+.tvv-result-row {
+  min-height: 58px !important;
+  border-top: 1px solid #e4ebf7 !important;
+}
+
+.tvv-result-row > div,
+.tvv-result-row > p,
+.tvv-result-row > strong {
+  min-height: 58px !important;
+  display: grid !important;
+  align-items: center !important;
+  border-right: 1px solid #e4ebf7 !important;
+  padding: 7px 8px !important;
+}
+
+.tvv-result-row > div {
+  grid-template-columns: 28px minmax(0, 1fr) !important;
+  gap: 4px !important;
+}
+
+.tvv-result-row b {
+  color: #061b66 !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+
+.tvv-result-icon {
+  width: 26px !important;
+  height: 26px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: #f59e0b !important;
+}
+
+.tvv-result-icon.tone-1 {
+  color: #9333ea !important;
+}
+
+.tvv-result-row p {
+  color: #061b66 !important;
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+}
+
+.tvv-result-row strong {
+  border-right: 0 !important;
+  color: #ff2634 !important;
+  font-size: 12px !important;
+  text-align: right !important;
+}
+
+.tvv-total {
+  min-height: 52px !important;
+  border: 1px solid #bfead1 !important;
+  border-top: 0 !important;
+  border-radius: 0 0 7px 7px !important;
+  background: #edfff4 !important;
+  padding: 10px 14px !important;
+}
+
+.tvv-total span {
+  color: #04954c !important;
+  font-size: 12px !important;
+}
+
+.tvv-total strong {
+  color: #04954c !important;
+  font-size: 20px !important;
+}
+
+.tvv-disclaimer {
+  display: grid !important;
+  grid-template-columns: 18px minmax(0, 1fr) !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+  border: 1px solid #d6e3fb !important;
+  border-radius: 7px !important;
+  background: #f5f8ff !important;
+  color: #061b66 !important;
+  padding: 10px !important;
+  font-size: 10px !important;
+}
+
+.tvv-disclaimer b {
+  display: block !important;
+  margin-bottom: 4px !important;
+  font-size: 12px !important;
+}
 @media (max-width: 767px) {
   .mobile-rank-card.mobile-group-rank-card {
     height: auto !important;
