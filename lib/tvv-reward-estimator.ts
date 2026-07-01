@@ -115,13 +115,23 @@ export function estimateRewardsForDraftContracts(params: {
   for (const program of params.competitionRules) {
     if (!program.rule) continue;
     try {
+      const eligibleDraftRows = draftRows.filter((row) =>
+        (!program.rule.start_date || row.paid_date >= program.rule.start_date)
+        && (!program.rule.end_date || row.paid_date <= program.rule.end_date)
+      );
+      if (eligibleDraftRows.length === 0) continue;
+      const eligibleDraftKeys = new Set(eligibleDraftRows.map(contractKeyFromRow));
       const result = calculateCompetitionReward(program.rule, combinedContracts);
-      const matchedContracts = result.contractRewardResults.filter((contract) => draftIdByKey.has(getRewardContractKey(contract)));
+      const baseline = calculateCompetitionReward(program.rule, currentAdvisorContracts);
+      const matchedContracts = result.contractRewardResults.filter((contract) => eligibleDraftKeys.has(getRewardContractKey(contract)));
       const matchedAdvisors = result.tvvRewardResults.filter((row) => normalizeText(row.advisor) === normalizeText(params.advisor.name));
-      const contractReward = matchedContracts.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
-      const advisorReward = matchedAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
-      const estimatedReward = contractReward + advisorReward;
-      if (estimatedReward <= 0 && matchedContracts.length === 0 && matchedAdvisors.length === 0) continue;
+      const baselineAdvisors = baseline.tvvRewardResults.filter((row) => normalizeText(row.advisor) === normalizeText(params.advisor.name));
+      const projectedTotal = result.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0)
+        + matchedAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
+      const baselineTotal = baseline.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0)
+        + baselineAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
+      const estimatedReward = Math.max(0, projectedTotal - baselineTotal);
+      if (estimatedReward <= 0) continue;
 
       const conditionText = [
         program.rule.reward_rules?.[0]?.condition_text,
@@ -146,17 +156,14 @@ export function estimateRewardsForDraftContracts(params: {
 
       const relatedDraftIds = new Set([
         ...matchedContracts.map((contract) => draftIdByKey.get(getRewardContractKey(contract))).filter(Boolean) as string[],
-        ...params.draftContracts.map((draft) => advisorReward > 0 ? draft.id : "").filter(Boolean)
+        ...eligibleDraftRows.map((row) => row.draft_id)
       ]);
-      const perDraftAdvisorReward = advisorReward > 0 && relatedDraftIds.size > 0 ? advisorReward / relatedDraftIds.size : 0;
+      const perDraftReward = relatedDraftIds.size > 0 ? estimatedReward / relatedDraftIds.size : 0;
       for (const draftId of relatedDraftIds) {
         const current = rewardByDraft.get(draftId);
         if (!current) continue;
-        const ownContractReward = matchedContracts
-          .filter((contract) => draftIdByKey.get(getRewardContractKey(contract)) === draftId)
-          .reduce((sum, contract) => sum + Number(contract.rewardAmount ?? 0), 0);
-        current.estimatedReward += ownContractReward + perDraftAdvisorReward;
-        current.matchedPrograms.push({ programId: program.id, programName: program.programName, estimatedReward: ownContractReward + perDraftAdvisorReward });
+        current.estimatedReward += perDraftReward;
+        current.matchedPrograms.push({ programId: program.id, programName: program.programName, estimatedReward: perDraftReward });
       }
       warnings.push(...(result.warnings ?? []));
     } catch (error) {

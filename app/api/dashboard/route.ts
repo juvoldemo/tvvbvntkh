@@ -47,6 +47,30 @@ function previousMonthKey(month: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function buildAgentIpPeriods(records: RevenueRecord[], month: string) {
+  const selectedMonth = month.slice(0, 7);
+  const selectedMonthNo = Number(selectedMonth.slice(5, 7));
+  const quarterStart = Math.floor((selectedMonthNo - 1) / 3) * 3 + 1;
+  const quarterEnd = quarterStart + 2;
+  const rows = new Map<string, { agentCode: string; agentName: string; monthIp: number; quarterIp: number; yearIp: number }>();
+
+  records.filter(isCountedRevenueRecord).forEach((record) => {
+    const agentCode = String(record.agent_code ?? "").trim();
+    const agentName = String(record.agent_name ?? "").trim();
+    const key = agentCode || agentName;
+    if (!key) return;
+    const current = rows.get(key) ?? { agentCode, agentName, monthIp: 0, quarterIp: 0, yearIp: 0 };
+    const ip = Number(record.ip) || 0;
+    const recordMonth = Number(record.paid_date.slice(5, 7));
+    current.yearIp += ip;
+    if (recordMonth >= quarterStart && recordMonth <= quarterEnd) current.quarterIp += ip;
+    if (record.paid_date.slice(0, 7) === selectedMonth) current.monthIp += ip;
+    rows.set(key, current);
+  });
+
+  return [...rows.values()];
+}
+
 function periodCutoffDay(month: string) {
   const today = getVietnamToday();
   if (today.slice(0, 7) === month.slice(0, 7)) return Number(today.slice(8, 10));
@@ -177,6 +201,7 @@ export async function GET(request: NextRequest) {
       planTable,
       groups: buildGroupRanking(countedRecords),
       agents: buildAgentRanking(countedRecords),
+      agentIpPeriods: buildAgentIpPeriods(allYearRecords, month),
       statuses: buildStatusReport(countedRecords, filteredRecords),
       statusContracts: filteredRecords,
       timeSeries: {

@@ -17,33 +17,13 @@ const fallbackAdvisor = {
   ads: ""
 };
 
-const fallbackContracts = [
-  { id: "demo-1", application_no: "A26004662832", product_name: "Sản phẩm", ip: 25590700, afyp: 25590700, policy_status: "Có hiệu lực" },
-  { id: "demo-2", application_no: "A26004669541", product_name: "Sản phẩm", ip: 21316600, afyp: 21316600, policy_status: "Có hiệu lực" },
-  { id: "demo-3", application_no: "A26004622002", product_name: "Sản phẩm", ip: 18952600, afyp: 18952600, policy_status: "Có hiệu lực" },
-  { id: "demo-4", application_no: "A26004942987", product_name: "Sản phẩm", ip: 15212420, afyp: 15212420, policy_status: "Có hiệu lực" },
-  { id: "demo-5", application_no: "A26004258448", product_name: "Sản phẩm", ip: 23119600, afyp: 23119600, policy_status: "Chờ xử lý" }
-];
-
-const fallbackEstimate = {
-  rewardByProgram: [{
-    programId: "demo-program",
-    programName: "Thưởng dành cho TB/TN - Hỗ trợ TVV hoạt động thành công",
-    conditionText: "TVV đã có hợp đồng trong tháng 06/2026 (trước 25/06) và phát sinh thêm hợp đồng đủ điều kiện.",
-    matchedContracts: [{ id: "demo-1" }],
-    estimatedReward: 500000
-  }],
-  ongoingPrograms: [{
-    programId: "demo-program",
-    programName: "Thưởng dành cho TB/TN - Hỗ trợ TVV hoạt động thành công",
-    startDate: "2026-06-01",
-    endDate: "2026-06-30",
-    matchedContracts: [{ id: "demo-1" }],
-    estimatedReward: 500000,
-    isEligible: true
-  }],
-  eligibleProgramCount: 1,
-  totalEstimatedReward: 500000,
+const emptyEstimate = {
+  rewardByProgram: [],
+  ongoingPrograms: [],
+  endedPrograms: [],
+  policyRewardPrograms: [],
+  eligibleProgramCount: 0,
+  totalEstimatedReward: 0,
   rewardByDraftContract: []
 };
 
@@ -64,6 +44,13 @@ function moneyInput(value: string) {
 
 function parseMoneyInput(value: string) {
   return Number(value.replace(/\D/g, "")) || 0;
+}
+
+function formatCompactVnd(value: unknown) {
+  const amount = Number(value) || 0;
+  if (Math.abs(amount) >= 1_000_000_000) return `${(amount / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tỷ`;
+  if (Math.abs(amount) >= 1_000_000) return `${(amount / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} tr`;
+  return formatVnd(amount);
 }
 
 function statusTone(status: unknown) {
@@ -105,6 +92,7 @@ export default function TvvMobilePage() {
   const [premiumText, setPremiumText] = useState("35.000.000");
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [estimate, setEstimate] = useState<any>(null);
+  const [selectedContract, setSelectedContract] = useState<any>(null);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
 
   useEffect(() => {
@@ -115,7 +103,7 @@ export default function TvvMobilePage() {
       if (cancelled) return;
       controller.abort();
       setData(null);
-      setEstimate((current: any) => current ?? fallbackEstimate);
+      setEstimate((current: any) => current ?? emptyEstimate);
       setLoading(false);
     }, 6500);
 
@@ -133,7 +121,7 @@ export default function TvvMobilePage() {
       .catch(() => {
         if (cancelled) return;
         setData(null);
-        setEstimate((current: any) => current ?? fallbackEstimate);
+        setEstimate((current: any) => current ?? emptyEstimate);
       })
       .finally(() => {
         window.clearTimeout(loadingTimer);
@@ -156,12 +144,15 @@ export default function TvvMobilePage() {
   })), [data]);
 
   const advisor = advisorOptions.find((item: any) => item.key === advisorKey) ?? advisorOptions[0] ?? fallbackAdvisor;
+  const advisorIpPeriods = useMemo(() => {
+    const rows = data?.agentIpPeriods ?? [];
+    return rows.find((row: any) => (advisor?.code && row.agentCode === advisor.code) || row.agentName === advisor?.name)
+      ?? { monthIp: 0, quarterIp: 0, yearIp: 0 };
+  }, [advisor, data?.agentIpPeriods]);
   const allContracts = data?.statusContracts ?? data?.contracts ?? [];
   const myContracts = useMemo(() => {
-    if (!advisor) return fallbackContracts;
-    const source = allContracts.length ? allContracts : fallbackContracts;
-    const filtered = source.filter((row: any) => (advisor.code && row.agent_code === advisor.code) || row.agent_name === advisor.name);
-    return filtered.length ? filtered : source;
+    if (!advisor || !allContracts.length) return [];
+    return allContracts.filter((row: any) => (advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name));
   }, [advisor, allContracts]);
   const productOptions = useMemo(() => {
     const names = new Set(myContracts.map((row: any) => row.product_name || row.raw_data?.product || row.raw_data?.["Sản phẩm chính"]).filter(Boolean));
@@ -179,7 +170,7 @@ export default function TvvMobilePage() {
     })
       .then((response) => response.json())
       .then((payload) => !cancelled && setEstimate(payload))
-      .catch(() => !cancelled && setEstimate(fallbackEstimate));
+      .catch(() => !cancelled && setEstimate(emptyEstimate));
     return () => { cancelled = true; };
   }, [advisor, drafts, month]);
 
@@ -189,7 +180,7 @@ export default function TvvMobilePage() {
     const invalid = myContracts.filter((row: any) => ["het hieu luc", "tu choi", "tri hoan", "hoan phi", "ycbh het hieu luc"].includes(normalizeStatusText(row.policy_status))).length;
     return { total, issued, pending: Math.max(total - issued - invalid, 0), invalid };
   }, [myContracts]);
-  const notificationCount = Math.min(99, stats.pending + stats.invalid + Number((estimate ?? fallbackEstimate)?.eligibleProgramCount ?? 0));
+  const notificationCount = Math.min(99, stats.pending + stats.invalid + Number((estimate ?? emptyEstimate)?.eligibleProgramCount ?? 0));
 
   function addDraft() {
     const premium = parseMoneyInput(premiumText);
@@ -217,90 +208,183 @@ export default function TvvMobilePage() {
                 <Bell size={28} />
                 {notificationCount > 0 && <b>{notificationCount}</b>}
               </button>
-              <label className="tvv-month-pill">
-                <CalendarDays size={20} />
-                <span>{monthLabel(month)}</span>
-                <ChevronDown size={19} />
-                <select value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Chọn tháng">
-                  {monthOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>
+              <div className="tvv-hero-period-row">
+                <label className="tvv-month-pill">
+                  <CalendarDays size={20} />
+                  <span>{monthLabel(month)}</span>
+                  <ChevronDown size={19} />
+                  <select value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Chọn tháng">
+                    {monthOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                </label>
+                <div className="tvv-ip-periods" aria-label="IP theo kỳ">
+                  <span><small>IP tháng</small><strong>{formatCompactVnd(advisorIpPeriods.monthIp)}</strong></span>
+                  <span><small>IP quý</small><strong>{formatCompactVnd(advisorIpPeriods.quarterIp)}</strong></span>
+                  <span><small>IP năm</small><strong>{formatCompactVnd(advisorIpPeriods.yearIp)}</strong></span>
+                </div>
+              </div>
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : "Cá nhân"} onBack={() => setTab("overview")} showHelp={tab === "contests"} />
           )}
-          {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? fallbackEstimate} onTab={setTab} />}
-          {tab === "contracts" && <ContractsList contracts={myContracts} />}
-          {tab === "contests" && <ContestList estimate={estimate ?? fallbackEstimate} />}
+          {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} onTab={setTab} onOpenContract={setSelectedContract} />}
+          {tab === "contracts" && <ContractsList contracts={myContracts} onOpenContract={setSelectedContract} />}
+          {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} />}
         </>
       )}
+      {selectedContract && <ContractDetailModal row={selectedContract} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
     </main>
   );
 }
 
-function TvvSubHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return <header className="tvv-calc-header tvv-sub-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1></header>;
+function TvvSubHeader({ title, onBack, showHelp = false }: { title: string; onBack: () => void; showHelp?: boolean }) {
+  return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
 }
 
-function Overview({ stats, contracts, estimate, onTab }: any) {
+function Overview({ stats, contracts, estimate, onTab, onOpenContract }: any) {
   const statItems = [
-    ["Tổng HĐ", stats.total, ClipboardList, "blue"],
-    ["Đã phát hành", stats.issued, ShieldCheck, "green"],
-    ["Chờ xử lý", stats.pending, Hourglass, "orange"],
-    ["Hết hiệu lực", stats.invalid, XCircle, "red"]
+    ["Tổng HĐ", stats.total, ClipboardList, "blue", "contracts"],
+    ["Đã phát hành", stats.issued, ShieldCheck, "green", "contracts"],
+    ["Chờ xử lý", stats.pending, Hourglass, "orange", "contracts"],
+    ["Hết hiệu lực", stats.invalid, XCircle, "red", "contracts"]
   ];
   return <section className="tvv-content">
-    <div className="tvv-stat-card">{statItems.map(([label, value, Icon, tone]: any) => <div className="tvv-stat" key={label}><span className={tone}><Icon size={27} /></span><strong>{value}</strong><p>{label}</p><i /></div>)}</div>
+    <div className="tvv-stat-card">{statItems.map(([label, value, Icon, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><span className={tone}><Icon size={27} /></span><strong>{value}</strong><p>{label}</p><i /></div>)}</div>
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
-    <ContractPreview contracts={contracts} onAll={() => onTab("contracts")} />
+    <ContractPreview contracts={contracts} onAll={() => onTab("contracts")} onOpenContract={onOpenContract} />
   </section>;
 }
 
 function ContestPreview({ estimate, onAll }: any) {
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const programs = estimate?.ongoingPrograms?.length ? estimate.ongoingPrograms : estimate?.rewardByProgram ?? [];
-  return <section className="tvv-card tvv-contest-preview"><div className="tvv-section-head"><h2>Chương trình thi đua</h2><div><span>{programs.length} đang diễn ra</span><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div></div>{programs.length ? <div className="tvv-contest-list">{programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} compact />)}</div> : <p className="tvv-empty">Chưa có chương trình thi đua đang diễn ra.</p>}</section>;
+  return <><section className="tvv-card tvv-contest-preview"><div className="tvv-section-head"><h2>Chương trình thi đua</h2><div><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div></div>{programs.length ? <div className="tvv-contest-list">{programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} compact onOpen={setSelectedProgram} />)}</div> : <p className="tvv-empty">Chưa có chương trình thi đua đang diễn ra.</p>}</section>{selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}</>;
 }
 
 function ContestList({ estimate }: any) {
-  const programs = estimate?.ongoingPrograms?.length ? estimate.ongoingPrograms : estimate?.rewardByProgram ?? [];
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card"><div className="tvv-section-head"><h2>Thi đua của tôi</h2></div>{programs.length ? programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} />) : <p className="tvv-empty">Chưa có chương trình thi đua đang diễn ra.</p>}</section></section>;
+  const [view, setView] = useState<"ongoing" | "ended" | "policy">("ongoing");
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const groups = {
+    ongoing: estimate?.ongoingPrograms?.length ? estimate.ongoingPrograms : [],
+    ended: estimate?.endedPrograms ?? [],
+    policy: estimate?.policyRewardPrograms ?? []
+  };
+  const totalReward = groups.policy.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0);
+  const today = currentMonth() ? new Date().toISOString().slice(0, 10) : "";
+  const soonEndingCount = groups.ongoing.filter((item: any) => {
+    const end = String(item.endDate ?? "");
+    if (!end || !today) return false;
+    const diff = (new Date(`${end}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length;
+  const tabs = [
+    ["ongoing", `Đang diễn ra (${groups.ongoing.length})`, groups.ongoing],
+    ["ended", `Đã kết thúc (${groups.ended.length})`, groups.ended],
+    ["policy", "Thưởng chính sách", groups.policy]
+  ] as const;
+  const programs = groups[view] ?? [];
+  return <><section className="tvv-content tvv-subpage tvv-after-sub-header tvv-contest-page"><section className="tvv-contest-summary"><h2>Tổng quan thi đua</h2><div><span><b>Đang diễn ra</b><strong>{groups.ongoing.length}</strong><em>chương trình</em></span><span><b>Sắp kết thúc</b><strong>{soonEndingCount}</strong><em>chương trình</em></span><span><b>Ước tính thưởng</b><strong>{formatVnd(totalReward)}</strong><em>Tổng có thể nhận</em></span></div></section><div className="tvv-contest-filter">{tabs.map(([id, label, rows]) => <button key={id} type="button" className={view === id ? "active" : ""} onClick={() => setView(id)}><span>{label}</span><strong>{formatVnd(rows.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0))}</strong></button>)}</div><section className="tvv-contest-list-panel">{programs.length ? programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} onOpen={setSelectedProgram} />) : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : view === "ended" ? "Chưa có chương trình thi đua đã kết thúc." : "Chưa có thưởng chính sách."}</p>}</section><p className="tvv-contest-note"><Info size={17} /><span>Ước tính thưởng được cập nhật dựa trên dữ liệu hiện tại. Mức thưởng chính thức sẽ được xác nhận khi chương trình kết thúc.</span></p></section>{selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}</>;
 }
 
-function ContestRow({ item, index, compact = false }: any) {
-  const icons = [Trophy, Gift, ShieldCheck];
-  const Icon = icons[index % icons.length];
+function ContestRow({ item, index, compact = false, onOpen }: any) {
   const progress = Math.min(100, Math.max(26, (item.matchedContracts?.length ?? 1) * 34));
   const hasReward = Number(item.estimatedReward ?? 0) > 0 || Boolean(item.isEligible);
-  return <article className={`tvv-contest-row${compact ? " compact" : ""}`}><span className={`tvv-contest-icon tone-${index % 3}`}><Icon size={compact ? 30 : 40} /></span><div><em>ĐANG DIỄN RA</em><b>{shortText(item.programName, compact ? 62 : 74)}</b><small><CalendarDays size={14} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</small>{hasReward && !compact && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}</div>{hasReward && !compact && <strong>{formatVnd(item.estimatedReward)}</strong>}<ChevronRight size={24} /></article>;
+  const isPolicy = Array.isArray(item.rows);
+  return <article className={`tvv-contest-row${compact ? " compact" : ""}`} role="button" tabIndex={0} onClick={() => onOpen?.(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen?.(item); } }}><div><em>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : "ĐANG DIỄN RA"}</em><b>{shortText(item.programName, compact ? 62 : 74)}</b><small><CalendarDays size={14} />{isPolicy ? item.period : `${formatDateVi(item.startDate)} - ${formatDateVi(item.endDate)}`}</small>{hasReward && !compact && !isPolicy && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}</div>{(hasReward || isPolicy) && !compact && <strong>{formatVnd(item.estimatedReward)}</strong>}<ChevronRight size={24} /></article>;
 }
 
-function ContractPreview({ contracts, onAll }: any) {
-  return <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div>{contracts.slice(0, 5).map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} />)}</section>;
+function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void }) {
+  const [detailTab, setDetailTab] = useState<"overview" | "achieved" | "missing" | "quarters" | "formula">("overview");
+  const content = item.conditionText || item.description || item.content || item.ruleText || "Nội dung chương trình đang được cập nhật.";
+  const policyRows = Array.isArray(item.rows) ? item.rows : null;
+  const tabs = policyRows ? [
+    ["overview", "Tổng quan"],
+    ["achieved", "TVV đạt"],
+    ["missing", "TVV chưa đạt"],
+    ...(item.programId === "policy-month-13" ? [["quarters", "Quý đạt"]] : []),
+    ["formula", "Cách tính"]
+  ] as Array<[typeof detailTab, string]> : [];
+  const visibleRows = detailTab === "achieved" ? policyRows?.filter((row: any) => row.achieved)
+    : detailTab === "missing" ? policyRows?.filter((row: any) => !row.achieved) : policyRows;
+  return <div className="tvv-contest-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contest-detail" role="dialog" aria-modal="true" aria-label="Nội dung chương trình thi đua" onClick={(event) => event.stopPropagation()}>
+    <header><div><em>{item.period || "ĐANG DIỄN RA"}</em><h2>{item.programName || "Chương trình thi đua"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+    {!policyRows && <p className="tvv-contest-detail-date"><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</p>}
+    {policyRows && <nav className="tvv-policy-detail-tabs">{tabs.map(([id, label]) => <button type="button" className={detailTab === id ? "active" : ""} key={id} onClick={() => setDetailTab(id)}>{label}</button>)}</nav>}
+    {(!policyRows || detailTab === "formula") && <div className="tvv-contest-detail-content"><span>{policyRows ? "Cách tính" : "Nội dung chương trình"}</span><p>{content}</p></div>}
+    {policyRows && detailTab === "overview" && <div className="tvv-policy-overview">
+      <span><small>TVV đạt</small><strong>{item.achievedCount || 0}</strong></span>
+      <span><small>Tổng FYC</small><strong>{formatVnd(policyRows.reduce((sum: number, row: any) => sum + Number(row.totalFyc || 0), 0))}</strong></span>
+      <span><small>Tổng thưởng</small><strong>{formatVnd(Number(item.estimatedReward || 0))}</strong></span>
+    </div>}
+    {policyRows && ["achieved", "missing", "quarters"].includes(detailTab) && <div className="tvv-policy-agent-list">
+      {(visibleRows ?? []).map((row: any) => <article key={row.agentCode}><div><b>{row.agentName}</b><small>{row.agentCode} · {row.group || row.ban}</small></div><span>{detailTab === "quarters" ? `Quý ${(row.achievedQuarters ?? []).join(", ") || "—"}` : formatVnd(row.reward)}</span></article>)}
+      {!visibleRows?.length && <p className="tvv-empty">Chưa có TVV trong danh sách này.</p>}
+    </div>}
+    {(item.warnings ?? []).map((warning: string) => <p className="tvv-policy-warning" key={warning}><Info size={16} />{warning}</p>)}
+    {!policyRows && Number(item.estimatedReward ?? 0) > 0 && <div className="tvv-contest-detail-reward"><span>Ước tính thưởng</span><strong>{formatVnd(Number(item.estimatedReward))}</strong></div>}
+  </section></div>;
 }
 
-function ContractsList({ contracts }: any) {
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><span>{contracts.length} HĐ</span></div>{contracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} />)}</section></section>;
+function ContractPreview({ contracts, onAll, onOpenContract }: any) {
+  return <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div>{contracts.length ? contracts.slice(0, 5).map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section>;
 }
 
-function ContractRow({ row }: any) {
+function ContractsList({ contracts, onOpenContract }: any) {
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><span>{contracts.length} HĐ</span></div>{contracts.length ? contracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section></section>;
+}
+
+function contractRawValue(row: any, keys: string[]) {
+  for (const key of keys) {
+    const value = row.raw_data?.[key];
+    if (value !== undefined && value !== null && String(value).trim()) return value;
+  }
+  return "";
+}
+
+function contractDisplay(row: any) {
+  const policyOwner = row.policy_owner || contractRawValue(row, ["BÊN MUA BẢO HIỂM (BMBH)", "BMBH", "Bên mua bảo hiểm"]) || row.insured_name || "-";
+  const insuredName = row.insured_name || contractRawValue(row, ["NGƯỜI ĐƯỢC BẢO HIỂM", "NĐBH", "Người được bảo hiểm"]) || "";
+  const applicationNo = row.application_no || row.gyc_no || row.contract_no || "-";
+  const paidDate = row.paid_date || row.collection_date || contractRawValue(row, ["NGÀY THU", "Ngày thu"]) || null;
+  const issuedDate = row.issued_date || row.issue_date || contractRawValue(row, ["NGÀY PHÁT HÀNH", "Ngày phát hành", "NGAY PHAT HANH"]) || "";
+  return { policyOwner, insuredName, applicationNo, paidDate, issuedDate };
+}
+
+function ContractRow({ row, onOpen }: any) {
   const tone = statusTone(row.policy_status);
   const Icon = tone.icon;
-  const policyOwner = row.policy_owner || row.raw_data?.["BÊN MUA BẢO HIỂM (BMBH)"] || row.raw_data?.["BMBH"] || row.raw_data?.["Bên mua bảo hiểm"] || row.insured_name || "-";
-  const applicationNo = row.application_no || row.gyc_no || row.contract_no || "-";
-  const paidDate = row.paid_date || row.collection_date || row.raw_data?.["NGÀY THU"] || row.raw_data?.["Ngày thu"] || null;
-  return <article className="tvv-contract-row"><span className={tone.tone}><Icon size={22} /></span><div><b>{policyOwner}</b><p>{applicationNo}</p></div><strong>{formatVnd(Number(row.ip || row.afyp || 0))}<small>{formatDateVi(paidDate)}</small></strong><em className={tone.tone}>{tone.label}</em><ChevronRight size={20} /></article>;
+  const display = contractDisplay(row);
+  return <button className="tvv-contract-row" type="button" onClick={() => onOpen?.(row)}><span className={tone.tone}><Icon size={22} /></span><div><b>{display.policyOwner}</b><p>{display.applicationNo}</p></div><strong>{formatVnd(Number(row.ip || row.afyp || 0))}<small>{formatDateVi(display.paidDate)}</small></strong><em className={tone.tone}>{tone.label}</em><ChevronRight size={20} /></button>;
+}
+
+function ContractDetailModal({ row, onClose }: { row: any; onClose: () => void }) {
+  const display = contractDisplay(row);
+  const detailRows = [
+    ["BMBH", display.policyOwner || ""],
+    ["NĐBH", display.insuredName || ""],
+    ["Ngày phát hành", display.issuedDate ? formatDateVi(display.issuedDate) : ""],
+    ["IP", formatVnd(Number(row.ip || 0))],
+    ["AFYP", formatVnd(Number(row.afyp || 0))]
+  ];
+  return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contract-detail" role="dialog" aria-modal="true" aria-label="Chi tiết hợp đồng" onClick={(event) => event.stopPropagation()}><header><div><p>{display.applicationNo}</p><h2>{display.policyOwner}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header><div className="tvv-contract-detail-grid">{detailRows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section></div>;
 }
 
 function CalculatorView(props: any) {
-  const { productOptions, drafts, draftRewards, estimate } = props;
+  const { drafts, draftRewards, estimate } = props;
+  const calculatorPrograms = estimate?.calculatorPrograms ?? estimate?.rewardByProgram ?? [];
+  const calculatorTotal = estimate?.calculatorTotalEstimatedReward ?? estimate?.totalEstimatedReward ?? 0;
   return <section className="tvv-calculator">
-    <header className="tvv-calc-header"><button className="tvv-back-button" onClick={props.onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>Máy tính thưởng</h1></header>
-    <section className="tvv-calc-card"><h2>1. Chọn sản phẩm & nhập thông tin hợp đồng</h2><div className="tvv-form-grid"><label>Sản phẩm<select value={props.productName} onChange={(e) => props.setProductName(e.target.value)}>{productOptions.map((name: string) => <option key={name}>{name}</option>)}</select></label><label>Phí đóng (PĐT/IP)<div className="tvv-money-field"><input value={props.premiumText} onChange={(e) => props.setPremiumText(e.target.value)} /><span>đ</span></div></label><label>Ngày nộp phí dự kiến<div className="tvv-date-field"><span>{formatDateVi(props.paidDate)}</span><CalendarDays size={17} /><input type="date" value={props.paidDate} onChange={(e) => props.setPaidDate(e.target.value)} /></div></label></div><button className="tvv-primary" onClick={props.onAdd}>+ Thêm hợp đồng</button></section>
+    <TvvSubHeader title="Máy tính thưởng" onBack={props.onBack} />
+    <section className="tvv-calc-card"><h2>1. Nhập thông tin hợp đồng</h2><div className="tvv-form-grid tvv-form-grid-compact"><label>Phí đóng (PĐT/IP)<div className="tvv-money-field"><input value={props.premiumText} onChange={(e) => props.setPremiumText(e.target.value)} /><span>đ</span></div></label><label>Ngày nộp phí dự kiến<div className="tvv-date-field"><span>{formatDateVi(props.paidDate)}</span><CalendarDays size={17} /><input type="date" value={props.paidDate} onChange={(e) => props.setPaidDate(e.target.value)} /></div></label></div><button className="tvv-primary" onClick={props.onAdd}>+ Thêm hợp đồng</button></section>
     <section className="tvv-calc-card"><div className="tvv-section-head"><h2>2. Danh sách hợp đồng đã thêm ({drafts.length})</h2>{drafts.length > 0 && <button className="danger" onClick={props.onClear}><Trash2 size={15} /> Xóa tất cả</button>}</div>{drafts.map((draft: DraftContract, index: number) => <article className="tvv-draft-row" key={draft.id}><GripVertical size={17} /><i>{index + 1}</i><div><b>{draft.productName}</b><p>PĐT: {formatVnd(draft.premium)}</p><small>Ngày dự kiến: {formatDateVi(draft.expectedPaidDate)}</small></div><strong><span>Dự kiến thưởng</span><b>{formatVnd(Number(draftRewards.get(draft.id)?.estimatedReward ?? 0))}</b></strong><button onClick={() => props.onRemove(draft.id)}><Trash2 size={18} /></button></article>)}</section>
-    <section className="tvv-calc-card"><h2>3. Kết quả ước tính</h2><div className="tvv-result-note"><Gift size={20} /> <span>Hợp đồng của bạn có thể nhận thưởng ở</span> <b>{estimate?.eligibleProgramCount ?? 0} chương trình</b></div><div className="tvv-result-table"><div className="tvv-result-head"><span>Chương trình</span><span>Điều kiện</span><span>Ước tính thưởng</span></div>{(estimate?.rewardByProgram ?? []).map((item: any, index: number) => <div className="tvv-result-row" key={item.programId}><div><span className={`tvv-result-icon tone-${index % 3}`}>{index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 38)}</b></div><p>{shortText(item.conditionText, 42)}</p><strong>{formatVnd(Number(item.estimatedReward ?? 0))}</strong></div>)}</div><div className="tvv-total"><span>Tổng ước tính tiền thưởng</span><strong>{formatVnd(Number(estimate?.totalEstimatedReward ?? 0))}</strong></div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Kết quả trên chỉ mang tính ước tính. Mức thưởng chính thức sẽ được xác nhận khi hợp đồng phát hành thành công.</span></p></section>
+    <section className="tvv-calc-card"><h2>3. Kết quả ước tính</h2><div className="tvv-result-table tvv-result-table-standalone"><div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>{calculatorPrograms.filter((item: any) => item.programId !== "policy-month-13").map((item: any, index: number) => {
+      const increase = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
+      const currentReward = Number(item.currentReward ?? 0);
+      return <div className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`} key={item.programId}><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{item.isPolicyProjection && currentReward > 0 && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
+    })}</div><div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(Number(calculatorTotal))}</strong></div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Phần màu xanh là số thưởng tăng thêm so với dữ liệu hiện tại. Thưởng chính sách chỉ được xác nhận khi hợp đồng đủ điều kiện và phát hành thành công.</span></p></section>
   </section>;
 }
 
@@ -310,5 +394,5 @@ function Profile({ advisor, contracts }: any) {
 
 function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Tính thưởng", Calculator], ["contests", "Thi đua", Trophy], ["profile", "Cá nhân", UserRound]];
-  return <nav className="tvv-bottom-nav">{items.map(([id, label, Icon]) => <button key={id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
+  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={tab === id ? "active" : ""} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }

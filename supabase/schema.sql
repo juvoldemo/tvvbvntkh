@@ -108,6 +108,30 @@ create index if not exists idx_star_viet_records_year on star_viet_records(data_
 create index if not exists idx_star_viet_records_source on star_viet_records(source);
 create index if not exists idx_star_viet_records_agent on star_viet_records(agent_name);
 
+create table if not exists tvv_reward_policy_records (
+  id uuid primary key default gen_random_uuid(),
+  data_month date not null,
+  agent_code text,
+  agent_name text,
+  ban_name text,
+  group_name text,
+  ip numeric default 0,
+  fyc numeric default 0,
+  fyp numeric,
+  additional_premium numeric default 0,
+  raw_data jsonb,
+  source_file text,
+  uploaded_by text,
+  uploaded_by_name text,
+  uploaded_at timestamptz default now()
+);
+
+create unique index if not exists uniq_tvv_reward_policy_month_agent
+  on tvv_reward_policy_records(data_month, agent_code)
+  where agent_code is not null and btrim(agent_code) <> '';
+create index if not exists idx_tvv_reward_policy_month on tvv_reward_policy_records(data_month);
+create index if not exists idx_tvv_reward_policy_agent on tvv_reward_policy_records(agent_code);
+
 create index if not exists idx_revenue_records_data_month on revenue_records(data_month);
 create index if not exists idx_revenue_records_paid_date on revenue_records(paid_date);
 create index if not exists idx_revenue_records_first_seen on revenue_records(first_seen_at);

@@ -9544,6 +9544,10 @@ body,
   background: #fff;
 }
 
+.tvv-form-grid.tvv-form-grid-compact {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+}
+
 .tvv-form-grid select,
 .tvv-form-grid input {
   color: #08266f;
@@ -10864,6 +10868,699 @@ body,
   color: transparent !important;
 }
 
+.tvv-month-pill select option {
+  color: #073a86 !important;
+  background: #fff !important;
+}
+
+.tvv-contest-row[role="button"] {
+  cursor: pointer;
+}
+
+.tvv-contest-row[role="button"]:focus-visible {
+  outline: 3px solid rgba(7, 95, 231, .28);
+  outline-offset: 2px;
+}
+
+.tvv-contest-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(18, 42, 79, .42);
+  backdrop-filter: blur(3px);
+}
+
+.tvv-contest-detail {
+  width: min(100%, 390px);
+  max-height: min(80vh, 620px);
+  overflow-y: auto;
+  border: 1px solid #dbe7f8;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(7, 32, 79, .25);
+  padding: 20px;
+}
+
+.tvv-contest-detail header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #dbe5f3;
+}
+
+.tvv-contest-detail header div {
+  display: grid;
+  gap: 8px;
+}
+
+.tvv-contest-detail header em {
+  justify-self: start;
+  border-radius: 999px;
+  background: #fff1f2;
+  color: #ff273d;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.tvv-contest-detail header h2 {
+  margin: 0;
+  color: #061b66;
+  font-size: 18px !important;
+  line-height: 1.3;
+}
+
+.tvv-contest-detail header button {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: #edf5ff;
+  color: #075fe7;
+  font-size: 27px;
+  line-height: 1;
+}
+
+.tvv-contest-detail-date {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 15px 0;
+  color: #173d7b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tvv-contest-detail-content,
+.tvv-contest-detail-reward {
+  border-radius: 14px;
+  background: #f5f9ff;
+  padding: 14px;
+}
+
+.tvv-contest-detail-content span,
+.tvv-contest-detail-reward span {
+  color: #61759e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tvv-contest-detail-content p {
+  margin: 8px 0 0;
+  color: #09296f;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.tvv-contest-detail-reward {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.tvv-contest-detail-reward strong {
+  color: #ed0016;
+  font-size: 17px;
+}
+
+.tvv-policy-detail-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 14px 0 10px;
+}
+
+.tvv-policy-detail-tabs button {
+  border: 0;
+  border-radius: 999px;
+  background: #eef5ff;
+  color: #52627b;
+  padding: 8px 12px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.tvv-policy-detail-tabs button.active {
+  background: #075ce5;
+  color: #fff;
+}
+
+.tvv-policy-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tvv-policy-overview span {
+  border-radius: 12px;
+  background: #f4f8ff;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.tvv-policy-overview small,
+.tvv-policy-overview strong {
+  display: block;
+}
+
+.tvv-policy-overview strong {
+  color: #075ce5;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.tvv-policy-agent-list article {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e6edf7;
+}
+
+.tvv-policy-agent-list small {
+  display: block;
+  color: #718099;
+  margin-top: 4px;
+}
+
+.tvv-policy-agent-list span {
+  color: #075ce5;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tvv-policy-warning {
+  display: flex;
+  gap: 8px;
+  color: #075ce5;
+  background: #eef6ff;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+}
+
+/* Keep the mobile app interactive inside embedded/preview webviews. */
+.tvv-app {
+  isolation: isolate !important;
+}
+
+.tvv-app > header,
+.tvv-app > section,
+.tvv-app > .tvv-content,
+.tvv-app > .tvv-calculator {
+  position: relative;
+  z-index: 1;
+}
+
+.tvv-app button,
+.tvv-app select,
+.tvv-app input,
+.tvv-contest-row[role="button"] {
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(7, 95, 231, .12);
+}
+
+.tvv-bottom-nav {
+  z-index: 1200 !important;
+  pointer-events: auto !important;
+}
+
+.tvv-stat {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.tvv-stat:active,
+.tvv-bottom-nav button:active,
+.tvv-section-head button:active,
+.tvv-contract-row:active,
+.tvv-contest-row[role="button"]:active {
+  opacity: .72;
+}
+
+/* TVV overview — final mobile-first visual layer. */
+@media (max-width: 600px) {
+  body:has(.tvv-app) {
+    background: #f4f8ff !important;
+  }
+
+  .tvv-app {
+    width: min(100%, 430px) !important;
+    min-height: 100dvh !important;
+    padding-bottom: calc(94px + env(safe-area-inset-bottom)) !important;
+    background: #f4f8ff !important;
+    overflow-x: clip !important;
+  }
+
+  .tvv-hero {
+    min-height: 0 !important;
+    margin: 0 8px !important;
+    padding: 18px 18px 22px !important;
+    border-radius: 0 0 24px 24px !important;
+    background:
+      radial-gradient(circle at 8% 8%, rgba(112, 174, 255, .55), transparent 32%),
+      radial-gradient(circle at 96% 84%, rgba(0, 109, 255, .42), transparent 38%),
+      linear-gradient(135deg, #287cff 0%, #0759df 52%, #0341ad 100%) !important;
+    box-shadow: 0 14px 30px rgba(4, 73, 181, .2) !important;
+  }
+
+  .tvv-hero-main {
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) 48px !important;
+    align-items: center !important;
+    gap: 10px 12px !important;
+  }
+
+  .tvv-avatar {
+    width: 52px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    border: 4px solid rgba(255,255,255,.35) !important;
+    background: #fff !important;
+    color: #287cff !important;
+    box-shadow: 0 8px 22px rgba(3, 45, 130, .2) !important;
+  }
+
+  .tvv-avatar svg {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .tvv-hero h1 {
+    margin: 0 0 4px !important;
+    max-width: none !important;
+    color: #fff !important;
+    font-size: 17px !important;
+    line-height: 1.18 !important;
+    letter-spacing: -.2px !important;
+  }
+
+  .tvv-hero p {
+    margin: 0 !important;
+    color: rgba(255,255,255,.92) !important;
+    font-size: 12px !important;
+  }
+
+  .tvv-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    border: 1px solid rgba(255,255,255,.28) !important;
+    border-radius: 50% !important;
+    background: rgba(255,255,255,.12) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-icon-button b {
+    top: -3px !important;
+    right: -2px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    border: 2px solid #fff !important;
+    background: #ff3344 !important;
+    font-size: 10px !important;
+  }
+
+  .tvv-hero-period-row {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, .9fr) !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-top: 10px !important;
+  }
+
+  .tvv-month-pill {
+    min-height: 48px !important;
+    align-self: center !important;
+    border: 1px solid rgba(255,255,255,.5) !important;
+    border-radius: 999px !important;
+    background: #fff !important;
+    color: #0a3f99 !important;
+    box-shadow: 0 8px 18px rgba(4,50,134,.15) !important;
+    padding: 0 14px !important;
+  }
+
+  .tvv-month-pill span {
+    color: #0a3f99 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  .tvv-month-pill svg {
+    color: #6383bc !important;
+  }
+
+  .tvv-ip-periods {
+    display: grid !important;
+    gap: 4px !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    border-radius: 16px !important;
+    background: rgba(129, 189, 255, .22) !important;
+    padding: 9px 12px !important;
+  }
+
+  .tvv-ip-periods span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+
+  .tvv-ip-periods small,
+  .tvv-ip-periods strong {
+    color: #fff !important;
+    font-size: 11px !important;
+  }
+
+  .tvv-content {
+    display: grid !important;
+    gap: 16px !important;
+    padding: 16px 12px 24px !important;
+  }
+
+  .tvv-stat-card,
+  .tvv-card {
+    margin: 0 !important;
+    border: 1px solid #e2ebf8 !important;
+    border-radius: 22px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 24px rgba(26, 69, 126, .07) !important;
+  }
+
+  .tvv-stat-card {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    padding: 14px 10px !important;
+  }
+
+  .tvv-stat {
+    min-width: 0 !important;
+    min-height: 126px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
+    border-radius: 16px !important;
+    padding: 9px 3px 7px !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-stat:nth-child(1) { background: #f0f5ff !important; }
+  .tvv-stat:nth-child(2) { background: #effbf4 !important; }
+  .tvv-stat:nth-child(3) { background: #fff8e9 !important; }
+  .tvv-stat:nth-child(4) { background: #fff1f2 !important; }
+
+  .tvv-stat > span {
+    width: 43px !important;
+    height: 43px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 50% !important;
+  }
+
+  .tvv-stat > span.blue { background: #dce9ff !important; color: #1269ed !important; }
+  .tvv-stat > span.green { background: #dff7e8 !important; color: #20a35b !important; }
+  .tvv-stat > span.orange { background: #fff0cc !important; color: #f1a900 !important; }
+  .tvv-stat > span.red { background: #ffe0e3 !important; color: #ed3345 !important; }
+
+  .tvv-stat strong {
+    margin-top: 1px !important;
+    background: transparent !important;
+    color: #071e66 !important;
+    font-size: 25px !important;
+    line-height: 1 !important;
+  }
+
+  .tvv-stat p {
+    min-height: 30px !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 !important;
+    color: #19326c !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+
+  .tvv-stat i {
+    width: 26px !important;
+    height: 3px !important;
+    margin-top: auto !important;
+    border-radius: 4px !important;
+  }
+
+  .tvv-stat:nth-child(1) i { background: #1b70f5 !important; }
+  .tvv-stat:nth-child(2) i { background: #24ad63 !important; }
+  .tvv-stat:nth-child(3) i { background: #f5b400 !important; }
+  .tvv-stat:nth-child(4) i { background: #ef3348 !important; }
+
+  .tvv-contest-preview,
+  .tvv-contract-card {
+    padding: 16px !important;
+  }
+
+  .tvv-section-head {
+    min-height: 30px !important;
+    margin: 0 0 12px !important;
+    padding: 0 0 11px !important;
+    border-bottom: 1px solid #e3ebf7 !important;
+  }
+
+  .tvv-section-head h2 {
+    color: #08266f !important;
+    font-size: 17px !important;
+    line-height: 1.2 !important;
+  }
+
+  .tvv-section-head button {
+    min-height: 30px !important;
+    color: #0867ef !important;
+    font-size: 11px !important;
+    padding: 0 !important;
+  }
+
+  .tvv-contest-list {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .tvv-contest-row.compact {
+    min-height: 132px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 58px 18px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg, #fbfdff, #f3f8ff) !important;
+    padding: 14px 10px 14px 14px !important;
+  }
+
+  .tvv-contest-row.compact > div {
+    min-width: 0 !important;
+  }
+
+  .tvv-contest-row.compact em {
+    display: inline-flex !important;
+    width: fit-content !important;
+    margin-bottom: 8px !important;
+    border-radius: 999px !important;
+    background: #ffe8eb !important;
+    color: #f12d42 !important;
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+    font-style: normal !important;
+  }
+
+  .tvv-contest-row.compact b {
+    display: block !important;
+    color: #071e66 !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+  }
+
+  .tvv-contest-row.compact small {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-top: 10px !important;
+    color: #385180 !important;
+    font-size: 10px !important;
+  }
+
+  .tvv-contest-art {
+    width: 56px !important;
+    height: 56px !important;
+    display: grid !important;
+    place-items: center !important;
+    border-radius: 18px !important;
+    background: linear-gradient(145deg, #e9f1ff, #d6e5ff) !important;
+    color: #3a79ec !important;
+    box-shadow: inset 0 0 0 1px rgba(56,115,222,.08) !important;
+  }
+
+  .tvv-contest-row.compact > svg {
+    color: #08266f !important;
+  }
+
+  .tvv-contract-card .tvv-contract-row {
+    min-height: 82px !important;
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(92px, auto) 16px !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    column-gap: 9px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e5edf7 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    padding: 10px 0 !important;
+  }
+
+  .tvv-contract-card .tvv-contract-row:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .tvv-contract-row > span {
+    grid-row: 1 / 3 !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+  }
+
+  .tvv-contract-row > div {
+    grid-row: 1 / 3 !important;
+    align-self: center !important;
+  }
+
+  .tvv-contract-row > div b {
+    display: block !important;
+    overflow: hidden !important;
+    color: #071e66 !important;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .tvv-contract-row > div p {
+    margin: 4px 0 0 !important;
+    color: #2d4a84 !important;
+    font-size: 10px !important;
+  }
+
+  .tvv-contract-row > strong {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+    color: #071e66 !important;
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  .tvv-contract-row > strong small {
+    display: block !important;
+    margin-top: 3px !important;
+    color: #50658e !important;
+    font-size: 9px !important;
+    text-align: right !important;
+  }
+
+  .tvv-contract-row > em {
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    margin-top: 4px !important;
+    border-radius: 999px !important;
+    background: #e7f8ed !important;
+    color: #1b9b54 !important;
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+    font-style: normal !important;
+    white-space: nowrap !important;
+  }
+
+  .tvv-contract-row > em.orange { background: #fff4d9 !important; color: #c98100 !important; }
+  .tvv-contract-row > em.red { background: #ffe7e9 !important; color: #d92d42 !important; }
+
+  .tvv-contract-row > svg {
+    grid-column: 4 !important;
+    grid-row: 1 / 3 !important;
+    color: #08266f !important;
+  }
+
+  .tvv-bottom-nav {
+    left: 50% !important;
+    bottom: 0 !important;
+    width: min(100%, 430px) !important;
+    min-height: calc(76px + env(safe-area-inset-bottom)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    border: 1px solid #e2eaf5 !important;
+    border-bottom: 0 !important;
+    border-radius: 24px 24px 0 0 !important;
+    background: rgba(255,255,255,.97) !important;
+    box-shadow: 0 -10px 30px rgba(28, 60, 110, .1) !important;
+    padding: 7px 8px calc(7px + env(safe-area-inset-bottom)) !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .tvv-bottom-nav button {
+    position: relative !important;
+    min-height: 58px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: #66779b !important;
+    font-size: 9px !important;
+  }
+
+  .tvv-bottom-nav button svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .tvv-bottom-nav button.active {
+    color: #0968f3 !important;
+  }
+
+  .tvv-bottom-nav button.active::after {
+    content: "" !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    width: 28px !important;
+    height: 3px !important;
+    border-radius: 3px !important;
+    background: #0968f3 !important;
+  }
+}
+
 .tvv-content {
   margin-top: -22px !important;
 }
@@ -11102,10 +11799,16 @@ body,
   border-radius: 0 0 7px 7px !important;
 }
 
+.tvv-result-table.tvv-result-table-standalone {
+  margin-top: 14px !important;
+  border-top: 1px solid #dce7f7 !important;
+  border-radius: 7px !important;
+}
+
 .tvv-result-head,
 .tvv-result-row {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 86px !important;
+  grid-template-columns: minmax(0, 1fr) 112px !important;
   align-items: center !important;
 }
 
@@ -11127,7 +11830,6 @@ body,
 }
 
 .tvv-result-row > div,
-.tvv-result-row > p,
 .tvv-result-row > strong {
   min-height: 58px !important;
   display: grid !important;
@@ -11161,18 +11863,33 @@ body,
   color: #9333ea !important;
 }
 
-.tvv-result-row p {
-  color: #061b66 !important;
-  font-size: 10px !important;
-  line-height: 1.25 !important;
-  text-align: center !important;
-}
-
 .tvv-result-row strong {
   border-right: 0 !important;
   color: #ff2634 !important;
   font-size: 12px !important;
   text-align: right !important;
+}
+
+.tvv-result-row.policy {
+  background: #fbfffd !important;
+}
+
+.tvv-result-row > div > small {
+  grid-column: 2 !important;
+  color: #687895 !important;
+  font-size: 8px !important;
+}
+
+.tvv-result-row > strong small {
+  display: block !important;
+  color: #687895 !important;
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+}
+
+.tvv-result-row > strong.increase {
+  color: #04954c !important;
 }
 
 .tvv-total {
@@ -12848,6 +13565,113 @@ body,
   margin-top: 0 !important;
 }
 
+.tvv-contract-row {
+  width: 100% !important;
+  border-color: #dce8f8 !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  text-align: left !important;
+}
+
+.tvv-contract-row:active {
+  transform: translateY(1px) !important;
+}
+
+.tvv-contract-detail-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120 !important;
+  display: grid !important;
+  align-items: center !important;
+  justify-items: center !important;
+  background: rgba(5, 18, 45, .34) !important;
+  padding: 24px 16px !important;
+}
+
+.tvv-contract-detail {
+  width: min(100%, 398px) !important;
+  max-height: calc(100vh - 48px) !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  border: 1px solid #dce8f8 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 24px 54px rgba(8, 33, 74, .22) !important;
+  padding: 16px !important;
+}
+
+.tvv-contract-detail header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 34px !important;
+  align-items: start !important;
+  gap: 12px !important;
+  padding-bottom: 12px !important;
+  border-bottom: 1px solid #e0e8f5 !important;
+}
+
+.tvv-contract-detail header p,
+.tvv-contract-detail header h2 {
+  margin: 0 !important;
+  color: #061b66 !important;
+}
+
+.tvv-contract-detail header p {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+.tvv-contract-detail header h2 {
+  margin-top: 3px !important;
+  font-size: 18px !important;
+  line-height: 1.2 !important;
+  font-weight: 850 !important;
+}
+
+.tvv-contract-detail header button {
+  width: 34px !important;
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #eef5ff !important;
+  color: #075fe7 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+.tvv-contract-detail-grid {
+  display: grid !important;
+  gap: 10px !important;
+  padding-top: 14px !important;
+}
+
+.tvv-contract-detail-grid > div {
+  display: grid !important;
+  grid-template-columns: 118px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 36px !important;
+  border-radius: 10px !important;
+  background: #f7fbff !important;
+  padding: 8px 10px !important;
+}
+
+.tvv-contract-detail-grid span {
+  color: #60749f !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.tvv-contract-detail-grid strong {
+  min-height: 16px !important;
+  color: #061b66 !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  text-align: right !important;
+  overflow-wrap: anywhere !important;
+}
+
 .tvv-contest-preview .tvv-section-head > div {
   display: inline-flex !important;
   align-items: center !important;
@@ -12855,17 +13679,11 @@ body,
   min-width: 0 !important;
 }
 
-.tvv-contest-preview .tvv-section-head > div > span {
-  display: inline-flex !important;
-  align-items: center !important;
-  min-height: 24px !important;
-  border-radius: 999px !important;
-  background: #eef6ff !important;
-  color: #075fe7 !important;
-  padding: 0 8px !important;
-  font-size: 10px !important;
-  font-weight: 900 !important;
-  white-space: nowrap !important;
+.tvv-contest-preview .tvv-section-head h2,
+.tvv-contract-card .tvv-section-head h2 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
 }
 
 .tvv-contest-list {
@@ -12903,4 +13721,471 @@ body,
   grid-column: 3 !important;
   grid-row: 1 !important;
   align-self: center !important;
+}
+
+.tvv-contest-filter {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin: 0 0 14px !important;
+}
+
+.tvv-contest-filter button {
+  min-width: 0 !important;
+  min-height: 58px !important;
+  display: grid !important;
+  align-content: center !important;
+  gap: 5px !important;
+  border: 1px solid #dce8f8 !important;
+  border-radius: 12px !important;
+  background: #f7fbff !important;
+  color: #60749f !important;
+  box-shadow: none !important;
+  padding: 8px 6px !important;
+  text-align: center !important;
+}
+
+.tvv-contest-filter button.active {
+  border-color: #86bbff !important;
+  background: #eaf4ff !important;
+  color: #075fe7 !important;
+}
+
+.tvv-contest-filter span {
+  display: block !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
+  font-weight: 850 !important;
+}
+
+.tvv-contest-filter strong {
+  display: block !important;
+  color: #061b66 !important;
+  font-size: 11px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.tvv-contest-row,
+.tvv-contest-row.compact {
+  grid-template-columns: minmax(0, 1fr) 22px !important;
+}
+
+.tvv-contest-row > div,
+.tvv-contest-row.compact > div {
+  grid-column: 1 !important;
+}
+
+.tvv-contest-row > svg,
+.tvv-contest-row.compact > svg {
+  grid-column: 2 !important;
+}
+
+/* TVV contest tab: closer to the target mobile composition. */
+.tvv-sub-header {
+  min-height: 128px !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  align-content: start !important;
+  padding: 30px 24px 48px !important;
+  background: linear-gradient(135deg, #1269f4 0%, #0648bf 58%, #043899 100%) !important;
+}
+
+.tvv-sub-header h1 {
+  font-size: 24px !important;
+  font-weight: 900 !important;
+}
+
+.tvv-header-help {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  white-space: nowrap !important;
+}
+
+.tvv-contest-page {
+  gap: 14px !important;
+  margin-top: -40px !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+.tvv-contest-summary,
+.tvv-contest-filter,
+.tvv-contest-list-panel,
+.tvv-contest-note {
+  border: 1px solid #dce8f8 !important;
+  background: #fff !important;
+  box-shadow: 0 16px 34px rgba(22, 53, 99, .08) !important;
+}
+
+.tvv-contest-summary {
+  border-radius: 18px !important;
+  padding: 16px !important;
+}
+
+.tvv-contest-summary h2 {
+  margin: 0 0 14px !important;
+  color: #7581a2 !important;
+  font-size: 16px !important;
+  font-weight: 850 !important;
+}
+
+.tvv-contest-summary > div {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.tvv-contest-summary span {
+  min-width: 0 !important;
+  min-height: 86px !important;
+  display: grid !important;
+  align-content: center !important;
+  justify-items: center !important;
+  gap: 5px !important;
+  border-radius: 12px !important;
+  background: #f7fbff !important;
+  padding: 9px 6px !important;
+  text-align: center !important;
+}
+
+.tvv-contest-summary b {
+  color: #061b66 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.tvv-contest-summary strong {
+  color: #075fe7 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.tvv-contest-summary span:nth-child(2) strong {
+  color: #f59e0b !important;
+}
+
+.tvv-contest-summary span:nth-child(3) strong {
+  max-width: 100% !important;
+  color: #04954c !important;
+  font-size: 17px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.tvv-contest-summary em {
+  color: #60749f !important;
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 750 !important;
+}
+
+.tvv-contest-filter {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+}
+
+.tvv-contest-filter button {
+  min-height: 58px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #7581a2 !important;
+  position: relative !important;
+}
+
+.tvv-contest-filter button.active {
+  background: #fff !important;
+  color: #075fe7 !important;
+}
+
+.tvv-contest-filter button.active::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: 4px !important;
+  border-radius: 999px 999px 0 0 !important;
+  background: #075fe7 !important;
+}
+
+.tvv-contest-filter strong {
+  font-size: 10px !important;
+  color: currentColor !important;
+}
+
+.tvv-contest-list-panel {
+  display: grid !important;
+  gap: 12px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tvv-contest-page .tvv-contest-row {
+  grid-template-columns: minmax(0, 1fr) 26px !important;
+  min-height: 176px !important;
+  border: 1px solid #dce8f8 !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  box-shadow: 0 12px 26px rgba(22, 53, 99, .07) !important;
+  padding: 18px 18px !important;
+}
+
+.tvv-contest-page .tvv-contest-row em {
+  background: #eaf3ff !important;
+  color: #075fe7 !important;
+  font-size: 10px !important;
+}
+
+.tvv-contest-page .tvv-contest-row b {
+  max-width: 88% !important;
+  font-size: 18px !important;
+  line-height: 1.22 !important;
+}
+
+.tvv-contest-page .tvv-contest-row small {
+  font-size: 13px !important;
+}
+
+.tvv-contest-page .tvv-contest-row > strong {
+  grid-column: 1 / span 2 !important;
+  justify-self: end !important;
+  margin-top: 10px !important;
+  font-size: 22px !important;
+}
+
+.tvv-contest-page .tvv-contest-row i {
+  max-width: 64% !important;
+}
+
+.tvv-contest-note {
+  display: grid !important;
+  grid-template-columns: 22px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: start !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  background: #eef6ff !important;
+  color: #075fe7 !important;
+  padding: 12px 14px !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+}
+
+.tvv-hero-period-row {
+  grid-column: 1 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.tvv-hero-period-row .tvv-month-pill {
+  flex: 0 0 156px;
+  width: 156px !important;
+  min-width: 156px !important;
+  margin: 0 !important;
+}
+
+.tvv-ip-periods {
+  flex: 0 1 174px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .09);
+  padding: 6px 9px;
+}
+
+.tvv-ip-periods > span {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.tvv-ip-periods small {
+  color: rgba(255, 255, 255, .78) !important;
+  font-size: 10px !important;
+}
+
+.tvv-ip-periods strong {
+  color: #fff !important;
+  font-size: 11px !important;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 370px) {
+  .tvv-hero-period-row {
+    gap: 8px;
+  }
+
+  .tvv-hero-period-row .tvv-month-pill {
+    flex-basis: 146px;
+    width: 146px !important;
+    min-width: 146px !important;
+  }
+
+  .tvv-ip-periods > span {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .tvv-ip-periods small {
+    font-size: 9px !important;
+  }
+
+  .tvv-ip-periods strong {
+    font-size: 10px !important;
+  }
+}
+
+/* One stable banner for every TVV sub-page. */
+.tvv-page-header {
+  min-height: 76px !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  align-content: center !important;
+  gap: 10px !important;
+  border-radius: 0 !important;
+  background: linear-gradient(135deg, #0b56d8 0%, #073ea8 100%) !important;
+  padding: 10px 18px 18px !important;
+}
+
+.tvv-app > .tvv-page-header {
+  width: calc(100% - 8px) !important;
+  margin: 0 4px !important;
+}
+
+.tvv-calculator > .tvv-page-header {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.tvv-page-header h1 {
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.tvv-page-header .tvv-back-button {
+  width: 32px !important;
+  min-height: 32px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.tvv-page-header .tvv-back-button img {
+  width: 24px !important;
+  height: 24px !important;
+  display: block !important;
+  filter: brightness(0) invert(1) !important;
+}
+
+.tvv-page-header .tvv-header-help {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  white-space: nowrap !important;
+}
+
+.tvv-contest-page {
+  margin-top: 0 !important;
+}
+
+/* Keep the overview hero and contest preview aligned after legacy overrides. */
+@media (max-width: 600px) {
+  .tvv-hero-period-row .tvv-month-pill {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .tvv-hero-period-row .tvv-ip-periods {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    align-self: stretch !important;
+  }
+
+  .tvv-contest-preview .tvv-contest-row.compact {
+    grid-template-columns: minmax(0, 1fr) 18px !important;
+    grid-template-rows: 1fr !important;
+    min-height: 104px !important;
+    padding: 11px 12px !important;
+  }
+
+  .tvv-contest-preview .tvv-contest-row.compact > div {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .tvv-contest-preview .tvv-contest-row.compact > svg {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .tvv-contest-preview .tvv-contest-row.compact em {
+    margin-bottom: 5px !important;
+    padding: 3px 7px !important;
+  }
+
+  .tvv-contest-preview .tvv-contest-row.compact small {
+    margin-top: 6px !important;
+  }
+
+  .tvv-app .tvv-stat-card > .tvv-stat:nth-child(1) {
+    background: #f0f5ff !important;
+    color: #071e66 !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-app .tvv-stat-card > .tvv-stat:nth-child(2) {
+    background: #effbf4 !important;
+    color: #071e66 !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-app .tvv-stat-card > .tvv-stat:nth-child(3) {
+    background: #fff8e9 !important;
+    color: #071e66 !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-app .tvv-stat-card > .tvv-stat:nth-child(4) {
+    background: #fff1f2 !important;
+    color: #071e66 !important;
+    box-shadow: none !important;
+  }
 }
