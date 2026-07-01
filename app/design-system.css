@@ -941,4 +941,93 @@ textarea:focus {
   .admin-grid {
     gap: var(--ds-space-4) !important;
   }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body .tvv-app .tvv-hero {
+    min-height: 148px !important;
+    padding: 14px 16px 24px !important;
+  }
+
+  body .tvv-app .tvv-hero::after {
+    height: 44px !important;
+  }
+
+  body .tvv-app .tvv-hero-main {
+    grid-template-columns: 44px minmax(0, 1fr) 44px !important;
+    gap: 8px 10px !important;
+  }
+
+  body .tvv-app .tvv-avatar,
+  body .tvv-app .tvv-icon-button {
+    width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+
+  body .tvv-app .tvv-hero h1 {
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+  }
+
+  body .tvv-app .tvv-hero p {
+    margin-top: 2px !important;
+    font-size: 12px !important;
+  }
+
+  body .tvv-app .tvv-hero-period-row {
+    gap: 10px !important;
+    margin-top: 0 !important;
+  }
+
+  body .tvv-app .tvv-month-picker.tvv-month-pill {
+    flex: 0 0 auto !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, .48) !important;
+    border-radius: var(--ds-radius-pill) !important;
+    background: rgba(255, 255, 255, .13) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(8px);
+  }
+
+  body .tvv-app .tvv-month-pill .tvv-month-trigger {
+    min-height: 32px !important;
+    color: var(--ds-white) !important;
+    padding: 0 12px !important;
+  }
+
+  body .tvv-app .tvv-month-pill .tvv-month-trigger span {
+    display: block !important;
+    overflow: visible !important;
+    color: var(--ds-white) !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  body .tvv-app .tvv-ip-periods {
+    flex: 0 1 164px !important;
+    gap: 2px !important;
+    padding: 5px 8px !important;
+  }
+
+  body .tvv-app .tvv-ip-periods > span {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  body .tvv-app .tvv-ip-periods small,
+  body .tvv-app .tvv-ip-periods strong {
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
 }
