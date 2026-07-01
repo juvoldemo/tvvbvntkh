@@ -1,0 +1,456 @@
+/*
+ * BVNT unified presentation layer
+ * Keep business components intact; all visual decisions live in these tokens.
+ */
+:root {
+  --ds-font: var(--font-be-vietnam-pro), Inter, system-ui, "Segoe UI", sans-serif;
+
+  --ds-blue-900: #062b73;
+  --ds-blue-800: #073b9d;
+  --ds-blue-700: #075fe7;
+  --ds-blue-600: #1b72eb;
+  --ds-blue-100: #eaf3ff;
+  --ds-blue-50: #f4f8ff;
+  --ds-green-700: #087a49;
+  --ds-green-100: #eaf8f1;
+  --ds-orange-700: #a85d00;
+  --ds-orange-100: #fff4df;
+  --ds-red-700: #bd2932;
+  --ds-red-100: #fff0f1;
+  --ds-gray-950: #111827;
+  --ds-gray-800: #24324a;
+  --ds-gray-600: #657187;
+  --ds-gray-500: #7b8799;
+  --ds-gray-300: #d5deea;
+  --ds-gray-200: #e5ebf3;
+  --ds-gray-100: #f1f4f8;
+  --ds-gray-50: #f6f8fb;
+  --ds-white: #fff;
+
+  --ds-text-primary: var(--ds-gray-950);
+  --ds-text-secondary: var(--ds-gray-600);
+  --ds-text-disabled: #9aa5b5;
+  --ds-bg: #f3f6fb;
+  --ds-card: var(--ds-white);
+  --ds-divider: var(--ds-gray-200);
+
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+  --ds-space-10: 40px;
+  --ds-space-12: 48px;
+
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-card: 16px;
+  --ds-radius-pill: 999px;
+  --ds-shadow-card: 0 6px 20px rgba(18, 47, 91, .07);
+  --ds-shadow-float: 0 16px 42px rgba(18, 47, 91, .16);
+  --ds-transition: 180ms ease;
+
+  --ds-text-display: 28px;
+  --ds-text-h1: 24px;
+  --ds-text-h2: 20px;
+  --ds-text-h3: 18px;
+  --ds-text-large: 16px;
+  --ds-text-body: 15px;
+  --ds-text-small: 13px;
+  --ds-text-caption: 12px;
+
+  --ds-control-height: 48px;
+  --ds-touch-target: 44px;
+}
+
+html {
+  background: var(--ds-bg);
+  color: var(--ds-text-primary);
+  font-family: var(--ds-font);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body,
+button,
+input,
+select,
+textarea,
+table {
+  font-family: var(--ds-font);
+  letter-spacing: 0 !important;
+}
+
+body {
+  color: var(--ds-text-primary);
+  font-size: var(--ds-text-body);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--ds-text-primary);
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+
+h1 { font-size: var(--ds-text-h1); }
+h2 { font-size: var(--ds-text-h2); }
+h3 { font-size: var(--ds-text-h3); }
+
+p {
+  line-height: 1.6;
+}
+
+b,
+strong {
+  font-weight: 700 !important;
+}
+
+label {
+  font-weight: 500 !important;
+}
+
+small,
+caption {
+  font-size: var(--ds-text-caption) !important;
+  line-height: 1.45 !important;
+}
+
+button,
+[role="button"] {
+  min-height: var(--ds-touch-target);
+  font-size: var(--ds-text-small);
+  font-weight: 600 !important;
+  line-height: 1.25;
+  transition: color var(--ds-transition), background var(--ds-transition), border-color var(--ds-transition), box-shadow var(--ds-transition), transform var(--ds-transition);
+}
+
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active {
+  transform: scale(.98);
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(7, 95, 231, .2) !important;
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  min-height: var(--ds-control-height);
+  border: 1px solid var(--ds-gray-300) !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-white) !important;
+  color: var(--ds-text-primary) !important;
+  padding: 0 var(--ds-space-3) !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.45;
+  transition: border-color var(--ds-transition), box-shadow var(--ds-transition);
+}
+
+textarea {
+  min-height: 112px;
+  padding-block: var(--ds-space-3) !important;
+  resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ds-text-disabled);
+  opacity: 1;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--ds-blue-700) !important;
+  box-shadow: 0 0 0 3px rgba(7, 95, 231, .1) !important;
+}
+
+/* Shared surfaces */
+:where(
+  .card,
+  .panel,
+  .stat-card,
+  .chart-card,
+  .table-card,
+  .filter-card,
+  .tvv-card,
+  .tvv-calc-card,
+  .tvv-stat-card,
+  .tvv-contest-preview,
+  .tvv-contract-card,
+  .admin-card,
+  .login-card
+) {
+  border: 1px solid var(--ds-divider) !important;
+  border-radius: var(--ds-radius-card) !important;
+  background: var(--ds-card) !important;
+  box-shadow: var(--ds-shadow-card) !important;
+}
+
+:where(.tvv-card, .tvv-calc-card, .admin-card, .card, .panel) {
+  padding: var(--ds-space-4) !important;
+}
+
+/* Shared semantic treatments */
+:where(.badge, .status-badge, [class*="status-pill"], [class*="badge-"]) {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--ds-radius-pill) !important;
+  padding: var(--ds-space-1) var(--ds-space-2) !important;
+  font-size: var(--ds-text-caption) !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+:where(.success, .issued, .active, .achieved) {
+  background-color: var(--ds-green-100);
+  color: var(--ds-green-700);
+}
+
+:where(.warning, .pending, .ongoing) {
+  background-color: var(--ds-orange-100);
+  color: var(--ds-orange-700);
+}
+
+:where(.danger, .invalid, .expired, .error) {
+  background-color: var(--ds-red-100);
+  color: var(--ds-red-700);
+}
+
+/* Mobile TVV application */
+.tvv-app {
+  background: var(--ds-bg) !important;
+  color: var(--ds-text-primary);
+  font-size: var(--ds-text-body);
+}
+
+.tvv-app :where(h1, h2, h3, b, strong, button, label, small, p, span) {
+  letter-spacing: 0 !important;
+}
+
+.tvv-app :where(h1, h2, h3, b, strong) {
+  font-weight: 700 !important;
+}
+
+.tvv-app :where(button, label, .tvv-bottom-nav span, .tvv-status-badge) {
+  font-weight: 600 !important;
+}
+
+.tvv-app :where(p, .tvv-profile-details span) {
+  font-weight: 400 !important;
+}
+
+.tvv-content {
+  gap: var(--ds-space-4) !important;
+  padding-inline: var(--ds-space-4) !important;
+}
+
+.tvv-section-head {
+  gap: var(--ds-space-3) !important;
+}
+
+.tvv-section-head h2,
+.tvv-calc-card > h2,
+.tvv-card > h2 {
+  font-size: var(--ds-text-h3) !important;
+  font-weight: 700 !important;
+}
+
+.tvv-stat-card {
+  overflow: hidden;
+}
+
+.tvv-stat {
+  min-height: 104px;
+  padding: var(--ds-space-3) var(--ds-space-2) !important;
+}
+
+.tvv-stat strong {
+  font-size: var(--ds-text-h2) !important;
+  line-height: 1.25 !important;
+}
+
+.tvv-stat p {
+  font-size: var(--ds-text-caption) !important;
+  line-height: 1.45 !important;
+}
+
+.tvv-contest-row,
+.tvv-contract-row,
+.tvv-draft-row,
+.tvv-result-row {
+  font-size: var(--ds-text-small) !important;
+}
+
+.tvv-contest-row b,
+.tvv-contract-row b,
+.tvv-draft-row b,
+.tvv-result-row b {
+  font-size: var(--ds-text-small) !important;
+  font-weight: 700 !important;
+  line-height: 1.45 !important;
+}
+
+.tvv-contest-row small,
+.tvv-contract-row small,
+.tvv-draft-row small,
+.tvv-result-row small {
+  font-size: var(--ds-text-caption) !important;
+}
+
+.tvv-bottom-nav {
+  min-height: 72px;
+  border-top: 1px solid var(--ds-divider) !important;
+  background: rgba(255, 255, 255, .96) !important;
+  box-shadow: 0 -6px 20px rgba(18, 47, 91, .08) !important;
+  backdrop-filter: blur(14px);
+}
+
+.tvv-bottom-nav button {
+  min-width: var(--ds-touch-target);
+  min-height: var(--ds-touch-target);
+  font-size: var(--ds-text-caption);
+  font-weight: 600 !important;
+}
+
+.tvv-notification-panel,
+.tvv-contract-detail {
+  border: 1px solid var(--ds-divider) !important;
+  border-radius: var(--ds-radius-card) !important;
+  box-shadow: var(--ds-shadow-float) !important;
+}
+
+.tvv-profile-details {
+  border-color: var(--ds-divider) !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-divider) !important;
+}
+
+/* Authentication and administration */
+.tvv-user-login,
+.admin-page,
+.login-screen {
+  background: var(--ds-bg) !important;
+}
+
+.tvv-user-login > form,
+.admin-login-card {
+  border: 1px solid var(--ds-divider);
+  border-radius: var(--ds-radius-card) !important;
+  padding: var(--ds-space-6) !important;
+  box-shadow: var(--ds-shadow-float) !important;
+}
+
+.admin-page {
+  color: var(--ds-text-primary);
+  font-size: var(--ds-text-body);
+}
+
+.admin-card-title h2 {
+  font-size: var(--ds-text-h2) !important;
+}
+
+.admin-card-title p,
+.admin-event-list p,
+.admin-page td,
+.admin-page th {
+  font-size: var(--ds-text-small) !important;
+}
+
+.admin-page th {
+  color: var(--ds-text-secondary);
+  font-weight: 600 !important;
+}
+
+/* Desktop dashboard */
+.dashboard-page {
+  background: var(--ds-bg) !important;
+  color: var(--ds-text-primary);
+  font-size: var(--ds-text-body);
+}
+
+.dashboard-page :where(h1, h2, h3, h4, b, strong) {
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+}
+
+.dashboard-page :where(button, label, th, .nav-label) {
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.dashboard-page :where(p, td, span, small) {
+  letter-spacing: 0 !important;
+}
+
+.dashboard-page :where(.card, .panel, .chart-card, .table-card, .filter-card) {
+  border-radius: var(--ds-radius-card) !important;
+  box-shadow: var(--ds-shadow-card) !important;
+}
+
+.dashboard-page table {
+  font-size: var(--ds-text-small);
+}
+
+.dashboard-page th {
+  font-size: var(--ds-text-caption) !important;
+  font-weight: 600 !important;
+}
+
+.dashboard-page td {
+  font-size: var(--ds-text-small) !important;
+}
+
+/* Accessibility and controlled motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --ds-text-display: 24px;
+    --ds-text-h1: 22px;
+    --ds-text-h2: 20px;
+  }
+
+  .tvv-content {
+    padding-inline: var(--ds-space-3) !important;
+  }
+
+  .tvv-app :where(button, [role="button"]) {
+    min-height: var(--ds-touch-target);
+  }
+
+  .admin-page {
+    padding: var(--ds-space-4) var(--ds-space-3) !important;
+  }
+
+  .admin-grid {
+    gap: var(--ds-space-4) !important;
+  }
+}

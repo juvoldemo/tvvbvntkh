@@ -3,6 +3,7 @@ import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { estimateRewardsForDraftContracts, type DraftRewardContract } from "@/lib/tvv-reward-estimator";
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
+import { userCodeFromRequest } from "@/lib/user-auth";
 
 function programDateRange(program: any, month: string) {
   const rule = program.confirmed_rule || program.ai_rule || {};
@@ -27,9 +28,10 @@ function isPolicyRewardProgram(programName: unknown) {
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
+    const signedInAdvisorCode = userCodeFromRequest(request);
     const month = String(payload.month || new Date().toISOString().slice(0, 7)).slice(0, 7);
     const advisor = {
-      code: String(payload.advisor?.code || ""),
+      code: signedInAdvisorCode || String(payload.advisor?.code || ""),
       name: String(payload.advisor?.name || ""),
       ban: String(payload.advisor?.ban || ""),
       group: String(payload.advisor?.group || ""),
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }] = await Promise.all([
       supabase.from("competition_programs").select("*"),
       supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`),
-      supabase.from("revenue_records").select("*").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`)
+      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`)
     ]);
     if (programError) throw programError;
     if (yearContractsError) throw yearContractsError;
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
     const { data: contracts, error: contractError } = await supabase
       .from("revenue_records")
       .select("*")
+      .neq("data_month", "2099-01-01")
       .gte("paid_date", start)
       .lte("paid_date", end);
     if (contractError) throw contractError;

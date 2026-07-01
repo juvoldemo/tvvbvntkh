@@ -7,6 +7,7 @@ import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { buildStarVietReport, type StarVietRecord } from "@/lib/star-viet";
 import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads-plan";
 import { buildAdoReport } from "@/lib/ado-report";
+import { userCodeFromRequest } from "@/lib/user-auth";
 
 function visibleName(value: unknown, codePattern: RegExp) {
   const name = String(value ?? "").trim();
@@ -116,6 +117,7 @@ function buildOverviewComparisons(current: ReturnType<typeof buildOverview>, pre
 
 export async function GET(request: NextRequest) {
   try {
+    const signedInAdvisorCode = userCodeFromRequest(request);
     const params = request.nextUrl.searchParams;
     const month = params.get("month") || new Date().toISOString().slice(0, 7);
     const filters: DashboardFilters = {
@@ -134,11 +136,13 @@ export async function GET(request: NextRequest) {
     const previousEnd = `${previousFilters.month}-${String(previousCutoffDay).padStart(2, "0")}`;
     const supabase = getSupabaseAdmin();
 
+    const advisorScope = <T extends { ilike: (column: string, pattern: string) => T }>(query: T) =>
+      signedInAdvisorCode ? query.ilike("agent_code", signedInAdvisorCode) : query;
     const [{ data: records, error: recordsError }, { data: previousRecords, error: previousRecordsError }, { data: previousMonthRecords, error: previousMonthRecordsError }, { data: yearRecords, error: yearRecordsError }, { data: target, error: targetError }, { data: latestUpload }, { data: uploadsByMonth }] = await Promise.all([
-      supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end),
-      supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousEnd),
-      supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousBounds.end),
-      supabase.from("revenue_records").select("*").gte("paid_date", "2026-01-01").lte("paid_date", "2026-12-31"),
+      advisorScope(supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end)),
+      advisorScope(supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousEnd)),
+      advisorScope(supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousBounds.end)),
+      advisorScope(supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", "2026-01-01").lte("paid_date", "2026-12-31")),
       supabase.from("monthly_targets").select("*").eq("target_month", toMonthStart(month)).eq("target_level", "company").is("target_code", null).maybeSingle(),
       supabase.from("upload_batches").select("*").eq("data_month", toMonthStart(month)).order("uploaded_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("upload_batches").select("data_month, uploaded_at").order("uploaded_at", { ascending: false })

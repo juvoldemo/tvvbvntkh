@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Bell, CalendarDays, Calculator, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
 type Tab = "overview" | "contracts" | "calculator" | "contests" | "profile";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
+type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
 
 const fallbackAdvisor = {
   key: "D1021A1YNG__Lê Thị Mỹ Châu",
@@ -82,6 +84,8 @@ function shortText(value: unknown, maxLength = 86) {
 }
 
 export default function TvvMobilePage() {
+  const [authReady, setAuthReady] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [month, setMonth] = useState(currentMonth());
   const [data, setData] = useState<any>(null);
@@ -93,9 +97,51 @@ export default function TvvMobilePage() {
   const [paidDate, setPaidDate] = useState(new Date().toISOString().slice(0, 10));
   const [estimate, setEstimate] = useState<any>(null);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const [notificationPosition, setNotificationPosition] = useState({ top: 0, right: 12 });
+  const [userProfile, setUserProfile] = useState<any>(null);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
 
   useEffect(() => {
+    fetch("/api/user/auth", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => setSignedIn(Boolean(payload.authenticated)))
+      .finally(() => setAuthReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!signedIn) return;
+    fetch("/api/user/profile", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload) => setUserProfile(payload.profile ?? null));
+  }, [signedIn]);
+
+  useEffect(() => {
+    fetch("/api/events", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { events: [] })
+      .then((payload) => setAdminEvents(payload.events ?? []))
+      .catch(() => setAdminEvents([]));
+  }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const positionPanel = () => {
+      const rect = notificationButtonRef.current?.getBoundingClientRect();
+      if (rect) setNotificationPosition({ top: rect.bottom + 8, right: Math.max(12, window.innerWidth - rect.right) });
+    };
+    positionPanel();
+    window.addEventListener("resize", positionPanel);
+    window.addEventListener("scroll", positionPanel, true);
+    return () => {
+      window.removeEventListener("resize", positionPanel);
+      window.removeEventListener("scroll", positionPanel, true);
+    };
+  }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!signedIn) return;
     let cancelled = false;
     const controller = new AbortController();
     setLoading(true);
@@ -132,7 +178,7 @@ export default function TvvMobilePage() {
       window.clearTimeout(loadingTimer);
       controller.abort();
     };
-  }, [month]);
+  }, [month, signedIn]);
 
   const advisorOptions = useMemo(() => (data?.agents ?? []).map((agent: any) => ({
     key: `${agent.agentCode || ""}__${agent.agentName || ""}`,
@@ -143,7 +189,8 @@ export default function TvvMobilePage() {
     ads: agent.adsName || ""
   })), [data]);
 
-  const advisor = advisorOptions.find((item: any) => item.key === advisorKey) ?? advisorOptions[0] ?? fallbackAdvisor;
+  const profileAdvisor = userProfile ? { key: `${userProfile.advisor_code}__${userProfile.full_name}`, code: userProfile.advisor_code, name: userProfile.full_name, ban: "", group: "", ads: "" } : null;
+  const advisor = advisorOptions.find((item: any) => item.key === advisorKey) ?? advisorOptions[0] ?? profileAdvisor ?? fallbackAdvisor;
   const advisorIpPeriods = useMemo(() => {
     const rows = data?.agentIpPeriods ?? [];
     return rows.find((row: any) => (advisor?.code && row.agentCode === advisor.code) || row.agentName === advisor?.name)
@@ -161,7 +208,7 @@ export default function TvvMobilePage() {
   }, [myContracts]);
 
   useEffect(() => {
-    if (!advisor) return;
+    if (!signedIn || !advisor) return;
     let cancelled = false;
     fetch("/api/tvv-reward-estimate", {
       method: "POST",
@@ -172,7 +219,7 @@ export default function TvvMobilePage() {
       .then((payload) => !cancelled && setEstimate(payload))
       .catch(() => !cancelled && setEstimate(emptyEstimate));
     return () => { cancelled = true; };
-  }, [advisor, drafts, month]);
+  }, [advisor, drafts, month, signedIn]);
 
   const stats = useMemo(() => {
     const total = myContracts.length;
@@ -180,7 +227,7 @@ export default function TvvMobilePage() {
     const invalid = myContracts.filter((row: any) => ["het hieu luc", "tu choi", "tri hoan", "hoan phi", "ycbh het hieu luc"].includes(normalizeStatusText(row.policy_status))).length;
     return { total, issued, pending: Math.max(total - issued - invalid, 0), invalid };
   }, [myContracts]);
-  const notificationCount = Math.min(99, stats.pending + stats.invalid + Number((estimate ?? emptyEstimate)?.eligibleProgramCount ?? 0));
+  const notificationCount = Math.min(99, adminEvents.length);
 
   function addDraft() {
     const premium = parseMoneyInput(premiumText);
@@ -189,6 +236,9 @@ export default function TvvMobilePage() {
   }
 
   const draftRewards = new Map((estimate?.rewardByDraftContract ?? []).map((item: any) => [item.draftId, item]));
+
+  if (!authReady) return <main className="tvv-user-login"><p>Đang kiểm tra đăng nhập…</p></main>;
+  if (!signedIn) return <UserLoginScreen onSuccess={() => setSignedIn(true)} />;
 
   return (
     <main className="tvv-app">
@@ -199,15 +249,28 @@ export default function TvvMobilePage() {
           {tab === "overview" ? (
           <header className="tvv-hero">
             <div className="tvv-hero-main">
-              <div className="tvv-avatar"><UserRound size={40} /></div>
+              <div className="tvv-avatar">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</div>
               <div>
                 <h1>Xin chào, {advisor?.name || "TVV"} <span>👋</span></h1>
                 <p>TVV - {advisor?.code || "Chưa có mã"}</p>
               </div>
-              <button className="tvv-icon-button" type="button" aria-label={`Thông báo (${notificationCount})`}>
+              <button ref={notificationButtonRef} className="tvv-icon-button" type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((value) => !value)}>
                 <Bell size={28} />
                 {notificationCount > 0 && <b>{notificationCount}</b>}
               </button>
+              {notificationsOpen && typeof document !== "undefined" && createPortal(
+                <div className="tvv-notification-panel" style={{ top: notificationPosition.top, right: notificationPosition.right }}>
+                  <div className="tvv-notification-heading"><strong>Thông báo</strong><button type="button" onClick={() => setNotificationsOpen(false)}>×</button></div>
+                  {adminEvents.length === 0 ? <p className="tvv-notification-empty">Chưa có thông báo mới.</p> : adminEvents.map((item) => (
+                    <article key={item.id}>
+                      <strong>{item.title}</strong>
+                      <p>{item.content}</p>
+                      <small>{item.event_date ? `Sự kiện: ${new Date(item.event_date).toLocaleString("vi-VN")}` : new Date(item.created_at).toLocaleString("vi-VN")}</small>
+                    </article>
+                  ))}
+                </div>,
+                document.body
+              )}
               <div className="tvv-hero-period-row">
                 <label className="tvv-month-pill">
                   <CalendarDays size={20} />
@@ -231,7 +294,7 @@ export default function TvvMobilePage() {
           {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} onTab={setTab} onOpenContract={setSelectedContract} />}
           {tab === "contracts" && <ContractsList contracts={myContracts} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
-          {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} />}
+          {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
       )}
       {selectedContract && <ContractDetailModal row={selectedContract} onClose={() => setSelectedContract(null)} />}
@@ -388,8 +451,75 @@ function CalculatorView(props: any) {
   </section>;
 }
 
-function Profile({ advisor, contracts }: any) {
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card"><h2>Cá nhân</h2><div className="tvv-profile"><UserRound size={42} /><b>{advisor?.name}</b><span>{advisor?.code}</span><p>{advisor?.ban} / {advisor?.group}</p><strong>{contracts.length} hợp đồng trong tháng</strong></div></section></section>;
+function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const response = await fetch("/api/user/auth", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password })
+    });
+    const payload = await response.json();
+    setBusy(false);
+    if (!response.ok) return setError(payload.error || "Không đăng nhập được.");
+    onSuccess();
+  }
+  return <main className="tvv-user-login"><form onSubmit={submit}><ShieldCheck size={44} /><h1>Đăng nhập TVV</h1><p>Sử dụng mã TVV và mật khẩu của bạn.</p><label>Mã TVV<input value={username} onChange={(event) => setUsername(event.target.value)} autoCapitalize="characters" required /></label><label>Mật khẩu<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <div className="tvv-user-error">{error}</div>}<button disabled={busy}>{busy ? "Đang đăng nhập…" : "Đăng nhập"}</button><small>Mật khẩu mặc định: 123456</small></form></main>;
+}
+
+function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
+  const [profile, setProfile] = useState<any>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
+  useEffect(() => { fetch("/api/user/profile", { cache: "no-store" }).then((response) => response.json()).then((payload) => setProfile(payload.profile ?? null)); }, []);
+  async function changePassword(event: FormEvent) {
+    event.preventDefault();
+    const response = await fetch("/api/user/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword, newPassword }) });
+    const payload = await response.json();
+    setMessage(response.ok ? "Đã thay đổi mật khẩu." : payload.error);
+    if (response.ok) { setCurrentPassword(""); setNewPassword(""); }
+  }
+  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const response = await fetch("/api/user/profile", { method: "POST", body: new FormData(form) });
+    const payload = await response.json();
+    setMessage(response.ok ? "Đã cập nhật avatar." : payload.error);
+    if (response.ok) {
+      setProfile((value: any) => ({ ...value, avatar_url: payload.avatarUrl }));
+      onAvatarChange?.(payload.avatarUrl);
+      setAvatarFileName("");
+      form.reset();
+    }
+  }
+  async function logout() {
+    await fetch("/api/user/auth", { method: "DELETE" });
+    onLogout();
+  }
+  const date = (value?: string) => value ? formatDateVi(value) : "—";
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-profile-card"><h2>Cá nhân</h2><div className="tvv-profile">
+    {profile?.avatar_url ? <img className="tvv-profile-avatar" src={profile.avatar_url} alt="Avatar" /> : <UserRound size={58} />}
+    <b>{profile?.full_name || advisor?.name}</b><span>{profile?.advisor_code || advisor?.code}</span><strong>{contracts.length} hợp đồng trong tháng</strong>
+  </div>
+  <div className="tvv-profile-details"><div><span>Ngày sinh</span><b>{profile?.birth_day && profile?.birth_month ? `${profile.birth_day}/${profile.birth_month}` : "—"}</b></div><div><span>Ngày bắt đầu làm việc</span><b>{date(profile?.start_date)}</b></div><div><span>Trạng thái</span><b>{profile?.advisor_status || "—"}</b></div><div><span>Chức vụ TVV</span><b>{profile?.advisor_position || "—"}</b></div><div><span>Ngày hiệu lực chức vụ</span><b>{date(profile?.position_effective_date)}</b></div></div>
+  {message && <div className="tvv-profile-message">{message}</div>}
+  <form className="tvv-profile-form" onSubmit={uploadAvatar}><h3>Ảnh đại diện</h3>
+    <label className="tvv-avatar-picker">
+      <span className="tvv-avatar-picker-icon"><Camera size={23} /></span>
+      <span className="tvv-avatar-picker-copy"><b>{avatarFileName || "Chọn ảnh đại diện"}</b><small>{avatarFileName ? "Nhấn để chọn ảnh khác" : "JPG, PNG hoặc WEBP"}</small></span>
+      <span className="tvv-avatar-picker-action">Chọn ảnh</span>
+      <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required onChange={(event) => setAvatarFileName(event.target.files?.[0]?.name || "")} />
+    </label>
+    <small className="tvv-avatar-limit">Dung lượng ảnh phải nhỏ hơn 5 MB.</small><button disabled={!avatarFileName}>Cập nhật avatar</button></form>
+  <form className="tvv-profile-form" onSubmit={changePassword}><h3>Đổi mật khẩu</h3><input type="password" placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /><input type="password" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required minLength={6} /><button>Đổi mật khẩu</button></form>
+  <button className="tvv-logout-button" onClick={logout}>Đăng xuất</button>
+  </section></section>;
 }
 
 function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {

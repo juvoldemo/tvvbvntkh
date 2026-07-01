@@ -326,4 +326,44 @@ $$;
 
 create index if not exists idx_page_views_created_at on page_views(created_at desc);
 
+create table if not exists authorized_users (
+  id uuid primary key default gen_random_uuid(),
+  advisor_code text not null unique,
+  full_name text not null,
+  phone text,
+  start_date date,
+  advisor_status text,
+  advisor_position text,
+  position_effective_date date,
+  birth_day smallint,
+  birth_month smallint,
+  password_hash text,
+  avatar_url text,
+  is_active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table authorized_users add column if not exists start_date date;
+alter table authorized_users add column if not exists advisor_status text;
+alter table authorized_users add column if not exists advisor_position text;
+alter table authorized_users add column if not exists position_effective_date date;
+alter table authorized_users add column if not exists birth_day smallint;
+alter table authorized_users add column if not exists birth_month smallint;
+alter table authorized_users add column if not exists password_hash text;
+alter table authorized_users add column if not exists avatar_url text;
+
+create index if not exists idx_authorized_users_active on authorized_users(is_active);
+
+create table if not exists admin_events (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  content text not null,
+  event_date timestamptz,
+  is_active boolean not null default true,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_admin_events_created_at on admin_events(created_at desc);
+
 notify pgrst, 'reload schema';
