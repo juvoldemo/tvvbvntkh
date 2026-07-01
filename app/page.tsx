@@ -75,7 +75,7 @@ function monthOptionsUntilCurrent() {
     const monthNo = index + 1;
     const value = `${year}-${String(monthNo).padStart(2, "0")}`;
     return { value, label: monthLabel(value) };
-  });
+  }).reverse();
 }
 
 function shortText(value: unknown, maxLength = 86) {
@@ -100,7 +100,11 @@ export default function TvvMobilePage() {
   const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const notificationPanelRef = useRef<HTMLDivElement>(null);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, right: 12 });
+  const [readEventIds, setReadEventIds] = useState<string[]>([]);
+  const [openedUnreadIds, setOpenedUnreadIds] = useState<string[]>([]);
+  const [notificationView, setNotificationView] = useState<"unread" | "read">("unread");
   const [userProfile, setUserProfile] = useState<any>(null);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
 
@@ -117,6 +121,16 @@ export default function TvvMobilePage() {
       .then((response) => response.json())
       .then((payload) => setUserProfile(payload.profile ?? null));
   }, [signedIn]);
+
+  useEffect(() => {
+    if (!userProfile?.advisor_code) return;
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(`bvnt.readEvents.${userProfile.advisor_code}`) || "[]");
+      setReadEventIds(Array.isArray(stored) ? stored.map(String) : []);
+    } catch {
+      setReadEventIds([]);
+    }
+  }, [userProfile?.advisor_code]);
 
   useEffect(() => {
     fetch("/api/events", { cache: "no-store" })
@@ -138,6 +152,18 @@ export default function TvvMobilePage() {
       window.removeEventListener("resize", positionPanel);
       window.removeEventListener("scroll", positionPanel, true);
     };
+  }, [notificationsOpen]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const closeOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!notificationPanelRef.current?.contains(target) && !notificationButtonRef.current?.contains(target)) {
+        setNotificationsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", closeOutside);
+    return () => document.removeEventListener("mousedown", closeOutside);
   }, [notificationsOpen]);
 
   useEffect(() => {
@@ -210,10 +236,11 @@ export default function TvvMobilePage() {
   useEffect(() => {
     if (!signedIn || !advisor) return;
     let cancelled = false;
+    const calculationMonth = drafts.at(-1)?.expectedPaidDate?.slice(0, 7) || month;
     fetch("/api/tvv-reward-estimate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ month, advisor, draftContracts: drafts })
+      body: JSON.stringify({ month: calculationMonth, advisor, draftContracts: drafts })
     })
       .then((response) => response.json())
       .then((payload) => !cancelled && setEstimate(payload))
@@ -227,7 +254,25 @@ export default function TvvMobilePage() {
     const invalid = myContracts.filter((row: any) => ["het hieu luc", "tu choi", "tri hoan", "hoan phi", "ycbh het hieu luc"].includes(normalizeStatusText(row.policy_status))).length;
     return { total, issued, pending: Math.max(total - issued - invalid, 0), invalid };
   }, [myContracts]);
-  const notificationCount = Math.min(99, adminEvents.length);
+  const notificationCount = Math.min(99, adminEvents.filter((item) => !readEventIds.includes(item.id)).length);
+  const displayedNotifications = notificationView === "unread"
+    ? adminEvents.filter((item) => openedUnreadIds.includes(item.id))
+    : adminEvents.filter((item) => readEventIds.includes(item.id));
+
+  function toggleNotifications() {
+    const willOpen = !notificationsOpen;
+    setNotificationsOpen(willOpen);
+    if (!willOpen) return;
+    setNotificationView("unread");
+    const unreadIds = adminEvents.filter((item) => !readEventIds.includes(item.id)).map((item) => item.id);
+    setOpenedUnreadIds(unreadIds);
+    if (!adminEvents.length) return;
+    const ids = adminEvents.map((item) => item.id);
+    setReadEventIds(ids);
+    if (userProfile?.advisor_code) {
+      window.localStorage.setItem(`bvnt.readEvents.${userProfile.advisor_code}`, JSON.stringify(ids));
+    }
+  }
 
   function addDraft() {
     const premium = parseMoneyInput(premiumText);
@@ -254,14 +299,17 @@ export default function TvvMobilePage() {
                 <h1>Xin chào, {advisor?.name || "TVV"} <span>👋</span></h1>
                 <p>TVV - {advisor?.code || "Chưa có mã"}</p>
               </div>
-              <button ref={notificationButtonRef} className="tvv-icon-button" type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((value) => !value)}>
+              <button ref={notificationButtonRef} className="tvv-icon-button" type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
                 <Bell size={28} />
                 {notificationCount > 0 && <b>{notificationCount}</b>}
               </button>
               {notificationsOpen && typeof document !== "undefined" && createPortal(
-                <div className="tvv-notification-panel" style={{ top: notificationPosition.top, right: notificationPosition.right }}>
-                  <div className="tvv-notification-heading"><strong>Thông báo</strong><button type="button" onClick={() => setNotificationsOpen(false)}>×</button></div>
-                  {adminEvents.length === 0 ? <p className="tvv-notification-empty">Chưa có thông báo mới.</p> : adminEvents.map((item) => (
+                <div ref={notificationPanelRef} className="tvv-notification-panel" style={{ top: notificationPosition.top, right: notificationPosition.right }}>
+                  <div className="tvv-notification-heading" role="tablist" aria-label="Hộp thông báo">
+                    <button type="button" role="tab" aria-selected={notificationView === "unread"} className={notificationView === "unread" ? "active" : ""} onClick={() => setNotificationView("unread")}>Thông báo</button>
+                    <button type="button" role="tab" aria-selected={notificationView === "read"} className={notificationView === "read" ? "active" : ""} onClick={() => setNotificationView("read")}>Đã xem</button>
+                  </div>
+                  {displayedNotifications.length === 0 ? <p className="tvv-notification-empty">{notificationView === "unread" ? "Không có thông báo mới." : "Chưa có thông báo đã xem."}</p> : displayedNotifications.map((item) => (
                     <article key={item.id}>
                       <strong>{item.title}</strong>
                       <p>{item.content}</p>
@@ -272,14 +320,7 @@ export default function TvvMobilePage() {
                 document.body
               )}
               <div className="tvv-hero-period-row">
-                <label className="tvv-month-pill">
-                  <CalendarDays size={20} />
-                  <span>{monthLabel(month)}</span>
-                  <ChevronDown size={19} />
-                  <select value={month} onChange={(event) => setMonth(event.target.value)} aria-label="Chọn tháng">
-                    {monthOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                  </select>
-                </label>
+                <MonthPicker className="tvv-month-pill" value={month} options={monthOptions} onChange={setMonth} ariaLabel="Chọn tháng" />
                 <div className="tvv-ip-periods" aria-label="IP theo kỳ">
                   <span><small>IP tháng</small><strong>{formatCompactVnd(advisorIpPeriods.monthIp)}</strong></span>
                   <span><small>IP quý</small><strong>{formatCompactVnd(advisorIpPeriods.quarterIp)}</strong></span>
@@ -289,10 +330,10 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : "Cá nhân"} onBack={() => setTab("overview")} showHelp={tab === "contests"} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} onTab={setTab} onOpenContract={setSelectedContract} />}
-          {tab === "contracts" && <ContractsList contracts={myContracts} onOpenContract={setSelectedContract} />}
+          {tab === "contracts" && <ContractsList contracts={myContracts} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
@@ -305,6 +346,45 @@ export default function TvvMobilePage() {
 
 function TvvSubHeader({ title, onBack, showHelp = false }: { title: string; onBack: () => void; showHelp?: boolean }) {
   return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
+}
+
+function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void; className?: string; ariaLabel: string }) {
+  const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 168 });
+  const pickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const positionMenu = () => {
+      const rect = pickerRef.current?.getBoundingClientRect();
+      if (rect) setMenuPosition({ top: rect.bottom + 8, left: rect.left, width: Math.max(rect.width, 168) });
+    };
+    const close = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!pickerRef.current?.contains(target) && !target.closest(".tvv-month-menu")) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    positionMenu();
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
+    };
+  }, [open]);
+  return <div ref={pickerRef} className={`tvv-month-picker ${className}${open ? " open" : ""}`}>
+    <button className="tvv-month-trigger" type="button" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+      <span>{monthLabel(value)}</span>
+    </button>
+    {open && typeof document !== "undefined" && createPortal(<div className="tvv-month-menu" style={{ top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }} role="listbox" aria-label={ariaLabel}>
+      {options.map((option) => <button type="button" role="option" aria-selected={option.value === value} className={option.value === value ? "active" : ""} key={option.value} onClick={() => { onChange(option.value); setOpen(false); }}><span>{option.label}</span>{option.value === value && <CheckCircle2 size={18} />}</button>)}
+    </div>, document.body)}
+  </div>;
 }
 
 function Overview({ stats, contracts, estimate, onTab, onOpenContract }: any) {
@@ -363,11 +443,9 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
   const [detailTab, setDetailTab] = useState<"overview" | "achieved" | "missing" | "quarters" | "formula">("overview");
   const content = item.conditionText || item.description || item.content || item.ruleText || "Nội dung chương trình đang được cập nhật.";
   const policyRows = Array.isArray(item.rows) ? item.rows : null;
+  const achievedQuarters = Array.from(new Set<number>((policyRows ?? []).flatMap((row: any) => Array.isArray(row.achievedQuarters) ? row.achievedQuarters : []).map(Number).filter((quarter: number) => quarter >= 1 && quarter <= 4))).sort((a, b) => a - b);
   const tabs = policyRows ? [
     ["overview", "Tổng quan"],
-    ["achieved", "TVV đạt"],
-    ["missing", "TVV chưa đạt"],
-    ...(item.programId === "policy-month-13" ? [["quarters", "Quý đạt"]] : []),
     ["formula", "Cách tính"]
   ] as Array<[typeof detailTab, string]> : [];
   const visibleRows = detailTab === "achieved" ? policyRows?.filter((row: any) => row.achieved)
@@ -381,6 +459,7 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
       <span><small>TVV đạt</small><strong>{item.achievedCount || 0}</strong></span>
       <span><small>Tổng FYC</small><strong>{formatVnd(policyRows.reduce((sum: number, row: any) => sum + Number(row.totalFyc || 0), 0))}</strong></span>
       <span><small>Tổng thưởng</small><strong>{formatVnd(Number(item.estimatedReward || 0))}</strong></span>
+      {item.programId === "policy-month-13" && <span className="tvv-achieved-quarters"><small>Số quý đã đạt</small><strong>{achievedQuarters.length}/4 quý</strong><em>{achievedQuarters.length ? achievedQuarters.map((quarter) => `Quý ${quarter}`).join(" · ") : "Chưa đạt quý nào"}</em></span>}
     </div>}
     {policyRows && ["achieved", "missing", "quarters"].includes(detailTab) && <div className="tvv-policy-agent-list">
       {(visibleRows ?? []).map((row: any) => <article key={row.agentCode}><div><b>{row.agentName}</b><small>{row.agentCode} · {row.group || row.ban}</small></div><span>{detailTab === "quarters" ? `Quý ${(row.achievedQuarters ?? []).join(", ") || "—"}` : formatVnd(row.reward)}</span></article>)}
@@ -395,8 +474,11 @@ function ContractPreview({ contracts, onAll, onOpenContract }: any) {
   return <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div>{contracts.length ? contracts.slice(0, 5).map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section>;
 }
 
-function ContractsList({ contracts, onOpenContract }: any) {
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><span>{contracts.length} HĐ</span></div>{contracts.length ? contracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section></section>;
+function ContractsList({ contracts, month, monthOptions, onMonthChange, onOpenContract }: any) {
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header">
+    <label className="tvv-contract-month-filter"><span><CalendarDays size={18} /> Tháng muốn xem</span><MonthPicker className="tvv-contract-month-control" value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chọn tháng hợp đồng" /></label>
+    <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><span>{contracts.length} HĐ</span></div>{contracts.length ? contracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section>
+  </section>;
 }
 
 function contractRawValue(row: any, keys: string[]) {
@@ -428,6 +510,7 @@ function ContractDetailModal({ row, onClose }: { row: any; onClose: () => void }
   const detailRows = [
     ["BMBH", display.policyOwner || ""],
     ["NĐBH", display.insuredName || ""],
+    ["Ngày hiệu lực", display.paidDate ? formatDateVi(display.paidDate) : ""],
     ["Ngày phát hành", display.issuedDate ? formatDateVi(display.issuedDate) : ""],
     ["IP", formatVnd(Number(row.ip || 0))],
     ["AFYP", formatVnd(Number(row.afyp || 0))]
@@ -503,11 +586,11 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
     onLogout();
   }
   const date = (value?: string) => value ? formatDateVi(value) : "—";
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-profile-card"><h2>Cá nhân</h2><div className="tvv-profile">
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header"><section className="tvv-card tvv-profile-card"><div className="tvv-profile">
     {profile?.avatar_url ? <img className="tvv-profile-avatar" src={profile.avatar_url} alt="Avatar" /> : <UserRound size={58} />}
     <b>{profile?.full_name || advisor?.name}</b><span>{profile?.advisor_code || advisor?.code}</span><strong>{contracts.length} hợp đồng trong tháng</strong>
   </div>
-  <div className="tvv-profile-details"><div><span>Ngày sinh</span><b>{profile?.birth_day && profile?.birth_month ? `${profile.birth_day}/${profile.birth_month}` : "—"}</b></div><div><span>Ngày bắt đầu làm việc</span><b>{date(profile?.start_date)}</b></div><div><span>Trạng thái</span><b>{profile?.advisor_status || "—"}</b></div><div><span>Chức vụ TVV</span><b>{profile?.advisor_position || "—"}</b></div><div><span>Ngày hiệu lực chức vụ</span><b>{date(profile?.position_effective_date)}</b></div></div>
+  <div className="tvv-profile-details"><div><span>Ngày bắt đầu làm việc</span><b>{date(profile?.start_date)}</b></div><div><span>Trạng thái</span><b>{profile?.advisor_status || "—"}</b></div><div><span>Chức vụ TVV</span><b>{profile?.advisor_position || "—"}</b></div><div><span>Ngày hiệu lực chức vụ</span><b>{date(profile?.position_effective_date)}</b></div></div>
   {message && <div className="tvv-profile-message">{message}</div>}
   <form className="tvv-profile-form" onSubmit={uploadAvatar}><h3>Ảnh đại diện</h3>
     <label className="tvv-avatar-picker">

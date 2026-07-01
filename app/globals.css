@@ -14100,7 +14100,9 @@ body,
 
 .tvv-notification-panel { position: fixed; z-index: 2147483647; width: min(370px, calc(100vw - 24px)); max-height: min(480px, 70vh); overflow-x: hidden; overflow-y: auto; border: 1px solid #dce4ef; border-radius: 16px; background: #fff; color: #172033; box-shadow: 0 22px 55px rgba(0, 31, 91, .28); text-align: left; isolation: isolate; }
 .tvv-notification-heading { position: sticky; z-index: 2; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 13px 15px; border-bottom: 1px solid #edf0f5; background: #fff; }
-.tvv-notification-heading button { width: 30px !important; min-width: 30px !important; height: 30px !important; min-height: 30px !important; display: grid !important; place-items: center; border: 0 !important; border-radius: 50% !important; background: #edf3fc !important; color: #50617a !important; padding: 0 !important; font-size: 20px !important; line-height: 1 !important; box-shadow: none !important; cursor: pointer; }
+.tvv-notification-heading { justify-content: flex-start; gap: 8px; padding: 10px 12px; }
+.tvv-notification-heading button { min-height: 38px !important; border: 0 !important; border-radius: 10px !important; background: transparent !important; color: #657186 !important; padding: 8px 12px !important; font-size: 13px !important; font-weight: 600 !important; box-shadow: none !important; }
+.tvv-notification-heading button.active { background: #eaf3ff !important; color: #075fe7 !important; }
 .tvv-notification-panel article { position: relative; z-index: 1; padding: 13px 15px; border-bottom: 1px solid #edf0f5; background: #fff; }
 .tvv-notification-panel article p { margin: 5px 0 8px !important; color: #4f5b6e !important; font-size: 13px !important; line-height: 1.45; white-space: pre-wrap; }
 .tvv-notification-panel article small { color: #7c8798; font-size: 12px; }

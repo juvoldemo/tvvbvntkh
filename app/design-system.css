@@ -3,7 +3,7 @@
  * Keep business components intact; all visual decisions live in these tokens.
  */
 :root {
-  --ds-font: var(--font-be-vietnam-pro), Inter, system-ui, "Segoe UI", sans-serif;
+  --ds-font: Roboto, system-ui, "Segoe UI", sans-serif;
 
   --ds-blue-900: #062b73;
   --ds-blue-800: #073b9d;
@@ -69,6 +69,8 @@ html {
   background: var(--ds-bg);
   color: var(--ds-text-primary);
   font-family: var(--ds-font);
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -84,6 +86,7 @@ table {
 }
 
 body {
+  --ds-font: var(--font-roboto), Roboto, system-ui, "Segoe UI", sans-serif;
   color: var(--ds-text-primary);
   font-size: var(--ds-text-body);
   font-weight: 400;
@@ -156,7 +159,7 @@ textarea {
   border-radius: var(--ds-radius-md) !important;
   background: var(--ds-white) !important;
   color: var(--ds-text-primary) !important;
-  padding: 0 var(--ds-space-3) !important;
+  padding: 0 var(--ds-space-3) 0 calc(var(--ds-space-3) + 42px) !important;
   font-size: 16px !important;
   font-weight: 500 !important;
   line-height: 1.45;
@@ -237,9 +240,45 @@ textarea:focus {
 
 /* Mobile TVV application */
 .tvv-app {
+  width: min(100%, 430px) !important;
+  min-height: 100dvh !important;
+  margin-inline: auto !important;
+  overflow-x: clip;
   background: var(--ds-bg) !important;
   color: var(--ds-text-primary);
   font-size: var(--ds-text-body);
+}
+
+.tvv-app,
+.tvv-app *,
+.tvv-bottom-nav {
+  box-sizing: border-box;
+}
+
+.tvv-app > .tvv-page-header,
+.tvv-calculator > .tvv-page-header {
+  width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+.tvv-content.tvv-subpage,
+.tvv-calculator {
+  width: 100% !important;
+  padding-right: var(--ds-space-3) !important;
+  padding-left: var(--ds-space-3) !important;
+}
+
+.tvv-calculator > .tvv-page-header {
+  margin-right: calc(var(--ds-space-3) * -1) !important;
+  margin-left: calc(var(--ds-space-3) * -1) !important;
+  width: calc(100% + var(--ds-space-6)) !important;
+}
+
+.tvv-bottom-nav {
+  left: 50% !important;
+  right: auto !important;
+  width: min(100%, 430px) !important;
+  transform: translateX(-50%) !important;
 }
 
 .tvv-app :where(h1, h2, h3, b, strong, button, label, small, p, span) {
@@ -316,6 +355,236 @@ textarea:focus {
   font-size: var(--ds-text-caption) !important;
 }
 
+.tvv-contest-page .tvv-contest-row {
+  min-height: 120px !important;
+  grid-template-columns: minmax(0, 1fr) 22px !important;
+  align-content: center !important;
+  padding: var(--ds-space-3) var(--ds-space-4) !important;
+}
+
+.tvv-contest-page .tvv-contest-row > div {
+  gap: var(--ds-space-1) !important;
+}
+
+.tvv-contest-page .tvv-contest-row b {
+  max-width: 94% !important;
+  font-size: var(--ds-text-body) !important;
+  line-height: 1.35 !important;
+}
+
+.tvv-contest-page .tvv-contest-row em {
+  width: fit-content;
+  padding: 3px 7px !important;
+  font-size: var(--ds-text-caption) !important;
+}
+
+.tvv-contest-page .tvv-contest-row small {
+  font-size: var(--ds-text-caption) !important;
+}
+
+.tvv-contest-page .tvv-contest-row > svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.tvv-contest-page .tvv-contest-row > strong {
+  margin-top: var(--ds-space-1) !important;
+  font-size: var(--ds-text-large) !important;
+}
+
+/* Competition detail: clear hierarchy and fully visible navigation. */
+.tvv-contest-detail {
+  width: min(430px, calc(100vw - 24px)) !important;
+  max-height: min(720px, calc(100vh - 40px)) !important;
+  overflow-y: auto !important;
+  border: 1px solid var(--ds-divider) !important;
+  border-radius: var(--ds-radius-card) !important;
+  background: var(--ds-white) !important;
+  padding: var(--ds-space-5) !important;
+  font-family: var(--ds-font) !important;
+  color: var(--ds-text-primary) !important;
+}
+
+.tvv-contest-detail header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 40px !important;
+  align-items: start !important;
+  gap: var(--ds-space-3) !important;
+  padding-bottom: var(--ds-space-4) !important;
+  border-bottom: 1px solid var(--ds-divider) !important;
+}
+
+.tvv-contest-detail header > div {
+  gap: var(--ds-space-2) !important;
+}
+
+.tvv-contest-detail header em {
+  width: fit-content;
+  border-radius: var(--ds-radius-pill) !important;
+  background: var(--ds-red-100) !important;
+  color: var(--ds-red-700) !important;
+  padding: 4px 9px !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-caption) !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+}
+
+.tvv-contest-detail header h2 {
+  margin: 0 !important;
+  color: var(--ds-blue-900) !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-h2) !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+}
+
+.tvv-contest-detail header button {
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: var(--ds-blue-100) !important;
+  color: var(--ds-blue-700) !important;
+  padding: 0 !important;
+  font-family: var(--ds-font) !important;
+  font-size: 25px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.tvv-policy-detail-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: var(--ds-space-2) !important;
+  overflow: visible !important;
+  padding: var(--ds-space-4) 0 var(--ds-space-3) !important;
+}
+
+.tvv-policy-detail-tabs button {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px !important;
+  border: 1px solid #cfe0f8 !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-blue-50) !important;
+  color: var(--ds-blue-800) !important;
+  padding: var(--ds-space-2) !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-small) !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+  box-shadow: none !important;
+}
+
+.tvv-policy-detail-tabs button.active {
+  border-color: var(--ds-blue-700) !important;
+  background: var(--ds-blue-700) !important;
+  color: var(--ds-white) !important;
+  box-shadow: 0 6px 14px rgba(7, 95, 231, .2) !important;
+}
+
+.tvv-policy-overview {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--ds-space-2) !important;
+  margin-top: 0 !important;
+}
+
+.tvv-policy-overview > span {
+  min-width: 0;
+  min-height: 84px;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--ds-divider) !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-gray-50) !important;
+  padding: var(--ds-space-3) var(--ds-space-2) !important;
+  text-align: center;
+}
+
+.tvv-policy-overview small {
+  color: var(--ds-text-secondary) !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-caption) !important;
+  font-weight: 500 !important;
+}
+
+.tvv-policy-overview strong {
+  margin-top: var(--ds-space-2) !important;
+  color: var(--ds-blue-700) !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-small) !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere;
+}
+
+.tvv-policy-overview .tvv-achieved-quarters {
+  grid-column: 1 / -1;
+  min-height: 76px;
+  align-items: flex-start;
+  border-color: #cfe0f8 !important;
+  background: var(--ds-blue-50) !important;
+  padding-inline: var(--ds-space-4) !important;
+  text-align: left;
+}
+
+.tvv-achieved-quarters strong {
+  color: var(--ds-blue-900) !important;
+  font-size: var(--ds-text-large) !important;
+}
+
+.tvv-achieved-quarters em {
+  margin-top: var(--ds-space-1);
+  color: var(--ds-blue-700);
+  font-size: var(--ds-text-small);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.tvv-contest-detail-content {
+  border: 1px solid var(--ds-divider) !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-gray-50) !important;
+  padding: var(--ds-space-4) !important;
+}
+
+.tvv-contest-detail-content > span {
+  color: var(--ds-text-secondary) !important;
+  font-size: var(--ds-text-caption) !important;
+  font-weight: 600 !important;
+}
+
+.tvv-contest-detail-content p {
+  margin: var(--ds-space-2) 0 0 !important;
+  color: var(--ds-text-primary) !important;
+  font-size: var(--ds-text-body) !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+}
+
+@media (max-width: 370px) {
+  .tvv-contest-detail {
+    padding: var(--ds-space-4) !important;
+  }
+
+  .tvv-policy-overview {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tvv-policy-overview > span {
+    min-height: 64px;
+  }
+}
+
 .tvv-bottom-nav {
   min-height: 72px;
   border-top: 1px solid var(--ds-divider) !important;
@@ -342,6 +611,225 @@ textarea:focus {
   border-color: var(--ds-divider) !important;
   border-radius: var(--ds-radius-md) !important;
   background: var(--ds-divider) !important;
+}
+
+.tvv-contract-month-filter {
+  display: grid;
+  gap: var(--ds-space-2);
+  color: var(--ds-text-secondary);
+  font-size: var(--ds-text-small);
+}
+
+.tvv-contract-month-filter > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  color: var(--ds-text-secondary);
+  font-weight: 600;
+}
+
+.tvv-contract-month-filter > div {
+  position: relative;
+  min-height: var(--ds-control-height);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: var(--ds-space-2);
+  border: 1px solid var(--ds-gray-300);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-white);
+  padding: 0 var(--ds-space-3);
+  box-shadow: var(--ds-shadow-card);
+}
+
+.tvv-contract-month-filter b {
+  color: var(--ds-blue-900);
+  font-size: var(--ds-text-body);
+}
+
+.tvv-contract-month-filter svg {
+  color: var(--ds-blue-700);
+}
+
+.tvv-contract-month-filter select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tvv-month-picker {
+  position: relative;
+}
+
+.tvv-month-picker .tvv-month-trigger {
+  width: 100%;
+  min-height: 44px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: center;
+  gap: var(--ds-space-2);
+  border: 0 !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 var(--ds-space-3) !important;
+  text-align: left;
+  box-shadow: none !important;
+}
+
+.tvv-month-picker .tvv-month-trigger span {
+  grid-column: 1;
+  overflow: hidden;
+  font-size: var(--ds-text-small) !important;
+  font-weight: 600 !important;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.tvv-month-picker.open .tvv-month-trigger > svg:last-child {
+  transform: rotate(180deg);
+}
+
+.tvv-month-picker.tvv-month-pill {
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: fit-content !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+.tvv-month-pill .tvv-month-trigger {
+  width: auto !important;
+  min-height: 36px !important;
+  color: var(--ds-white) !important;
+  padding: 0 var(--ds-space-3) !important;
+}
+
+.tvv-month-pill .tvv-month-trigger span {
+  color: var(--ds-white) !important;
+}
+
+.tvv-contract-month-filter > .tvv-contract-month-control {
+  min-height: var(--ds-control-height);
+  display: block;
+  border: 1px solid var(--ds-gray-300);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-white);
+  padding: 0;
+  box-shadow: var(--ds-shadow-card);
+}
+
+.tvv-contract-month-control .tvv-month-trigger {
+  color: var(--ds-blue-900) !important;
+}
+
+.tvv-month-menu {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: calc(100vw - 24px);
+  max-height: min(360px, 55vh);
+  display: grid;
+  gap: var(--ds-space-1);
+  overflow-y: auto;
+  border: 1px solid var(--ds-divider);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-white);
+  padding: var(--ds-space-2);
+  box-shadow: var(--ds-shadow-float);
+}
+
+.tvv-month-menu button {
+  width: 100%;
+  min-height: 44px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: var(--ds-space-2);
+  border: 0 !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: transparent !important;
+  color: var(--ds-text-primary) !important;
+  padding: var(--ds-space-2) 10px !important;
+  font-family: var(--ds-font) !important;
+  font-size: var(--ds-text-body) !important;
+  font-weight: 500 !important;
+  text-align: left;
+  box-shadow: none !important;
+}
+
+.tvv-month-menu button:hover {
+  background: var(--ds-blue-50) !important;
+}
+
+.tvv-month-menu button.active {
+  background: var(--ds-blue-100) !important;
+  color: var(--ds-blue-700) !important;
+  font-weight: 600 !important;
+}
+
+.tvv-month-menu button svg {
+  color: var(--ds-blue-700);
+}
+
+.tvv-money-field {
+  min-height: var(--ds-control-height) !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  align-items: stretch !important;
+  overflow: hidden;
+  border: 1px solid var(--ds-gray-300) !important;
+  border-radius: var(--ds-radius-md) !important;
+  background: var(--ds-white) !important;
+  padding: 0 !important;
+  transition: border-color var(--ds-transition), box-shadow var(--ds-transition);
+}
+
+.tvv-money-field:focus-within {
+  border-color: var(--ds-blue-700) !important;
+  box-shadow: 0 0 0 3px rgba(7, 95, 231, .1) !important;
+}
+
+.tvv-money-field input {
+  min-width: 0;
+  min-height: 46px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 var(--ds-space-3) !important;
+  text-align: center !important;
+}
+
+.tvv-money-field > span {
+  display: grid;
+  place-items: center;
+  border-left: 1px solid var(--ds-divider);
+  background: var(--ds-gray-50);
+  color: var(--ds-text-secondary);
+  font-size: var(--ds-text-body) !important;
+  font-weight: 600 !important;
+}
+
+.tvv-date-field {
+  min-height: var(--ds-control-height) !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  gap: 0 !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.tvv-date-field > span {
+  min-height: 46px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding-left: 42px !important;
+  text-align: center !important;
+}
+
+.tvv-date-field > svg {
+  justify-self: center;
 }
 
 /* Authentication and administration */

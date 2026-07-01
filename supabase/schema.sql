@@ -360,10 +360,16 @@ create table if not exists admin_events (
   title text not null,
   content text not null,
   event_date timestamptz,
+  event_type text,
+  event_key text,
   is_active boolean not null default true,
   created_at timestamptz default now()
 );
 
+alter table admin_events add column if not exists event_type text;
+alter table admin_events add column if not exists event_key text;
+
 create index if not exists idx_admin_events_created_at on admin_events(created_at desc);
+create unique index if not exists uniq_admin_events_event_key on admin_events(event_key);
 
 notify pgrst, 'reload schema';
