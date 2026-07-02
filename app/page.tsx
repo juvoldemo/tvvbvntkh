@@ -2,11 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, FileText, Filter, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
-type Tab = "overview" | "contracts" | "calculator" | "contests" | "profile";
+type Tab = "overview" | "contracts" | "calculator" | "contests" | "illustration" | "profile";
+type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
 
@@ -28,6 +29,21 @@ const emptyEstimate = {
   totalEstimatedReward: 0,
   rewardByDraftContract: []
 };
+
+const POLICY_MONTH_TIERS = [
+  { minimum: 12_000_000, rate: 0.1 },
+  { minimum: 24_000_000, rate: 0.15 },
+  { minimum: 50_000_000, rate: 0.18 }
+];
+const POLICY_QUARTER_TIERS = [
+  { minimum: 24_000_000, rate: 0.08 },
+  { minimum: 60_000_000, rate: 0.1 },
+  { minimum: 90_000_000, rate: 0.13 },
+  { minimum: 150_000_000, rate: 0.15 },
+  { minimum: 250_000_000, rate: 0.18 },
+  { minimum: 350_000_000, rate: 0.2 },
+  { minimum: 500_000_000, rate: 0.25 }
+];
 
 function currentMonth() {
   return new Date().toISOString().slice(0, 7);
@@ -55,6 +71,11 @@ function formatCompactVnd(value: unknown) {
   return formatVnd(amount);
 }
 
+function formatRate(value: unknown) {
+  const rate = Number(value) || 0;
+  return `${Math.round(rate * 100)}%`;
+}
+
 function statusTone(status: unknown) {
   const normalized = normalizeStatusText(status);
   if (normalized === "co hieu luc") return { label: "Đã phát hành", tone: "green", icon: CheckCircle2 };
@@ -65,6 +86,53 @@ function statusTone(status: unknown) {
 
 function monthLabel(month: string) {
   return `Tháng ${Number(month.slice(5, 7))}/${month.slice(0, 4)}`;
+}
+
+function quarterLabel(month: string) {
+  const quarter = Math.ceil(Number(month.slice(5, 7)) / 3);
+  return `Quý ${quarter}/${month.slice(0, 4)}`;
+}
+
+function recordInPeriod(row: any, month: string, period: PeriodMode) {
+  const paidDate = String(row.paid_date || row.collection_date || "");
+  if (!paidDate) return false;
+  const selectedYear = month.slice(0, 4);
+  if (paidDate.slice(0, 4) !== selectedYear) return false;
+  if (period === "year") return true;
+  if (period === "month") return paidDate.slice(0, 7) === month.slice(0, 7);
+  const selectedQuarter = Math.ceil(Number(month.slice(5, 7)) / 3);
+  const recordQuarter = Math.ceil(Number(paidDate.slice(5, 7)) / 3);
+  return recordQuarter === selectedQuarter;
+}
+
+function contractStatusGroup(row: any): "issued" | "refunded" | "pending" {
+  const normalized = normalizeStatusText(row.policy_status);
+  if (normalized === "co hieu luc") return "issued";
+  if (
+    normalized.includes("hoan phi") ||
+    normalized.includes("het hieu luc") ||
+    normalized.includes("huy") ||
+    normalized.includes("tu choi") ||
+    normalized.includes("tri hoan")
+  ) return "refunded";
+  return "pending";
+}
+
+function contractIpValue(row: any) {
+  return contractStatusGroup(row) === "refunded" ? 0 : Number(row.ip || 0);
+}
+
+function calculatorProgramOrder(item: any) {
+  const id = String(item.programId ?? "").toLowerCase();
+  const name = String(item.programName ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase();
+  if (id === "acquisition-commission" || name.includes("hoa hong khai thac")) return 1;
+  if (id === "policy-quarterly" || name.includes("thuong quy tvv")) return 2;
+  if (id === "policy-monthly" || name.includes("thuong nang suat thang")) return 3;
+  return 10;
 }
 
 function monthOptionsUntilCurrent() {
@@ -78,9 +146,56 @@ function monthOptionsUntilCurrent() {
   }).reverse();
 }
 
+function quarterOptionsUntilCurrent() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const currentQuarter = Math.ceil((now.getMonth() + 1) / 3);
+  return Array.from({ length: currentQuarter }, (_, index) => {
+    const quarter = index + 1;
+    const value = `${year}-${String((quarter - 1) * 3 + 1).padStart(2, "0")}`;
+    return { value, label: quarterLabel(value) };
+  }).reverse();
+}
+
+function yearOptionsUntilCurrent() {
+  const currentYear = new Date().getFullYear();
+  return Array.from({ length: currentYear - 2026 + 1 }, (_, index) => {
+    const year = currentYear - index;
+    return { value: `${year}-01`, label: `Năm ${year}` };
+  });
+}
+
 function shortText(value: unknown, maxLength = 86) {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}...` : text;
+}
+
+function playNotificationTone() {
+  if (typeof window === "undefined") return;
+  const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextCtor) return;
+
+  try {
+    const audioContext = new AudioContextCtor();
+    const now = audioContext.currentTime;
+    [0, 0.18].forEach((offset) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(1046.5, now + offset);
+      oscillator.frequency.exponentialRampToValueAtTime(1568, now + offset + 0.08);
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + offset + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.14);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(now + offset);
+      oscillator.stop(now + offset + 0.16);
+    });
+    window.setTimeout(() => audioContext.close().catch(() => undefined), 600);
+  } catch {
+    // Some browsers block page-load audio until the user interacts with the page.
+  }
 }
 
 export default function TvvMobilePage() {
@@ -88,6 +203,7 @@ export default function TvvMobilePage() {
   const [signedIn, setSignedIn] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [month, setMonth] = useState(currentMonth());
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("month");
   const [data, setData] = useState<any>(null);
   const [advisorKey, setAdvisorKey] = useState("");
   const [loading, setLoading] = useState(true);
@@ -103,7 +219,7 @@ export default function TvvMobilePage() {
   const notificationPanelRef = useRef<HTMLDivElement>(null);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, right: 12 });
   const [readEventIds, setReadEventIds] = useState<string[]>([]);
-  const [openedUnreadIds, setOpenedUnreadIds] = useState<string[]>([]);
+  const [readEventsReady, setReadEventsReady] = useState(false);
   const [notificationView, setNotificationView] = useState<"unread" | "read">("unread");
   const [userProfile, setUserProfile] = useState<any>(null);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
@@ -123,12 +239,17 @@ export default function TvvMobilePage() {
   }, [signedIn]);
 
   useEffect(() => {
-    if (!userProfile?.advisor_code) return;
+    if (!userProfile?.advisor_code) {
+      setReadEventsReady(false);
+      return;
+    }
     try {
       const stored = JSON.parse(window.localStorage.getItem(`bvnt.readEvents.${userProfile.advisor_code}`) || "[]");
       setReadEventIds(Array.isArray(stored) ? stored.map(String) : []);
     } catch {
       setReadEventIds([]);
+    } finally {
+      setReadEventsReady(true);
     }
   }, [userProfile?.advisor_code]);
 
@@ -222,11 +343,13 @@ export default function TvvMobilePage() {
     return rows.find((row: any) => (advisor?.code && row.agentCode === advisor.code) || row.agentName === advisor?.name)
       ?? { monthIp: 0, quarterIp: 0, yearIp: 0 };
   }, [advisor, data?.agentIpPeriods]);
-  const allContracts = data?.statusContracts ?? data?.contracts ?? [];
+  const allContracts = useMemo(() => periodMode === "month"
+    ? data?.statusContracts ?? data?.contracts ?? []
+    : data?.yearStatusContracts ?? data?.yearContracts ?? [], [data, periodMode]);
   const myContracts = useMemo(() => {
     if (!advisor || !allContracts.length) return [];
-    return allContracts.filter((row: any) => (advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name));
-  }, [advisor, allContracts]);
+    return allContracts.filter((row: any) => ((advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name)) && recordInPeriod(row, month, periodMode));
+  }, [advisor, allContracts, month, periodMode]);
   const productOptions = useMemo(() => {
     const names = new Set(myContracts.map((row: any) => row.product_name || row.raw_data?.product || row.raw_data?.["Sản phẩm chính"]).filter(Boolean));
     ["An Thịnh Phúc Niên", "An Tâm Hoạch Định"].forEach((name) => names.add(name));
@@ -254,20 +377,31 @@ export default function TvvMobilePage() {
     const invalid = myContracts.filter((row: any) => ["het hieu luc", "tu choi", "tri hoan", "hoan phi", "ycbh het hieu luc"].includes(normalizeStatusText(row.policy_status))).length;
     return { total, issued, pending: Math.max(total - issued - invalid, 0), invalid };
   }, [myContracts]);
-  const notificationCount = Math.min(99, adminEvents.filter((item) => !readEventIds.includes(item.id)).length);
+  const unreadNotifications = useMemo(() => adminEvents.filter((item) => !readEventIds.includes(item.id)), [adminEvents, readEventIds]);
+  const unreadNotificationKey = unreadNotifications.map((item) => item.id).join("|");
+  const notificationCount = Math.min(99, unreadNotifications.length);
   const displayedNotifications = notificationView === "unread"
-    ? adminEvents.filter((item) => openedUnreadIds.includes(item.id))
+    ? unreadNotifications
     : adminEvents.filter((item) => readEventIds.includes(item.id));
+
+  useEffect(() => {
+    if (!signedIn || !readEventsReady || !userProfile?.advisor_code || !unreadNotificationKey) return;
+    const storageKey = `bvnt.notifiedEvents.${userProfile.advisor_code}`;
+    if (window.sessionStorage.getItem(storageKey) === unreadNotificationKey) return;
+    window.sessionStorage.setItem(storageKey, unreadNotificationKey);
+    playNotificationTone();
+  }, [readEventsReady, signedIn, unreadNotificationKey, userProfile?.advisor_code]);
 
   function toggleNotifications() {
     const willOpen = !notificationsOpen;
     setNotificationsOpen(willOpen);
     if (!willOpen) return;
     setNotificationView("unread");
-    const unreadIds = adminEvents.filter((item) => !readEventIds.includes(item.id)).map((item) => item.id);
-    setOpenedUnreadIds(unreadIds);
-    if (!adminEvents.length) return;
-    const ids = adminEvents.map((item) => item.id);
+  }
+
+  function markEventAsRead(eventId: string) {
+    if (readEventIds.includes(eventId)) return;
+    const ids = [...readEventIds, eventId];
     setReadEventIds(ids);
     if (userProfile?.advisor_code) {
       window.localStorage.setItem(`bvnt.readEvents.${userProfile.advisor_code}`, JSON.stringify(ids));
@@ -294,12 +428,12 @@ export default function TvvMobilePage() {
           {tab === "overview" ? (
           <header className="tvv-hero">
             <div className="tvv-hero-main">
-              <div className="tvv-avatar">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</div>
+              <button className="tvv-avatar tvv-avatar-button" type="button" onClick={() => setTab("profile")} aria-label="Mở trang cá nhân">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</button>
               <div>
                 <h1>Xin chào, {advisor?.name || "TVV"} <span>👋</span></h1>
                 <p>TVV - {advisor?.code || "Chưa có mã"}</p>
               </div>
-              <button ref={notificationButtonRef} className="tvv-icon-button" type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
+              <button ref={notificationButtonRef} className={`tvv-icon-button${notificationCount > 0 ? " tvv-notification-alert" : ""}`} type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
                 <Bell size={28} />
                 {notificationCount > 0 && <b>{notificationCount}</b>}
               </button>
@@ -310,7 +444,17 @@ export default function TvvMobilePage() {
                     <button type="button" role="tab" aria-selected={notificationView === "read"} className={notificationView === "read" ? "active" : ""} onClick={() => setNotificationView("read")}>Đã xem</button>
                   </div>
                   {displayedNotifications.length === 0 ? <p className="tvv-notification-empty">{notificationView === "unread" ? "Không có thông báo mới." : "Chưa có thông báo đã xem."}</p> : displayedNotifications.map((item) => (
-                    <article key={item.id}>
+                    <article
+                      key={item.id}
+                      role={notificationView === "unread" ? "button" : undefined}
+                      tabIndex={notificationView === "unread" ? 0 : undefined}
+                      onClick={() => notificationView === "unread" && markEventAsRead(item.id)}
+                      onKeyDown={(event) => {
+                        if (notificationView !== "unread" || (event.key !== "Enter" && event.key !== " ")) return;
+                        event.preventDefault();
+                        markEventAsRead(item.id);
+                      }}
+                    >
                       <strong>{item.title}</strong>
                       <p>{item.content}</p>
                       <small>{item.event_date ? `Sự kiện: ${new Date(item.event_date).toLocaleString("vi-VN")}` : new Date(item.created_at).toLocaleString("vi-VN")}</small>
@@ -321,20 +465,16 @@ export default function TvvMobilePage() {
               )}
               <div className="tvv-hero-period-row">
                 <MonthPicker className="tvv-month-pill" value={month} options={monthOptions} onChange={setMonth} ariaLabel="Chọn tháng" />
-                <div className="tvv-ip-periods" aria-label="IP theo kỳ">
-                  <span><small>IP tháng</small><strong>{formatCompactVnd(advisorIpPeriods.monthIp)}</strong></span>
-                  <span><small>IP quý</small><strong>{formatCompactVnd(advisorIpPeriods.quarterIp)}</strong></span>
-                  <span><small>IP năm</small><strong>{formatCompactVnd(advisorIpPeriods.yearIp)}</strong></span>
-                </div>
               </div>
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "illustration" ? "Minh hoạ" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} onTab={setTab} onOpenContract={setSelectedContract} />}
-          {tab === "contracts" && <ContractsList contracts={myContracts} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContract={setSelectedContract} />}
+          {tab === "contracts" && <ContractsListV2 contracts={myContracts} month={month} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setMonth} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
+          {tab === "illustration" && <IllustrationView advisor={advisor} contracts={myContracts} estimate={estimate ?? emptyEstimate} onOpenCalculator={() => setTab("calculator")} />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
       )}
@@ -345,13 +485,14 @@ export default function TvvMobilePage() {
 }
 
 function TvvSubHeader({ title, onBack, showHelp = false }: { title: string; onBack: () => void; showHelp?: boolean }) {
-  return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
+  return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{title === "Hợp đồng" && <button className="tvv-header-filter" type="button" aria-label="Lọc hợp đồng"><Filter size={22} /></button>}{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
 }
 
 function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void; className?: string; ariaLabel: string }) {
   const [open, setOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 168 });
   const pickerRef = useRef<HTMLDivElement>(null);
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? monthLabel(value);
   useEffect(() => {
     if (!open) return;
     const positionMenu = () => {
@@ -379,7 +520,7 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   }, [open]);
   return <div ref={pickerRef} className={`tvv-month-picker ${className}${open ? " open" : ""}`}>
     <button className="tvv-month-trigger" type="button" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-      <span>{monthLabel(value)}</span>
+      <span>{selectedLabel}</span>
     </button>
     {open && typeof document !== "undefined" && createPortal(<div className="tvv-month-menu" style={{ top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }} role="listbox" aria-label={ariaLabel}>
       {options.map((option) => <button type="button" role="option" aria-selected={option.value === value} className={option.value === value ? "active" : ""} key={option.value} onClick={() => { onChange(option.value); setOpen(false); }}><span>{option.label}</span>{option.value === value && <CheckCircle2 size={18} />}</button>)}
@@ -439,22 +580,129 @@ function ContestRow({ item, index, compact = false, onOpen }: any) {
   return <article className={`tvv-contest-row${compact ? " compact" : ""}`} role="button" tabIndex={0} onClick={() => onOpen?.(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen?.(item); } }}><div><em>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : "ĐANG DIỄN RA"}</em><b>{shortText(item.programName, compact ? 62 : 74)}</b><small><CalendarDays size={14} />{isPolicy ? item.period : `${formatDateVi(item.startDate)} - ${formatDateVi(item.endDate)}`}</small>{hasReward && !compact && !isPolicy && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}</div>{(hasReward || isPolicy) && !compact && <strong>{formatVnd(item.estimatedReward)}</strong>}<ChevronRight size={24} /></article>;
 }
 
+function contestNextMilestones(item: any) {
+  if (item.isCommission) {
+    const reward = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
+    return {
+      basisLabel: "Phí đóng",
+      currentBasis: reward / 0.3,
+      currentReward: reward,
+      currentRate: 0,
+      currentRateLabel: "30%",
+      nextTiers: [
+        {
+          title: "Hoa hồng hợp đồng hiện tại",
+          subtitle: "Phí đóng × 30%",
+          missing: 0,
+          missingLabel: "hợp đồng",
+          estimatedContracts: 1,
+          projectedReward: reward,
+          incrementalReward: 0
+        }
+      ]
+    };
+  }
+
+  const policyRow = Array.isArray(item.rows) ? item.rows[0] : null;
+  if (policyRow) {
+    const tiers = item.programId === "policy-quarterly" ? POLICY_QUARTER_TIERS : item.programId === "policy-monthly" ? POLICY_MONTH_TIERS : [];
+    const basisLabel = item.programId === "policy-quarterly" ? "FYP quý" : "IP tháng";
+    const basisValue = item.programId === "policy-quarterly"
+      ? Number(policyRow.fypFallback ? policyRow.totalFyc : policyRow.fyp)
+      : Number(policyRow.ip);
+    const currentTotalFyc = Number(policyRow.totalFyc || 0);
+    const currentReward = Number(policyRow.reward || item.estimatedReward || 0);
+    const averageContract = Math.max(
+      1,
+      Math.round(Number(policyRow.ip || policyRow.fyp || policyRow.totalFyc || 0) / Math.max(1, Number(policyRow.contractCount || policyRow.contract_count || 1)))
+    );
+    const nextTiers = tiers
+      .filter((tier) => basisValue < tier.minimum)
+      .slice(0, 2)
+      .map((tier) => {
+        const missing = Math.max(0, tier.minimum - basisValue);
+        const estimatedContracts = Math.max(1, Math.ceil(missing / averageContract));
+        const projectedTotalFyc = currentTotalFyc + missing * 0.3;
+        const projectedReward = projectedTotalFyc * tier.rate;
+        return {
+          title: `${basisLabel} đạt ${formatCompactVnd(tier.minimum)}`,
+          subtitle: `Bậc thưởng ${formatRate(tier.rate)}`,
+          missing,
+          missingLabel: basisLabel,
+          estimatedContracts,
+          projectedReward,
+          incrementalReward: Math.max(0, projectedReward - currentReward)
+        };
+      });
+    return {
+      basisLabel,
+      currentBasis: basisValue,
+      currentReward,
+      currentRate: Number(policyRow.rate || 0),
+      currentRateLabel: Number(policyRow.rate || 0) > 0 ? formatRate(policyRow.rate) : "0%",
+      nextTiers
+    };
+  }
+
+  const matchedCount = Math.max(0, item.matchedContracts?.length ?? 0);
+  const reward = Number(item.estimatedReward || 0);
+  const averageReward = matchedCount > 0 && reward > 0 ? reward / matchedCount : 0;
+  const nextTiers = [1, 2].map((step) => ({
+    title: `Thêm ${step} HĐ đủ điều kiện`,
+    subtitle: averageReward > 0 ? "Minh họa theo thưởng bình quân hiện tại" : "Cần đối chiếu điều kiện chương trình",
+    missing: step,
+    missingLabel: "hợp đồng",
+    estimatedContracts: step,
+    projectedReward: averageReward > 0 ? reward + averageReward * step : 0,
+    incrementalReward: averageReward > 0 ? averageReward * step : 0
+  }));
+  return {
+    basisLabel: "HĐ đủ điều kiện",
+    currentBasis: matchedCount,
+    currentReward: reward,
+    currentRate: 0,
+    currentRateLabel: "",
+    nextTiers
+  };
+}
+
 function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void }) {
   const [detailTab, setDetailTab] = useState<"overview" | "achieved" | "missing" | "quarters" | "formula">("overview");
   const content = item.conditionText || item.description || item.content || item.ruleText || "Nội dung chương trình đang được cập nhật.";
   const policyRows = Array.isArray(item.rows) ? item.rows : null;
+  const milestoneInfo = contestNextMilestones(item);
   const achievedQuarters = Array.from(new Set<number>((policyRows ?? []).flatMap((row: any) => Array.isArray(row.achievedQuarters) ? row.achievedQuarters : []).map(Number).filter((quarter: number) => quarter >= 1 && quarter <= 4))).sort((a, b) => a - b);
   const tabs = policyRows ? [
-    ["overview", "Tổng quan"],
-    ["formula", "Cách tính"]
+    ["overview", "Tổng quan"]
   ] as Array<[typeof detailTab, string]> : [];
   const visibleRows = detailTab === "achieved" ? policyRows?.filter((row: any) => row.achieved)
     : detailTab === "missing" ? policyRows?.filter((row: any) => !row.achieved) : policyRows;
   return <div className="tvv-contest-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contest-detail" role="dialog" aria-modal="true" aria-label="Nội dung chương trình thi đua" onClick={(event) => event.stopPropagation()}>
     <header><div><em>{item.period || "ĐANG DIỄN RA"}</em><h2>{item.programName || "Chương trình thi đua"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
     {!policyRows && <p className="tvv-contest-detail-date"><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</p>}
-    {policyRows && <nav className="tvv-policy-detail-tabs">{tabs.map(([id, label]) => <button type="button" className={detailTab === id ? "active" : ""} key={id} onClick={() => setDetailTab(id)}>{label}</button>)}</nav>}
-    {(!policyRows || detailTab === "formula") && <div className="tvv-contest-detail-content"><span>{policyRows ? "Cách tính" : "Nội dung chương trình"}</span><p>{content}</p></div>}
+    {policyRows && tabs.length > 1 && <nav className="tvv-policy-detail-tabs">{tabs.map(([id, label]) => <button type="button" className={detailTab === id ? "active" : ""} key={id} onClick={() => setDetailTab(id)}>{label}</button>)}</nav>}
+    {!policyRows && <div className="tvv-contest-detail-content"><span>Nội dung chương trình</span><p>{content}</p></div>}
+    {(!policyRows || detailTab === "overview") && <div className="tvv-current-tier-card">
+      <span>Hiện tại</span>
+      <strong>{milestoneInfo.basisLabel === "hợp đồng" || milestoneInfo.basisLabel === "HĐ đủ điều kiện" ? `${milestoneInfo.currentBasis} HĐ` : formatCompactVnd(milestoneInfo.currentBasis)}</strong>
+      {milestoneInfo.currentRateLabel && <em>Bậc hiện tại: {milestoneInfo.currentRateLabel}</em>}
+    </div>}
+    {(!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
+      <div className="tvv-next-milestones-head">
+        <span>Mốc tiếp theo</span>
+      </div>
+      {milestoneInfo.nextTiers.length ? <div className="tvv-next-milestone-grid">{milestoneInfo.nextTiers.map((tier: any) => (
+        <article key={`${tier.title}-${tier.subtitle}`}>
+          <div>
+            <b>{tier.title}</b>
+            <small>{tier.subtitle}</small>
+          </div>
+          <p>Cần thêm <strong>{tier.missingLabel === "hợp đồng" ? `${tier.missing} HĐ` : formatCompactVnd(tier.missing)}</strong>, khoảng <strong>{tier.estimatedContracts} HĐ</strong></p>
+          <footer><span>Dự kiến thưởng</span><strong>{tier.projectedReward > 0 ? formatVnd(tier.projectedReward) : "Chưa đủ dữ liệu"}</strong></footer>
+          {tier.incrementalReward > 0 && <em>+{formatVnd(tier.incrementalReward)} so với hiện tại</em>}
+        </article>
+      ))}</div> : <p className="tvv-empty">TVV đã ở mốc cao nhất hiện có của chương trình này.</p>}
+    </div>}
     {policyRows && detailTab === "overview" && <div className="tvv-policy-overview">
       <span><small>TVV đạt</small><strong>{item.achievedCount || 0}</strong></span>
       <span><small>Tổng FYC</small><strong>{formatVnd(policyRows.reduce((sum: number, row: any) => sum + Number(row.totalFyc || 0), 0))}</strong></span>
@@ -470,12 +718,82 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
   </section></div>;
 }
 
+function ContractsListV2({ contracts, month, monthOptions, periodMode, onPeriodModeChange, onMonthChange, onOpenContract }: any) {
+  const [statusFilter, setStatusFilter] = useState<"all" | "issued" | "pending" | "refunded">("all");
+  const filteredContracts = statusFilter === "all" ? contracts : contracts.filter((row: any) => contractStatusGroup(row) === statusFilter);
+  const totalIp = contracts.reduce((sum: number, row: any) => sum + contractIpValue(row), 0);
+  const periodOptions = periodMode === "year" ? yearOptionsUntilCurrent() : periodMode === "quarter" ? quarterOptionsUntilCurrent() : monthOptions;
+  const issued = contracts.filter((row: any) => contractStatusGroup(row) === "issued").length;
+  const pending = contracts.filter((row: any) => contractStatusGroup(row) === "pending").length;
+  const refunded = contracts.filter((row: any) => contractStatusGroup(row) === "refunded").length;
+  const selectedIndex = periodOptions.findIndex((option: any) => option.value === month);
+  const periodTitle = periodMode === "year" ? `Năm ${month.slice(0, 4)}` : periodMode === "quarter" ? quarterLabel(month) : monthLabel(month);
+
+  function selectPeriodMode(mode: PeriodMode) {
+    onPeriodModeChange(mode);
+    if (mode === "year") {
+      onMonthChange(`${month.slice(0, 4)}-01`);
+      return;
+    }
+    if (mode === "quarter") {
+      const quarter = Math.ceil(Number(month.slice(5, 7)) / 3);
+      onMonthChange(`${month.slice(0, 4)}-${String((quarter - 1) * 3 + 1).padStart(2, "0")}`);
+    }
+  }
+
+  function movePeriod(direction: number) {
+    const next = periodOptions[selectedIndex + direction];
+    if (next) onMonthChange(next.value);
+  }
+
+  const filters = [
+    ["all", "Tất cả", contracts.length, "blue"],
+    ["issued", "Đã phát hành", issued, "green"],
+    ["pending", "Chờ phát hành", pending, "orange"],
+    ["refunded", "Hoàn phí", refunded, "red"]
+  ];
+
+  return <section className="tvv-content tvv-contract-template">
+    <div className="ct-period-tabs" role="tablist" aria-label="Chọn kỳ dữ liệu">
+      {(["month", "quarter", "year"] as PeriodMode[]).map((mode) => <button key={mode} type="button" role="tab" aria-selected={periodMode === mode} onClick={() => selectPeriodMode(mode)}><CalendarDays size={16} />{mode === "month" ? "Tháng" : mode === "quarter" ? "Quý" : "Năm"}</button>)}
+    </div>
+    <div className="ct-period-nav">
+      <button type="button" disabled={selectedIndex < 0 || selectedIndex === periodOptions.length - 1} onClick={() => movePeriod(1)} aria-label="Kỳ trước"><ChevronLeft size={22} /></button>
+      <MonthPicker className="ct-month-picker" value={month} options={periodOptions} onChange={onMonthChange} ariaLabel="Chọn kỳ hợp đồng" />
+      <button type="button" disabled={selectedIndex <= 0} onClick={() => movePeriod(-1)} aria-label="Kỳ sau"><ChevronRight size={22} /></button>
+    </div>
+    <div className="ct-summary">
+      <article><span>IP {periodMode === "month" ? "tháng" : periodMode === "quarter" ? "quý" : "năm"}</span><i><BarChart3 size={20} /></i><strong>{formatVnd(totalIp)}</strong></article>
+      <article><span>Số hợp đồng</span><i><FileText size={19} /></i><strong>{contracts.length}</strong></article>
+      <article className="ct-status-summary"><span>Trạng thái</span><div><small><b className="green" />Đã phát hành</small><strong>{issued}</strong></div><div><small><b className="orange" />Chờ phát hành</small><strong>{pending}</strong></div><div><small><b className="red" />Hoàn phí</small><strong>{refunded}</strong></div></article>
+    </div>
+    <div className="ct-status-tabs" role="tablist" aria-label="Lọc trạng thái hợp đồng">
+      {filters.map(([id, label, count, tone]: any) => <button key={id} type="button" role="tab" aria-selected={statusFilter === id} onClick={() => setStatusFilter(id)}><b className={tone} />{label} ({count})</button>)}
+    </div>
+    <section className="ct-contract-list">
+      <header><h2>Danh sách hợp đồng</h2><span>{filteredContracts.length} HĐ</span></header>
+      {filteredContracts.length ? filteredContracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="ct-empty">Chưa có hợp đồng trong {periodTitle.toLowerCase()}.</p>}
+    </section>
+  </section>;
+}
+
 function ContractPreview({ contracts, onAll, onOpenContract }: any) {
   return <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><button onClick={onAll}>Xem tất cả <ChevronRight size={18} /></button></div>{contracts.length ? contracts.slice(0, 5).map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section>;
 }
 
-function ContractsList({ contracts, month, monthOptions, onMonthChange, onOpenContract }: any) {
+function ContractsList({ contracts, month, monthOptions, periodMode, onPeriodModeChange, onMonthChange, onOpenContract }: any) {
+  const totalIp = contracts.reduce((sum: number, row: any) => sum + contractIpValue(row), 0);
+  const totalAfyp = contracts.reduce((sum: number, row: any) => sum + Number(row.afyp || 0), 0);
+  const periodLabel = periodMode === "year" ? `Nam ${month.slice(0, 4)}` : periodMode === "quarter" ? quarterLabel(month) : monthLabel(month);
+  const emptyLabel = periodMode === "year" ? "nam nay" : periodMode === "quarter" ? "quy nay" : "thang nay";
   return <section className="tvv-content tvv-subpage tvv-after-sub-header">
+    <div className="tvv-period-tabs" role="tablist" aria-label="Chon ky du lieu">
+      {(["month", "quarter", "year"] as PeriodMode[]).map((mode) => <button key={mode} type="button" role="tab" aria-selected={periodMode === mode} className={periodMode === mode ? "active" : ""} onClick={() => onPeriodModeChange(mode)}>{mode === "month" ? "Thang" : mode === "quarter" ? "Quy" : "Nam"}</button>)}
+    </div>
+    <section className="tvv-contract-revenue" aria-label="Doanh thu TVV">
+      <div><span>{periodLabel}</span><strong>{formatVnd(totalIp)}</strong><small>IP</small></div>
+      <div><span>AFYP</span><strong>{formatVnd(totalAfyp)}</strong><small>Doanh thu quy doi</small></div>
+    </section>
     <label className="tvv-contract-month-filter"><span><CalendarDays size={18} /> Tháng muốn xem</span><MonthPicker className="tvv-contract-month-control" value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chọn tháng hợp đồng" /></label>
     <section className="tvv-card tvv-contract-card"><div className="tvv-section-head"><h2>Hợp đồng của tôi</h2><span>{contracts.length} HĐ</span></div>{contracts.length ? contracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="tvv-empty">Chưa có hợp đồng trong tháng này.</p>}</section>
   </section>;
@@ -520,17 +838,80 @@ function ContractDetailModal({ row, onClose }: { row: any; onClose: () => void }
 
 function CalculatorView(props: any) {
   const { drafts, draftRewards, estimate } = props;
-  const calculatorPrograms = estimate?.calculatorPrograms ?? estimate?.rewardByProgram ?? [];
-  const calculatorTotal = estimate?.calculatorTotalEstimatedReward ?? estimate?.totalEstimatedReward ?? 0;
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const draftCommissionReward = drafts.reduce((sum: number, draft: DraftContract) => sum + (Number(draft.premium) || 0) * 0.3, 0);
+  const rawCalculatorPrograms = estimate?.calculatorPrograms ?? estimate?.rewardByProgram ?? [];
+  const hasCommissionRow = rawCalculatorPrograms.some((item: any) => item.programId === "acquisition-commission");
+  const calculatorPrograms = draftCommissionReward > 0 && !hasCommissionRow
+    ? [
+      ...rawCalculatorPrograms,
+      {
+        programId: "acquisition-commission",
+        programName: "Hoa hồng khai thác",
+        period: "Phí đóng × 30%",
+        estimatedReward: draftCommissionReward,
+        currentReward: 0,
+        projectedReward: draftCommissionReward,
+        incrementalReward: draftCommissionReward,
+        isPolicyProjection: false,
+        isCommission: true
+      }
+    ]
+    : rawCalculatorPrograms;
+  const orderedCalculatorPrograms = [...calculatorPrograms]
+    .filter((item: any) => item.programId !== "policy-month-13")
+    .sort((a: any, b: any) => calculatorProgramOrder(a) - calculatorProgramOrder(b));
+  const apiCalculatorTotal = Number(estimate?.calculatorTotalEstimatedReward ?? estimate?.totalEstimatedReward ?? 0);
+  const visibleProgramTotal = orderedCalculatorPrograms.reduce((sum: number, item: any) => sum + Number(item.incrementalReward ?? item.estimatedReward ?? 0), 0);
+  const calculatorTotal = Math.max(apiCalculatorTotal, visibleProgramTotal, draftCommissionReward);
   return <section className="tvv-calculator">
     <TvvSubHeader title="Máy tính thưởng" onBack={props.onBack} />
     <section className="tvv-calc-card"><h2>1. Nhập thông tin hợp đồng</h2><div className="tvv-form-grid tvv-form-grid-compact"><label>Phí đóng (PĐT/IP)<div className="tvv-money-field"><input value={props.premiumText} onChange={(e) => props.setPremiumText(e.target.value)} /><span>đ</span></div></label><label>Ngày nộp phí dự kiến<div className="tvv-date-field"><span>{formatDateVi(props.paidDate)}</span><CalendarDays size={17} /><input type="date" value={props.paidDate} onChange={(e) => props.setPaidDate(e.target.value)} /></div></label></div><button className="tvv-primary" onClick={props.onAdd}>+ Thêm hợp đồng</button></section>
-    <section className="tvv-calc-card"><div className="tvv-section-head"><h2>2. Danh sách hợp đồng đã thêm ({drafts.length})</h2>{drafts.length > 0 && <button className="danger" onClick={props.onClear}><Trash2 size={15} /> Xóa tất cả</button>}</div>{drafts.map((draft: DraftContract, index: number) => <article className="tvv-draft-row" key={draft.id}><GripVertical size={17} /><i>{index + 1}</i><div><b>{draft.productName}</b><p>PĐT: {formatVnd(draft.premium)}</p><small>Ngày dự kiến: {formatDateVi(draft.expectedPaidDate)}</small></div><strong><span>Dự kiến thưởng</span><b>{formatVnd(Number(draftRewards.get(draft.id)?.estimatedReward ?? 0))}</b></strong><button onClick={() => props.onRemove(draft.id)}><Trash2 size={18} /></button></article>)}</section>
-    <section className="tvv-calc-card"><h2>3. Kết quả ước tính</h2><div className="tvv-result-table tvv-result-table-standalone"><div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>{calculatorPrograms.filter((item: any) => item.programId !== "policy-month-13").map((item: any, index: number) => {
+    <section className="tvv-calc-card"><div className="tvv-section-head"><h2>2. Danh sách hợp đồng đã thêm ({drafts.length})</h2>{drafts.length > 0 && <button className="danger" onClick={props.onClear}><Trash2 size={15} /> Xóa tất cả</button>}</div>{drafts.map((draft: DraftContract, index: number) => {
+      const rewardFromPrograms = Number(draftRewards.get(draft.id)?.estimatedReward ?? 0);
+      const fallbackReward = (Number(draft.premium) || 0) * 0.3;
+      return <article className="tvv-draft-row" key={draft.id}><GripVertical size={17} /><i>{index + 1}</i><div><b>{draft.productName}</b><p>PĐT: {formatVnd(draft.premium)}</p><small>Ngày dự kiến: {formatDateVi(draft.expectedPaidDate)}</small></div><strong><span>Dự kiến thưởng</span><b>{formatVnd(Math.max(rewardFromPrograms, fallbackReward))}</b></strong><button onClick={() => props.onRemove(draft.id)}><Trash2 size={18} /></button></article>;
+    })}</section>
+    <section className="tvv-calc-card"><h2>3. Kết quả ước tính</h2><div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(Number(calculatorTotal))}</strong></div><div className="tvv-result-table tvv-result-table-standalone"><div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>{orderedCalculatorPrograms.map((item: any, index: number) => {
       const increase = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
       const currentReward = Number(item.currentReward ?? 0);
-      return <div className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`} key={item.programId}><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{item.isPolicyProjection && currentReward > 0 && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
-    })}</div><div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(Number(calculatorTotal))}</strong></div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Phần màu xanh là số thưởng tăng thêm so với dữ liệu hiện tại. Thưởng chính sách chỉ được xác nhận khi hợp đồng đủ điều kiện và phát hành thành công.</span></p></section>
+      return <div
+        className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`}
+        key={item.programId}
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelectedProgram(item)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          setSelectedProgram(item);
+        }}
+      ><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{item.isPolicyProjection && currentReward > 0 && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
+    })}</div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Phần màu xanh là số thưởng tăng thêm so với dữ liệu hiện tại. Thưởng chính sách chỉ được xác nhận khi hợp đồng đủ điều kiện và phát hành thành công.</span></p></section>
+    {selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}
+  </section>;
+}
+
+function IllustrationView({ advisor, contracts, estimate, onOpenCalculator }: any) {
+  const totalIp = contracts.reduce((sum: number, row: any) => sum + contractIpValue(row), 0);
+  const totalAfyp = contracts.reduce((sum: number, row: any) => sum + Number(row.afyp || 0), 0);
+  const issued = contracts.filter((row: any) => normalizeStatusText(row.policy_status) === "co hieu luc").length;
+  const programs = (estimate?.calculatorPrograms ?? estimate?.policyRewardPrograms ?? []).filter((item: any) => item.programId !== "policy-month-13").slice(0, 3);
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-illustration-page">
+    <section className="tvv-card tvv-illustration-summary">
+      <div><span>TVV</span><strong>{advisor?.name || "TVV"}</strong><small>{advisor?.code || "Chưa có mã"}</small></div>
+      <button type="button" onClick={onOpenCalculator}><Calculator size={18} /> Thu nhập</button>
+    </section>
+    <section className="tvv-card tvv-illustration-metrics">
+      <div><span>Tổng HĐ</span><strong>{contracts.length}</strong></div>
+      <div><span>Đã phát hành</span><strong>{issued}</strong></div>
+      <div><span>Tổng IP</span><strong>{formatCompactVnd(totalIp)}</strong></div>
+      <div><span>Tổng AFYP</span><strong>{formatCompactVnd(totalAfyp)}</strong></div>
+    </section>
+    <section className="tvv-card tvv-illustration-programs">
+      <div className="tvv-section-head"><h2>Minh hoạ thưởng</h2></div>
+      {programs.length ? programs.map((item: any) => <article key={item.programId}><div><b>{item.programName}</b><small>{item.period || item.conditionText || "Chương trình"}</small></div><strong>{formatVnd(Number(item.incrementalReward ?? item.estimatedReward ?? 0))}</strong></article>) : <p className="tvv-empty">Chưa có dữ liệu minh hoạ.</p>}
+    </section>
   </section>;
 }
 
@@ -546,7 +927,7 @@ function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
     const response = await fetch("/api/user/auth", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password })
     });
-    const payload = await response.json();
+    const payload = await response.json().catch(() => ({ error: "May chu khong tra ve JSON." }));
     setBusy(false);
     if (!response.ok) return setError(payload.error || "Không đăng nhập được.");
     onSuccess();
@@ -606,6 +987,6 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
 }
 
 function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
-  const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Tính thưởng", Calculator], ["contests", "Thi đua", Trophy], ["profile", "Cá nhân", UserRound]];
-  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={tab === id ? "active" : ""} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
+  const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
+  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => id === "illustration" ? window.location.assign("/minhhoa2/") : setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }

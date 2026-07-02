@@ -8,23 +8,34 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({}));
-  const code = normalizeAdvisorCode(body.username);
-  const password = String(body.password || "");
-  const { data, error } = await getSupabaseAdmin()
-    .from("authorized_users")
-    .select("advisor_code,password_hash,is_active")
-    .eq("advisor_code", code)
-    .maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data?.is_active || !verifyPassword(password, data.password_hash || "")) {
-    return NextResponse.json({ error: "Mã TVV hoặc mật khẩu không đúng." }, { status: 401 });
+  try {
+    const body = await request.json().catch(() => ({}));
+    const code = normalizeAdvisorCode(body.username);
+    const password = String(body.password || "");
+    const { data, error } = await getSupabaseAdmin()
+      .from("authorized_users")
+      .select("advisor_code,password_hash,is_active")
+      .eq("advisor_code", code)
+      .maybeSingle();
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data?.is_active || !verifyPassword(password, data.password_hash || "")) {
+      return NextResponse.json({ error: "Ma TVV hoac mat khau khong dung." }, { status: 401 });
+    }
+
+    const response = NextResponse.json({ ok: true, advisorCode: code });
+    response.cookies.set(USER_COOKIE, createUserToken(code), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30
+    });
+    return response;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Cannot connect to login service.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-  const response = NextResponse.json({ ok: true, advisorCode: code });
-  response.cookies.set(USER_COOKIE, createUserToken(code), {
-    httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/", maxAge: 60 * 60 * 24 * 30
-  });
-  return response;
 }
 
 export async function DELETE() {

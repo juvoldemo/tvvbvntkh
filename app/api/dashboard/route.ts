@@ -206,6 +206,8 @@ export async function GET(request: NextRequest) {
       groups: buildGroupRanking(countedRecords),
       agents: buildAgentRanking(countedRecords),
       agentIpPeriods: buildAgentIpPeriods(allYearRecords, month),
+      yearStatusContracts: sortContractDetails(allYearRecords),
+      yearContracts: countedYearRecords.slice(0, 5000),
       statuses: buildStatusReport(countedRecords, filteredRecords),
       statusContracts: filteredRecords,
       timeSeries: {

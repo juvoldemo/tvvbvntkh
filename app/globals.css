@@ -2924,6 +2924,19 @@ tr.clickable:hover {
   }
 }
 
+.tvv-app .tvv-contract-status-tabs button {
+  background: #005bd8 !important;
+  border-color: #005bd8 !important;
+  color: #fff !important;
+}
+
+.tvv-app .tvv-contract-status-tabs button.active,
+.tvv-app .tvv-contract-status-tabs button[aria-selected="true"] {
+  background: #e0ad00 !important;
+  border-color: #c99a00 !important;
+  color: #fff !important;
+}
+
 .contest-rule-editor {
   display: grid;
   gap: 10px;
@@ -8409,6 +8422,143 @@ body,
 
 .tvv-contract-card { padding-top: 12px !important; }
 
+.tvv-contract-period-filter {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 620px);
+  margin: 0 auto 12px;
+}
+
+.tvv-contract-period-head {
+  display: block;
+}
+
+.tvv-contract-period-head > span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #52658d;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tvv-contract-period-filter > .tvv-contract-month-control {
+  min-height: 54px;
+  display: block;
+  border: 1px solid #d7e3f4;
+  border-radius: 16px;
+  background: #fff;
+  padding: 0;
+  box-shadow: 0 10px 24px rgba(17, 54, 117, 0.07);
+}
+
+.tvv-period-tabs {
+  float: right;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 8px 12px;
+  width: min(260px, 100%);
+  border: 1px solid #9cbff2;
+  border-radius: 16px;
+  background: #dbeaff;
+  padding: 6px;
+}
+
+.tvv-period-tabs button {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid #005bd8;
+  border-radius: 11px;
+  background: #005bd8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tvv-period-tabs button.active {
+  border-color: #c99a00;
+  background: #e0ad00;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(224, 173, 0, 0.24);
+}
+
+.tvv-contract-period-head .tvv-period-tabs {
+  float: none;
+  width: 100%;
+  margin: 0;
+}
+
+.tvv-contract-revenue {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 520px);
+  margin: 0 auto 16px;
+  text-align: center;
+}
+
+.tvv-contract-revenue div {
+  min-width: 0;
+  border: 1px solid #dbe6f6;
+  border-radius: 16px;
+  background: #fff;
+  padding: 13px 14px;
+  box-shadow: 0 12px 28px rgba(17, 54, 117, 0.08);
+}
+
+.tvv-contract-revenue span,
+.tvv-contract-revenue small {
+  display: block;
+  color: #66789f;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.tvv-contract-revenue strong {
+  display: block;
+  margin: 5px 0 3px;
+  color: #001b5a;
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.tvv-contract-status-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: min(100%, 560px);
+  margin: 0 auto 14px;
+  border: 1px solid #9cbff2;
+  border-radius: 16px;
+  background: #dbeaff;
+  padding: 6px;
+}
+
+.tvv-contract-status-tabs button {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid #005bd8;
+  border-radius: 11px;
+  background: #005bd8;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.15;
+}
+
+.tvv-contract-status-tabs button.active,
+.tvv-contract-status-tabs button[aria-selected="true"] {
+  border-color: #c99a00;
+  background: #e0ad00;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(224, 173, 0, 0.24);
+}
+
 .tvv-contract-row {
   grid-template-columns: 44px minmax(0, 1fr) auto 18px !important;
   grid-template-areas: "icon info amount arrow" "icon info meta arrow" !important;
@@ -8422,6 +8572,28 @@ body,
 }
 
 .tvv-contract-row + .tvv-contract-row { margin-top: 8px !important; }
+
+.tvv-contract-period-head .tvv-period-tabs button {
+  background: #005bd8 !important;
+  border-color: #005bd8 !important;
+  color: #fff !important;
+}
+
+.tvv-contract-period-head .tvv-period-tabs button.active,
+.tvv-contract-period-head .tvv-period-tabs button[aria-selected="true"] {
+  background: #e0ad00 !important;
+  border-color: #c99a00 !important;
+  color: #fff !important;
+}
+
+.tvv-contract-period-filter > .tvv-contract-month-control .tvv-month-trigger {
+  text-align: center !important;
+}
+
+.tvv-contract-period-filter > .tvv-contract-month-control .tvv-month-trigger span {
+  justify-self: center !important;
+  text-align: center !important;
+}
 
 .tvv-contract-row > span {
   width: 40px !important;
@@ -10993,6 +11165,130 @@ body,
   font-size: 17px;
 }
 
+.tvv-next-milestones {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tvv-next-milestones-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tvv-next-milestones-head span {
+  color: #61759e;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tvv-next-milestones-head strong {
+  color: #061b66;
+  font-size: 13px;
+  text-align: right;
+}
+
+.tvv-current-tier-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 12px;
+  border: 1px solid #dce8f8;
+  border-radius: 14px;
+  background: #f7fbff;
+  padding: 13px 14px;
+}
+
+.tvv-current-tier-card span {
+  color: #61759e;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tvv-current-tier-card strong {
+  color: #061b66;
+  font-size: 20px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tvv-current-tier-card em {
+  color: #075fe7;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tvv-next-milestone-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.tvv-next-milestone-grid article {
+  display: grid;
+  gap: 9px;
+  border: 1px solid #dce8f8;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+}
+
+.tvv-next-milestone-grid b,
+.tvv-next-milestone-grid strong {
+  color: #061b66;
+}
+
+.tvv-next-milestone-grid small {
+  display: block;
+  margin-top: 3px;
+  color: #667894;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tvv-next-milestone-grid p {
+  margin: 0;
+  color: #34415d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tvv-next-milestone-grid footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 10px;
+  background: #edf8f1;
+  padding: 9px 10px;
+}
+
+.tvv-next-milestone-grid footer span {
+  color: #267348;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tvv-next-milestone-grid footer strong {
+  color: #008a3d;
+  font-size: 15px;
+  text-align: right;
+}
+
+.tvv-next-milestone-grid em {
+  justify-self: end;
+  color: #ed0016;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
 .tvv-policy-detail-tabs {
   display: flex;
   gap: 8px;
@@ -11827,6 +12123,19 @@ body,
 .tvv-result-row {
   min-height: 58px !important;
   border-top: 1px solid #e4ebf7 !important;
+}
+
+.tvv-result-row[role="button"] {
+  cursor: pointer;
+}
+
+.tvv-result-row[role="button"]:hover {
+  background: #f8fbff !important;
+}
+
+.tvv-result-row[role="button"]:focus-visible {
+  outline: 3px solid rgba(7, 95, 231, .25);
+  outline-offset: -3px;
 }
 
 .tvv-result-row > div,
@@ -14104,9 +14413,38 @@ body,
 .tvv-notification-heading button { min-height: 38px !important; border: 0 !important; border-radius: 10px !important; background: transparent !important; color: #657186 !important; padding: 8px 12px !important; font-size: 13px !important; font-weight: 600 !important; box-shadow: none !important; }
 .tvv-notification-heading button.active { background: #eaf3ff !important; color: #075fe7 !important; }
 .tvv-notification-panel article { position: relative; z-index: 1; padding: 13px 15px; border-bottom: 1px solid #edf0f5; background: #fff; }
+.tvv-notification-panel article[role="button"] { cursor: pointer; }
+.tvv-notification-panel article[role="button"]:hover { background: #f8fbff; }
+.tvv-notification-panel article[role="button"]:focus-visible { outline: 2px solid #0b63e5; outline-offset: -2px; }
 .tvv-notification-panel article p { margin: 5px 0 8px !important; color: #4f5b6e !important; font-size: 13px !important; line-height: 1.45; white-space: pre-wrap; }
 .tvv-notification-panel article small { color: #7c8798; font-size: 12px; }
 .tvv-notification-empty { margin: 0 !important; padding: 24px 15px; color: #7a8495 !important; text-align: center; }
+.tvv-notification-alert { animation: tvv-bell-wiggle 1.35s ease-in-out infinite; transform-origin: 50% 8%; }
+.tvv-notification-alert b { animation: tvv-badge-pulse 1.35s ease-in-out infinite; }
+.tvv-avatar-button { border: 0; padding: 0; cursor: pointer; }
+.tvv-avatar-button:focus-visible { outline: 3px solid rgba(255, 255, 255, .55); outline-offset: 3px; }
+
+@keyframes tvv-bell-wiggle {
+  0%, 46%, 100% { transform: rotate(0deg); }
+  6% { transform: rotate(9deg); }
+  12% { transform: rotate(-8deg); }
+  18% { transform: rotate(7deg); }
+  24% { transform: rotate(-5deg); }
+  30% { transform: rotate(3deg); }
+}
+
+@keyframes tvv-badge-pulse {
+  0%, 100% { transform: scale(1); }
+  18% { transform: scale(1.16); }
+  34% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tvv-notification-alert,
+  .tvv-notification-alert b {
+    animation: none !important;
+  }
+}
 
 .tvv-user-login { min-height: 100vh; display: grid; place-items: center; background: linear-gradient(150deg, #edf5ff, #f8fbff); padding: 20px; color: #172033; }
 .tvv-user-login > form { width: min(400px, 100%); display: grid; gap: 14px; border-radius: 20px; background: #fff; padding: 30px; box-shadow: 0 18px 55px rgba(12, 48, 105, .15); }
@@ -14221,6 +14559,94 @@ body,
   }
 }
 .tvv-profile-message { border-radius: 9px; background: #eaf8ef; color: #18733a; padding: 10px; font-size: 13px; }
+
+.tvv-illustration-page {
+  gap: 14px !important;
+}
+
+.tvv-illustration-summary {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.tvv-illustration-summary div {
+  display: grid;
+  gap: 4px;
+}
+
+.tvv-illustration-summary span,
+.tvv-illustration-summary small,
+.tvv-illustration-metrics span,
+.tvv-illustration-programs small {
+  color: #687895;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tvv-illustration-summary strong {
+  color: #061b66;
+  font-size: 18px;
+}
+
+.tvv-illustration-summary button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 11px;
+  background: #075fe7;
+  color: #fff;
+  padding: 10px 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tvv-illustration-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tvv-illustration-metrics div {
+  border-radius: 12px;
+  background: #f5f9ff;
+  padding: 13px;
+}
+
+.tvv-illustration-metrics strong {
+  display: block;
+  margin-top: 6px;
+  color: #075fe7;
+  font-size: 18px;
+}
+
+.tvv-illustration-programs {
+  display: grid !important;
+  gap: 10px;
+}
+
+.tvv-illustration-programs article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #dce8f8;
+  border-radius: 13px;
+  padding: 12px;
+}
+
+.tvv-illustration-programs b {
+  display: block;
+  color: #061b66;
+  font-size: 14px;
+}
+
+.tvv-illustration-programs strong {
+  color: #04954c;
+  white-space: nowrap;
+}
 .tvv-logout-button { border: 1px solid #f0c8c8; border-radius: 10px; background: #fff4f4; color: #b52b31; padding: 11px; font-weight: 700; }
 
 /* One stable banner for every TVV sub-page. */
@@ -14350,4 +14776,268 @@ body,
     color: #071e66 !important;
     box-shadow: none !important;
   }
+}
+
+/* Overview stat card: compact vertical rhythm. */
+.tvv-app .tvv-stat-card {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat {
+  min-height: 92px !important;
+  gap: 4px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  justify-content: center !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat > span {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat > span svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat strong {
+  margin-top: 0 !important;
+  font-size: 24px !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat p {
+  min-height: 20px !important;
+  font-size: 13px !important;
+  line-height: 1.05 !important;
+}
+
+.tvv-app .tvv-stat-card > .tvv-stat i {
+  margin-top: 2px !important;
+  width: 24px !important;
+  height: 3px !important;
+}
+
+/* Contracts page: keep period, IP, and AFYP on one row. */
+.tvv-subpage:has(.tvv-contract-period-filter) {
+  grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+  column-gap: 10px !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) > .tvv-contract-period-filter {
+  display: contents !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-period-head,
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-status-tabs,
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-card {
+  grid-column: 1 / -1 !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-period-filter > .tvv-contract-month-control {
+  grid-column: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) > .tvv-contract-revenue {
+  grid-column: 2 / 4 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  grid-template-columns: minmax(max-content, 1fr) max-content !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-period-filter > .tvv-contract-month-control,
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue div {
+  min-height: 76px !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue div:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+@media (max-width: 430px) {
+  .tvv-subpage:has(.tvv-contract-period-filter) {
+    column-gap: 7px !important;
+  }
+
+  .tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue div {
+    padding: 11px 8px !important;
+  }
+
+  .tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue strong {
+    font-size: 13px !important;
+  }
+
+  .tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-month-control .tvv-month-trigger span {
+    font-size: 13px !important;
+  }
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue strong {
+  font-size: clamp(13px, 3.2vw, 16px) !important;
+  white-space: nowrap !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-revenue div {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+.tvv-subpage:has(.tvv-contract-period-filter) .tvv-contract-month-control .tvv-month-trigger span {
+  white-space: nowrap !important;
+}
+
+/* Contract screen — scoped so the original app frame and dimensions stay intact. */
+.tvv-page-header .tvv-header-filter {
+  position: absolute; right: 18px; display: grid; place-items: center;
+  width: 36px; height: 36px; padding: 0; border: 0;
+  background: transparent; color: #fff;
+}
+.tvv-contract-template {
+  display: flex !important; flex-direction: column; gap: 12px;
+  width: 100%; padding: 0 10px 104px !important;
+  background: #fff; color: #09215f;
+}
+.ct-period-tabs {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;
+  margin-top: -34px; padding: 8px; border: 1px solid #dce6f5;
+  border-radius: 15px; background: #fff;
+  box-shadow: 0 3px 12px rgba(19, 57, 120, .12);
+}
+.ct-period-tabs button {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  height: 36px; border: 0; border-radius: 9px;
+  background: #fff !important; color: #111827 !important;
+  font-size: 12px !important; font-weight: 700;
+}
+.ct-period-tabs button[aria-selected="true"] {
+  background: #0867ef !important; color: #fff !important;
+  box-shadow: 0 4px 10px rgba(8, 103, 239, .23);
+}
+.ct-period-nav {
+  display: grid; grid-template-columns: 44px 1fr 44px;
+  align-items: center; min-height: 30px;
+}
+.ct-period-nav > button {
+  display: grid; place-items: center; justify-self: center;
+  width: 28px !important; height: 28px !important; padding: 0 !important;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; color: #153d86 !important;
+  box-shadow: none !important;
+}
+.ct-period-nav > button:disabled { opacity: .28; }
+.ct-period-nav > button svg {
+  width: 17px !important; height: 17px !important;
+  stroke-width: 2.25;
+}
+.ct-month-picker { justify-self: center; }
+.ct-month-picker .tvv-month-trigger {
+  min-width: 0 !important; width: auto !important; padding: 2px 8px !important;
+  border: 0 !important; background: transparent !important;
+  color: #09215f !important; box-shadow: none !important;
+  font-size: 13px !important; font-weight: 800 !important;
+  justify-content: center !important; gap: 6px !important;
+}
+.ct-summary {
+  display: grid; grid-template-columns: 1.12fr .94fr 1fr; gap: 6px;
+}
+.ct-summary > article {
+  position: relative; min-width: 0; height: 105px; padding: 17px 11px;
+  border: 1px solid #e6ecf5; border-radius: 10px; background: #fff;
+  box-shadow: 0 3px 10px rgba(32, 64, 115, .06);
+}
+.ct-summary article > span { display: block; color: #667493; font-size: 11px; }
+.ct-summary article > i {
+  position: absolute; top: 13px; right: 9px; display: grid; place-items: center;
+  width: 25px; height: 25px; border-radius: 7px;
+  background: #eaf2ff; color: #0871ff; font-style: normal;
+}
+.ct-summary article > strong {
+  display: block; margin-top: 19px; color: #0867ef;
+  font-size: clamp(14px, 3.7vw, 17px); white-space: nowrap;
+}
+.ct-summary > article:nth-child(2) > strong {
+  position: static; display: block;
+  margin-top: 19px; color: #09215f; font-size: 18px;
+  text-align: center;
+}
+.ct-status-summary { padding: 13px 10px !important; }
+.ct-status-summary > span { margin-bottom: 7px; }
+.ct-status-summary > div {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 5px; font-size: 8px;
+}
+.ct-status-summary small { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.ct-status-summary div > strong { font-size: 9px; }
+.ct-status-summary b, .ct-status-tabs b {
+  width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%;
+}
+.ct-status-summary .green, .ct-status-tabs .green { background: #18c54b; }
+.ct-status-summary .orange, .ct-status-tabs .orange { background: #ff9d0b; }
+.ct-status-summary .red, .ct-status-tabs .red { background: #ff3346; }
+.ct-status-tabs .blue { background: #0867ef; }
+.ct-status-tabs {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px; overflow: hidden; padding: 5px 6px;
+  border-radius: 18px; background: #f7f9fc; scrollbar-width: none;
+}
+.ct-status-tabs::-webkit-scrollbar { display: none; }
+.ct-status-tabs button {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  min-width: 0; min-height: 24px !important; height: 24px !important;
+  padding: 0 3px !important; border: 0;
+  border-radius: 15px; background: #fff !important; color: #111827 !important;
+  box-shadow: 0 2px 6px rgba(25, 48, 88, .04);
+  font-size: clamp(7px, 1.9vw, 9px) !important;
+  line-height: 1; white-space: nowrap;
+}
+.ct-status-tabs button[aria-selected="true"] {
+  background: #0867ef !important; color: #fff !important;
+  box-shadow: 0 3px 8px rgba(8, 103, 239, .25);
+}
+.ct-status-tabs button[aria-selected="true"] b { background: #fff; }
+.ct-contract-list > header {
+  display: flex; align-items: center; justify-content: space-between; height: 32px;
+}
+.ct-contract-list h2 { margin: 0; font-size: 12px; }
+.ct-contract-list header span { font-size: 11px; font-weight: 800; }
+.ct-contract-list .tvv-contract-row {
+  min-height: 84px !important; border: 1px solid #e5ebf4 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(32, 64, 115, .05) !important;
+}
+.ct-empty {
+  display: grid; place-items: center; min-height: 84px; margin: 0;
+  border: 1px solid #e5ebf4; border-radius: 10px;
+  color: #697795; font-size: 11px;
+}
+@media (min-width: 601px) {
+  .tvv-contract-template { padding-inline: 20px !important; }
+}
+
+.tvv-bottom-nav button.income-nav {
+  min-height: 54px !important;
+  margin: -10px 4px 0 !important;
+  border-radius: 16px !important;
+  background: linear-gradient(145deg, #1677f8, #075ee5) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 16px rgba(8, 103, 239, .3) !important;
+  font-weight: 800 !important;
+}
+.tvv-bottom-nav button.income-nav svg {
+  color: #fff !important;
+  stroke-width: 2.2 !important;
+}
+.tvv-bottom-nav button.income-nav.active {
+  background: linear-gradient(145deg, #0968ef, #064fc9) !important;
+  color: #fff !important;
+}
+.tvv-bottom-nav button.income-nav::after {
+  display: none !important;
 }
