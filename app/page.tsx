@@ -988,5 +988,5 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
 
 function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
-  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => id === "illustration" ? window.location.assign("/minhhoa2/") : setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
+  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => id === "illustration" ? window.location.assign("/minhhoa2/index.html") : setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }

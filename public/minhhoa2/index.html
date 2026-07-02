@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <title>Minh họa quyền lợi bảo hiểm</title>
+    <meta name="description" content="Minh họa quyền lợi bảo hiểm" />
+    <meta property="og:title" content="Minh họa quyền lợi bảo hiểm" />
+    <meta property="og:description" content="Minh họa quyền lợi bảo hiểm" />
+    <meta name="twitter:title" content="Minh họa quyền lợi bảo hiểm" />
+    <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
+    <link rel="stylesheet" href="styles.css?v=20260703-unified-banner-blue" />
+    <script>
+      window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="illustration-page-header">
+        <button class="illustration-back-button" type="button" aria-label="Quay lại tổng quan" onclick="window.location.href='/'">
+          <img src="/Icon/arrow-back-up.svg" alt="" />
+        </button>
+        <h1>Minh hoạ</h1>
+      </header>
+
+      <nav class="tabs" aria-label="Chọn màn hình">
+        <button class="tab-button tab-main active" type="button" data-tab="main">Minh họa SPC</button>
+        <button class="tab-button tab-riders" type="button" data-tab="riders">Sản phẩm bán kèm</button>
+      </nav>
+
+      <section id="mainTab" class="tab-panel active">
+        <form id="illustrationForm" class="form-grid">
+          <section class="panel">
+            <h2><span class="section-badge customer-badge"></span><span>1. Thông tin khách hàng</span></h2>
+            <div class="fields">
+              <label class="field-row icon-user">
+                <span>Họ và tên khách hàng</span>
+                <input id="fullName" name="fullName" type="text" required value="Nguyễn Hoàng Vũ" placeholder="Nguyễn Hoàng Vũ" />
+              </label>
+
+              <label class="field-row icon-calendar">
+                <span class="required-label">Ngày tháng năm sinh</span>
+                <input id="dateOfBirth" name="dateOfBirth" type="text" inputmode="numeric" maxlength="10" required placeholder="dd/mm/yyyy" />
+              </label>
+
+              <label class="field-row icon-info">
+                <span>Tuổi bảo hiểm hiện tại</span>
+                <input id="currentAge" type="text" value="-" readonly />
+              </label>
+
+              <label class="field-row icon-user">
+                <span class="required-label">Giới tính</span>
+                <select id="gender" name="gender" class="gender-native-select" aria-hidden="true" tabindex="-1">
+                  <option>Nam</option>
+                  <option>Nữ</option>
+                </select>
+                <div class="gender-buttons" role="group" aria-label="Chọn giới tính">
+                  <button class="gender-button active" type="button" data-gender-value="Nam" aria-pressed="true">
+                    <span class="gender-icon" aria-hidden="true">♂</span>
+                    <span>Nam</span>
+                  </button>
+                  <button class="gender-button" type="button" data-gender-value="Nữ" aria-pressed="false">
+                    <span class="gender-icon" aria-hidden="true">♀</span>
+                    <span>Nữ</span>
+                  </button>
+                </div>
+              </label>
+
+              <label class="field-row main-extra-field occupation-field visible-occupation-field icon-briefcase">
+                <span>Nghề nghiệp</span>
+                <select id="occupationGroup" name="occupationGroup" disabled>
+                  <option value="1">Nhóm 1</option>
+                  <option value="2">Nhóm 2</option>
+                  <option value="3">Nhóm 3</option>
+                  <option value="4">Nhóm 4</option>
+                  <option value="5">Nhóm 5</option>
+                  <option value="6">Nhóm 6</option>
+                </select>
+                <div class="occupation-search-box">
+                  <img src="icons/search.svg" alt="" aria-hidden="true" />
+                  <input id="occupationJob" name="occupationJob" type="text" autocomplete="off" placeholder="Tìm nghề nghiệp..." aria-autocomplete="list" aria-expanded="false" aria-controls="occupationSuggestions" />
+                </div>
+                <div id="occupationSuggestions" class="occupation-suggestions" role="listbox" hidden></div>
+                <small id="occupationJobNote" class="field-note"></small>
+              </label>
+
+              <label class="field-row main-extra-field hidden-main-field icon-calendar">
+                <span>Định kỳ đóng phí</span>
+                <select id="paymentMode" name="paymentMode">
+                  <option value="yearly">Năm</option>
+                  <option value="halfYearly">Nửa năm</option>
+                  <option value="quarterly">Quý</option>
+                  <option value="monthly">Tháng</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2><span class="section-badge illustration-badge"></span><span>2. Thông tin minh họa</span></h2>
+            <div class="fields">
+              <label class="field-row single-line-field icon-book main-product-field">
+                <span class="main-product-label">Sản phẩm
+                  <button id="mainProductInfoButton" class="main-product-info-button" type="button" aria-label="Xem quy tắc điều khoản sản phẩm"></button>
+                </span>
+                <select id="mainProduct" name="mainProduct">
+                  <option value="ATHD">An Tâm Hoạch Định</option>
+                  <option value="ATPN" selected>An Thịnh Phúc Niên</option>
+                  <option value="LIFE_CARE_20">Life Care 2.0</option>
+                </select>
+                <div id="mainProductDropdown" class="main-product-dropdown" data-open="false">
+                  <button id="mainProductDropdownButton" class="main-product-dropdown-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="mainProductDropdownText">An Thịnh Phúc Niên</span>
+                    <span class="main-product-chevron" aria-hidden="true"></span>
+                  </button>
+                  <div id="mainProductDropdownList" class="main-product-dropdown-list" role="listbox" hidden>
+                    <button class="main-product-option" type="button" role="option" data-product-value="ATHD" aria-selected="false">An Tâm Hoạch Định</button>
+                    <button class="main-product-option selected" type="button" role="option" data-product-value="ATPN" aria-selected="true">An Thịnh Phúc Niên</button>
+                    <button class="main-product-option" type="button" role="option" data-product-value="LIFE_CARE_20" aria-selected="false">Life Care 2.0</button>
+                  </div>
+                </div>
+              </label>
+
+              <label class="field-row single-line-field icon-money annual-premium-field">
+                <span class="required-label annual-premium-label">Phí bảo hiểm định kỳ năm</span>
+                <input id="annualPremium" class="money-input" name="annualPremium" type="text" inputmode="numeric" value="20,000,000" required />
+              </label>
+
+              <label class="field-row single-line-field icon-plus legacy-illustration-field">
+                <span>Phí đóng thêm</span>
+                <input id="additionalPremium" class="money-input" name="additionalPremium" type="text" inputmode="numeric" />
+              </label>
+
+              <label class="field-row death-sum-field icon-shield">
+                <span id="mainSumAssuredLabel" class="required-label">STBH tử vong</span>
+                <input id="deathSumAssured" class="money-input" name="deathSumAssured" type="text" inputmode="numeric" value="500,000,000" required />
+                <small id="deathSumAssuredRange" class="field-note"></small>
+              </label>
+
+              <label class="field-row icon-shield legacy-illustration-field">
+                <span id="secondaryBenefitLabel">STBH TTTBVV</span>
+                <input id="disabilitySumAssured" class="money-input" name="disabilitySumAssured" type="text" inputmode="numeric" readonly />
+                <small class="field-note" aria-hidden="true"></small>
+              </label>
+
+              <label class="field-row icon-calendar legacy-illustration-field">
+                <span class="required-label">Số năm đóng phí dự kiến</span>
+                <input id="premiumPaymentYears" name="premiumPaymentYears" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10" required />
+              </label>
+
+              <label class="field-row icon-calendar legacy-illustration-field">
+                <span>Số năm minh họa</span>
+                <input id="illustrationYears" name="illustrationYears" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="20" required />
+              </label>
+
+              <label class="field-row icon-percent" hidden>
+                <span>Lãi suất minh họa (%/năm)</span>
+                <input id="interestRate" name="interestRate" type="text" value="4.76" readonly required />
+              </label>
+
+              <div id="lifeCareTermField" class="field-row icon-calendar life-care-only" hidden>
+                <span class="required-label">Thời hạn hợp đồng</span>
+                <div class="life-care-term-buttons" role="group" aria-label="Chọn thời hạn hợp đồng Life Care 2.0">
+                  <button type="button" data-life-care-term="5" aria-pressed="false">5 năm</button>
+                  <button type="button" data-life-care-term="10" class="active" aria-pressed="true">10 năm</button>
+                </div>
+              </div>
+
+              <div id="lifeCarePaymentTermField" class="field-row icon-calendar life-care-only life-care-readonly" hidden>
+                <span>Thời hạn đóng phí</span>
+                <strong id="lifeCarePaymentTerm">10 năm</strong>
+              </div>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button type="submit">Tạo bảng minh họa</button>
+          </div>
+        </form>
+
+        <section id="resultsSection" class="results">
+          <div class="result-heading">
+            <div>
+              <h2 id="resultTitle"><span class="section-badge result-badge"></span><span>3. Giá trị hoàn lại minh họa</span><span class="result-unit">Đơn vị <strong>nghìn đồng</strong></span></h2>
+            </div>
+            <p id="resultMeta"></p>
+          </div>
+
+          <div class="result-toggle" role="group" aria-label="Chế độ xem bảng minh họa">
+            <button id="milestoneView" class="active" type="button">Mốc nổi bật</button>
+            <button id="fullView" type="button">Toàn bộ</button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="year-age-col" rowspan="2">Năm / Tuổi</th>
+                  <th class="premium-col" rowspan="2">Phí BH lũy kế</th>
+                  <th class="cash-parent" colspan="2">Giá trị hoàn lại</th>
+                </tr>
+                <tr class="cash-rate-row">
+                  <th class="cash-rate-col">4.25%</th>
+                  <th class="cash-rate-col">4.76%</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody"></tbody>
+            </table>
+          </div>
+
+          <div id="lifeCareBenefits" class="life-care-benefits" hidden></div>
+
+          <p class="disclaimer">
+            Kết quả chỉ mang tính mô phỏng nội bộ, phục vụ tham khảo nhanh. Giá trị chính thức căn cứ theo bảng minh họa do hệ thống Bảo Việt Nhân thọ phát hành.
+          </p>
+        </section>
+
+        <section id="summaryExportBar" class="summary-export-bar" hidden>
+          <button id="exportSummaryButton" class="summary-export-button" type="button">📄 Xuất tóm tắt</button>
+          <p id="summaryExportStatus" class="summary-export-status" role="status"></p>
+        </section>
+      </section>
+
+      <section id="ridersTab" class="tab-panel">
+        <section class="rider-customer-card">
+          <div class="rider-customer-left">
+            <strong id="riderCustomerName">-</strong>
+            <span id="riderCustomerMeta">-</span>
+            <span id="riderCustomerPhone">0123 456 789</span>
+          </div>
+          <div class="rider-customer-money">
+            <span>STBH chính: <strong id="riderMainSum">-</strong></span>
+            <span>Phí định kỳ: <strong id="riderMainPremium">-</strong></span>
+          </div>
+        </section>
+
+        <section class="rider-card">
+          <section class="rider-totals rider-plan-summary">
+            <div>
+              <span>Tổng phí SPBK</span>
+              <strong id="totalRiderPremium">0 đồng</strong>
+            </div>
+            <div>
+              <span class="total-plan-label">Tổng phí BH</span>
+              <strong id="totalPlanPremium">0 đồng</strong>
+              <small id="dailySavingsAmount">Cần tiết kiệm 0 đồng/ngày</small>
+            </div>
+          </section>
+          <div class="rider-section-heading plan-product-heading">
+            <h3 class="plan-summary-title">Chọn sản phẩm bán kèm</h3>
+            <span id="riderSelectedCount">Đã chọn 0/7</span>
+          </div>
+          <div id="riderProductButtons" class="rider-product-buttons"></div>
+        </section>
+
+        <section id="riderDetailCard" class="rider-detail-card"></section>
+
+        <section class="rider-card">
+          <div class="rider-section-heading">
+            <h3>Danh sách sản phẩm đã chọn</h3>
+            <label class="switch-row">
+              <input id="toggleAllRiders" type="checkbox" checked />
+              <span>Bật tất cả</span>
+            </label>
+          </div>
+          <div id="selectedRiderList" class="selected-rider-list"></div>
+        </section>
+
+        <p id="riderSaveMessage" class="save-message" role="status"></p>
+
+        <section id="riderSummaryExportBar" class="summary-export-bar rider-summary-export-bar" hidden>
+          <button id="riderExportSummaryButton" class="summary-export-button" type="button">📄 Xuất tóm tắt</button>
+          <p id="riderSummaryExportStatus" class="summary-export-status" role="status"></p>
+        </section>
+      </section>
+
+    </main>
+
+    <section id="spbkBenefitPopup" class="spbk-benefit-popup" hidden role="dialog" aria-modal="true" aria-labelledby="spbkBenefitPopupTitle">
+      <div class="spbk-benefit-overlay" data-close-spbk-benefit></div>
+      <article class="spbk-benefit-dialog">
+        <header class="spbk-benefit-header">
+          <div>
+            <h2 id="spbkBenefitPopupTitle">Chi tiết quyền lợi bảo vệ</h2>
+            <p id="spbkBenefitPopupSubtitle"></p>
+          </div>
+          <button id="spbkBenefitPopupClose" class="spbk-benefit-close" type="button" aria-label="Đóng popup">
+            <span class="spbk-benefit-close-icon" aria-hidden="true"></span>
+          </button>
+        </header>
+        <div id="spbkBenefitPopupBody" class="spbk-benefit-body"></div>
+        <p class="spbk-benefit-note">Thông tin trên là tóm tắt minh họa, quyền lợi chi trả thực tế căn cứ Quy tắc, Điều khoản sản phẩm và hồ sơ được Bảo Việt Nhân thọ chấp thuận.</p>
+      </article>
+    </section>
+
+    <section id="summaryPreviewScreen" class="summary-preview-screen" hidden aria-labelledby="summaryPreviewTitle">
+      <div class="summary-preview-shell">
+        <header class="summary-preview-header">
+          <div>
+            <span>Tóm tắt phương án</span>
+            <h1 id="summaryPreviewTitle">Bảo Việt Nhân thọ Khánh Hòa</h1>
+          </div>
+        </header>
+
+        <div class="summary-preview-carousel">
+          <div class="summary-preview-stage">
+            <img id="summaryPreviewImage" alt="Ảnh tóm tắt phương án minh họa" />
+            <div id="summaryPreviewLoading" class="summary-preview-loading">Đang tạo PDF...</div>
+          </div>
+          <div id="addonBenefitPreviewPages" class="addon-benefit-preview-pages" hidden></div>
+        </div>
+
+        <div class="summary-preview-actions">
+          <button id="downloadSummaryJpg" class="summary-action-button primary" type="button">📥 Tải xuống</button>
+          <div id="addonBenefitDownloadLinks" class="addon-benefit-download-links" hidden></div>
+          <button id="shareSummaryZalo" class="summary-action-button" type="button" disabled>📤 Chia sẻ</button>
+          <button id="editSummaryPlan" class="summary-action-button secondary" type="button">✏️ Quay lại chỉnh sửa</button>
+        </div>
+
+        <p id="summaryShareStatus" class="summary-share-status" role="status"></p>
+      </div>
+    </section>
+
+    <script src="occupation-data.js?v=20260613-occupation"></script>
+    <script src="addon-stbh-validator.js?v=20260612-addon-stbh"></script>
+    <script src="addonBenefitSummaryService.js?v=20260617-r21-two-cards"></script>
+    <script src="atpn-data-loader.js?v=20260616-atpn-funeral-ui"></script>
+    <script src="lifeCare20Rates.js?v=20260625-life-care-cleanup-3"></script>
+    <script src="script.js?v=20260703-unified-banner-blue"></script>
+    <script src="supabaseConfig.js"></script>
+    <script src="accessLogger.js"></script>
+    <script>
+      initAccessLogger();
+    </script>
+  </body>
+</html>
