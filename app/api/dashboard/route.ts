@@ -4,7 +4,8 @@ import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "@/lib/types
 import { buildAfypPlanSummary, buildAfypPlanTable } from "@/lib/afyp-plan";
 import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
-import { buildStarVietReport, type StarVietRecord } from "@/lib/star-viet";
+import { buildStarVietReport, normalizeText, type StarVietRecord } from "@/lib/star-viet";
+import { readStarVietRecords } from "@/lib/star-viet-data";
 import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads-plan";
 import { buildAdoReport } from "@/lib/ado-report";
 import { userCodeFromRequest } from "@/lib/user-auth";
@@ -165,11 +166,28 @@ export async function GET(request: NextRequest) {
     const allPreviousRecords = withDisplayContractNo((previousRecords ?? []) as RevenueRecord[]);
     const allPreviousMonthRecords = withDisplayContractNo((previousMonthRecords ?? []) as RevenueRecord[]);
     const allYearRecords = withDisplayContractNo((yearRecords ?? []) as RevenueRecord[]);
-    const starYear = Number(month.slice(0, 4)) || new Date().getFullYear();
-    const { data: starVietRecords, error: starVietError } = await supabase
-      .from("star_viet_records")
-      .select("*")
-      .eq("data_year", starYear);
+    let starVietRecords: StarVietRecord[] = [];
+    let starVietWarning: string | null = null;
+    try {
+      starVietRecords = await readStarVietRecords(supabase, month.slice(0, 7), signedInAdvisorCode);
+    } catch (error) {
+      starVietWarning = error instanceof Error ? error.message : "Không tải được dữ liệu Sao Việt.";
+    }
+    const starVietReport = buildStarVietReport(starVietRecords);
+    let currentStarViet = signedInAdvisorCode
+      ? starVietReport.rows.find((row) => String(row.agentCode).trim().toUpperCase() === signedInAdvisorCode) ?? null
+      : null;
+    if (signedInAdvisorCode && !currentStarViet) {
+      const { data: advisorProfile } = await supabase
+        .from("authorized_users")
+        .select("full_name")
+        .eq("advisor_code", signedInAdvisorCode)
+        .maybeSingle();
+      const advisorName = normalizeText(advisorProfile?.full_name);
+      currentStarViet = advisorName
+        ? starVietReport.rows.find((row) => normalizeText(row.agentName) === advisorName) ?? null
+        : null;
+    }
     const filteredRecords = sortContractDetails(applyFilters(allRecords, filters));
     const previousFilteredRecords = sortContractDetails(applyFilters(allPreviousRecords, previousFilters));
     const previousMonthActiveAgentFilters = { ...previousFilters, paidDate: undefined };
@@ -216,8 +234,9 @@ export async function GET(request: NextRequest) {
       },
       ads: buildAdsReport(countedRecords),
       ado: buildAdoReport(allYearRecords, month, filters),
-      starViet: buildStarVietReport(starVietError ? [] : (starVietRecords ?? []) as StarVietRecord[]),
-      starVietWarning: starVietError ? "Chưa có bảng dữ liệu Sao Việt. Vui lòng chạy schema mới trước khi upload." : null,
+      starViet: starVietReport,
+      currentStarViet,
+      starVietWarning,
       competitionContracts: allRecords,
       contracts: countedRecords.slice(0, 500)
     });

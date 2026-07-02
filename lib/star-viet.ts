@@ -3,10 +3,13 @@ import * as XLSX from "xlsx";
 export type StarVietSource = "kpi04" | "bc02";
 
 export type StarVietRecord = {
+  id?: string;
   data_year: number;
   source: StarVietSource;
   agent_name: string;
+  agent_code?: string | null;
   group_name: string | null;
+  ban_name?: string | null;
   afyp: number;
   policy_status?: string | null;
   raw_data?: Record<string, unknown>;
@@ -57,7 +60,7 @@ const STAR_VIET_LEVELS = [
   { key: "diamond_2", rank: "Hạng Kim Cương", tickets: 2, threshold: 3_000_000_000, tone: "diamond" }
 ];
 
-function normalizeText(value: unknown) {
+export function normalizeText(value: unknown) {
   return String(value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -69,7 +72,7 @@ function normalizeText(value: unknown) {
     .trim();
 }
 
-function parseMoney(value: unknown) {
+export function parseMoney(value: unknown) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   const text = String(value ?? "").trim();
   if (!text) return 0;
@@ -132,7 +135,7 @@ function missingColumnMessage(source: StarVietSource, headers: unknown[], missin
   ].join(" ");
 }
 
-function isBc02Counted(status: unknown) {
+export function isBc02Counted(status: unknown) {
   return !EXCLUDED_BC02_STATUSES.has(normalizeText(status));
 }
 
@@ -261,7 +264,7 @@ function rawValue(record: StarVietRecord, aliases: string[]) {
   return "";
 }
 
-function parseDateValue(value: unknown) {
+export function parseDateValue(value: unknown) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
@@ -301,7 +304,7 @@ function getKpi04Fyp(record: StarVietRecord) {
   return parseMoney(rawValue(record, FYP_COLUMN_ALIASES));
 }
 
-function competitionMultiplier(competitionFyp: number) {
+export function competitionMultiplier(competitionFyp: number) {
   if (competitionFyp >= 50_000_000) return 2;
   if (competitionFyp >= 30_000_000) return 1.5;
   return 1;
@@ -322,9 +325,17 @@ export function calculateTotalSaoVietAfyp(records: StarVietRecord[]) {
 }
 
 export function buildStarVietReport(records: StarVietRecord[]) {
+  const codeByName = new Map<string, string>();
+  records.forEach((record) => {
+    const code = normalizeText(record.agent_code);
+    const name = normalizeText(record.agent_name);
+    if (code && name) codeByName.set(name, code);
+  });
   const grouped = new Map<string, StarVietRecord[]>();
   records.forEach((record) => {
-    const key = normalizeText(record.agent_name);
+    if (record.source === "bc02" && !isBc02Counted(record.policy_status)) return;
+    const nameKey = normalizeText(record.agent_name);
+    const key = normalizeText(record.agent_code) || codeByName.get(nameKey) || nameKey;
     if (!key) return;
     grouped.set(key, [...(grouped.get(key) ?? []), record]);
   });
@@ -346,8 +357,12 @@ export function buildStarVietReport(records: StarVietRecord[]) {
       const nextThreshold = next?.threshold ?? totalAfyp;
       const progress = next ? Math.min(100, (totalAfyp / next.threshold) * 100) : 100;
       return {
+        agentCode: bc02Items.find((item) => item.agent_code)?.agent_code ?? items.find((item) => item.agent_code)?.agent_code ?? "",
         agentName: items[0]?.agent_name ?? "",
-        groupName: bc02Items.find((item) => item.group_name)?.group_name ?? items.find((item) => item.group_name)?.group_name ?? "",
+        groupName: bc02Items.find((item) => item.group_name)?.group_name
+          ?? kpi04Items.find((item) => item.group_name)?.group_name
+          ?? items.find((item) => item.ban_name)?.ban_name
+          ?? DEFAULT_GROUP_NAME,
         kpi04Afyp: kpi04SaoVietFyp,
         kpi04Fyp,
         competitionFyp,

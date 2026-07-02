@@ -923,7 +923,7 @@ export default function HomePage() {
             {tab === "status" && <StatusReport report={data.statuses} contracts={data.statusContracts ?? data.contracts} openContracts={(status, title, rows) => { setSelectedStatus(status); setSelectedTitle(title); setSelectedContracts(rows); }} />}
             {tab === "time" && <TimeReport report={data.timeSeries} />}
             {tab === "ads" && <AdsTable report={data.ado} rows={data.ads} month={month} contracts={data.contracts} openContracts={(title, rows) => { setSelectedTitle(title); setSelectedContracts(rows); }} />}
-            {tab === "contests" && <CompetitionPanel month={month} refreshKey={competitionRefreshKey} onChanged={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
+            {tab === "contests" && <CompetitionPanel month={month} starViet={data.currentStarViet} starVietWarning={data.starVietWarning} refreshKey={competitionRefreshKey} onChanged={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
             {tab === "starviet" && <StarVietPanel report={data.starViet} warning={data.starVietWarning} />}
             {tab === "admin" && <AdminPanel month={month} planRows={data.planTable ?? []} onSaved={loadDashboard} />}
             {tab === "upload" && <UploadPanel month={month} uploader={currentUploader} onUploaded={() => { setCompetitionRefreshKey((value) => value + 1); loadDashboard(); }} />}
@@ -2874,7 +2874,36 @@ function logCompetitionCalculationDebug(params: {
   });
 }
 
-function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; refreshKey: number; onChanged: () => void }) {
+function PersonalStarVietJourney({ row, warning }: { row?: any; warning?: string | null }) {
+  if (warning) return <section className="personal-star-journey empty"><strong>Hành trình Sao Việt</strong><span>{warning}</span></section>;
+  if (!row) return <section className="personal-star-journey empty"><strong>Hành trình Sao Việt</strong><span>Chưa có dữ liệu Sao Việt của TVV trong tháng này.</span></section>;
+  return (
+    <section className="personal-star-journey">
+      <div className="personal-star-heading">
+        <div><span><Sparkles size={17} /> Hành trình Sao Việt của bạn</span><h2>{row.currentRank}</h2></div>
+        <span className={`star-rank-badge ${row.rankTone}`}>{ticketLabel(row.currentTickets)}</span>
+      </div>
+      <div className="personal-star-total">
+        <span>Tổng AFYP Sao Việt</span>
+        <strong>{formatCompactVnd(row.totalAfyp)}</strong>
+      </div>
+      <StarProgress row={row} />
+      <div className="personal-star-next">
+        {row.remainingToNext > 0
+          ? <><span>Mốc tiếp theo: <b>{row.nextRank}</b></span><strong>Còn {formatCompactVnd(row.remainingToNext)}</strong></>
+          : <strong>Đã đạt mốc cao nhất</strong>}
+      </div>
+      <div className="personal-star-breakdown">
+        <span><small>KPI04</small><b>{formatCompactVnd(row.kpi04Fyp)}</b></span>
+        <span><small>Thưởng hệ số</small><b>{formatCompactVnd(row.doubleBonusAfyp)}</b></span>
+        <span><small>BC02 tháng</small><b>{formatCompactVnd(row.bc02Afyp)}</b></span>
+        <span><small>Phí đóng thêm</small><b>{formatCompactVnd(row.topupBonusAfyp)}</b></span>
+      </div>
+    </section>
+  );
+}
+
+function CompetitionPanel({ month, starViet, starVietWarning, refreshKey, onChanged }: { month: string; starViet?: any; starVietWarning?: string | null; refreshKey: number; onChanged: () => void }) {
   const [programs, setPrograms] = useState<CompetitionProgramView[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -2917,6 +2946,7 @@ function CompetitionPanel({ month, refreshKey, onChanged }: { month: string; ref
 
   return (
     <div className={`competition-panel-stack ${selectedProgramId ? "has-selected-program" : ""}`}>
+      <PersonalStarVietJourney row={starViet} warning={starVietWarning} />
       <div className="panel contest-panel competition-section">
         <div className="panel-header contest-header">
           <div>
@@ -4551,4 +4581,3 @@ function DataTable({ headers, children, className = "", colWidths, hiddenColumns
     </div></>
   );
 }
-

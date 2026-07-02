@@ -9,7 +9,8 @@
     "lint": "next lint",
     "fetch:data": "tsx scripts/fetch-bc02.ts",
     "test:competition-bc02": "tsx scripts/test-competition-bc02.ts",
-    "test:tvv-policy": "tsx scripts/test-tvv-policy-rewards.ts"
+    "test:tvv-policy": "tsx scripts/test-tvv-policy-rewards.ts",
+    "test:star-viet": "tsx scripts/test-star-viet.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

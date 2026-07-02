@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { BarChart3, Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, FileText, Filter, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, FileText, Filter, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Sparkles, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
@@ -471,7 +471,7 @@ export default function TvvMobilePage() {
           ) : (
             <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "illustration" ? "Minh hoạ" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
-          {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} onTab={setTab} onOpenContract={setSelectedContract} />}
+          {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} onOpenContract={setSelectedContract} />}
           {tab === "contracts" && <ContractsListV2 contracts={myContracts} month={month} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setMonth} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
           {tab === "illustration" && <IllustrationView advisor={advisor} contracts={myContracts} estimate={estimate ?? emptyEstimate} onOpenCalculator={() => setTab("calculator")} />}
@@ -528,7 +528,7 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
-function Overview({ stats, contracts, estimate, onTab, onOpenContract }: any) {
+function Overview({ stats, contracts, estimate, starViet, starVietWarning, onTab, onOpenContract }: any) {
   const statItems = [
     ["Tổng HĐ", stats.total, ClipboardList, "blue", "contracts"],
     ["Đã phát hành", stats.issued, ShieldCheck, "green", "contracts"],
@@ -538,7 +538,25 @@ function Overview({ stats, contracts, estimate, onTab, onOpenContract }: any) {
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, Icon, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><span className={tone}><Icon size={27} /></span><strong>{value}</strong><p>{label}</p><i /></div>)}</div>
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
+    <PersonalStarJourney row={starViet} warning={starVietWarning} />
     <ContractPreview contracts={contracts} onAll={() => onTab("contracts")} onOpenContract={onOpenContract} />
+  </section>;
+}
+
+function PersonalStarJourney({ row, warning }: { row?: any; warning?: string | null }) {
+  if (warning) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa tải được dữ liệu Sao Việt.</p></section>;
+  if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của bạn trong tháng này.</p></section>;
+  const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
+  return <section className="tvv-card tvv-star-journey">
+    <div className="tvv-star-title"><span><Sparkles size={17} /> Hành trình Sao Việt</span><em>{row.currentTickets > 0 ? `${row.currentTickets} vé` : row.currentRank}</em></div>
+    <div className="tvv-star-main"><div><small>Tổng AFYP Sao Việt</small><strong>{formatVnd(row.totalAfyp)}</strong></div><Trophy size={31} /></div>
+    <div className="tvv-star-progress"><div><span>Mốc tiếp theo</span><b>{row.remainingToNext > 0 ? row.nextRank : "Đã đạt mốc cao nhất"}</b></div><i><u style={{ width: `${progress}%` }} /></i><div><span>{progress.toFixed(1).replace(".0", "")}%</span>{row.remainingToNext > 0 && <b>Còn {formatVnd(row.remainingToNext)}</b>}</div></div>
+    <div className="tvv-star-parts">
+      <span><small>KPI04</small><b>{formatVnd(row.kpi04Fyp)}</b></span>
+      <span><small>Thưởng hệ số</small><b>{formatVnd(row.doubleBonusAfyp)}</b></span>
+      <span><small>BC02 tháng</small><b>{formatVnd(row.bc02Afyp)}</b></span>
+      <span><small>Phí đóng thêm</small><b>{formatVnd(row.topupBonusAfyp)}</b></span>
+    </div>
   </section>;
 }
 
