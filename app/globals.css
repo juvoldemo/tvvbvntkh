@@ -11142,7 +11142,7 @@ body,
   justify-content: space-between;
   gap: 14px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #dbe5f3;
+  border-bottom: 0;
 }
 
 .tvv-contest-detail header div {
@@ -11183,11 +11183,24 @@ body,
 .tvv-contest-detail-date {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 7px;
   margin: 15px 0;
   color: #173d7b;
   font-size: 13px;
   font-weight: 700;
+}
+
+.tvv-contest-detail-date span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tvv-contest-detail-date .tvv-contest-issue-deadline {
+  color: #61759e;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .tvv-contest-detail-content,
@@ -11210,6 +11223,79 @@ body,
   font-size: 14px;
   line-height: 1.55;
   white-space: pre-line;
+}
+
+.tvv-contest-poster {
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  isolation: isolate;
+}
+
+.tvv-contest-poster > button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  cursor: zoom-in;
+  clip-path: inset(1px round 17px);
+}
+
+.tvv-contest-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  transform: scale(1.012);
+  backface-visibility: hidden;
+}
+
+.tvv-contest-poster-empty {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  border-radius: 14px;
+  background: #f5f9ff;
+  color: #61759e;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.tvv-poster-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 60px 20px 20px;
+  background: rgba(5, 16, 39, .92);
+  cursor: zoom-out;
+}
+
+.tvv-poster-lightbox img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.tvv-poster-lightbox > button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .tvv-contest-detail-reward {
@@ -11253,7 +11339,7 @@ body,
 
 .tvv-current-tier-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   margin: 14px 0 12px;
@@ -11278,10 +11364,75 @@ body,
 }
 
 .tvv-current-tier-card em {
+  grid-column: 1 / -1;
   color: #075fe7;
   font-size: 14px;
   font-style: normal;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.tvv-current-tier-reward {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 1px -2px -1px;
+  padding-top: 11px;
+  border-top: 1px solid #dce8f8;
+}
+
+.tvv-current-tier-reward strong {
+  color: #ed1639;
+  font-size: 17px;
+}
+
+.tvv-current-contracts {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.tvv-current-contracts article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.tvv-current-contracts article div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.tvv-current-contracts b {
+  overflow: hidden;
+  color: #09296f;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tvv-current-contracts small {
+  color: #61759e;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tvv-current-contracts article > span {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #eaf8ef;
+  color: #078a3b;
+  padding: 5px 8px;
+  font-size: 11px;
+  text-transform: none;
   white-space: nowrap;
 }
 
@@ -14940,6 +15091,7 @@ body,
   gap: 11px;
   padding: 14px 16px !important;
   border: 0;
+  background: #fffbea !important;
   color: #08266f;
   text-align: left;
   cursor: pointer;
@@ -15335,4 +15487,103 @@ body,
 }
 .tvv-bottom-nav button.income-nav::after {
   display: none !important;
+}
+
+/* Complete, self-contained reward estimate summary. */
+.tvv-reward-summary-card {
+  overflow: visible !important;
+  border-radius: 16px !important;
+  padding: 18px 16px !important;
+}
+
+.tvv-reward-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.tvv-reward-summary-title > span {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf2ff;
+  color: #075fe7;
+}
+
+.tvv-reward-summary-title h2 {
+  margin: 0 !important;
+  color: #061b66 !important;
+  font-size: 17px !important;
+  line-height: 1.25 !important;
+}
+
+.tvv-reward-summary-title p {
+  margin: 3px 0 0;
+  color: #68789a;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.tvv-reward-summary-card .tvv-total {
+  min-height: 76px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  overflow: hidden;
+  border: 1px solid #a9e3c2 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #ecfff4 0%, #e2f9ec 100%) !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 7px 18px rgba(4, 149, 76, .08);
+}
+
+.tvv-reward-summary-card .tvv-total span {
+  min-width: 0;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.tvv-reward-summary-card .tvv-total strong {
+  font-size: clamp(19px, 5.3vw, 24px) !important;
+  line-height: 1.15 !important;
+  text-align: right;
+}
+
+.tvv-reward-summary-card .tvv-result-table.tvv-result-table-standalone {
+  margin-top: 16px !important;
+  overflow: hidden !important;
+  border: 1px solid #d6e2f3 !important;
+  border-radius: 12px !important;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(15, 54, 116, .05);
+}
+
+.tvv-reward-summary-card .tvv-result-head {
+  border-bottom: 1px solid #dce6f4;
+  background: #f5f8fd !important;
+}
+
+.tvv-reward-summary-card .tvv-result-head span {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+@media (max-width: 370px) {
+  .tvv-reward-summary-card {
+    padding-inline: 13px !important;
+  }
+
+  .tvv-reward-summary-card .tvv-total {
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+  }
+
+  .tvv-reward-summary-card .tvv-total strong {
+    text-align: left;
+  }
 }

@@ -411,7 +411,7 @@ textarea:focus {
   align-items: start !important;
   gap: var(--ds-space-3) !important;
   padding-bottom: var(--ds-space-4) !important;
-  border-bottom: 1px solid var(--ds-divider) !important;
+  border-bottom: 0 !important;
 }
 
 .tvv-contest-detail header > div {

@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { estimateRewardsForDraftContracts, type DraftRewardContract } from "@/lib/tvv-reward-estimator";
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 
 function programDateRange(program: any, month: string) {
   const rule = program.confirmed_rule || program.ai_rule || {};
@@ -23,6 +24,24 @@ function isPolicyRewardProgram(programName: unknown) {
     .replace(/\s+/g, " ")
     .trim();
   return normalized.includes("thuong nang suat thang") || normalized.includes("thuong quy");
+}
+
+function normalizeAdvisorIdentity(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "D")
+    .toLowerCase();
+}
+
+function contractBelongsToAdvisor(record: any, advisor: { code: string; name: string }) {
+  const advisorCode = normalizeAdvisorIdentity(advisor.code);
+  const advisorName = normalizeAdvisorIdentity(advisor.name);
+  const recordCode = normalizeAdvisorIdentity(record.agent_code ?? record.tvv_code ?? record.advisor_code);
+  const recordName = normalizeAdvisorIdentity(record.agent_name ?? record.tvv ?? record.advisor);
+  return Boolean((advisorCode && advisorCode === recordCode) || (advisorName && advisorName === recordName));
 }
 
 export async function POST(request: NextRequest) {
@@ -98,11 +117,54 @@ export async function POST(request: NextRequest) {
     }
 
     const today = getVietnamToday();
-    const rewardByProgram = new Map((result.rewardByProgram ?? []).map((item: any) => [item.programId, item]));
+    const currentAdvisorContracts = (contracts ?? []).filter((record: any) => contractBelongsToAdvisor(record, advisor));
+    const actualRewardByProgram = new Map(competitionRules.map((program: any) => {
+      try {
+        const actual = calculateCompetitionReward(program.rule, currentAdvisorContracts);
+        const advisorReward = actual.tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.rewardAmount ?? 0), 0);
+        const contractReward = actual.contractRewardResults.reduce((sum: number, row: any) => sum + Number(row.rewardAmount ?? 0), 0);
+        const advisorContractCount = actual.tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.contractCount ?? 0), 0);
+        const contractRewardCount = actual.contractRewardResults.length;
+        const primaryRule = program.rule.reward_rules?.[0];
+        const milestoneTiers = primaryRule?.thresholds ?? program.rule.thresholds ?? program.rule.tiers ?? [];
+        const metricText = normalizeAdvisorIdentity(
+          primaryRule?.calculation_logic ?? program.rule.calculation_logic ?? program.rule.metric_type
+        );
+        const usesIp = metricText.includes("ip") || metricText.includes("pdt") || metricText.includes("phi dau tien");
+        const milestoneCurrentBasis = actual.tvvRewardResults.reduce(
+          (sum: number, row: any) => sum + Number(usesIp ? row.totalIP : row.totalAFYP),
+          0
+        );
+        const participatingContracts = getBaseEligibleCompetitionContracts(program.rule, currentAdvisorContracts)
+          .map((contract: any) => ({
+            applicationNo: contract.applicationNo || contract.gyc_no || "",
+            policyOwner: contract.customer || contract.customer_name || "Chưa có tên BMBH",
+            status: contract.status || "Chưa có trạng thái"
+          }));
+        return [program.id, {
+          actualContractCount: Math.max(advisorContractCount, contractRewardCount),
+          actualReward: advisorReward + contractReward,
+          isEligible: advisorReward + contractReward > 0,
+          milestoneType: milestoneTiers.length ? "revenue-tier" : undefined,
+          milestoneMetricLabel: usesIp ? "Phí đầu tiên (IP)" : "AFYP",
+          milestoneCurrentBasis,
+          milestoneCurrentReward: advisorReward + contractReward,
+          milestoneContractCount: Math.max(advisorContractCount, contractRewardCount),
+          milestoneTiers,
+          participatingContracts
+        }];
+      } catch (error) {
+        console.error(`[tvv-reward-estimate] actual competition calculation failed for ${program.id}`, error);
+        return [program.id, { actualContractCount: 0, actualReward: 0, isEligible: false }];
+      }
+    }));
     const allProgramSummaries = (programs ?? [])
       .map((program: any) => ({
         id: program.id,
         programName: program.program_name || program.confirmed_rule?.program_name || program.ai_rule?.program_name || "Chương trình thi đua",
+        originalFileUrl: program.original_file_url || null,
+        originalFileName: program.original_file_name || null,
+        issueDeadline: program.issue_deadline || program.confirmed_rule?.issue_deadline || program.ai_rule?.issue_deadline || null,
         status: program.status,
         isHidden: program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1,
         range: programDateRange(program, month)
@@ -110,16 +172,27 @@ export async function POST(request: NextRequest) {
       .filter((program: any) => !program.isHidden)
       .sort((a: any, b: any) => a.range.end.localeCompare(b.range.end) || a.range.start.localeCompare(b.range.start))
       .map((program: any) => {
-        const reward = rewardByProgram.get(program.id) as any;
+        const actual = actualRewardByProgram.get(program.id) as any;
         return {
           programId: program.id,
           programName: program.programName,
+          originalFileUrl: program.originalFileUrl,
+          originalFileName: program.originalFileName,
+          issueDeadline: program.issueDeadline,
           status: program.status,
           startDate: program.range.start,
           endDate: program.range.end,
-          estimatedReward: Number(reward?.estimatedReward ?? 0),
-          matchedContracts: reward?.matchedContracts ?? [],
-          isEligible: Boolean(reward)
+          estimatedReward: Number(actual?.actualReward ?? 0),
+          actualContractCount: Number(actual?.actualContractCount ?? 0),
+          matchedContracts: [],
+          isEligible: Boolean(actual?.isEligible),
+          milestoneType: actual?.milestoneType,
+          milestoneMetricLabel: actual?.milestoneMetricLabel,
+          milestoneCurrentBasis: Number(actual?.milestoneCurrentBasis ?? 0),
+          milestoneCurrentReward: Number(actual?.milestoneCurrentReward ?? 0),
+          milestoneContractCount: Number(actual?.milestoneContractCount ?? 0),
+          milestoneTiers: actual?.milestoneTiers ?? [],
+          participatingContracts: actual?.participatingContracts ?? []
         };
       });
     const ongoingPrograms = allProgramSummaries.filter((program: any) => program.startDate <= today && program.endDate >= today);
@@ -228,8 +301,8 @@ export async function POST(request: NextRequest) {
     const calculatorPrograms = [
       ...(result.rewardByProgram ?? []).map((program: any) => ({
         ...program,
-        currentReward: 0,
-        projectedReward: Number(program.estimatedReward ?? 0),
+        currentReward: Number(program.currentReward ?? 0),
+        projectedReward: Number(program.projectedReward ?? program.estimatedReward ?? 0),
         incrementalReward: Number(program.estimatedReward ?? 0),
         isPolicyProjection: false
       })),

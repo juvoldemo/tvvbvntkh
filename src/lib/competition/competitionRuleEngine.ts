@@ -929,6 +929,12 @@ function passesBaseFilters(rule: CompetitionRuleInput, contract: NormalizedCompe
   return reasons;
 }
 
+export function getBaseEligibleCompetitionContracts(rule: CompetitionRuleInput, contracts: AnyRecord[]) {
+  return contracts
+    .map((contract, index) => normalizeContract(contract, index))
+    .filter((contract) => passesBaseFilters(rule, contract).length === 0);
+}
+
 function calculateContractRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[], programMetric?: CompetitionRuleInput["metric_type"]) {
   const kind = rewardKind(rule);
   if (kind === "reward_by_policy_pdt_table") {

@@ -210,11 +210,17 @@ export function calculatePolicyRewards(params: {
 export function policyProgramSummaries(result: ReturnType<typeof calculatePolicyRewards>, selectedMonth: string) {
   const month = Number(selectedMonth.slice(5, 7));
   const year = selectedMonth.slice(0, 4);
+  const posterByProgramId: Record<string, string> = {
+    "policy-monthly": "/Thưởng năng suất tháng.png",
+    "policy-quarterly": "/Thưởng Quý.png",
+    "policy-month-13": "/Thưởng tháng 13.png"
+  };
   const build = (id: string, name: string, period: string, conditionText: string, rows: PolicyRewardRow[]) => ({
     programId: id,
     programName: name,
     period,
     conditionText,
+    originalFileUrl: posterByProgramId[id],
     estimatedReward: rows.reduce((sum, row) => sum + row.reward, 0),
     achievedCount: rows.filter((row) => row.achieved).length,
     rows,

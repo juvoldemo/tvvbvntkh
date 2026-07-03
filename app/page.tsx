@@ -881,7 +881,7 @@ function contestNextMilestones(item: any) {
     };
   }
 
-  const matchedCount = Math.max(0, item.matchedContracts?.length ?? 0);
+  const matchedCount = Math.max(0, Number(item.actualContractCount ?? item.matchedContracts?.length ?? 0));
   const reward = Number(item.estimatedReward || 0);
   const averageReward = matchedCount > 0 && reward > 0 ? reward / matchedCount : 0;
   const nextTiers = [1, 2].map((step) => ({
@@ -905,7 +905,7 @@ function contestNextMilestones(item: any) {
 
 function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void }) {
   const [detailTab, setDetailTab] = useState<"overview" | "achieved" | "missing" | "quarters" | "formula">("overview");
-  const content = item.conditionText || item.description || item.content || item.ruleText || "Nội dung chương trình đang được cập nhật.";
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const policyRows = Array.isArray(item.rows) ? item.rows : null;
   const milestoneInfo = contestNextMilestones(item);
   const tabs = policyRows ? [
@@ -913,15 +913,41 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
   ] as Array<[typeof detailTab, string]> : [];
   const visibleRows = detailTab === "achieved" ? policyRows?.filter((row: any) => row.achieved)
     : detailTab === "missing" ? policyRows?.filter((row: any) => !row.achieved) : policyRows;
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (previewUrl) setPreviewUrl(null);
+      else onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, previewUrl]);
   return <div className="tvv-contest-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contest-detail" role="dialog" aria-modal="true" aria-label="Nội dung chương trình thi đua" onClick={(event) => event.stopPropagation()}>
     <header><div><em>{item.period || "ĐANG DIỄN RA"}</em><h2>{item.programName || "Chương trình thi đua"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
-    {!policyRows && <p className="tvv-contest-detail-date"><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</p>}
+    {!policyRows && <p className="tvv-contest-detail-date">
+      <span><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</span>
+      {item.issueDeadline && <span className="tvv-contest-issue-deadline">Phát hành đến {formatDateVi(item.issueDeadline)}</span>}
+    </p>}
     {policyRows && tabs.length > 1 && <nav className="tvv-policy-detail-tabs">{tabs.map(([id, label]) => <button type="button" className={detailTab === id ? "active" : ""} key={id} onClick={() => setDetailTab(id)}>{label}</button>)}</nav>}
-    {!policyRows && <div className="tvv-contest-detail-content"><span>Nội dung chương trình</span><p>{content}</p></div>}
+    {(item.originalFileUrl || !policyRows) && <div className="tvv-contest-poster">
+      {item.originalFileUrl ? <button type="button" onClick={() => setPreviewUrl(item.originalFileUrl)} aria-label={`Xem poster ${item.programName || "chương trình thi đua"}`}>
+        <img src={item.originalFileUrl} alt={`Poster ${item.programName || "chương trình thi đua"}`} />
+      </button> : <div className="tvv-contest-poster-empty">Chưa có ảnh</div>}
+    </div>}
     {(!policyRows || detailTab === "overview") && <div className="tvv-current-tier-card">
       <span>Hiện tại</span>
       <strong>{milestoneInfo.basisLabel === "hợp đồng" || milestoneInfo.basisLabel === "HĐ đủ điều kiện" ? `${milestoneInfo.currentBasis} HĐ` : formatCompactVnd(milestoneInfo.currentBasis)}</strong>
       {milestoneInfo.currentRateLabel && <em>Bậc hiện tại: {milestoneInfo.currentRateLabel}</em>}
+      {!policyRows && Number(item.estimatedReward ?? 0) > 0 && <div className="tvv-current-tier-reward">
+        <span>Ước tính thưởng</span>
+        <strong>{formatVnd(Number(item.estimatedReward))}</strong>
+      </div>}
+      {!policyRows && Array.isArray(item.participatingContracts) && item.participatingContracts.length > 0 && <div className="tvv-current-contracts">
+        {item.participatingContracts.map((contract: any, index: number) => <article key={`${contract.applicationNo}-${index}`}>
+          <div><b>{contract.policyOwner}</b><small>GYC {contract.applicationNo || "—"}</small></div>
+          <span>{contract.status}</span>
+        </article>)}
+      </div>}
     </div>}
     {(!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
       <div className="tvv-next-milestones-head">
@@ -933,7 +959,7 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
             <b>{tier.title}</b>
             <small>{tier.subtitle}</small>
           </div>
-          <p>Cần thêm <strong>{tier.missingLabel === "hợp đồng" ? `${tier.missing} HĐ` : formatCompactVnd(tier.missing)}</strong></p>
+          <p>Cần thêm <strong>{tier.missingLabel === "hợp đồng" ? `${tier.missing} HĐ` : formatCompactVnd(tier.missing)}</strong>{tier.missingLabel !== "hợp đồng" && ` ${tier.missingLabel}`}</p>
           <footer><span>Dự kiến thưởng</span><strong>{tier.projectedReward > 0 ? formatVnd(tier.projectedReward) : "Chưa đủ dữ liệu"}</strong></footer>
           {tier.incrementalReward > 0 && <em>+{formatVnd(tier.incrementalReward)} so với hiện tại</em>}
         </article>
@@ -944,7 +970,10 @@ function ContestDetailModal({ item, onClose }: { item: any; onClose: () => void 
       {!visibleRows?.length && <p className="tvv-empty">Chưa có TVV trong danh sách này.</p>}
     </div>}
     {(item.warnings ?? []).map((warning: string) => <p className="tvv-policy-warning" key={warning}><Info size={16} />{warning}</p>)}
-    {!policyRows && Number(item.estimatedReward ?? 0) > 0 && <div className="tvv-contest-detail-reward"><span>Ước tính thưởng</span><strong>{formatVnd(Number(item.estimatedReward))}</strong></div>}
+    {previewUrl && createPortal(<div className="tvv-poster-lightbox" role="presentation" onClick={() => setPreviewUrl(null)}>
+      <button type="button" onClick={() => setPreviewUrl(null)} aria-label="Đóng ảnh">×</button>
+      <img src={previewUrl} alt={`Poster ${item.programName || "chương trình thi đua"}`} onClick={(event) => event.stopPropagation()} />
+    </div>, document.body)}
   </section></div>;
 }
 
@@ -1072,10 +1101,7 @@ function CalculatorView(props: any) {
   const draftCommissionReward = drafts.reduce((sum: number, draft: DraftContract) => sum + (Number(draft.premium) || 0) * 0.3, 0);
   const rawCalculatorPrograms = estimate?.calculatorPrograms ?? estimate?.rewardByProgram ?? [];
   const hasCommissionRow = rawCalculatorPrograms.some((item: any) => item.programId === "acquisition-commission");
-  const calculatorPrograms = draftCommissionReward > 0 && !hasCommissionRow
-    ? [
-      ...rawCalculatorPrograms,
-      {
+  const localCommissionProgram = {
         programId: "acquisition-commission",
         programName: "Hoa hồng khai thác",
         period: "Phí đóng × 30%",
@@ -1085,9 +1111,12 @@ function CalculatorView(props: any) {
         incrementalReward: draftCommissionReward,
         isPolicyProjection: false,
         isCommission: true
-      }
-    ]
-    : rawCalculatorPrograms;
+  };
+  const calculatorPrograms = hasCommissionRow
+    ? rawCalculatorPrograms.map((item: any) => item.programId === "acquisition-commission"
+      ? { ...item, ...localCommissionProgram }
+      : item)
+    : [...rawCalculatorPrograms, localCommissionProgram];
   const orderedCalculatorPrograms = [...calculatorPrograms]
     .filter((item: any) => item.programId !== "policy-month-13")
     .sort((a: any, b: any) => calculatorProgramOrder(a) - calculatorProgramOrder(b));
@@ -1100,7 +1129,7 @@ function CalculatorView(props: any) {
     <section className="tvv-calc-card"><div className="tvv-section-head"><h2>2. Danh sách hợp đồng đã thêm ({drafts.length})</h2>{drafts.length > 0 && <button className="danger" onClick={props.onClear}><Trash2 size={15} /> Xóa tất cả</button>}</div>{drafts.map((draft: DraftContract, index: number) => {
       return <article className="tvv-draft-row" key={draft.id}><GripVertical size={17} /><i>{index + 1}</i><div><p>PĐT: {formatVnd(draft.premium)}</p><small>Ngày dự kiến: {formatDateVi(draft.expectedPaidDate)}</small></div><button onClick={() => props.onRemove(draft.id)}><Trash2 size={18} /></button></article>;
     })}</section>
-    <section className="tvv-calc-card"><h2>3. Kết quả ước tính</h2><div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(Number(calculatorTotal))}</strong></div><div className="tvv-result-table tvv-result-table-standalone"><div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>{orderedCalculatorPrograms.map((item: any, index: number) => {
+    <section className="tvv-calc-card tvv-reward-summary-card"><div className="tvv-reward-summary-title"><span><Sparkles size={18} /></span><div><h2>3. Kết quả ước tính</h2><p>Thu nhập tăng thêm từ hợp đồng dự kiến</p></div></div><div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(Number(calculatorTotal))}</strong></div><div className="tvv-result-table tvv-result-table-standalone"><div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>{orderedCalculatorPrograms.map((item: any, index: number) => {
       const increase = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
       const currentReward = Number(item.currentReward ?? 0);
       return <div
@@ -1114,7 +1143,7 @@ function CalculatorView(props: any) {
           event.preventDefault();
           setSelectedProgram(item);
         }}
-      ><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{item.isPolicyProjection && currentReward > 0 && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
+      ><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{!item.isCommission && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
     })}</div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Phần màu xanh là số thưởng tăng thêm so với dữ liệu hiện tại. Thưởng chính sách chỉ được xác nhận khi hợp đồng đủ điều kiện và phát hành thành công.</span></p></section>
     {selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}
   </section>;

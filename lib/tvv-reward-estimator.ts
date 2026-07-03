@@ -161,6 +161,8 @@ export function estimateRewardsForDraftContracts(params: {
         })),
         conditionText,
         estimatedReward,
+        currentReward: baselineTotal,
+        projectedReward: projectedTotal,
         milestoneType: revenueTiers.length ? "revenue-tier" : undefined,
         milestoneMetricLabel: usesIp ? "PĐT/IP" : "AFYP",
         milestoneCurrentBasis: projectedBasis,
