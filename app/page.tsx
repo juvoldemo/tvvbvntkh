@@ -2,11 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { BarChart3, Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, FileText, Filter, GripVertical, Gift, Home, Hourglass, Info, Search, ShieldCheck, Sparkles, Trash2, Trophy, UserRound, XCircle } from "lucide-react";
+import { BarChart3, Bell, CalendarDays, Calculator, Camera, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, FileText, Filter, GripVertical, Gift, Home, Hourglass, Info, Medal, Search, ShieldCheck, Sparkles, Trash2, Trophy, UserRound, Users, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
-type Tab = "overview" | "contracts" | "calculator" | "contests" | "illustration" | "profile";
+type Tab = "overview" | "contracts" | "calculator" | "contests" | "leaderboard" | "illustration" | "profile";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -170,13 +170,36 @@ function shortText(value: unknown, maxLength = 86) {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}...` : text;
 }
 
-function playNotificationTone() {
-  if (typeof window === "undefined") return;
+async function fetchJsonWithRetry(url: string, signal: AbortSignal, attempts = 3) {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, { cache: "no-store", signal });
+      if (!response.ok) throw new Error(`${url} trả về lỗi ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      if (signal.aborted) throw error;
+      lastError = error;
+      if (attempt < attempts) {
+        await new Promise((resolve) => window.setTimeout(resolve, attempt * 700));
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function playNotificationTone() {
+  if (typeof window === "undefined") return false;
   const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextCtor) return;
+  if (!AudioContextCtor) return false;
 
   try {
     const audioContext = new AudioContextCtor();
+    if (audioContext.state === "suspended") await audioContext.resume();
+    if (audioContext.state !== "running") {
+      await audioContext.close().catch(() => undefined);
+      return false;
+    }
     const now = audioContext.currentTime;
     [0, 0.18].forEach((offset) => {
       const oscillator = audioContext.createOscillator();
@@ -193,18 +216,23 @@ function playNotificationTone() {
       oscillator.stop(now + offset + 0.16);
     });
     window.setTimeout(() => audioContext.close().catch(() => undefined), 600);
+    return true;
   } catch {
-    // Some browsers block page-load audio until the user interacts with the page.
+    return false;
   }
 }
 
 export default function TvvMobilePage() {
   const [authReady, setAuthReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [authenticatedAdvisorCode, setAuthenticatedAdvisorCode] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [month, setMonth] = useState(currentMonth());
+  const [contractMonth, setContractMonth] = useState(currentMonth());
   const [periodMode, setPeriodMode] = useState<PeriodMode>("month");
   const [data, setData] = useState<any>(null);
+  const [contractData, setContractData] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<any>({ agents: [], groups: [] });
   const [advisorKey, setAdvisorKey] = useState("");
   const [loading, setLoading] = useState(true);
   const [drafts, setDrafts] = useState<DraftContract[]>([]);
@@ -217,6 +245,8 @@ export default function TvvMobilePage() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
   const notificationPanelRef = useRef<HTMLDivElement>(null);
+  const latestMonthResolvedRef = useRef(false);
+  const notificationSoundPlayedRef = useRef(false);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, right: 12 });
   const [readEventIds, setReadEventIds] = useState<string[]>([]);
   const [readEventsReady, setReadEventsReady] = useState(false);
@@ -227,7 +257,10 @@ export default function TvvMobilePage() {
   useEffect(() => {
     fetch("/api/user/auth", { cache: "no-store" })
       .then((response) => response.json())
-      .then((payload) => setSignedIn(Boolean(payload.authenticated)))
+      .then((payload) => {
+        setSignedIn(Boolean(payload.authenticated));
+        setAuthenticatedAdvisorCode(String(payload.advisorCode || "").trim().toUpperCase());
+      })
       .finally(() => setAuthReady(true));
   }, []);
 
@@ -292,40 +325,70 @@ export default function TvvMobilePage() {
     let cancelled = false;
     const controller = new AbortController();
     setLoading(true);
-    const loadingTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      controller.abort();
-      setData(null);
-      setEstimate((current: any) => current ?? emptyEstimate);
-      setLoading(false);
-    }, 6500);
-
-    fetch(`/api/dashboard?month=${month}`, { cache: "no-store", signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Dashboard API ${response.status}`);
-        return response.json();
-      })
+    fetchJsonWithRetry(`/api/dashboard?month=${month}`, controller.signal)
       .then((payload) => {
         if (cancelled) return;
         setData(payload);
+        const latestMonth = payload?.availableMonths?.[0];
+        if (!latestMonthResolvedRef.current) {
+          latestMonthResolvedRef.current = true;
+          if (latestMonth && latestMonth !== "2099-01" && latestMonth <= currentMonth() && latestMonth !== month) {
+            setMonth(latestMonth);
+            setContractMonth(latestMonth);
+          }
+        }
         const first = payload?.agents?.[0];
         setAdvisorKey((current) => current || (first ? `${first.agentCode}__${first.agentName}` : ""));
       })
       .catch(() => {
         if (cancelled) return;
-        setData(null);
+        setData((current: any) => current);
         setEstimate((current: any) => current ?? emptyEstimate);
       })
       .finally(() => {
-        window.clearTimeout(loadingTimer);
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
-      window.clearTimeout(loadingTimer);
       controller.abort();
     };
   }, [month, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn || tab !== "contracts") return;
+    let cancelled = false;
+    const controller = new AbortController();
+    fetchJsonWithRetry(`/api/dashboard?month=${contractMonth}`, controller.signal)
+      .then((payload) => {
+        if (!cancelled) setContractData(payload);
+      })
+      .catch(() => {
+        // Keep the last successful contract period visible during a temporary failure.
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [contractMonth, signedIn, tab]);
+
+  useEffect(() => {
+    const code = authenticatedAdvisorCode || userProfile?.advisor_code;
+    if (!signedIn || !code) return;
+    let cancelled = false;
+    const controller = new AbortController();
+    const advisorCode = encodeURIComponent(code);
+    fetchJsonWithRetry(`/api/tvv-leaderboard?month=${month}&advisorCode=${advisorCode}`, controller.signal)
+      .then((payload) => {
+        if (!cancelled) setLeaderboard(payload);
+      })
+      .catch(() => {
+        // Preserve the last successful ranking during a temporary network failure.
+      });
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [authenticatedAdvisorCode, month, signedIn, userProfile?.advisor_code]);
 
   const advisorOptions = useMemo(() => (data?.agents ?? []).map((agent: any) => ({
     key: `${agent.agentCode || ""}__${agent.agentName || ""}`,
@@ -338,18 +401,35 @@ export default function TvvMobilePage() {
 
   const profileAdvisor = userProfile ? { key: `${userProfile.advisor_code}__${userProfile.full_name}`, code: userProfile.advisor_code, name: userProfile.full_name, ban: "", group: "", ads: "" } : null;
   const advisor = advisorOptions.find((item: any) => item.key === advisorKey) ?? advisorOptions[0] ?? profileAdvisor ?? fallbackAdvisor;
+  const currentAdvisorRank = useMemo(() => {
+    if (leaderboard?.currentAdvisorRank) return leaderboard.currentAdvisorRank;
+    const advisorCode = String(advisor?.code ?? "").trim().toUpperCase();
+    const advisorName = String(advisor?.name ?? "").trim().toLocaleLowerCase("vi");
+    return (leaderboard?.agents ?? []).find((row: any) =>
+      (advisorCode && String(row.agentCode ?? "").trim().toUpperCase() === advisorCode)
+      || (!advisorCode && String(row.agentName ?? "").trim().toLocaleLowerCase("vi") === advisorName)
+    )?.rank ?? null;
+  }, [advisor?.code, advisor?.name, leaderboard?.agents, leaderboard?.currentAdvisorRank]);
   const advisorIpPeriods = useMemo(() => {
     const rows = data?.agentIpPeriods ?? [];
     return rows.find((row: any) => (advisor?.code && row.agentCode === advisor.code) || row.agentName === advisor?.name)
       ?? { monthIp: 0, quarterIp: 0, yearIp: 0 };
   }, [advisor, data?.agentIpPeriods]);
-  const allContracts = useMemo(() => periodMode === "month"
-    ? data?.statusContracts ?? data?.contracts ?? []
-    : data?.yearStatusContracts ?? data?.yearContracts ?? [], [data, periodMode]);
+  const allContracts = useMemo(() => data?.statusContracts ?? data?.contracts ?? [], [data]);
   const myContracts = useMemo(() => {
     if (!advisor || !allContracts.length) return [];
-    return allContracts.filter((row: any) => ((advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name)) && recordInPeriod(row, month, periodMode));
-  }, [advisor, allContracts, month, periodMode]);
+    return allContracts.filter((row: any) => ((advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name)) && recordInPeriod(row, month, "month"));
+  }, [advisor, allContracts, month]);
+  const contractAllContracts = useMemo(() => periodMode === "month"
+    ? contractData?.statusContracts ?? contractData?.contracts ?? []
+    : contractData?.yearStatusContracts ?? contractData?.yearContracts ?? [], [contractData, periodMode]);
+  const selectedPeriodContracts = useMemo(() => {
+    if (!advisor || !contractAllContracts.length) return [];
+    return contractAllContracts.filter((row: any) =>
+      ((advisor.code && row.agent_code === advisor.code) || (!advisor.code && row.agent_name === advisor.name))
+      && recordInPeriod(row, contractMonth, periodMode)
+    );
+  }, [advisor, contractAllContracts, contractMonth, periodMode]);
   const productOptions = useMemo(() => {
     const names = new Set(myContracts.map((row: any) => row.product_name || row.raw_data?.product || row.raw_data?.["Sản phẩm chính"]).filter(Boolean));
     ["An Thịnh Phúc Niên", "An Tâm Hoạch Định"].forEach((name) => names.add(name));
@@ -386,10 +466,27 @@ export default function TvvMobilePage() {
 
   useEffect(() => {
     if (!signedIn || !readEventsReady || !userProfile?.advisor_code || !unreadNotificationKey) return;
-    const storageKey = `bvnt.notifiedEvents.${userProfile.advisor_code}`;
-    if (window.sessionStorage.getItem(storageKey) === unreadNotificationKey) return;
-    window.sessionStorage.setItem(storageKey, unreadNotificationKey);
-    playNotificationTone();
+    if (notificationSoundPlayedRef.current) return;
+    notificationSoundPlayedRef.current = true;
+    let active = true;
+    const playAfterInteraction = () => {
+      if (!active) return;
+      void playNotificationTone();
+      removeInteractionListeners();
+    };
+    const removeInteractionListeners = () => {
+      window.removeEventListener("pointerdown", playAfterInteraction);
+      window.removeEventListener("keydown", playAfterInteraction);
+    };
+    void playNotificationTone().then((played) => {
+      if (!active || played) return;
+      window.addEventListener("pointerdown", playAfterInteraction, { once: true });
+      window.addEventListener("keydown", playAfterInteraction, { once: true });
+    });
+    return () => {
+      active = false;
+      removeInteractionListeners();
+    };
   }, [readEventsReady, signedIn, unreadNotificationKey, userProfile?.advisor_code]);
 
   function toggleNotifications() {
@@ -432,6 +529,7 @@ export default function TvvMobilePage() {
               <div>
                 <h1>Xin chào, {advisor?.name || "TVV"} <span>👋</span></h1>
                 <p>TVV - {advisor?.code || "Chưa có mã"}</p>
+                <strong className="tvv-current-rank"><Trophy size={13} />{currentAdvisorRank ? `Hạng ${currentAdvisorRank} tháng này` : "Chưa có xếp hạng tháng này"}</strong>
               </div>
               <button ref={notificationButtonRef} className={`tvv-icon-button${notificationCount > 0 ? " tvv-notification-alert" : ""}`} type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
                 <Bell size={28} />
@@ -463,17 +561,15 @@ export default function TvvMobilePage() {
                 </div>,
                 document.body
               )}
-              <div className="tvv-hero-period-row">
-                <MonthPicker className="tvv-month-pill" value={month} options={monthOptions} onChange={setMonth} ariaLabel="Chọn tháng" />
-              </div>
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "illustration" ? "Minh hoạ" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
-          {tab === "overview" && <Overview stats={stats} contracts={myContracts} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} onOpenContract={setSelectedContract} />}
-          {tab === "contracts" && <ContractsListV2 contracts={myContracts} month={month} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setMonth} onOpenContract={setSelectedContract} />}
+          {tab === "overview" && <Overview stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />}
+          {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
+          {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "illustration" && <IllustrationView advisor={advisor} contracts={myContracts} estimate={estimate ?? emptyEstimate} onOpenCalculator={() => setTab("calculator")} />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
@@ -528,18 +624,76 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
-function Overview({ stats, contracts, estimate, starViet, starVietWarning, onTab, onOpenContract }: any) {
+function Overview({ stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
   const statItems = [
-    ["Tổng HĐ", stats.total, ClipboardList, "blue", "contracts"],
-    ["Đã phát hành", stats.issued, ShieldCheck, "green", "contracts"],
-    ["Chờ xử lý", stats.pending, Hourglass, "orange", "contracts"],
-    ["Hết hiệu lực", stats.invalid, XCircle, "red", "contracts"]
+    ["Tổng HĐ", stats.total, "blue", "contracts"],
+    ["Đã phát hành", stats.issued, "green", "contracts"],
+    ["Chờ xử lý", stats.pending, "orange", "contracts"],
+    ["Hết hiệu lực", stats.invalid, "red", "contracts"]
   ];
   return <section className="tvv-content">
-    <div className="tvv-stat-card">{statItems.map(([label, value, Icon, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><span className={tone}><Icon size={27} /></span><strong>{value}</strong><p>{label}</p><i /></div>)}</div>
+    <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
+    <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     <PersonalStarJourney row={starViet} warning={starVietWarning} />
-    <ContractPreview contracts={contracts} onAll={() => onTab("contracts")} onOpenContract={onOpenContract} />
+  </section>;
+}
+
+function initials(value: unknown) {
+  const words = String(value ?? "").trim().split(/\s+/).filter(Boolean);
+  return words.slice(-2).map((word) => word.charAt(0)).join("").toUpperCase() || "TV";
+}
+
+function RankingAvatar({ name, src, group = false }: { name: string; src?: string | null; group?: boolean }) {
+  return <span className={`tvv-ranking-avatar${group ? " group" : ""}`}>
+    {src ? <img src={src} alt={`Ảnh đại diện ${name}`} /> : group ? <Users size={20} /> : initials(name)}
+  </span>;
+}
+
+function LeaderboardPreview({ leaderboard, onOpen }: any) {
+  const leaders = (leaderboard?.agents ?? []).slice(0, 3);
+  return <button className="tvv-card tvv-leaderboard-preview" type="button" onClick={onOpen}>
+    <span className="tvv-leaderboard-preview-icon"><img src="/images/leaderboard-trophy.png" alt="" /></span>
+    <span className="tvv-leaderboard-preview-copy">
+      <strong>Bảng xếp hạng doanh thu</strong>
+      <small>Tôn vinh những gương mặt dẫn đầu tháng</small>
+      <span className="tvv-preview-avatars">
+        {leaders.map((row: any) => <RankingAvatar key={row.agentCode || row.agentName} name={row.agentName} src={row.avatarUrl} />)}
+      </span>
+    </span>
+    <ChevronRight size={22} />
+  </button>;
+}
+
+function LeaderboardPage({ leaderboard, month }: any) {
+  const [rankingView, setRankingView] = useState<"agents" | "groups">("agents");
+  const agents = leaderboard?.agents ?? [];
+  const groups = leaderboard?.groups ?? [];
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-leaderboard-page">
+    <div className="tvv-ranking-tabs" role="tablist" aria-label={`Bảng xếp hạng ${monthLabel(month)}`}>
+      <button type="button" role="tab" aria-selected={rankingView === "agents"} className={rankingView === "agents" ? "active" : ""} onClick={() => setRankingView("agents")}><UserRound size={18} />Top TVV</button>
+      <button type="button" role="tab" aria-selected={rankingView === "groups"} className={rankingView === "groups" ? "active" : ""} onClick={() => setRankingView("groups")}><Users size={18} />Top nhóm</button>
+    </div>
+    {rankingView === "agents"
+      ? <RankingSection title="Top 10 Tư vấn viên" subtitle="Những cá nhân xuất sắc nhất" rows={agents} />
+      : <RankingSection title="Top 10 Nhóm" subtitle="Những tập thể bứt phá nhất" rows={groups} group />}
+  </section>;
+}
+
+function RankingSection({ title, subtitle, rows, group = false }: { title: string; subtitle: string; rows: any[]; group?: boolean }) {
+  return <section className="tvv-ranking-section">
+    <header><Medal size={22} /><span><h3>{title}</h3><p>{subtitle}</p></span></header>
+    {rows.length ? <div className="tvv-ranking-list">
+      {rows.map((row) => {
+        const name = group ? row.groupName || "Nhóm chưa xác định" : row.agentName || row.agentCode || "Tư vấn viên";
+        return <article className={row.rank <= 3 ? `top-${row.rank}` : ""} key={group ? `${row.banName}-${row.groupName}` : row.agentCode || row.agentName}>
+          <strong className="tvv-rank-number">{row.rank <= 3 ? <Crown size={18} /> : row.rank}</strong>
+          <RankingAvatar name={name} src={row.avatarUrl} group={group} />
+          <span className="tvv-ranking-name"><b>{name}</b><small>{group ? row.banName : row.groupName}</small></span>
+          <span className="tvv-ranking-revenue"><b>{formatVnd(row.afyp)}</b><small>{row.contractCount} hợp đồng</small></span>
+        </article>;
+      })}
+    </div> : <p className="tvv-empty">Chưa có dữ liệu xếp hạng trong kỳ này.</p>}
   </section>;
 }
 
@@ -549,14 +703,8 @@ function PersonalStarJourney({ row, warning }: { row?: any; warning?: string | n
   const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
   return <section className="tvv-card tvv-star-journey">
     <div className="tvv-star-title"><span><Sparkles size={17} /> Hành trình Sao Việt</span><em>{row.currentTickets > 0 ? `${row.currentTickets} vé` : row.currentRank}</em></div>
-    <div className="tvv-star-main"><div><small>Tổng AFYP Sao Việt</small><strong>{formatVnd(row.totalAfyp)}</strong></div><Trophy size={31} /></div>
+    <div className="tvv-star-main"><div><small>Tổng AFYP Sao Việt</small><strong>{formatVnd(row.totalAfyp)}</strong></div><img className="tvv-star-achievement-icon" src="/images/star-viet-achievement.png" alt="" /></div>
     <div className="tvv-star-progress"><div><span>Mốc tiếp theo</span><b>{row.remainingToNext > 0 ? row.nextRank : "Đã đạt mốc cao nhất"}</b></div><i><u style={{ width: `${progress}%` }} /></i><div><span>{progress.toFixed(1).replace(".0", "")}%</span>{row.remainingToNext > 0 && <b>Còn {formatVnd(row.remainingToNext)}</b>}</div></div>
-    <div className="tvv-star-parts">
-      <span><small>KPI04</small><b>{formatVnd(row.kpi04Fyp)}</b></span>
-      <span><small>Thưởng hệ số</small><b>{formatVnd(row.doubleBonusAfyp)}</b></span>
-      <span><small>BC02 tháng</small><b>{formatVnd(row.bc02Afyp)}</b></span>
-      <span><small>Phí đóng thêm</small><b>{formatVnd(row.topupBonusAfyp)}</b></span>
-    </div>
   </section>;
 }
 

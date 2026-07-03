@@ -155,7 +155,9 @@ export async function GET(request: NextRequest) {
     if (yearRecordsError) throw yearRecordsError;
     if (targetError) throw targetError;
 
-    const availableMonths = [...new Set(((uploadsByMonth ?? []) as Array<{ data_month?: string | null }>).map((item) => String(item.data_month ?? "").slice(0, 7)).filter(Boolean))]
+    const availableMonths = [...new Set(((uploadsByMonth ?? []) as Array<{ data_month?: string | null }>)
+      .map((item) => String(item.data_month ?? "").slice(0, 7))
+      .filter((value) => value && value !== "2099-01"))]
       .sort((a, b) => b.localeCompare(a));
 
     const withDisplayContractNo = (items: RevenueRecord[]) => items.map((record) => ({

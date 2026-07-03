@@ -14062,7 +14062,13 @@ body,
 .tvv-star-title em { border-radius: 999px !important; background: #ffd34e !important; color: #063274 !important; padding: 5px 10px !important; font-size: 12px !important; font-style: normal !important; font-weight: 800 !important; }
 .tvv-star-main small, .tvv-star-progress span, .tvv-star-parts small { color: rgba(255,255,255,.78) !important; font-size: 11px !important; }
 .tvv-star-main strong { display: block !important; margin-top: 3px !important; color: #fff !important; font-size: 23px !important; }
-.tvv-star-main > svg { color: #ffd34e !important; }
+.tvv-star-achievement-icon {
+  width: 48px;
+  height: 48px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 7px rgba(255, 190, 0, .24));
+}
 .tvv-star-progress { display: grid !important; gap: 7px !important; }
 .tvv-star-progress > i { display: block !important; height: 8px !important; overflow: hidden !important; border-radius: 999px !important; background: rgba(255,255,255,.22) !important; }
 .tvv-star-progress > i > u { display: block !important; height: 100% !important; border-radius: inherit !important; background: #ffd34e !important; text-decoration: none !important; }
@@ -14866,31 +14872,45 @@ body,
 
 /* Overview stat card: compact vertical rhythm. */
 .tvv-app .tvv-stat-card {
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
 }
 
 .tvv-app .tvv-stat-card > .tvv-stat {
-  min-height: 92px !important;
-  gap: 4px !important;
+  min-height: 64px !important;
+  gap: 3px !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   justify-content: center !important;
 }
 
-.tvv-app .tvv-stat-card > .tvv-stat > span {
-  width: 44px !important;
-  height: 44px !important;
-}
-
-.tvv-app .tvv-stat-card > .tvv-stat > span svg {
-  width: 20px !important;
-  height: 20px !important;
-}
-
 .tvv-app .tvv-stat-card > .tvv-stat strong {
   margin-top: 0 !important;
   font-size: 24px !important;
+}
+
+.tvv-app .tvv-stat-card .stat-blue {
+  color: #1268e8 !important;
+  background: #1268e8 !important;
+}
+
+.tvv-app .tvv-stat-card .stat-green {
+  color: #16a34a !important;
+  background: #16a34a !important;
+}
+
+.tvv-app .tvv-stat-card .stat-orange {
+  color: #ed9200 !important;
+  background: #ed9200 !important;
+}
+
+.tvv-app .tvv-stat-card .stat-red {
+  color: #e52b3d !important;
+  background: #e52b3d !important;
+}
+
+.tvv-app .tvv-stat-card strong[class^="stat-"] {
+  background: transparent !important;
 }
 
 .tvv-app .tvv-stat-card > .tvv-stat p {
@@ -14903,6 +14923,184 @@ body,
   margin-top: 2px !important;
   width: 24px !important;
   height: 3px !important;
+}
+
+/* Revenue leaderboard */
+.tvv-leaderboard-preview {
+  width: 100%;
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px !important;
+  border: 0;
+  color: #08266f;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tvv-leaderboard-preview-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  background: transparent;
+}
+
+.tvv-leaderboard-preview-icon img {
+  width: 62px;
+  height: 62px;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 8px rgba(189, 118, 0, .2));
+}
+
+.tvv-leaderboard-preview-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.tvv-leaderboard-preview-copy > strong { font-size: 16px; }
+.tvv-leaderboard-preview-copy > small { color: #6d7894; font-size: 11px; }
+
+.tvv-preview-avatars {
+  display: flex;
+  margin-top: 3px;
+}
+
+.tvv-preview-avatars .tvv-ranking-avatar {
+  width: 25px;
+  height: 25px;
+  margin-right: -5px;
+  border: 2px solid #fff;
+  font-size: 8px;
+}
+
+.tvv-leaderboard-page { gap: 14px !important; }
+
+.tvv-ranking-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 5px;
+  border: 1px solid #dce7f7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(22, 53, 99, .07);
+}
+
+.tvv-app .tvv-ranking-tabs button {
+  height: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #d9e6fb !important;
+  border-radius: 12px;
+  color: #075ee1 !important;
+  background: #fff !important;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.tvv-app .tvv-ranking-tabs button.active {
+  color: #fff !important;
+  border-color: #075ee1 !important;
+  background: #075ee1 !important;
+  box-shadow: 0 6px 14px rgba(7, 94, 225, .25) !important;
+}
+
+.tvv-ranking-section {
+  overflow: hidden;
+  border: 1px solid #dce7f7;
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(22, 53, 99, .08);
+}
+
+.tvv-ranking-section > header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 16px 12px;
+  color: #d28a00;
+  border-bottom: 1px solid #e9eef7;
+}
+
+.tvv-ranking-section h3 { margin: 0; color: #071e66; font-size: 17px; }
+.tvv-ranking-section header p { margin: 2px 0 0; color: #7b849d; font-size: 11px; }
+.tvv-ranking-list { padding: 5px 10px 10px; }
+
+.tvv-ranking-list article {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 27px 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 7px;
+  border-bottom: 1px solid #edf1f7;
+}
+
+.tvv-ranking-list article:last-child { border-bottom: 0; }
+.tvv-ranking-list article.top-1 { margin-top: 5px; border-radius: 13px; background: linear-gradient(90deg, #fff8dc, #fffdf6); }
+.tvv-ranking-list article.top-2 { border-radius: 13px; background: linear-gradient(90deg, #f1f5fb, #fff); }
+.tvv-ranking-list article.top-3 { border-radius: 13px; background: linear-gradient(90deg, #fff0e5, #fff); }
+
+.tvv-rank-number {
+  display: grid;
+  place-items: center;
+  color: #71809d;
+  font-size: 14px;
+}
+
+.top-1 .tvv-rank-number { color: #e2a200; }
+.top-2 .tvv-rank-number { color: #8e9aaa; }
+.top-3 .tvv-rank-number { color: #c87338; }
+
+.tvv-ranking-avatar {
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #347cff, #0748b8);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tvv-ranking-avatar.group { color: #956000; background: linear-gradient(145deg, #fff1ad, #ffc438); }
+.tvv-ranking-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.tvv-ranking-name,
+.tvv-ranking-revenue { min-width: 0; display: grid; gap: 3px; }
+.tvv-ranking-name b { overflow: hidden; color: #0b2264; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.tvv-ranking-name small { overflow: hidden; color: #7a859e; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.tvv-ranking-revenue { text-align: right; }
+.tvv-ranking-revenue b { color: #0759d5; font-size: 12px; white-space: nowrap; }
+.top-1 .tvv-ranking-revenue b { color: #b87700; }
+.tvv-ranking-revenue small { color: #8a94aa; font-size: 9px; }
+
+.tvv-current-rank {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 224, 112, .55);
+  border-radius: 999px;
+  color: #ffe587;
+  background: rgba(4, 47, 139, .22);
+  font-size: 10px;
+  line-height: 1;
 }
 
 /* Contracts page: keep period, IP, and AFYP on one row. */
