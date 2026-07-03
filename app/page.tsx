@@ -227,6 +227,7 @@ export default function TvvMobilePage() {
   const [signedIn, setSignedIn] = useState(false);
   const [authenticatedAdvisorCode, setAuthenticatedAdvisorCode] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
+  const [illustrationLoaded, setIllustrationLoaded] = useState(false);
   const [month, setMonth] = useState(currentMonth());
   const [contractMonth, setContractMonth] = useState(currentMonth());
   const [periodMode, setPeriodMode] = useState<PeriodMode>("month");
@@ -252,7 +253,11 @@ export default function TvvMobilePage() {
   const [readEventIds, setReadEventIds] = useState<string[]>([]);
   const [readEventsReady, setReadEventsReady] = useState(false);
   const [notificationView, setNotificationView] = useState<"unread" | "read">("unread");
+  const [openedNotificationIds, setOpenedNotificationIds] = useState<string[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  useEffect(() => {
+    if (tab === "illustration") setIllustrationLoaded(true);
+  }, [tab]);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
 
   useEffect(() => {
@@ -484,7 +489,7 @@ export default function TvvMobilePage() {
   const unreadNotificationKey = unreadNotifications.map((item) => item.id).join("|");
   const notificationCount = Math.min(99, unreadNotifications.length);
   const displayedNotifications = notificationView === "unread"
-    ? unreadNotifications
+    ? adminEvents.filter((item) => openedNotificationIds.includes(item.id))
     : adminEvents.filter((item) => readEventIds.includes(item.id));
 
   useEffect(() => {
@@ -517,11 +522,10 @@ export default function TvvMobilePage() {
     setNotificationsOpen(willOpen);
     if (!willOpen) return;
     setNotificationView("unread");
-  }
-
-  function markEventAsRead(eventId: string) {
-    if (readEventIds.includes(eventId)) return;
-    const ids = [...readEventIds, eventId];
+    const newlyOpenedIds = unreadNotifications.map((item) => item.id);
+    setOpenedNotificationIds(newlyOpenedIds);
+    if (newlyOpenedIds.length === 0) return;
+    const ids = Array.from(new Set([...readEventIds, ...newlyOpenedIds]));
     setReadEventIds(ids);
     if (userProfile?.advisor_code) {
       window.localStorage.setItem(`bvnt.readEvents.${userProfile.advisor_code}`, JSON.stringify(ids));
@@ -565,17 +569,7 @@ export default function TvvMobilePage() {
                     <button type="button" role="tab" aria-selected={notificationView === "read"} className={notificationView === "read" ? "active" : ""} onClick={() => setNotificationView("read")}>Đã xem</button>
                   </div>
                   {displayedNotifications.length === 0 ? <p className="tvv-notification-empty">{notificationView === "unread" ? "Không có thông báo mới." : "Chưa có thông báo đã xem."}</p> : displayedNotifications.map((item) => (
-                    <article
-                      key={item.id}
-                      role={notificationView === "unread" ? "button" : undefined}
-                      tabIndex={notificationView === "unread" ? 0 : undefined}
-                      onClick={() => notificationView === "unread" && markEventAsRead(item.id)}
-                      onKeyDown={(event) => {
-                        if (notificationView !== "unread" || (event.key !== "Enter" && event.key !== " ")) return;
-                        event.preventDefault();
-                        markEventAsRead(item.id);
-                      }}
-                    >
+                    <article key={item.id}>
                       <strong>{item.title}</strong>
                       <p>{item.content}</p>
                       <small>{item.event_date ? `Sự kiện: ${new Date(item.event_date).toLocaleString("vi-VN")}` : new Date(item.created_at).toLocaleString("vi-VN")}</small>
@@ -593,10 +587,10 @@ export default function TvvMobilePage() {
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} />}
           {tab === "contests" && <ContestList estimate={estimate ?? emptyEstimate} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
-          {tab === "illustration" && <IllustrationView advisor={advisor} contracts={myContracts} estimate={estimate ?? emptyEstimate} onOpenCalculator={() => setTab("calculator")} />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
       )}
+      {illustrationLoaded && <IllustrationTab active={tab === "illustration"} />}
       {selectedContract && <ContractDetailModal row={selectedContract} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
     </main>
@@ -1172,6 +1166,14 @@ function IllustrationView({ advisor, contracts, estimate, onOpenCalculator }: an
   </section>;
 }
 
+function IllustrationTab({ active }: { active: boolean }) {
+  return (
+    <section className={`tvv-illustration-embed${active ? " active" : ""}`} aria-hidden={!active}>
+      <iframe src="/minhhoa2/index.html?embedded=1" title="Minh hoạ quyền lợi bảo hiểm" loading="eager" />
+    </section>
+  );
+}
+
 function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -1245,5 +1247,5 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
 
 function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
-  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => id === "illustration" ? window.location.assign("/minhhoa2/index.html") : setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
+  return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }

@@ -948,12 +948,15 @@ textarea:focus {
   }
 
   body .tvv-app .tvv-hero {
-    min-height: 148px !important;
-    padding: 14px 16px 24px !important;
+    box-sizing: border-box !important;
+    height: 106px !important;
+    min-height: 106px !important;
+    padding: 8px 16px 12px !important;
   }
 
   body .tvv-app .tvv-hero::after {
-    height: 44px !important;
+    display: none !important;
+    height: 0 !important;
   }
 
   body .tvv-app .tvv-hero-main {

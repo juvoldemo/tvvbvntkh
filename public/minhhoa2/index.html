@@ -11,6 +11,9 @@
     <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
     <link rel="stylesheet" href="styles.css?v=20260703-unified-banner-blue" />
     <script>
+      if (new URLSearchParams(window.location.search).get("embedded") === "1") {
+        document.documentElement.classList.add("embedded");
+      }
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>

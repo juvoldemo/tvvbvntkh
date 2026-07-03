@@ -17,6 +17,14 @@
   box-sizing: border-box;
 }
 
+html.embedded .app-shell {
+  margin-top: 0;
+}
+
+html.embedded .illustration-page-header {
+  display: none !important;
+}
+
 body.riders-mode .app-shell {
   max-width: 920px;
   width: auto;

@@ -11619,7 +11619,7 @@ body,
 }
 
 /* TVV overview — final mobile-first visual layer. */
-@media (max-width: 600px) {
+@media (max-width: 0px) {
   body:has(.tvv-app) {
     background: #f4f8ff !important;
   }
@@ -14618,6 +14618,27 @@ body,
   }
 }
 
+.tvv-illustration-embed {
+  display: none;
+  width: 100%;
+  height: calc(100dvh - 148px - env(safe-area-inset-bottom));
+  min-height: 420px;
+  overflow: hidden;
+  background: #f7faff;
+}
+
+.tvv-illustration-embed.active {
+  display: block;
+}
+
+.tvv-illustration-embed iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #f7faff;
+}
+
 /* Private data administration */
 .admin-page { min-height: 100vh; background: #f4f7fb; color: #172033; padding: 28px; font-family: var(--ds-font); }
 .admin-loading, .admin-login { display: grid; place-items: center; }
@@ -14960,7 +14981,7 @@ body,
 }
 
 /* Keep the overview hero and contest preview aligned after legacy overrides. */
-@media (max-width: 600px) {
+@media (max-width: 0px) {
   .tvv-hero-period-row .tvv-month-pill {
     grid-column: 1 !important;
     grid-row: 1 !important;
@@ -15261,9 +15282,15 @@ body,
 }
 
 .tvv-app > .tvv-hero {
-  min-height: 118px !important;
-  padding-top: 11px !important;
-  padding-bottom: 18px !important;
+  box-sizing: border-box !important;
+  height: 106px !important;
+  min-height: 106px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.tvv-app > .tvv-hero::after {
+  display: none !important;
 }
 
 /* Contracts page: keep period, IP, and AFYP on one row. */
