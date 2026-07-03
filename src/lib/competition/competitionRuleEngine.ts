@@ -1041,6 +1041,17 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
       const total = rows.reduce((sum, row) => sum + (metric === "ip" ? row.ip : row.afyp), 0);
       const tier = findTier(rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [], total);
       if (!tier) return [];
+      const rate = Number(tier.reward_rate ?? 0);
+      const percent = parseCompetitionMoney(String(tier.reward_percent ?? "").replace("%", ""));
+      const formulaPercentMatch = String(tier.reward_formula ?? rule.reward_formula ?? "").match(/(\d+(?:[.,]\d+)?)\s*%/);
+      const formulaPercent = formulaPercentMatch ? parseCompetitionMoney(formulaPercentMatch[1]) : 0;
+      const tierReward = rate > 0
+        ? total * rate
+        : percent > 0
+          ? total * percent / 100
+          : formulaPercent > 0
+            ? total * formulaPercent / 100
+            : Number(tier.reward_amount ?? tier.rewardAmount ?? tier.amount ?? rule.reward_amount ?? 0) || 0;
       return [{
         advisor,
         group: rows.find((row) => row.team)?.team ?? "",
@@ -1049,7 +1060,7 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
         totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
         totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
         prizeName: rewardName(rule),
-        rewardAmount: Number(tier.reward_amount ?? tier.rewardAmount ?? tier.amount ?? rule.reward_amount ?? 0) || 0,
+        rewardAmount: tierReward,
         achievedRewardNames: [rewardName(rule)]
       }];
     });

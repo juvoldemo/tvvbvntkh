@@ -11124,11 +11124,16 @@ body,
   width: min(100%, 390px);
   max-height: min(80vh, 620px);
   overflow-y: auto;
+  scrollbar-width: none;
   border: 1px solid #dbe7f8;
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 24px 60px rgba(7, 32, 79, .25);
   padding: 20px;
+}
+
+.tvv-contest-detail::-webkit-scrollbar {
+  display: none;
 }
 
 .tvv-contest-detail header {
@@ -12065,7 +12070,7 @@ body,
 }
 
 .tvv-draft-row {
-  grid-template-columns: 16px 28px minmax(0, 1fr) 96px 24px !important;
+  grid-template-columns: 16px 28px minmax(0, 1fr) 24px !important;
   gap: 8px !important;
   min-height: 70px !important;
   border-color: #e2e9f6 !important;
@@ -15101,6 +15106,12 @@ body,
   background: rgba(4, 47, 139, .22);
   font-size: 10px;
   line-height: 1;
+}
+
+.tvv-app > .tvv-hero {
+  min-height: 118px !important;
+  padding-top: 11px !important;
+  padding-bottom: 18px !important;
 }
 
 /* Contracts page: keep period, IP, and AFYP on one row. */

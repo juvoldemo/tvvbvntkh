@@ -207,6 +207,24 @@ export async function POST(request: NextRequest) {
     }).filter((program) => program.programId !== "policy-month-13");
     const policyIncrementalReward = calculatorPolicyPrograms.reduce((sum, program) => sum + program.incrementalReward, 0);
     const commissionReward = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0) * 0.3, 0);
+    const totalDraftPremium = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0), 0);
+    const competitionRewardByDraft = new Map(
+      (result.rewardByDraftContract ?? []).map((row: any) => [row.draftId, Number(row.estimatedReward ?? 0)])
+    );
+    const calculatorDraftRewards = draftContracts.map((draft) => {
+      const premium = Number(draft.premium) || 0;
+      const premiumShare = totalDraftPremium > 0 ? premium / totalDraftPremium : 0;
+      const commission = premium * 0.3;
+      const competitionReward = Number(competitionRewardByDraft.get(draft.id) ?? 0);
+      const policyReward = policyIncrementalReward * premiumShare;
+      return {
+        draftId: draft.id,
+        estimatedReward: commission + competitionReward + policyReward,
+        commissionReward: commission,
+        competitionReward,
+        policyReward
+      };
+    });
     const calculatorPrograms = [
       ...(result.rewardByProgram ?? []).map((program: any) => ({
         ...program,
@@ -232,6 +250,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       month: toMonthStart(month).slice(0, 7),
       ...result,
+      rewardByDraftContract: calculatorDraftRewards,
       ongoingPrograms,
       endedPrograms,
       policyRewardPrograms: calculatedPolicyPrograms.length ? calculatedPolicyPrograms : configuredPolicyPrograms,

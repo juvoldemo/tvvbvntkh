@@ -124,14 +124,24 @@ export function estimateRewardsForDraftContracts(params: {
       const result = calculateCompetitionReward(program.rule, combinedContracts);
       const baseline = calculateCompetitionReward(program.rule, currentAdvisorContracts);
       const matchedContracts = result.contractRewardResults.filter((contract) => eligibleDraftKeys.has(getRewardContractKey(contract)));
-      const matchedAdvisors = result.tvvRewardResults.filter((row) => normalizeText(row.advisor) === normalizeText(params.advisor.name));
-      const baselineAdvisors = baseline.tvvRewardResults.filter((row) => normalizeText(row.advisor) === normalizeText(params.advisor.name));
+      // `combinedContracts` and `currentAdvisorContracts` are already scoped to the
+      // selected advisor above. Keep every advisor-level result here so differences
+      // in Vietnamese name encoding cannot discard an otherwise valid reward.
+      const matchedAdvisors = result.tvvRewardResults;
+      const baselineAdvisors = baseline.tvvRewardResults;
       const projectedTotal = result.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0)
         + matchedAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
       const baselineTotal = baseline.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0)
         + baselineAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
       const estimatedReward = Math.max(0, projectedTotal - baselineTotal);
       if (estimatedReward <= 0) continue;
+      const programRule = program.rule as AnyRecord;
+      const primaryRule = programRule.reward_rules?.[0];
+      const revenueTiers = primaryRule?.thresholds ?? programRule.thresholds ?? programRule.tiers ?? [];
+      const metricText = normalizeText(String(primaryRule?.calculation_logic ?? programRule.calculation_logic ?? programRule.metric_type ?? ""));
+      const usesIp = metricText.includes("ip") || metricText.includes("pdt");
+      const projectedBasis = matchedAdvisors.reduce((sum, row) => sum + Number(usesIp ? row.totalIP : row.totalAFYP), 0);
+      const projectedContractCount = matchedAdvisors.reduce((sum, row) => sum + Number(row.contractCount ?? 0), 0);
 
       const conditionText = [
         program.rule.reward_rules?.[0]?.condition_text,
@@ -151,6 +161,12 @@ export function estimateRewardsForDraftContracts(params: {
         })),
         conditionText,
         estimatedReward,
+        milestoneType: revenueTiers.length ? "revenue-tier" : undefined,
+        milestoneMetricLabel: usesIp ? "PĐT/IP" : "AFYP",
+        milestoneCurrentBasis: projectedBasis,
+        milestoneCurrentReward: projectedTotal,
+        milestoneContractCount: projectedContractCount,
+        milestoneTiers: revenueTiers,
         status: program.status || "Đang diễn ra"
       });
 
