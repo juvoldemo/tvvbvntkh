@@ -19,7 +19,17 @@ function dateValue(row: Record<string, unknown>, names: string[]) {
   }
   const raw = String(value).trim();
   const match = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (match) return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+  if (match) {
+    const first = Number(match[1]);
+    const second = Number(match[2]);
+    // File nhân sự dùng định dạng MM/DD/YYYY. Nếu phần đầu > 12 thì
+    // tự nhận diện lại là DD/MM/YYYY để vẫn hỗ trợ file Việt Nam.
+    const month = first <= 12 ? first : second;
+    const day = first <= 12 ? second : first;
+    const candidate = `${match[3]}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const parsedCandidate = new Date(`${candidate}T00:00:00Z`);
+    if (!Number.isNaN(parsedCandidate.getTime()) && parsedCandidate.toISOString().slice(0, 10) === candidate) return candidate;
+  }
   const date = new Date(raw);
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }

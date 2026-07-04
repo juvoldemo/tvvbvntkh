@@ -1,5 +1,17 @@
 type AnyRecord = Record<string, any>;
 
+const REWARD_DEBUG_ENABLED =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEBUG_REWARD === "true";
+
+function rewardDebugLog(...args: unknown[]) {
+  if (REWARD_DEBUG_ENABLED) console.log(...args);
+}
+
+function rewardDebugWarn(...args: unknown[]) {
+  if (REWARD_DEBUG_ENABLED) console.warn(...args);
+}
+
 export type CompetitionRewardRule = {
   id?: string;
   reward_name?: string;
@@ -878,7 +890,7 @@ function calculateTopNNewlySeenContracts(rule: CompetitionRewardRule, contracts:
     ) * direction)
     .slice(0, limit);
 
-  console.log("[CTTD NEWLY SEEN]", {
+  rewardDebugLog("[CTTD NEWLY SEEN]", {
     reward_type: "top_n_newly_seen_contracts",
     total_snapshot_contracts: contracts.filter((contract) => contract.first_seen_at).length,
     eligible_new_contracts: candidates.length,
@@ -952,14 +964,14 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       const metricValue = competitionMetricValue(contract);
       const tier = tiers.find((item) => metricValue >= Number(item.min_pdt));
       if (!tier) {
-        console.log("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "metric", metric_value: metricValue, result: "excluded" });
+        rewardDebugLog("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "metric", metric_value: metricValue, result: "excluded" });
         return [];
       }
       const rawProductField = rawContractProductCode(contract);
       const productCode = getContractProductCode(contract);
       const isSpc = spcProducts.has(productCode);
       if (spcProducts.size > 0 && !productCode) {
-        console.log("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "product", raw_product_field: rawProductField, result: "missing_product" });
+        rewardDebugLog("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "product", raw_product_field: rawProductField, result: "missing_product" });
       }
       const rawReward = isSpc ? tier.spc_reward : tier.other_reward;
       const text = String(rawReward ?? "").trim();
@@ -970,7 +982,7 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
           ? numericReward * 100
           : 0;
       const amount = percent > 0 ? metricValue * percent / 100 : parseCompetitionMoney(rawReward);
-      console.log("[CTTD PDT TABLE]", { gyc_no: contract.gyc_no, raw_product_field: rawProductField, normalized_product_code: productCode, expected_spc_code: [...spcProducts].join(", "), isSPC: isSpc, metric_value: metricValue, threshold_matched: tier.min_pdt, reward_type: percent > 0 ? "percent" : "fixed", reward_amount: amount });
+      rewardDebugLog("[CTTD PDT TABLE]", { gyc_no: contract.gyc_no, raw_product_field: rawProductField, normalized_product_code: productCode, expected_spc_code: [...spcProducts].join(", "), isSPC: isSpc, metric_value: metricValue, threshold_matched: tier.min_pdt, reward_type: percent > 0 ? "percent" : "fixed", reward_amount: amount });
       if (!Number.isFinite(amount) || amount <= 0) return [];
       const eligible = toEligibleContract(contract, rule, amount, `PĐT/HĐ >= ${Number(tier.min_pdt).toLocaleString("vi-VN")}đ`);
       eligible.prizeName = isSpc ? "HĐ SPC An Thịnh Phúc Niên" : "HĐ còn lại";
@@ -1143,7 +1155,7 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     if (reasons.length > 0) {
       const uniqueReasons = [...new Set(reasons)];
       excludedContracts.push(toExcluded(contract, uniqueReasons.join("; ")));
-      console.log("[CTTD FILTER]", {
+      rewardDebugLog("[CTTD FILTER]", {
         gyc_no: contract.gyc_no || contract.contract_no,
         steps: uniqueReasons.map((reason) => {
           const normalized = normalizeText(reason);
@@ -1187,7 +1199,7 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     eligibleContracts.push(...rewardContracts.map((contract) => ({ ...contract, rulePriority })));
     const groupRewards = shouldOutputGroupRows ? calculateGroupRewards(rewardRule, uniqueEligibleBaseContracts) : [];
     for (const group of groupRewards) {
-      console.log("[CTTD Reward]", rule.program_name, rewardRule.id, rewardRule.target_type, {
+      rewardDebugLog("[CTTD Reward]", rule.program_name, rewardRule.id, rewardRule.target_type, {
         calculatedReward: group.totalReward,
         group_reward_amount: group.group_reward_amount,
         reward_per_tvv: group.reward_per_tvv
@@ -1228,7 +1240,7 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
         advisorRewardMap.set(key, candidate);
       }
     }
-    console.log("[CTTD RULE OUTPUT]", {
+    rewardDebugLog("[CTTD RULE OUTPUT]", {
       reward_name: rewardName(rewardRule),
       condition_scope: conditionScope,
       recipient_scope: recipientScope,
@@ -1296,13 +1308,13 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     contractKeyCounts.set(key, (contractKeyCounts.get(key) ?? 0) + 1);
   }
   const duplicatedContractKeys = [...contractKeyCounts.entries()].filter(([, count]) => count > 1);
-  if (duplicatedContractKeys.length > 0) console.warn("[CTTD DUPLICATE CONTRACT REWARD]", { program: rule.program_name, duplicatedContractKeys });
+  if (duplicatedContractKeys.length > 0) rewardDebugWarn("[CTTD DUPLICATE CONTRACT REWARD]", { program: rule.program_name, duplicatedContractKeys });
 
   for (const advisor of eligibleAdvisors) {
     const sourceRows = uniqueEligibleBaseContracts.filter((contract) => normalizeText(contract.tvv) === normalizeText(advisor.advisor) && normalizeText(contract.team) === normalizeText(advisor.group));
     const uniqueCount = new Set(sourceRows.map(getRewardContractKey).filter(Boolean)).size;
     if (uniqueCount !== Number(advisor.contractCount ?? 0)) {
-      console.warn("[CTTD TVV CONTRACT COUNT MISMATCH]", { program: rule.program_name, advisor: advisor.advisor, reported: advisor.contractCount, uniqueGroupedContracts: uniqueCount });
+      rewardDebugWarn("[CTTD TVV CONTRACT COUNT MISMATCH]", { program: rule.program_name, advisor: advisor.advisor, reported: advisor.contractCount, uniqueGroupedContracts: uniqueCount });
     }
   }
 
@@ -1310,23 +1322,23 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     const sourceRows = uniqueEligibleBaseContracts.filter((contract) => normalizeText(contract.team) === normalizeText(group.group));
     const uniqueCount = new Set(sourceRows.map(getRewardContractKey).filter(Boolean)).size;
     if (uniqueCount !== Number(group.eligibleContractCount ?? 0)) {
-      console.warn("[CTTD GROUP CONTRACT COUNT MISMATCH]", { program: rule.program_name, group: group.group, reported: group.eligibleContractCount, uniqueGroupedContracts: uniqueCount });
+      rewardDebugWarn("[CTTD GROUP CONTRACT COUNT MISMATCH]", { program: rule.program_name, group: group.group, reported: group.eligibleContractCount, uniqueGroupedContracts: uniqueCount });
     }
   }
 
-  console.group(rule.program_name || "Chương trình thi đua");
-  console.log("rawContracts count", contracts.length);
-  console.log("eligibleContracts count", eligibleBaseContracts.length);
-  console.log("uniqueEligibleContracts count", uniqueEligibleBaseContracts.length);
-  console.log("contractRules count", contractRulesCount);
-  console.log("tvvRules count", tvvRulesCount);
-  console.log("groupRules count", groupRulesCount);
-  console.log("contractRewardResults count + totalReward", { count: uniqueContracts.length, totalReward: contractRewardTotal });
-  console.log("tvvRewardResults count + totalReward", { count: eligibleAdvisors.length, totalReward: tvvRewardTotal });
-  console.log("groupRewardResults count + totalReward", { count: achievedGroups.length, totalReward: groupRewardTotal });
-  console.groupEnd();
+  if (REWARD_DEBUG_ENABLED) console.group(rule.program_name || "Chương trình thi đua");
+  rewardDebugLog("rawContracts count", contracts.length);
+  rewardDebugLog("eligibleContracts count", eligibleBaseContracts.length);
+  rewardDebugLog("uniqueEligibleContracts count", uniqueEligibleBaseContracts.length);
+  rewardDebugLog("contractRules count", contractRulesCount);
+  rewardDebugLog("tvvRules count", tvvRulesCount);
+  rewardDebugLog("groupRules count", groupRulesCount);
+  rewardDebugLog("contractRewardResults count + totalReward", { count: uniqueContracts.length, totalReward: contractRewardTotal });
+  rewardDebugLog("tvvRewardResults count + totalReward", { count: eligibleAdvisors.length, totalReward: tvvRewardTotal });
+  rewardDebugLog("groupRewardResults count + totalReward", { count: achievedGroups.length, totalReward: groupRewardTotal });
+  if (REWARD_DEBUG_ENABLED) console.groupEnd();
 
-  console.log("[competition] calculateCompetitionReward debug", filterDebug);
+  rewardDebugLog("[competition] calculateCompetitionReward debug", filterDebug);
   const groupRevenueByTeam = [...groupBy(eligibleBaseContracts, (contract) => contract.team).entries()].map(([team, rows]) => ({
     team,
     totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
@@ -1334,7 +1346,7 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     contracts: new Set(rows.map((row) => row.contract_no || row.gyc_no).filter(Boolean)).size,
     advisors: new Set(rows.map((row) => row.tvv).filter(Boolean)).size
   }));
-  console.log("[competition] reward output", {
+  rewardDebugLog("[competition] reward output", {
     eligibleContracts: uniqueContracts.length,
     eligibleGroups: achievedGroups.length,
     eligibleAdvisors: eligibleAdvisors.length,

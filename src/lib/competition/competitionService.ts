@@ -4,6 +4,14 @@ import { calculateCompetitionReward, normalizeContract, type CompetitionRewardRe
 
 type SupabaseClient = ReturnType<typeof getSupabaseAdmin>;
 
+const REWARD_DEBUG_ENABLED =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEBUG_REWARD === "true";
+
+function rewardDebugLog(...args: unknown[]) {
+  if (REWARD_DEBUG_ENABLED) console.log(...args);
+}
+
 function messageFromError(error: unknown) {
   if (!error) return "";
   if (error instanceof Error) return error.message;
@@ -291,7 +299,7 @@ export async function syncCompetitionContractSnapshotsAfterUpload(params: {
     if (error) throw new Error(messageFromError(error));
   }
 
-  console.log("[CTTD SNAPSHOT SYNC]", {
+  rewardDebugLog("[CTTD SNAPSHOT SYNC]", {
     month_key: params.monthKey,
     upload_batch_id: params.uploadBatchId,
     total_rows: params.contracts.length,
@@ -582,7 +590,7 @@ export async function recalculateAllCompetitionProgramsAfterUpload(selectedMonth
       );
       const calculated = await calculateAndSaveCompetitionFromContracts(supabase, program, enrichedProgramContracts, calculatedBy);
       const summary = calculated.rewardResult.summary;
-      console.log("[CTTD RESULT]", {
+      rewardDebugLog("[CTTD RESULT]", {
         programName: program.program_name,
         dateRange: range,
         inputContracts: programContracts?.length ?? 0,
@@ -606,7 +614,7 @@ export async function recalculateAllCompetitionProgramsAfterUpload(selectedMonth
     }
   }
 
-  console.log("[CTTD AUTO SYNC]", {
+  rewardDebugLog("[CTTD AUTO SYNC]", {
     selectedMonth,
     uploadedMonthContractsCount: contractsAfterUpload.length,
     programCount: programs?.length ?? 0,

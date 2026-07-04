@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { hashPassword, userCodeFromRequest, verifyPassword } from "@/lib/user-auth";
+import { managedTeamName } from "@/lib/team-scope";
 
 const fields = "advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url";
 
@@ -9,7 +10,13 @@ export async function GET(request: NextRequest) {
   if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
   const { data, error } = await getSupabaseAdmin().from("authorized_users").select(fields).eq("advisor_code", code).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ profile: data });
+  return NextResponse.json({
+    profile: {
+      ...data,
+      managed_group_name: managedTeamName(data.advisor_code, data.advisor_position),
+      dashboard_role: data.advisor_position === "Trưởng nhóm" ? "team_leader" : "advisor"
+    }
+  });
 }
 
 export async function PUT(request: NextRequest) {

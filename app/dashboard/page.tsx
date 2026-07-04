@@ -73,6 +73,9 @@ const QUARTER_PLAN_VND: Record<number, number> = {
 const YEAR_PLAN_VND = 54_000_000_000;
 const HIDDEN_COMPETITION_PROGRAMS_KEY = "dashboard.hiddenCompetitionProgramIds";
 const HIDDEN_COMPETITION_PROGRAMS_EVENT = "dashboard:hidden-competition-programs-changed";
+const REWARD_DEBUG_ENABLED =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_DEBUG_REWARD === "true";
 
 const tabs: Array<{ id: Tab; label: string; mobileLabel: string; icon: LucideIcon }> = [
   { id: "overview", label: "Tổng quan", mobileLabel: "Tổng quan", icon: LayoutGrid },
@@ -2858,6 +2861,7 @@ function logCompetitionCalculationDebug(params: {
   month: string;
   payload: any;
 }) {
+  if (!REWARD_DEBUG_ENABLED) return;
   const resultSummary = params.payload?.rewardResult?.summary
     ?? params.payload?.result?.result_summary?.summary
     ?? params.payload?.result?.result_summary
@@ -3691,7 +3695,7 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   }, [resultTargets.join("|"), tab]);
 
   useEffect(() => {
-    if (!detail) return;
+    if (!detail || !REWARD_DEBUG_ENABLED) return;
     console.log("[CTTD reward scopes]", { program: program?.programName, contractRewardResults: qualifiedRewardContracts.length, tvvRewardResults: tvvRewardResults.length, groupRewardResults: groupRows.length, contractRewardTotal: qualifiedRewardContracts.reduce((sum, row) => sum + Number(row.reward_amount ?? row.rewardAmount ?? 0), 0), tvvRewardTotal: tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.reward_amount ?? row.rewardAmount ?? 0), 0), groupRewardTotal: groupRows.reduce((sum, row) => sum + Number(row.totalReward ?? 0), 0) });
   }, [detail]);
 
