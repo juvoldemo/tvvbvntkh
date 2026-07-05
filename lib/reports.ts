@@ -122,6 +122,55 @@ export function isCountedRevenueRecord(record: RevenueRecord) {
 export const isOverviewRevenueRecord = isCountedRevenueRecord;
 export const isValidForRanking = isCountedRevenueRecord;
 
+function contractIdentity(record: RevenueRecord) {
+  const contractNo = String(record.contract_no ?? "").trim();
+  const applicationNo = String(record.application_no ?? "").trim();
+  if (contractNo && !contractNo.startsWith("Num-")) return `contract:${contractNo.toUpperCase()}`;
+  if (applicationNo) return `application:${applicationNo.toUpperCase()}`;
+  return "";
+}
+
+function recordTimestamp(record: RevenueRecord, key: keyof RevenueRecord) {
+  const value = record[key];
+  if (!value) return 0;
+  const time = new Date(String(value)).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function preferredDuplicateRecord(current: RevenueRecord, next: RevenueRecord) {
+  const dataMonthDiff = String(next.data_month ?? "").localeCompare(String(current.data_month ?? ""));
+  if (dataMonthDiff !== 0) return dataMonthDiff > 0 ? next : current;
+
+  const updatedDiff = recordTimestamp(next, "updated_date") - recordTimestamp(current, "updated_date");
+  if (updatedDiff !== 0) return updatedDiff > 0 ? next : current;
+
+  const paidDiff = recordTimestamp(next, "paid_date") - recordTimestamp(current, "paid_date");
+  if (paidDiff !== 0) return paidDiff > 0 ? next : current;
+
+  const createdDiff = recordTimestamp(next, "created_at") - recordTimestamp(current, "created_at");
+  if (createdDiff !== 0) return createdDiff > 0 ? next : current;
+
+  const countedDiff = Number(isCountedRevenueRecord(next)) - Number(isCountedRevenueRecord(current));
+  return countedDiff > 0 ? next : current;
+}
+
+export function dedupeRevenueRecordsByContract(records: RevenueRecord[]) {
+  const rows = new Map<string, RevenueRecord>();
+  const result: RevenueRecord[] = [];
+
+  records.forEach((record) => {
+    const key = contractIdentity(record);
+    if (!key) {
+      result.push(record);
+      return;
+    }
+    const current = rows.get(key);
+    rows.set(key, current ? preferredDuplicateRecord(current, record) : record);
+  });
+
+  return [...result, ...rows.values()];
+}
+
 export function applyFilters(records: RevenueRecord[], filters: DashboardFilters) {
   const bounds = monthBounds(filters.month);
   const start = filters.paidDate || bounds.start;

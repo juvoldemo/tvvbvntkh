@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds, toMonthStart } from "@/lib/format";
-import { isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
+import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import type { RevenueRecord } from "@/lib/types";
@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
 
     const contracts = (monthRows ?? []) as RevenueRecord[];
     const previousContracts = (previousRows ?? []) as RevenueRecord[];
+    const yearContracts = dedupeRevenueRecordsByContract((yearRows ?? []) as RevenueRecord[]);
     const counted = contracts.filter(isCountedRevenueRecord);
     const previousCounted = previousContracts.filter(isCountedRevenueRecord);
     const agents = new Map<string, any>();
@@ -140,8 +141,8 @@ export async function GET(request: NextRequest) {
       },
       agents: ranking,
       contracts,
-      yearContracts: yearRows ?? [],
-      yearRevenue: (yearRows ?? []).filter((row: any) => isCountedRevenueRecord(row))
+      yearContracts,
+      yearRevenue: yearContracts.filter((row: any) => isCountedRevenueRecord(row))
         .reduce((sum: number, row: any) => sum + (Number(row.afyp) || 0), 0)
     });
   } catch (error) {

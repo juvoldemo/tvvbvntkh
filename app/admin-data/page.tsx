@@ -1,10 +1,16 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Bell, CalendarPlus, LogOut, ShieldCheck, Upload, Users } from "lucide-react";
+import { Bell, BookOpen, CalendarPlus, FileText, HelpCircle, LogOut, Plus, Save, ShieldCheck, Trash2, Upload, Users } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; created_at: string };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; is_active: boolean };
+type ArchiveTab = "forms" | "guides" | "faq";
+type ArchiveDocument = { id: string; title: string; file?: string; size?: string };
+type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
+type ArchiveForms = { folders: ArchiveFolder[] };
+type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
+type ArchiveFaq = { id: string; question: string; answer: string };
 
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
@@ -17,15 +23,30 @@ export default function AdminDataPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [archiveForms, setArchiveForms] = useState<ArchiveForms>({ folders: [] });
+  const [archiveGuides, setArchiveGuides] = useState<ArchiveGuide[]>([]);
+  const [archiveFaq, setArchiveFaq] = useState<ArchiveFaq[]>([]);
 
   const loadData = useCallback(async () => {
-    const [userResponse, eventResponse] = await Promise.all([
+    const [userResponse, eventResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
       fetch("/api/admin/access-list", { cache: "no-store" }),
-      fetch("/api/events", { cache: "no-store" })
+      fetch("/api/events", { cache: "no-store" }),
+      fetch("/api/admin/archive/content?key=forms", { cache: "no-store" }),
+      fetch("/api/admin/archive/content?key=guides", { cache: "no-store" }),
+      fetch("/api/admin/archive/content?key=faq", { cache: "no-store" })
     ]);
-    const [userPayload, eventPayload] = await Promise.all([userResponse.json(), eventResponse.json()]);
+    const [userPayload, eventPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
+      userResponse.json(),
+      eventResponse.json(),
+      formsResponse.json(),
+      guidesResponse.json(),
+      faqResponse.json()
+    ]);
     if (userResponse.ok) setUsers(userPayload.users ?? []);
     if (eventResponse.ok) setEvents(eventPayload.events ?? []);
+    if (formsResponse.ok) setArchiveForms(formsPayload ?? { folders: [] });
+    if (guidesResponse.ok) setArchiveGuides(guidesPayload ?? []);
+    if (faqResponse.ok) setArchiveFaq(faqPayload ?? []);
   }, []);
 
   useEffect(() => {
@@ -150,7 +171,210 @@ export default function AdminDataPage() {
             {events.map((item) => <div key={item.id}><div><b>{item.title}</b><p>{item.content}</p><small>{item.event_date ? new Date(item.event_date).toLocaleString("vi-VN") : "Thông báo chung"}</small></div><button onClick={() => removeEvent(item.id)}>Xóa</button></div>)}
           </div>
         </article>
+        <ArchiveAdminPanel
+          forms={archiveForms}
+          guides={archiveGuides}
+          faq={archiveFaq}
+          setForms={setArchiveForms}
+          setGuides={setArchiveGuides}
+          setFaq={setArchiveFaq}
+          onSaved={loadData}
+          setMessage={setMessage}
+        />
       </section>
     </main>
   );
+}
+
+function makeArchiveId(value: string, fallback = "item") {
+  return (
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || `${fallback}-${Date.now()}`
+  );
+}
+
+function todayText() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function emptyArchiveDocument(): ArchiveDocument {
+  return { id: `mau-${Date.now()}`, title: "Mẫu mới.pdf", file: "", size: "" };
+}
+
+function emptyArchiveGuide(order: number): ArchiveGuide {
+  return {
+    id: `huong-dan-${Date.now()}`,
+    category: "Hướng dẫn",
+    title: "",
+    description: "",
+    summary: "",
+    type: "pdf",
+    pdfUrl: "",
+    pageCount: 0,
+    youtubeUrl: "",
+    youtubeId: "",
+    isActive: true,
+    order,
+    createdAt: todayText()
+  };
+}
+
+function extractYoutubeId(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const match = trimmed.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
+  return match?.[1] ?? "";
+}
+
+function ArchiveAdminPanel({ forms, guides, faq, setForms, setGuides, setFaq, onSaved, setMessage }: {
+  forms: ArchiveForms;
+  guides: ArchiveGuide[];
+  faq: ArchiveFaq[];
+  setForms: (value: ArchiveForms) => void;
+  setGuides: (value: ArchiveGuide[]) => void;
+  setFaq: (value: ArchiveFaq[]) => void;
+  onSaved: () => Promise<void>;
+  setMessage: (value: string) => void;
+}) {
+  const [tab, setTab] = useState<ArchiveTab>("forms");
+  const [saving, setSaving] = useState(false);
+
+  async function saveArchive(key: ArchiveTab) {
+    const value = key === "forms" ? forms : key === "guides" ? guides : faq;
+    setSaving(true);
+    setMessage("");
+    const response = await fetch(`/api/admin/archive/content?key=${key}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(value)
+    });
+    const payload = await response.json().catch(() => ({}));
+    setSaving(false);
+    setMessage(response.ok ? "Đã lưu Kho tài liệu." : payload.error || "Không thể lưu Kho tài liệu.");
+    if (response.ok) await onSaved();
+  }
+
+  return (
+    <article className="admin-card admin-archive-card">
+      <div className="admin-card-title"><BookOpen /><div><h2>Kho tài liệu</h2><p>Thêm mẫu biểu, hướng dẫn và FAQ hiển thị trong web.</p></div></div>
+      <div className="admin-archive-tabs">
+        <button type="button" className={tab === "forms" ? "active" : ""} onClick={() => setTab("forms")}><FileText size={16} />Mẫu biểu</button>
+        <button type="button" className={tab === "guides" ? "active" : ""} onClick={() => setTab("guides")}><BookOpen size={16} />Hướng dẫn</button>
+        <button type="button" className={tab === "faq" ? "active" : ""} onClick={() => setTab("faq")}><HelpCircle size={16} />FAQ</button>
+      </div>
+
+      {tab === "forms" && <ArchiveFormsEditor forms={forms} setForms={setForms} />}
+      {tab === "guides" && <ArchiveGuidesEditor guides={guides} setGuides={setGuides} />}
+      {tab === "faq" && <ArchiveFaqEditor faq={faq} setFaq={setFaq} />}
+
+      <button type="button" disabled={saving} onClick={() => saveArchive(tab)}><Save size={17} />{saving ? "Đang lưu..." : "Lưu thay đổi"}</button>
+    </article>
+  );
+}
+
+function ArchiveFormsEditor({ forms, setForms }: { forms: ArchiveForms; setForms: (value: ArchiveForms) => void }) {
+  const [uploadingId, setUploadingId] = useState("");
+
+  const updateFolder = (folderIndex: number, folder: ArchiveFolder) => {
+    setForms({ folders: forms.folders.map((item, index) => (index === folderIndex ? folder : item)) });
+  };
+
+  async function uploadPdf(folderIndex: number, itemIndex: number, file?: File | null) {
+    if (!file) return;
+    const item = forms.folders[folderIndex].items[itemIndex];
+    setUploadingId(item.id);
+    try {
+      const formData = new FormData();
+      formData.append("kind", "forms");
+      formData.append("file", file);
+      const response = await fetch("/api/admin/archive/upload", { method: "POST", body: formData });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không thể upload PDF.");
+      const folder = forms.folders[folderIndex];
+      updateFolder(folderIndex, {
+        ...folder,
+        items: folder.items.map((entry, index) => index === itemIndex ? { ...entry, title: file.name, file: result.file, size: result.size } : entry)
+      });
+    } finally {
+      setUploadingId("");
+    }
+  }
+
+  return <section className="admin-archive-editor">
+    <button type="button" className="admin-secondary" onClick={() => setForms({ folders: [...forms.folders, { id: `danh-muc-${Date.now()}`, title: "Danh mục mới", items: [emptyArchiveDocument()] }] })}><Plus size={16} />Thêm danh mục</button>
+    {forms.folders.map((folder, folderIndex) => <div className="admin-archive-group" key={folder.id}>
+      <label>Tên danh mục<input value={folder.title} onChange={(event) => updateFolder(folderIndex, { ...folder, title: event.target.value, id: makeArchiveId(event.target.value, "folder") })} /></label>
+      {folder.items.map((item, itemIndex) => <div className="admin-archive-mini" key={item.id}>
+        <input value={item.title} onChange={(event) => updateFolder(folderIndex, { ...folder, items: folder.items.map((entry, index) => index === itemIndex ? { ...entry, title: event.target.value, id: makeArchiveId(event.target.value, "mau") } : entry) })} placeholder="Tên mẫu biểu" />
+        <label className="admin-archive-upload"><Upload size={15} />{uploadingId === item.id ? "Đang upload..." : "Upload PDF"}<input type="file" accept="application/pdf,.pdf" onChange={(event) => uploadPdf(folderIndex, itemIndex, event.target.files?.[0])} /></label>
+        <input value={item.file ?? ""} onChange={(event) => updateFolder(folderIndex, { ...folder, items: folder.items.map((entry, index) => index === itemIndex ? { ...entry, file: event.target.value } : entry) })} placeholder="/pdfs/file.pdf" />
+        <span>{item.size || "Chưa có file"}</span>
+        <button type="button" className="admin-danger" onClick={() => updateFolder(folderIndex, { ...folder, items: folder.items.filter((_, index) => index !== itemIndex) })}><Trash2 size={15} />Xóa mẫu</button>
+      </div>)}
+      <div className="admin-archive-actions">
+        <button type="button" className="admin-secondary" onClick={() => updateFolder(folderIndex, { ...folder, items: [...folder.items, emptyArchiveDocument()] })}><Plus size={15} />Thêm mẫu</button>
+        <button type="button" className="admin-danger" onClick={() => setForms({ folders: forms.folders.filter((_, index) => index !== folderIndex) })}><Trash2 size={15} />Xóa danh mục</button>
+      </div>
+    </div>)}
+  </section>;
+}
+
+function ArchiveGuidesEditor({ guides, setGuides }: { guides: ArchiveGuide[]; setGuides: (value: ArchiveGuide[]) => void }) {
+  const [uploadingId, setUploadingId] = useState("");
+  const updateGuide = (index: number, guide: ArchiveGuide) => setGuides(guides.map((item, i) => i === index ? guide : item));
+
+  async function uploadPdf(index: number, file?: File | null) {
+    if (!file) return;
+    const guide = guides[index];
+    setUploadingId(guide.id);
+    try {
+      const formData = new FormData();
+      formData.append("kind", "guides");
+      formData.append("file", file);
+      const response = await fetch("/api/admin/archive/upload", { method: "POST", body: formData });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không thể upload PDF.");
+      updateGuide(index, { ...guide, title: guide.title || file.name.replace(/\.pdf$/i, ""), type: "pdf", pdfUrl: result.pdfUrl, youtubeUrl: "", youtubeId: "", isActive: guide.isActive !== false });
+    } finally {
+      setUploadingId("");
+    }
+  }
+
+  return <section className="admin-archive-editor">
+    <button type="button" className="admin-secondary" onClick={() => setGuides([...guides, emptyArchiveGuide(guides.length + 1)])}><Plus size={16} />Thêm hướng dẫn</button>
+    {guides.map((guide, index) => {
+      const type = guide.type ?? (guide.youtubeId ? "youtube" : "pdf");
+      return <div className="admin-archive-group" key={guide.id}>
+        <label>Tiêu đề<input value={guide.title} onChange={(event) => updateGuide(index, { ...guide, title: event.target.value })} /></label>
+        <label>Mô tả<textarea value={guide.description ?? guide.summary ?? ""} onChange={(event) => updateGuide(index, { ...guide, description: event.target.value, summary: event.target.value })} rows={2} /></label>
+        <div className="admin-archive-two">
+          <label>Loại<select value={type} onChange={(event) => updateGuide(index, { ...guide, type: event.target.value as "pdf" | "youtube" })}><option value="pdf">PDF</option><option value="youtube">YouTube</option></select></label>
+          <label>Thứ tự<input type="number" value={guide.order ?? index + 1} onChange={(event) => updateGuide(index, { ...guide, order: Number(event.target.value) || index + 1 })} /></label>
+        </div>
+        {type === "pdf" ? <>
+          <label className="admin-archive-upload"><Upload size={15} />{uploadingId === guide.id ? "Đang upload..." : "Upload PDF"}<input type="file" accept="application/pdf,.pdf" onChange={(event) => uploadPdf(index, event.target.files?.[0])} /></label>
+          <input value={guide.pdfUrl ?? ""} onChange={(event) => updateGuide(index, { ...guide, pdfUrl: event.target.value })} placeholder="/uploads/guides/file.pdf" />
+        </> : <label>Link YouTube<input value={guide.youtubeUrl ?? ""} onChange={(event) => updateGuide(index, { ...guide, type: "youtube", youtubeUrl: event.target.value, youtubeId: extractYoutubeId(event.target.value), pdfUrl: "", pageCount: 0 })} /></label>}
+        <div className="admin-archive-actions">
+          <button type="button" className="admin-secondary" onClick={() => updateGuide(index, { ...guide, isActive: guide.isActive === false })}>{guide.isActive === false ? "Đang ẩn" : "Đang hiện"}</button>
+          <button type="button" className="admin-danger" onClick={() => setGuides(guides.filter((_, i) => i !== index))}><Trash2 size={15} />Xóa</button>
+        </div>
+      </div>;
+    })}
+  </section>;
+}
+
+function ArchiveFaqEditor({ faq, setFaq }: { faq: ArchiveFaq[]; setFaq: (value: ArchiveFaq[]) => void }) {
+  return <section className="admin-archive-editor">
+    <button type="button" className="admin-secondary" onClick={() => setFaq([...faq, { id: `faq-${Date.now()}`, question: "Câu hỏi mới", answer: "" }])}><Plus size={16} />Thêm FAQ</button>
+    {faq.map((item, index) => <div className="admin-archive-group" key={item.id}>
+      <label>Câu hỏi<input value={item.question} onChange={(event) => setFaq(faq.map((entry, i) => i === index ? { ...entry, question: event.target.value } : entry))} /></label>
+      <label>Câu trả lời<textarea value={item.answer} onChange={(event) => setFaq(faq.map((entry, i) => i === index ? { ...entry, answer: event.target.value } : entry))} rows={5} /></label>
+      <button type="button" className="admin-danger" onClick={() => setFaq(faq.filter((_, i) => i !== index))}><Trash2 size={15} />Xóa FAQ</button>
+    </div>)}
+  </section>;
 }

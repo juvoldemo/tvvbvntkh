@@ -111,6 +111,7 @@ create index if not exists idx_star_viet_records_agent on star_viet_records(agen
 create table if not exists tvv_reward_policy_records (
   id uuid primary key default gen_random_uuid(),
   data_month date not null,
+  reward_source text not null default 'kpi04' check (reward_source in ('kpi04', 'kpi05')),
   agent_code text,
   agent_name text,
   ban_name text,
@@ -126,11 +127,22 @@ create table if not exists tvv_reward_policy_records (
   uploaded_at timestamptz default now()
 );
 
-create unique index if not exists uniq_tvv_reward_policy_month_agent
-  on tvv_reward_policy_records(data_month, agent_code)
+alter table tvv_reward_policy_records add column if not exists reward_source text not null default 'kpi04';
+alter table tvv_reward_policy_records drop constraint if exists tvv_reward_policy_records_reward_source_check;
+alter table tvv_reward_policy_records add constraint tvv_reward_policy_records_reward_source_check
+  check (reward_source in ('kpi04', 'kpi05'));
+drop index if exists uniq_tvv_reward_policy_month_agent;
+create unique index if not exists uniq_tvv_reward_policy_source_month_agent_contract
+  on tvv_reward_policy_records(
+    reward_source,
+    data_month,
+    agent_code,
+    (upper(regexp_replace(coalesce(raw_data->>'contract_no', raw_data->>'application_no', raw_data->>'application_nos', id::text), '\s+', '', 'g')))
+  )
   where agent_code is not null and btrim(agent_code) <> '';
 create index if not exists idx_tvv_reward_policy_month on tvv_reward_policy_records(data_month);
 create index if not exists idx_tvv_reward_policy_agent on tvv_reward_policy_records(agent_code);
+create index if not exists idx_tvv_reward_policy_source on tvv_reward_policy_records(reward_source);
 
 create index if not exists idx_revenue_records_data_month on revenue_records(data_month);
 create index if not exists idx_revenue_records_paid_date on revenue_records(paid_date);

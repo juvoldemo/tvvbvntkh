@@ -98,4 +98,45 @@ const filtered = calculatePolicyRewards({
 assert.equal(filtered.monthly.length, 1);
 assert.equal(filtered.monthly[0].agentCode, "A01");
 
+const kpi05ReplacesSameAgentMonth = calculatePolicyRewards({
+  selectedMonth: "2026-04",
+  kpi04: [
+    kpi("2026-04", { raw_data: { application_nos: ["KPI04-001"] } }),
+    kpi("2026-04", { reward_source: "kpi05", fyp: 40_000_000, fyc: 12_000_000, ip: 40_000_000, raw_data: { application_nos: ["KPI05-NEW"] } })
+  ],
+  bc02: [bc02("2026-04-10", "BC02-001", { ip: 20_000_000 })]
+});
+assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "kpi04").length, 0);
+assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "bc02").length, 0);
+assert.equal(kpi05ReplacesSameAgentMonth.monthly[0].totalFyc, 12_000_000);
+
+const kpi05RecurringByMonth = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-04", { reward_source: "kpi05", fyp: 20_272_476.3, fyc: 5_800_283.2, ip: 18_081_915, raw_data: { application_nos: ["10000016619993", "10000017728630"] } }),
+    kpi("2026-05", { reward_source: "kpi05", fyp: 40_746_145.3, fyc: 11_329_699.6, ip: 38_555_584, raw_data: { application_nos: ["10000016619993", "10000017827130", "10000017847594"] } }),
+    kpi("2026-06", { reward_source: "kpi05", fyp: 133_250_361.3, fyc: 38_915_181.5, ip: 130_459_800, raw_data: { application_nos: ["10000016122459", "10000016619993", "10000017968925"] } })
+  ],
+  bc02: []
+});
+assert.equal(Math.round(kpi05RecurringByMonth.monthly[0].totalFyc), 38_915_182);
+assert.equal(Math.round(kpi05RecurringByMonth.monthly[0].reward), 7_004_733);
+assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].fyp), 194_268_983);
+assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].totalFyc), 56_045_164);
+assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].reward), 8_406_775);
+
+const newAdvisorQuarter = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-04", { fyp: 233_280_750 / 3, fyc: 68_578_887 / 3 }),
+    kpi("2026-05", { fyp: 233_280_750 / 3, fyc: 68_578_887 / 3 }),
+    kpi("2026-06", { fyp: 233_280_750 / 3, fyc: 68_578_887 / 3 })
+  ],
+  bc02: [],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-04-13" }]
+});
+assert.equal(Math.round(newAdvisorQuarter.quarterly[0].qualificationFyp ?? 0), 268_715_801);
+assert.equal(newAdvisorQuarter.quarterly[0].rate, 0.18);
+assert.equal(Math.round(newAdvisorQuarter.quarterly[0].reward), 12_344_200);
+
 console.log("TVV policy reward tests passed.");

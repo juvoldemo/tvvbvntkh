@@ -53,7 +53,7 @@ async function calculate(request: NextRequest, body: any = {}) {
   const year = month.slice(0, 4);
   const [allRevenue, fycRows, advisorProfiles] = await Promise.all([
     readAll((from, to) => supabase.from("revenue_records").select("*").order("paid_date").range(from, to)),
-    readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,agent_code,fyc,raw_data").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
+    readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,agent_code,fyc,raw_data,reward_source").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
     readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date").range(from, to))
   ]);
   const uniqueRevenue = deduplicateRevenue(allRevenue as RevenueRecord[]).sort((a, b) => String(a.paid_date).localeCompare(String(b.paid_date)));

@@ -5,6 +5,7 @@ import { estimateRewardsForDraftContracts, type DraftRewardContract } from "@/li
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
+import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 
 function programDateRange(program: any, month: string) {
   const rule = program.confirmed_rule || program.ai_rule || {};
@@ -63,13 +64,18 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
     const year = month.slice(0, 4);
-    const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }] = await Promise.all([
+    const advisorProfileQuery = advisor.code
+      ? supabase.from("authorized_users").select("advisor_code,start_date").eq("advisor_code", advisor.code)
+      : supabase.from("authorized_users").select("advisor_code,start_date");
+    const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }, { data: advisorProfiles, error: advisorProfilesError }] = await Promise.all([
       supabase.from("competition_programs").select("*"),
       supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`),
-      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`)
+      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`),
+      advisorProfileQuery
     ]);
     if (programError) throw programError;
     if (yearContractsError) throw yearContractsError;
+    if (advisorProfilesError) throw advisorProfilesError;
 
     const calculablePrograms = (programs ?? []).filter((program: any) => program.confirmed_rule);
     const ranges = calculablePrograms.map((program: any) => programDateRange(program, month));
@@ -82,6 +88,8 @@ export async function POST(request: NextRequest) {
       .gte("paid_date", start)
       .lte("paid_date", end);
     if (contractError) throw contractError;
+    const dedupedContracts = dedupeRevenueRecordsByContract((contracts ?? []) as any);
+    const dedupedYearContracts = dedupeRevenueRecordsByContract((yearContracts ?? []) as any);
 
     const competitionRules = calculablePrograms.map((program: any) => ({
       id: program.id,
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
     try {
       result = estimateRewardsForDraftContracts({
         draftContracts,
-        currentContracts: contracts ?? [],
+        currentContracts: dedupedContracts,
         competitionRules,
         advisor
       });
@@ -117,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     const today = getVietnamToday();
-    const currentAdvisorContracts = (contracts ?? []).filter((record: any) => contractBelongsToAdvisor(record, advisor));
+    const currentAdvisorContracts = dedupedContracts.filter((record: any) => contractBelongsToAdvisor(record, advisor));
     const actualRewardByProgram = new Map(competitionRules.map((program: any) => {
       try {
         const actual = calculateCompetitionReward(program.rule, currentAdvisorContracts);
@@ -203,7 +211,8 @@ export async function POST(request: NextRequest) {
     const policyResult = calculatePolicyRewards({
       selectedMonth: month,
       kpi04: policyRecords ?? [],
-      bc02: yearContracts ?? [],
+      bc02: dedupedYearContracts,
+      advisorProfiles: advisorProfiles ?? [],
       filters: {
         agentCode: advisor.code || undefined,
         agent: advisor.code ? undefined : advisor.name || undefined,
@@ -235,7 +244,8 @@ export async function POST(request: NextRequest) {
     const projectedPolicyResult = calculatePolicyRewards({
       selectedMonth: month,
       kpi04: policyRecords ?? [],
-      bc02: [...(yearContracts ?? []), ...draftPolicyContracts],
+      bc02: [...dedupedYearContracts, ...draftPolicyContracts],
+      advisorProfiles: advisorProfiles ?? [],
       filters: {
         agentCode: advisor.code || undefined,
         agent: advisor.code ? undefined : advisor.name || undefined,

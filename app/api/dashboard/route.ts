@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "@/lib/types";
 import { buildAfypPlanSummary, buildAfypPlanTable } from "@/lib/afyp-plan";
-import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
+import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, dedupeRevenueRecordsByContract, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { buildStarVietReport, normalizeText, type StarVietRecord } from "@/lib/star-viet";
 import { readStarVietRecords } from "@/lib/star-viet-data";
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
     const allRecords = withDisplayContractNo((records ?? []) as RevenueRecord[]);
     const allPreviousRecords = withDisplayContractNo((previousRecords ?? []) as RevenueRecord[]);
     const allPreviousMonthRecords = withDisplayContractNo((previousMonthRecords ?? []) as RevenueRecord[]);
-    const allYearRecords = withDisplayContractNo((yearRecords ?? []) as RevenueRecord[]);
+    const allYearRecords = dedupeRevenueRecordsByContract(withDisplayContractNo((yearRecords ?? []) as RevenueRecord[]));
     let starVietRecords: StarVietRecord[] = [];
     let starVietWarning: string | null = null;
     try {

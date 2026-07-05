@@ -3022,6 +3022,19 @@ document.querySelectorAll(".money-input").forEach((input) => {
   });
 });
 
+function applyEmbeddedAnnualPremium() {
+  const premium = new URLSearchParams(window.location.search).get("annualPremium");
+  const numericPremium = Number(String(premium || "").replace(/\D/g, ""));
+  if (!numericPremium) return;
+  const input = document.getElementById("annualPremium");
+  if (!input) return;
+  input.value = formatCommaNumber(numericPremium);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+applyEmbeddedAnnualPremium();
+
 ["annualPremium", "deathSumAssured"].forEach((inputId) => {
   const input = document.getElementById(inputId);
   input.addEventListener("focus", () => {
