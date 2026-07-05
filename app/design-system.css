@@ -5,10 +5,10 @@
 :root {
   --ds-font: Roboto, system-ui, "Segoe UI", sans-serif;
 
-  --ds-blue-900: #062b73;
-  --ds-blue-800: #073b9d;
-  --ds-blue-700: #075fe7;
-  --ds-blue-600: #1b72eb;
+  --ds-blue-900: #004b7a;
+  --ds-blue-800: #004b7a;
+  --ds-blue-700: #004b7a;
+  --ds-blue-600: #004b7a;
   --ds-blue-100: #eaf3ff;
   --ds-blue-50: #f4f8ff;
   --ds-green-700: #087a49;
@@ -18,7 +18,7 @@
   --ds-red-700: #bd2932;
   --ds-red-100: #fff0f1;
   --ds-gray-950: #111827;
-  --ds-gray-800: #24324a;
+  --ds-gray-800: #004b7a;
   --ds-gray-600: #657187;
   --ds-gray-500: #7b8799;
   --ds-gray-300: #d5deea;
@@ -147,7 +147,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(7, 95, 231, .2) !important;
+  outline: 3px solid rgba(0, 75, 122, .2) !important;
   outline-offset: 2px;
 }
 
@@ -182,7 +182,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--ds-blue-700) !important;
-  box-shadow: 0 0 0 3px rgba(7, 95, 231, .1) !important;
+  box-shadow: 0 0 0 3px rgba(0, 75, 122, .1) !important;
 }
 
 /* Shared surfaces */
@@ -487,7 +487,7 @@ textarea:focus {
   border-color: var(--ds-blue-700) !important;
   background: var(--ds-blue-700) !important;
   color: var(--ds-white) !important;
-  box-shadow: 0 6px 14px rgba(7, 95, 231, .2) !important;
+  box-shadow: 0 6px 14px rgba(0, 75, 122, .2) !important;
 }
 
 .tvv-policy-overview {
@@ -789,7 +789,7 @@ textarea:focus {
 
 .tvv-money-field:focus-within {
   border-color: var(--ds-blue-700) !important;
-  box-shadow: 0 0 0 3px rgba(7, 95, 231, .1) !important;
+  box-shadow: 0 0 0 3px rgba(0, 75, 122, .1) !important;
 }
 
 .tvv-money-field input {

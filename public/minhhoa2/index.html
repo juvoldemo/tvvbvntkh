@@ -9,7 +9,7 @@
     <meta property="og:description" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:title" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
-    <link rel="stylesheet" href="styles.css?v=20260703-unified-banner-blue" />
+    <link rel="stylesheet" href="styles.css?v=20260705-relation-before-tabs" />
     <script>
       if (new URLSearchParams(window.location.search).get("embedded") === "1") {
         document.documentElement.classList.add("embedded");
@@ -27,18 +27,49 @@
         <h1>Minh hoạ</h1>
       </header>
 
+      <section class="policy-owner-relation-card global-policy-owner-relation-card" aria-label="Quan hệ BMBH và NĐBH">
+        <div class="policy-owner-relation-row">
+          <strong>BMBH</strong>
+          <div class="policy-owner-toggle" role="group" aria-label="Chọn quan hệ BMBH và NĐBH">
+            <button id="samePolicyOwnerButton" class="active" type="button" data-policy-owner-mode="same" aria-pressed="true">LÀ</button>
+            <button id="differentPolicyOwnerButton" type="button" data-policy-owner-mode="different" aria-pressed="false">KHÁC</button>
+          </div>
+          <strong>NĐBH</strong>
+        </div>
+        <div id="personFormTabs" class="person-form-tabs" hidden>
+          <button class="active" type="button" data-person-form-tab="insured" aria-pressed="true">NĐBH</button>
+          <button type="button" data-person-form-tab="policyOwner" aria-pressed="false">Bên mua bảo hiểm</button>
+        </div>
+        <p id="policyOwnerValidationMessage" class="policy-owner-validation" role="status"></p>
+      </section>
+
       <nav class="tabs" aria-label="Chọn màn hình">
-        <button class="tab-button tab-main active" type="button" data-tab="main">Minh họa SPC</button>
+        <button class="tab-button tab-main active" type="button" data-tab="main">Sản phẩm chính</button>
         <button class="tab-button tab-riders" type="button" data-tab="riders">Sản phẩm bán kèm</button>
       </nav>
 
       <section id="mainTab" class="tab-panel active">
         <form id="illustrationForm" class="form-grid">
+          <section class="policy-owner-relation-card" aria-label="Quan hệ BMBH và NĐBH">
+            <div class="policy-owner-relation-row">
+              <strong>BMBH</strong>
+              <div class="policy-owner-toggle" role="group" aria-label="Chọn quan hệ BMBH và NĐBH">
+                <button id="samePolicyOwnerButton" class="active" type="button" data-policy-owner-mode="same" aria-pressed="true">LÀ</button>
+                <button id="differentPolicyOwnerButton" type="button" data-policy-owner-mode="different" aria-pressed="false">KHÁC</button>
+              </div>
+              <strong>NĐBH</strong>
+            </div>
+            <div id="personFormTabs" class="person-form-tabs" hidden>
+              <button class="active" type="button" data-person-form-tab="insured" aria-pressed="true">NĐBH</button>
+              <button type="button" data-person-form-tab="policyOwner" aria-pressed="false">Bên mua bảo hiểm</button>
+            </div>
+            <p id="policyOwnerValidationMessage" class="policy-owner-validation" role="status"></p>
+          </section>
           <section class="panel">
             <h2><span class="section-badge customer-badge"></span><span>1. Thông tin khách hàng</span></h2>
-            <div class="fields">
+            <div id="insuredPersonFields" class="fields person-fields active">
               <label class="field-row icon-user">
-                <span>Họ và tên khách hàng</span>
+                <span>Họ và tên NĐBH</span>
                 <input id="fullName" name="fullName" type="text" required value="Nguyễn Hoàng Vũ" placeholder="Nguyễn Hoàng Vũ" />
               </label>
 
@@ -87,7 +118,62 @@
                 <div id="occupationSuggestions" class="occupation-suggestions" role="listbox" hidden></div>
                 <small id="occupationJobNote" class="field-note"></small>
               </label>
+            </div>
 
+            <div id="policyOwnerFields" class="fields person-fields" hidden>
+              <label class="field-row icon-user">
+                <span>Họ và tên BMBH</span>
+                <input id="policyOwnerName" name="policyOwnerName" type="text" value="Lê Thị Hòa" placeholder="Lê Thị Hòa" />
+              </label>
+
+              <label class="field-row icon-calendar">
+                <span>Ngày tháng năm sinh BMBH</span>
+                <input id="policyOwnerDateOfBirth" name="policyOwnerDateOfBirth" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" />
+              </label>
+
+              <label class="field-row icon-info">
+                <span>Tuổi BMBH</span>
+                <input id="policyOwnerAge" type="text" value="-" readonly />
+              </label>
+
+              <label class="field-row icon-user">
+                <span>Giới tính BMBH</span>
+                <select id="policyOwnerGender" name="policyOwnerGender" class="gender-native-select" aria-hidden="true" tabindex="-1">
+                  <option>Nam</option>
+                  <option selected>Nữ</option>
+                </select>
+                <div class="gender-buttons policy-owner-gender-buttons" role="group" aria-label="Chọn giới tính BMBH">
+                  <button class="gender-button" type="button" data-policy-owner-gender-value="Nam" aria-pressed="false">
+                    <span class="gender-icon" aria-hidden="true">♂</span>
+                    <span>Nam</span>
+                  </button>
+                  <button class="gender-button active" type="button" data-policy-owner-gender-value="Nữ" aria-pressed="true" style="background: #004b7a; border-color: #004b7a; color: #fff; box-shadow: 0 3px 9px rgba(0, 75, 147, 0.22);">
+                    <span class="gender-icon" aria-hidden="true" style="color: #fff;">♀</span>
+                    <span style="color: #fff;">Nữ</span>
+                  </button>
+                </div>
+              </label>
+
+              <label class="field-row policy-owner-occupation-field icon-briefcase">
+                <span>Nghề nghiệp</span>
+                <select id="policyOwnerOccupationGroup" name="policyOwnerOccupationGroup" disabled>
+                  <option value="1">Nhóm 1</option>
+                  <option value="2">Nhóm 2</option>
+                  <option value="3">Nhóm 3</option>
+                  <option value="4">Nhóm 4</option>
+                  <option value="5">Nhóm 5</option>
+                  <option value="6">Nhóm 6</option>
+                </select>
+                <div class="occupation-search-box">
+                  <img src="icons/search.svg" alt="" aria-hidden="true" />
+                  <input id="policyOwnerOccupation" name="policyOwnerOccupation" type="text" autocomplete="off" placeholder="Tìm nghề nghiệp..." aria-autocomplete="list" aria-expanded="false" aria-controls="policyOwnerOccupationSuggestions" />
+                </div>
+                <div id="policyOwnerOccupationSuggestions" class="occupation-suggestions" role="listbox" hidden></div>
+                <small id="policyOwnerOccupationNote" class="field-note"></small>
+              </label>
+            </div>
+
+            <div class="fields">
               <label class="field-row main-extra-field hidden-main-field icon-calendar">
                 <span>Định kỳ đóng phí</span>
                 <select id="paymentMode" name="paymentMode">
@@ -330,7 +416,7 @@
     <script src="addonBenefitSummaryService.js?v=20260617-r21-two-cards"></script>
     <script src="atpn-data-loader.js?v=20260616-atpn-funeral-ui"></script>
     <script src="lifeCare20Rates.js?v=20260625-life-care-cleanup-3"></script>
-    <script src="script.js?v=20260703-unified-banner-blue"></script>
+    <script src="script.js?v=20260705-relation-before-tabs"></script>
     <script src="supabaseConfig.js"></script>
     <script src="accessLogger.js"></script>
     <script>

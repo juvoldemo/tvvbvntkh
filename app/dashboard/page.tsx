@@ -221,7 +221,7 @@ function formatMoney(value: number) {
 function formatHeaderCompactMoney(value: number) {
   const abs = Math.abs(value || 0);
   if (abs >= 1_000_000_000) {
-    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tá»·`;
+    return `${(value / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
   }
   if (abs >= 1_000_000) {
     return `${(value / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tr`;
@@ -362,15 +362,15 @@ function repairMojibake(value: unknown) {
 }
 
 const ADO_COLORS_BY_KEY: Record<string, string> = {
-  "nguyen thi mai trang": "#1677ff",
+  "nguyen thi mai trang": "#004b7a",
   "nguyen thi tram": "#f59e0b",
-  "dinh quoc tien": "#7c3aed",
+  "dinh quoc tien": "#004b7a",
   "nguyen thoc": "#16a34a",
   "tran xuan thu": "#f97316",
-  "nguyen thanh nhan": "#06b6d4"
+  "nguyen thanh nhan": "#004b7a"
 };
 
-const ADO_FALLBACK_COLORS = ["#e11d48", "#0ea5e9", "#84cc16", "#a855f7", "#f59e0b", "#14b8a6"];
+const ADO_FALLBACK_COLORS = ["#e11d48", "#004b7a", "#84cc16", "#004b7a", "#f59e0b", "#14b8a6"];
 
 function adoColor(name: unknown, index = 0) {
   return ADO_COLORS_BY_KEY[normalizeViText(String(name ?? ""))]
@@ -592,10 +592,10 @@ function isCountedContract(value: unknown) {
 }
 
 const STATUS_COLOR_BY_NORMALIZED_LABEL: Record<string, string> = {
-  "cho kiem tra ycbh": "#0f6fff",
+  "cho kiem tra ycbh": "#004b7a",
   "cnbh chuan": "#22a447",
   "cho dgrr": "#f59e0b",
-  "cnbh co dieu kien": "#8b5cf6",
+  "cnbh co dieu kien": "#004b7a",
   "dang dgrr": "#14b8a6",
   "co hieu luc": "#22a447",
   "cho xu ly": "#f59e0b",
@@ -605,10 +605,10 @@ const STATUS_COLOR_BY_NORMALIZED_LABEL: Record<string, string> = {
   "ycbh het hieu luc": "#ef4444",
   "tri hoan": "#ef4444",
   "huy": "#ef4444",
-  "khong xac dinh": "#64748b"
+  "khong xac dinh": "#004b7a"
 };
 
-const STATUS_FALLBACK_COLORS = ["#0f6fff", "#22a447", "#f59e0b", "#8b5cf6", "#14b8a6", "#ef4444", "#64748b"];
+const STATUS_FALLBACK_COLORS = ["#004b7a", "#22a447", "#f59e0b", "#004b7a", "#14b8a6", "#ef4444", "#004b7a"];
 
 function getStatusColor(status: unknown) {
   const normalized = normalizedContractStatus(status);
@@ -1753,7 +1753,7 @@ function GroupPosterDownloadButton({
       const dataUrl = await toPng(posterRef.current, {
         cacheBust: true,
         pixelRatio: 1,
-        backgroundColor: "#031a4e",
+        backgroundColor: "#004b7a",
         width: 1400,
         height: posterRef.current.offsetHeight
       });
@@ -1781,7 +1781,7 @@ async function groupPosterFile(element: HTMLElement, fileName: string) {
   const pngUrl = await toPng(element, {
     cacheBust: true,
     pixelRatio: 1,
-    backgroundColor: "#031a4e",
+    backgroundColor: "#004b7a",
     width: 1400,
     height: element.offsetHeight
   });
@@ -2240,8 +2240,8 @@ function TimeReport({ report }: { report: any }) {
               <YAxis tickFormatter={(v) => `${Math.round(Number(v) / 1_000_000)}tr`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
-              <Bar dataKey="afyp" name="AFYP" fill="#0759a3" />
-              <Bar dataKey="ip" name="IP" fill="#f7c948" />
+              <Bar dataKey="afyp" name="AFYP" fill="#004b7a" />
+              <Bar dataKey="ip" name="IP" fill="#004b7a" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -2253,11 +2253,11 @@ function TimeReport({ report }: { report: any }) {
             <LineChart data={report.yearPlanRows ?? []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="monthLabel" />
-              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tá»·`} />
+              <YAxis tickFormatter={(v) => `${Number(v) / 1_000_000_000} tỷ`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
-              <Line type="monotone" dataKey="actual" name="AFYP thực hiện" stroke="#0759a3" strokeWidth={2} />
-              <Line type="monotone" dataKey="monthlyPlan" name="Kế hoạch tháng" stroke="#f7c948" strokeWidth={2} />
+              <Line type="monotone" dataKey="actual" name="AFYP thực hiện" stroke="#004b7a" strokeWidth={2} />
+              <Line type="monotone" dataKey="monthlyPlan" name="Kế hoạch tháng" stroke="#004b7a" strokeWidth={2} />
               <Line type="monotone" dataKey="cumulativeActual" name="Thực hiện lũy kế" stroke="#0f8b55" strokeWidth={2} />
               <Line type="monotone" dataKey="cumulativePlan" name="Kế hoạch lũy kế" stroke="#c2413b" strokeWidth={2} />
             </LineChart>
@@ -2274,8 +2274,8 @@ function TimeReport({ report }: { report: any }) {
               <YAxis tickFormatter={(v) => `${Math.round(Number(v) / 1_000_000)}tr`} />
               <Tooltip formatter={(v) => formatVnd(Number(v))} />
               <Legend />
-              <Area dataKey="cumulativeAfyp" name="AFYP lũy kế" stroke="#0759a3" fill="#e9f4ff" />
-              <Area dataKey="targetCumulative" name="Chỉ tiêu lũy kế" stroke="#f7c948" fill="#fff6d8" />
+              <Area dataKey="cumulativeAfyp" name="AFYP lũy kế" stroke="#004b7a" fill="#e9f4ff" />
+              <Area dataKey="targetCumulative" name="Chỉ tiêu lũy kế" stroke="#004b7a" fill="#fff6d8" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -2326,7 +2326,7 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
     if (!adoRows.some((row: any) => row.adoName === "Nguyễn Thị Trầm")) console.warn("[ADO] Nguyễn Thị Trầm không xuất hiện: kiểm tra mapping ADO/KPI.");
   }, [rows, adoRows]);
   const tone = (value: number) => value >= 100 ? "good" : value >= 80 ? "blue" : value >= 50 ? "warn" : "bad";
-  const kpiDonut = (value: number, color = "#1677ff") => <div className="ado-donut ado-kpi-donut" style={{ background: `conic-gradient(${color} ${Math.min(value, 100)}%, #e8f1fb 0)` }}><div><strong>{formatPercent(value)}</strong><small>Hoàn thành KPI tháng</small></div></div>;
+  const kpiDonut = (value: number, color = "#004b7a") => <div className="ado-donut ado-kpi-donut" style={{ background: `conic-gradient(${color} ${Math.min(value, 100)}%, #e8f1fb 0)` }}><div><strong>{formatPercent(value)}</strong><small>Hoàn thành KPI tháng</small></div></div>;
   const revenueDonut = (items: any[], total: number) => {
     let cursor = 0;
     const slices = items.map((row, index) => {
@@ -2390,7 +2390,7 @@ function AdsTable({ report, rows, month, contracts, openContracts }: { report?: 
   return (
     <div className="panel ado-page">
       <div className="panel-header"><h2>Tổng quan KPI theo phòng</h2></div>
-      <div className="ado-departments">{departmentRows.map((row: any, index: number) => <section className="ado-department summary" key={row.department}><div><h3>{row.department}</h3><strong>{formatCompactVnd(row.monthlyAfyp)}</strong></div>{kpiDonut(row.monthlyRate, index ? "#16a34a" : "#1677ff")}<aside><span>Hoàn thành<b>{formatPercent(row.monthlyRate)}</b></span><span>Còn thiếu<b>{formatCompactVnd(Math.max(row.monthlyKpi-row.monthlyAfyp,0))}</b></span></aside></section>)}</div>
+      <div className="ado-departments">{departmentRows.map((row: any, index: number) => <section className="ado-department summary" key={row.department}><div><h3>{row.department}</h3><strong>{formatCompactVnd(row.monthlyAfyp)}</strong></div>{kpiDonut(row.monthlyRate, index ? "#16a34a" : "#004b7a")}<aside><span>Hoàn thành<b>{formatPercent(row.monthlyRate)}</b></span><span>Còn thiếu<b>{formatCompactVnd(Math.max(row.monthlyKpi-row.monthlyAfyp,0))}</b></span></aside></section>)}</div>
       <div className="ado-composition">{departmentRows.map((department: any) => { const items=adoRows.filter((row:any)=>row.department===department.department); const total = Number(department.monthlyAfyp ?? 0); return <section key={department.department} className={department.department === "PTKD 2" ? "ptkd-2" : "ptkd-1"}><h3>Cơ cấu doanh thu {department.department} (AFYP tháng)</h3>{revenueDonut(items,total)}<div className="ado-composition-list">{items.map((row:any,index:number)=>{ const share = total ? Number(row.monthlyAfyp ?? 0) / total * 100 : 0; return <p key={row.adoName} style={{ "--ado-color": adoColor(row.adoName, index) } as React.CSSProperties}><span>{row.adoName}</span><b>{formatCompactVnd(row.monthlyAfyp)}</b><strong>{formatPercent(share)}</strong></p>;})}</div></section>;})}</div>
       <div className="panel-header ado-detail-header"><h2>Chi tiết ADO</h2></div>
       <div className="ado-detail-sections">{departmentRows.map((department: any) => { const items = adoRows.filter((row: any) => row.department === department.department).sort((a: any,b:any)=>b.monthlyAfyp-a.monthlyAfyp); const total = periodMetrics(department); const totalDelta = total.kpi - total.afyp; return <section className="ado-room" key={department.department}><div className="ado-room-total"><div><span className="ado-room-icon">{department.department === "PTKD 2" ? "2" : "1"}</span><strong>{department.department}</strong></div>{periodButtons}</div><DataTable className="desktop-table ado-table" headers={["ADO","AFYP","KPI","Hoàn thành","Còn thiếu","IP","HĐ / TVV"]} colWidths={adoColWidths}>{items.map(detailRow)}<tr className="ado-total-row"><td>Tổng {department.department}</td><td>{formatFullMoney(total.afyp)}</td><td>{formatFullMoney(total.kpi)}</td><td>{formatPercent(total.rate)}</td><td className={totalDelta <= 0 ? "positive" : "negative"}>{totalDelta <= 0 ? `Vượt ${formatFullMoney(Math.abs(totalDelta))}` : formatFullMoney(totalDelta)}</td><td>{formatFullMoney(total.ip)}</td><td>{total.contractCount} / {total.agentCount}</td></tr></DataTable><div className="ado-mobile-detail-list">{items.map(mobileDetailRow)}</div></section>; })}</div>
@@ -3582,10 +3582,10 @@ function CompetitionTopPanel({ title, actionTab, onOpen, headers, rows }: { titl
 }
 
 const COMPETITION_STATUS_LEGEND = [
-  ["Đang kiểm tra YCBH", "#1677ff"],
+  ["Đang kiểm tra YCBH", "#004b7a"],
   ["CNBH chuẩn", "#19a65a"],
   ["Chờ ĐGRR", "#f58b00"],
-  ["CNBH có điều kiện", "#8b5cf6"],
+  ["CNBH có điều kiện", "#004b7a"],
   ["Đang ĐGRR", "#12a7a2"],
   ["Có hiệu lực", "#16a34a"]
 ];
@@ -4472,7 +4472,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
       <DataTable className="desktop-table contract-details-table" headers={[headers[0], "Số GYC", ...headers.slice(1)]} colWidths={showStatus ? ["110px", "130px", "15%", "15%", "17%", "17%", "190px", "110px", "110px"] : undefined}>
         {visibleRows.map((row, index) => (
           <tr key={`${row.contract_no}-${index}`} className="clickable contract-reward-row" onClick={() => openContractRewards(row)}>
-            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatFullMoney(row.ip)}</td><td>{formatFullMoney(row.afyp)}</td>
+            <td>{formatDateVi(row.paid_date)}{isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}</td><td>{row.application_no || "-"}</td><td>{row.group_name}</td><td>{row.agent_name}</td><td>{row.policy_owner}</td><td>{row.insured_name}</td>{showStatus && <td><span className="contract-status-text" style={{ color: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span></td>}<td>{formatFullMoney(row.ip)}</td><td>{formatFullMoney(row.afyp)}</td>
           </tr>
         ))}
       </DataTable>
@@ -4483,7 +4483,7 @@ function ContractDetails({ title, rows, showStatus = false, emptyMessage }: { ti
             <div className="mobile-contract-date">
               <CalendarDays size={18} />
               <strong>Ngày {formatDateVi(row.paid_date)}</strong>
-              {isNewUploadContract(row) && <span className="new-contract-badge">Má»›i</span>}
+              {isNewUploadContract(row) && <span className="new-contract-badge">Mới</span>}
               {showStatus && <span className="status-badge" style={{ color: getStatusColor(row.policy_status), borderColor: getStatusColor(row.policy_status) }}>{contractStatusLabel(row.policy_status)}</span>}
             </div>
             <div className="mobile-contract-main">

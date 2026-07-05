@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const programId = String(request.nextUrl.searchParams.get("id") || "").trim();
-    if (!programId) return NextResponse.json({ error: "Thiáº¿u program_id." }, { status: 400 });
+    if (!programId) return NextResponse.json({ error: "Thiếu program_id." }, { status: 400 });
 
     const { error } = await getSupabaseAdmin()
       .from("competition_programs")

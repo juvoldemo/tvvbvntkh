@@ -1140,9 +1140,51 @@ const R26_RATE_TABLE = {
   maternity: [[18, 45, [null, 7229, 13494, 20706, 30963]]]
 };
 
-const R24_SAMPLE_RATES = {
-  male: { 30: { 10: 20602, 15: 26231, 20: 34784 } },
-  female: { 30: { 10: 11915, 15: 14204, 20: 18069 } }
+const R24_RATE_TABLE = {
+  male: {
+    18: { 10: 16964, 15: 21039, 20: 26707 }, 19: { 10: 18138, 15: 22307, 20: 28186 },
+    20: { 10: 19223, 15: 23437, 20: 29481 }, 21: { 10: 20035, 15: 24250, 20: 30490 },
+    22: { 10: 20606, 15: 24809, 20: 31151 }, 23: { 10: 20728, 15: 24992, 20: 31433 },
+    24: { 10: 20624, 15: 24915, 20: 31464 }, 25: { 10: 20348, 15: 24699, 20: 31386 },
+    26: { 10: 20044, 15: 24509, 20: 31837 }, 27: { 10: 19855, 15: 24505, 20: 31650 },
+    28: { 10: 19868, 15: 24781, 20: 32269 }, 29: { 10: 20118, 15: 25362, 20: 33356 },
+    30: { 10: 20602, 15: 26231, 20: 34784 }, 31: { 10: 21253, 15: 27341, 20: 36527 },
+    32: { 10: 22063, 15: 28675, 20: 38602 }, 33: { 10: 23128, 15: 30274, 20: 41022 },
+    34: { 10: 24326, 15: 32136, 20: 43812 }, 35: { 10: 25866, 15: 34407, 20: 47014 },
+    36: { 10: 27595, 15: 36926, 20: 50559 }, 37: { 10: 29518, 15: 39721, 20: 54492 },
+    38: { 10: 31582, 15: 42769, 20: 58906 }, 39: { 10: 33964, 15: 46143, 20: 63603 },
+    40: { 10: 36621, 15: 49863, 20: 69000 }, 41: { 10: 39633, 15: 54031, 20: 74805 },
+    42: { 10: 43021, 15: 58818, 20: 81393 }, 43: { 10: 46725, 15: 63854, 20: 88180 },
+    44: { 10: 50635, 15: 69408, 20: 95637 }, 45: { 10: 54816, 15: 75191, 20: 103666 },
+    46: { 10: 59266, 15: 81386, 20: 112005 }, 47: { 10: 63801, 15: 87426, 20: 120785 },
+    48: { 10: 68620, 15: 94384, 20: 130217 }, 49: { 10: 74044, 15: 101553, 20: 140023 },
+    50: { 10: 79715, 15: 109246, 20: 150759 }, 51: { 10: 85873, 15: 117502 },
+    52: { 10: 92492, 15: 126367 }, 53: { 10: 99488, 15: 135719 },
+    54: { 10: 106760, 15: 145581 }, 55: { 10: 114089, 15: 155555 },
+    56: { 10: 121263 }, 57: { 10: 128810 }, 58: { 10: 136614 }, 59: { 10: 144955 }, 60: { 10: 154654 }
+  },
+  female: {
+    18: { 10: 10463, 15: 12086, 20: 14819 }, 19: { 10: 10898, 15: 12531, 20: 15323 },
+    20: { 10: 11245, 15: 12879, 20: 15746 }, 21: { 10: 11408, 15: 13042, 20: 15984 },
+    22: { 10: 11453, 15: 13095, 20: 16079 }, 23: { 10: 11340, 15: 13004, 20: 15993 },
+    24: { 10: 11167, 15: 12869, 20: 15903 }, 25: { 10: 11030, 15: 12791, 20: 15872 },
+    26: { 10: 10970, 15: 12807, 20: 15984 }, 27: { 10: 11077, 15: 13006, 20: 16325 },
+    28: { 10: 11290, 15: 13321, 20: 16789 }, 29: { 10: 11588, 15: 13725, 20: 17370 },
+    30: { 10: 11915, 15: 14204, 20: 18069 }, 31: { 10: 12276, 15: 14686, 20: 18780 },
+    32: { 10: 12647, 15: 15168, 20: 19543 }, 33: { 10: 13036, 15: 15722, 20: 20318 },
+    34: { 10: 13438, 15: 16289, 20: 21136 }, 35: { 10: 13877, 15: 16892, 20: 21972 },
+    36: { 10: 14313, 15: 17555, 20: 22967 }, 37: { 10: 14753, 15: 18236, 20: 23947 },
+    38: { 10: 15240, 15: 19049, 20: 25062 }, 39: { 10: 15871, 15: 19226, 20: 26374 },
+    40: { 10: 16594, 15: 21001, 20: 27894 }, 41: { 10: 17517, 15: 22390, 20: 29689 },
+    42: { 10: 18609, 15: 23801, 20: 31685 }, 43: { 10: 19886, 15: 25502, 20: 34008 },
+    44: { 10: 21333, 15: 27437, 20: 36577 }, 45: { 10: 22935, 15: 29498, 20: 39359 },
+    46: { 10: 24536, 15: 31594, 20: 42277 }, 47: { 10: 26187, 15: 33475, 20: 45257 },
+    48: { 10: 27780, 15: 35870, 20: 48296 }, 49: { 10: 29429, 15: 38122, 20: 51471 },
+    50: { 10: 31126, 15: 40547, 20: 55126 }, 51: { 10: 32954, 15: 42582 },
+    52: { 10: 35107, 15: 46303 }, 53: { 10: 37436, 15: 49718 },
+    54: { 10: 39961, 15: 53480 }, 55: { 10: 42720, 15: 57720 },
+    56: { 10: 45744 }, 57: { 10: 49142 }, 58: { 10: 53108 }, 59: { 10: 57949 }, 60: { 10: 63241 }
+  }
 };
 
 const SPBK_PRODUCTS = {
@@ -1312,9 +1354,39 @@ function getCurrentInputContext() {
     paymentMode: document.getElementById("paymentMode")?.value || "yearly",
     mainSumAssured: moneyValue("deathSumAssured"),
     mainAnnualPremium: moneyValue("annualPremium"),
+    premiumPaymentYears: numberValue("premiumPaymentYears"),
+    illustrationYears: numberValue("illustrationYears"),
     relation: "MAIN_INSURED",
     fullName: document.getElementById("fullName").value.trim()
   };
+}
+
+function getR24AvailableTerms(context = getCurrentInputContext()) {
+  if (context.age === null) return [];
+  const rates = R24_RATE_TABLE[getGenderKey(context.gender)]?.[context.age] || {};
+  const maxByAge = Math.max(0, 70 - context.age);
+  const maxByMainPremiumTerm = Number(context.premiumPaymentYears) || 0;
+  const maxTerm = Math.min(maxByAge, maxByMainPremiumTerm);
+  return Object.keys(rates)
+    .map(Number)
+    .filter((term) => term >= 5 && term <= maxTerm)
+    .sort((first, second) => first - second);
+}
+
+function getR24PremiumPaymentTerm(term) {
+  const numericTerm = Number(term) || 0;
+  if (!numericTerm) return 0;
+  return Math.max(0, numericTerm - (numericTerm < 10 ? 1 : 3));
+}
+
+function normalizeR24Term(selection, context = getCurrentInputContext()) {
+  if (!selection || selection.code !== "R24") return selection;
+  const allowedTerms = getR24AvailableTerms(context);
+  if (!allowedTerms.length) return selection;
+  if (!allowedTerms.includes(Number(selection.term))) {
+    selection.term = allowedTerms.includes(10) ? 10 : allowedTerms[allowedTerms.length - 1];
+  }
+  return selection;
 }
 
 function setOccupationGroup(group) {
@@ -1396,6 +1468,110 @@ function hideOccupationSuggestions() {
   if (input) input.setAttribute("aria-expanded", "false");
 }
 
+function setPolicyOwnerOccupationGroup(group) {
+  const select = document.getElementById("policyOwnerOccupationGroup");
+  if (!select) return;
+  select.value = String(group || DEFAULT_JOB_GROUP);
+}
+
+function setPolicyOwnerOccupationNote(message = "", isError = false) {
+  const note = document.getElementById("policyOwnerOccupationNote");
+  if (!note) return;
+  note.textContent = message;
+  note.classList.toggle("is-error", Boolean(isError));
+}
+
+function updatePolicyOwnerOccupationSuggestionPosition() {
+  const list = document.getElementById("policyOwnerOccupationSuggestions");
+  const input = document.getElementById("policyOwnerOccupation");
+  if (!list || !input || list.hidden) return;
+
+  if (window.matchMedia("(max-width: 640px)").matches) {
+    list.style.left = "";
+    list.style.top = "";
+    list.style.width = "";
+    return;
+  }
+
+  const inputBox = (input.closest(".occupation-search-box") || input).getBoundingClientRect();
+  const margin = 12;
+  const desiredWidth = Math.min(720, window.innerWidth - margin * 2);
+  const left = Math.min(Math.max(inputBox.left, margin), window.innerWidth - desiredWidth - margin);
+  list.style.left = `${left}px`;
+  list.style.top = `${inputBox.bottom + 6}px`;
+  list.style.width = `${desiredWidth}px`;
+}
+
+function hidePolicyOwnerOccupationSuggestions() {
+  const list = document.getElementById("policyOwnerOccupationSuggestions");
+  const input = document.getElementById("policyOwnerOccupation");
+  if (list) list.hidden = true;
+  if (input) input.setAttribute("aria-expanded", "false");
+}
+
+function selectPolicyOwnerOccupationJob(job) {
+  const input = document.getElementById("policyOwnerOccupation");
+  if (!job || !input) return;
+  input.value = job.job;
+  setPolicyOwnerOccupationGroup(job.group);
+  setPolicyOwnerOccupationNote("");
+  hidePolicyOwnerOccupationSuggestions();
+  validatePolicyOwnerFields({ showMessage: true });
+  updateSummaryExportAvailability();
+}
+
+function renderPolicyOwnerOccupationSuggestions(items) {
+  const list = document.getElementById("policyOwnerOccupationSuggestions");
+  const input = document.getElementById("policyOwnerOccupation");
+  if (!list || !input) return;
+
+  if (!items.length) {
+    list.innerHTML = `<div class="occupation-empty">Không tìm thấy nghề phù hợp</div>`;
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    updatePolicyOwnerOccupationSuggestionPosition();
+    return;
+  }
+
+  list.innerHTML = items.map((item, index) => `
+    <button class="occupation-option" type="button" role="option" data-policy-owner-occupation-index="${index}">
+      <span>${item.job}</span>
+      <strong>${item.groupLabel}</strong>
+    </button>
+  `).join("");
+  list.hidden = false;
+  input.setAttribute("aria-expanded", "true");
+  updatePolicyOwnerOccupationSuggestionPosition();
+
+  list.querySelectorAll("[data-policy-owner-occupation-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectPolicyOwnerOccupationJob(items[Number(button.dataset.policyOwnerOccupationIndex)]);
+    });
+  });
+}
+
+function handlePolicyOwnerOccupationInput() {
+  const input = document.getElementById("policyOwnerOccupation");
+  if (!input) return;
+  const text = input.value.trim();
+  const exact = findExactOccupationJob(text);
+
+  if (exact) {
+    setPolicyOwnerOccupationGroup(exact.group);
+    setPolicyOwnerOccupationNote("");
+  } else {
+    setPolicyOwnerOccupationGroup(DEFAULT_JOB_GROUP);
+    setPolicyOwnerOccupationNote(
+      text ? "Vui lòng chọn nghề trong danh sách gợi ý để xác định nhóm nghề." : "",
+      Boolean(text)
+    );
+  }
+
+  renderPolicyOwnerOccupationSuggestions(filterJobs(text));
+  validatePolicyOwnerFields({ showMessage: true });
+  updateSummaryExportAvailability();
+}
+
 function selectOccupationJob(job) {
   const input = document.getElementById("occupationJob");
   if (!job || !input) return;
@@ -1456,6 +1632,9 @@ function normalizeRiderAmount(product, value) {
 function normalizeRiderSelection(selection) {
   const product = SPBK_PRODUCTS[selection.code];
   if (!product) return selection;
+  if (selection.code === "R24") {
+    normalizeR24Term(selection);
+  }
   if (product.maxSumInsured) {
     selection.sumInsured = normalizeRiderAmount(product, selection.sumInsured);
   }
@@ -1668,7 +1847,15 @@ function calculateRiderPremium(code, selection, context) {
   }
 
   if (code === "R24") {
-    const rates = R24_SAMPLE_RATES[getGenderKey(context.gender)]?.[context.age];
+    normalizeR24Term(selection, context);
+    const allowedTerms = getR24AvailableTerms(context);
+    if (!allowedTerms.length) {
+      return { premium: 0, annualPremium: 0, error: "R24 chÆ°a cÃ³ thá»i háº¡n báº£o hiá»ƒm há»£p lá»‡ theo tuá»•i vÃ  thá»i háº¡n Ä‘Ã³ng phÃ­ SPC." };
+    }
+    if (!allowedTerms.includes(Number(selection.term))) {
+      return { premium: 0, annualPremium: 0, error: "Thá»i háº¡n R24 khÃ´ng há»£p lá»‡ theo tuá»•i vÃ  thá»i háº¡n Ä‘Ã³ng phÃ­ SPC." };
+    }
+    const rates = R24_RATE_TABLE[getGenderKey(context.gender)]?.[context.age];
     const rate = rates?.[selection.term];
     if (!rate) return { premium: 0, annualPremium: 0, error: "Chưa có biểu phí R24 cho tuổi/thời hạn này." };
     const annualPremium = Math.round(rate * (context.mainAnnualPremium / 1000000));
@@ -1826,6 +2013,7 @@ function buildR23BenefitRows(stbh, context) {
 function buildR24BenefitRows(selection, context) {
   const annualPremiumText = getMainAnnualPremiumBenefitText(context);
   const term = Number(selection.term) || 0;
+  const paymentTerm = getR24PremiumPaymentTerm(term);
   const projectedSupport = context.mainAnnualPremium && term ? formatBenefitMoney(context.mainAnnualPremium * term) : "Theo thời hạn hỗ trợ đã chọn";
   return [
     spbkBenefitRow("Hỗ trợ đóng phí mỗi năm", annualPremiumText, "Không bao gồm phí bảo hiểm đóng thêm"),
@@ -2042,14 +2230,186 @@ function formatCurrency(value) {
   return `${formatVND(value || 0)} đồng`;
 }
 
+let policyOwnerMode = "same";
+let activePersonFormTab = "insured";
+
+function getInsuredPersonInput() {
+  const dateOfBirth = document.getElementById("dateOfBirth")?.value || "";
+  const age = dateOfBirth && parseDateInput(dateOfBirth) ? calculateAge(dateOfBirth) : null;
+  return {
+    name: document.getElementById("fullName")?.value.trim() || "",
+    dateOfBirth,
+    age,
+    gender: document.getElementById("gender")?.value || "Nam",
+    occupation: document.getElementById("occupationJob")?.value.trim() || "",
+    occupationGroup: document.getElementById("occupationGroup")?.value || "1"
+  };
+}
+
+function getPolicyOwnerInput() {
+  const insured = getInsuredPersonInput();
+  if (policyOwnerMode !== "different") {
+    return {
+      ...insured,
+      phone: "",
+      sameAsInsured: true
+    };
+  }
+
+  const dateOfBirth = document.getElementById("policyOwnerDateOfBirth")?.value || "";
+  const age = dateOfBirth && parseDateInput(dateOfBirth) ? calculateAge(dateOfBirth) : null;
+  return {
+    name: document.getElementById("policyOwnerName")?.value.trim() || "",
+    dateOfBirth,
+    age,
+    gender: document.getElementById("policyOwnerGender")?.value || "Nam",
+    occupation: document.getElementById("policyOwnerOccupation")?.value.trim() || "",
+    occupationGroup: document.getElementById("policyOwnerOccupationGroup")?.value || "1",
+    sameAsInsured: false
+  };
+}
+
+function validatePolicyOwnerFields({ showMessage = false } = {}) {
+  const messages = document.querySelectorAll(".policy-owner-validation");
+  const nameInput = document.getElementById("policyOwnerName");
+  if (!nameInput) return true;
+
+  nameInput.setCustomValidity("");
+  if (policyOwnerMode !== "different") {
+    messages.forEach((message) => {
+      message.textContent = "";
+    });
+    return true;
+  }
+
+  const owner = getPolicyOwnerInput();
+  const missing = [];
+  if (!owner.name) missing.push("họ tên");
+  if (!owner.dateOfBirth || !parseDateInput(owner.dateOfBirth)) missing.push("ngày sinh");
+  if (!owner.gender) missing.push("giới tính");
+
+  if (!missing.length) {
+    messages.forEach((message) => {
+      message.textContent = "";
+    });
+    return true;
+  }
+
+  const validationMessage = `Vui lòng nhập ${missing.join(", ")} của BMBH.`;
+  nameInput.setCustomValidity(validationMessage);
+  messages.forEach((message) => {
+    message.textContent = showMessage ? validationMessage : "";
+  });
+  return false;
+}
+
+function updatePolicyOwnerAgePreview() {
+  const input = document.getElementById("policyOwnerDateOfBirth");
+  const output = document.getElementById("policyOwnerAge");
+  if (!input || !output) return;
+  output.value = input.value && parseDateInput(input.value) ? calculateAge(input.value) : "-";
+}
+
+function syncPolicyOwnerGenderButtons() {
+  const genderValue = document.getElementById("policyOwnerGender")?.value || "Nữ";
+  document.querySelectorAll("[data-policy-owner-gender-value]").forEach((button) => {
+    const isActive = button.dataset.policyOwnerGenderValue === genderValue;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function setDefaultPolicyOwnerGender() {
+  const genderSelect = document.getElementById("policyOwnerGender");
+  if (!genderSelect) return;
+  genderSelect.value = "Nữ";
+  document.querySelectorAll("[data-policy-owner-gender-value]").forEach((button) => {
+    const isFemale = button.dataset.policyOwnerGenderValue === "Nữ";
+    button.classList.toggle("active", isFemale);
+    button.setAttribute("aria-pressed", String(isFemale));
+  });
+}
+
+function getPolicyOwnerGenderButtons() {
+  return Array.from(document.querySelectorAll("[data-policy-owner-gender-value]"));
+}
+
+function syncPolicyOwnerGenderButtons() {
+  const genderSelect = document.getElementById("policyOwnerGender");
+  const selectedIndex = genderSelect?.selectedIndex ?? 1;
+  getPolicyOwnerGenderButtons().forEach((button, index) => {
+    const isActive = index === selectedIndex;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+    button.style.background = isActive ? "#004b7a" : "#fff";
+    button.style.borderColor = isActive ? "#004b7a" : "#b7cfff";
+    button.style.color = isActive ? "#fff" : "#004b7a";
+    button.style.boxShadow = isActive ? "0 3px 9px rgba(0, 75, 147, 0.22)" : "none";
+    button.querySelectorAll("span").forEach((span) => {
+      span.style.color = isActive ? "#fff" : "#004b7a";
+    });
+  });
+}
+
+function setDefaultPolicyOwnerGender() {
+  const genderSelect = document.getElementById("policyOwnerGender");
+  if (genderSelect) genderSelect.selectedIndex = 1;
+  syncPolicyOwnerGenderButtons();
+}
+
+function setActivePersonFormTab(tab) {
+  activePersonFormTab = tab === "policyOwner" ? "policyOwner" : "insured";
+  document.querySelectorAll("[data-person-form-tab]").forEach((button) => {
+    const isActive = button.dataset.personFormTab === activePersonFormTab;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  const insuredFields = document.getElementById("insuredPersonFields");
+  const ownerFields = document.getElementById("policyOwnerFields");
+  document.body.classList.toggle("policy-owner-form-active", activePersonFormTab === "policyOwner" && policyOwnerMode === "different");
+  if (insuredFields) {
+    insuredFields.hidden = activePersonFormTab !== "insured";
+    insuredFields.classList.toggle("active", activePersonFormTab === "insured");
+  }
+  if (ownerFields) {
+    ownerFields.hidden = activePersonFormTab !== "policyOwner";
+    ownerFields.classList.toggle("active", activePersonFormTab === "policyOwner");
+  }
+  if (activePersonFormTab === "policyOwner") {
+    setDefaultPolicyOwnerGender();
+  }
+  renderRiderUI();
+}
+
+function setPolicyOwnerMode(mode) {
+  policyOwnerMode = mode === "different" ? "different" : "same";
+  document.querySelectorAll("[data-policy-owner-mode]").forEach((button) => {
+    const isActive = button.dataset.policyOwnerMode === policyOwnerMode;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  document.querySelectorAll(".person-form-tabs").forEach((tabs) => {
+    tabs.hidden = policyOwnerMode !== "different";
+  });
+  setActivePersonFormTab(policyOwnerMode === "different" ? activePersonFormTab : "insured");
+  validatePolicyOwnerFields();
+  updateSummaryExportAvailability();
+  renderRiderUI();
+}
+
 function readInput() {
   selectedMainProduct = getSelectedMainProduct();
   updateDisabilitySumAssured();
+  const insuredPerson = getInsuredPersonInput();
+  const policyOwner = getPolicyOwnerInput();
   return {
     mainProduct: selectedMainProduct,
-    fullName: document.getElementById("fullName").value.trim(),
-    dateOfBirth: document.getElementById("dateOfBirth").value,
-    gender: document.getElementById("gender").value,
+    fullName: insuredPerson.name,
+    dateOfBirth: insuredPerson.dateOfBirth,
+    gender: insuredPerson.gender,
+    insuredPerson,
+    policyOwner,
+    isPolicyOwnerSameAsInsured: policyOwnerMode !== "different",
     deathSumAssured: moneyValue("deathSumAssured"),
     disabilitySumAssured: moneyValue("disabilitySumAssured"),
     annualPremium: moneyValue("annualPremium"),
@@ -2133,8 +2493,8 @@ function setActiveTab(tabName) {
     const isActive = button.dataset.tab === tabName;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", String(isActive));
-    button.style.setProperty("background", isActive ? "#0b56d8" : "#fff", "important");
-    button.style.setProperty("color", isActive ? "#fff" : "#073ea8", "important");
+    button.style.setProperty("background", isActive ? "#004b7a" : "#fff", "important");
+    button.style.setProperty("color", isActive ? "#fff" : "#004b7a", "important");
     button.style.setProperty("opacity", "1", "important");
   });
   document.getElementById("mainTab").classList.toggle("active", tabName === "main");
@@ -2164,6 +2524,10 @@ function renderRiderCustomerCard() {
   document.getElementById("riderMainPremium").textContent = formatCompactCurrency(context.mainAnnualPremium);
 }
 
+function isR24DisabledByPersonTab() {
+  return policyOwnerMode === "different" && activePersonFormTab === "insured";
+}
+
 function renderRiderProductButtons() {
   const context = getCurrentInputContext();
   const container = document.getElementById("riderProductButtons");
@@ -2173,6 +2537,7 @@ function renderRiderProductButtons() {
       const selection = riderState.selections[code];
       const occupationRule = applyOccupationGroupRules(code, context.occupationGroup, product.maxSumInsured || null);
       const result = selection ? calculateRiderPremium(code, selection, context) : { error: "" };
+      const disabledByPersonTab = code === "R24" && isR24DisabledByPersonTab();
       const statusText = !product.isConfigured
         ? "Chưa cấu hình"
         : !occupationRule.allowed
@@ -2182,10 +2547,10 @@ function renderRiderProductButtons() {
               : "Sẵn sàng";
       return `
         <button
-          class="rider-pill ${riderState.activeCode === code ? "active" : ""} ${selection?.selected ? "selected" : ""}"
+          class="rider-pill ${riderState.activeCode === code ? "active" : ""} ${selection?.selected ? "selected" : ""} ${disabledByPersonTab ? "is-person-disabled" : ""}"
           type="button"
           data-rider-code="${code}"
-          ${product.isConfigured && occupationRule.allowed ? "" : "disabled"}
+          ${product.isConfigured && occupationRule.allowed && !disabledByPersonTab ? "" : "disabled"}
         >
           <span>${selection?.selected ? "✓ " : ""}${code}</span>
           <small>${statusText}</small>
@@ -2209,6 +2574,7 @@ function renderRiderProductButtons() {
     button.addEventListener("click", () => {
       const code = button.dataset.riderCode;
       if (!SPBK_PRODUCTS[code].isConfigured) return;
+      if (code === "R24" && isR24DisabledByPersonTab()) return;
       const rule = applyOccupationGroupRules(code, getCurrentInputContext().occupationGroup, SPBK_PRODUCTS[code].maxSumInsured || null);
       if (!rule.allowed) return;
       const selection = getRiderSelection(code);
@@ -2307,7 +2673,54 @@ function ensureRiderTermsModal() {
 
 function openRiderTerms(code) {
   if (!SPBK_PRODUCTS[code]) return;
-  window.location.href = getRiderTermsPdfUrl(code);
+  const product = SPBK_PRODUCTS[code];
+  const pdfUrl = getRiderTermsPdfUrl(code);
+  const modal = ensureRiderTermsModal();
+  const frame = modal.querySelector("#termsPdfFrame");
+  const codeLabel = modal.querySelector("#termsModalCode");
+  const title = modal.querySelector("#termsModalTitle");
+  const subtitle = modal.querySelector("#termsModalSubtitle");
+  const openLink = modal.querySelector("#termsOpenLink");
+  const downloadLink = modal.querySelector("#termsDownloadLink");
+
+  if (codeLabel) codeLabel.textContent = code;
+  if (title) title.textContent = product.name || "Điều khoản sản phẩm";
+  if (subtitle) subtitle.textContent = "Quy tắc, điều khoản và tóm tắt điều khoản";
+  if (openLink) openLink.href = pdfUrl;
+  if (downloadLink) {
+    downloadLink.href = pdfUrl;
+    downloadLink.setAttribute("download", `${code}.pdf`);
+  }
+  if (frame) frame.src = pdfUrl;
+
+  modal.hidden = false;
+  document.body.classList.add("terms-open");
+  modal.querySelector(".terms-close")?.focus();
+}
+
+function openTermsModal({ code, title, subtitle, pdfUrl, downloadName }) {
+  if (!pdfUrl) return;
+  const modal = ensureRiderTermsModal();
+  const frame = modal.querySelector("#termsPdfFrame");
+  const codeLabel = modal.querySelector("#termsModalCode");
+  const titleElement = modal.querySelector("#termsModalTitle");
+  const subtitleElement = modal.querySelector("#termsModalSubtitle");
+  const openLink = modal.querySelector("#termsOpenLink");
+  const downloadLink = modal.querySelector("#termsDownloadLink");
+
+  if (codeLabel) codeLabel.textContent = code || "";
+  if (titleElement) titleElement.textContent = title || "Điều khoản sản phẩm";
+  if (subtitleElement) subtitleElement.textContent = subtitle || "Quy tắc, điều khoản và tóm tắt điều khoản";
+  if (openLink) openLink.href = pdfUrl;
+  if (downloadLink) {
+    downloadLink.href = pdfUrl;
+    downloadLink.setAttribute("download", downloadName || "dieu-khoan.pdf");
+  }
+  if (frame) frame.src = pdfUrl;
+
+  modal.hidden = false;
+  document.body.classList.add("terms-open");
+  modal.querySelector(".terms-close")?.focus();
 }
 
 function closeRiderTerms() {
@@ -2320,6 +2733,14 @@ function closeRiderTerms() {
 }
 
 function renderR24Controls(selection) {
+  const context = getCurrentInputContext();
+  normalizeR24Term(selection, context);
+  const allowedTerms = getR24AvailableTerms(context);
+  const paymentTerm = getR24PremiumPaymentTerm(selection.term);
+  const options = allowedTerms.map((term) => `
+        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} năm</option>
+      `).join("");
+
   return `
     <label class="compact-field">
       <span>Thời hạn bảo hiểm R24</span>
@@ -2328,6 +2749,26 @@ function renderR24Controls(selection) {
         <option value="15" ${selection.term === 15 ? "selected" : ""}>15 năm</option>
         <option value="20" ${selection.term === 20 ? "selected" : ""}>20 năm</option>
       </select>
+    </label>
+  `;
+}
+
+function renderR24Controls(selection) {
+  const context = getCurrentInputContext();
+  normalizeR24Term(selection, context);
+  const allowedTerms = getR24AvailableTerms(context);
+  const paymentTerm = getR24PremiumPaymentTerm(selection.term);
+  const options = allowedTerms.map((term) => `
+        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} năm</option>
+      `).join("");
+
+  return `
+    <label class="compact-field">
+      <span>Thời hạn bảo hiểm R24</span>
+      <select id="riderTerm" ${allowedTerms.length ? "" : "disabled"}>
+        ${options || `<option value="">Không có thời hạn hợp lệ</option>`}
+      </select>
+      <small class="field-note">${paymentTerm ? `Thời hạn đóng phí R24: ${paymentTerm} năm` : "Theo tuổi và thời hạn đóng phí SPC."}</small>
     </label>
   `;
 }
@@ -2675,6 +3116,7 @@ function updateAgePreview() {
   const age = dateOfBirth && parseDateInput(dateOfBirth) ? calculateAge(dateOfBirth) : "-";
   document.getElementById("currentAge").value = age;
   updateAthdTermAndAgeValidity(age);
+  updatePolicyOwnerAgePreview();
 }
 
 function updateAthdTermAndAgeValidity(age = "-") {
@@ -2791,7 +3233,13 @@ async function openMainProductTerms() {
   const pdfUrl = getMainProductTermsPdf();
 
   if (await mainProductTermsPdfExists(pdfUrl)) {
-    window.open(pdfUrl, "_blank");
+    openTermsModal({
+      code: getSelectedMainProduct(),
+      title: MAIN_PRODUCTS[getSelectedMainProduct()] || "Điều khoản sản phẩm chính",
+      subtitle: "Quy tắc, điều khoản sản phẩm chính",
+      pdfUrl,
+      downloadName: pdfUrl.split("/").pop() || "dieu-khoan-san-pham-chinh.pdf"
+    });
     return;
   }
 
@@ -2947,6 +3395,7 @@ function refreshIllustration() {
   updateAgePreview();
   updateDeathSumAssuredRange();
   updateDisabilitySumAssured();
+  validatePolicyOwnerFields({ showMessage: true });
 
   if (isLifeCare20()) {
     updateLifeCarePremium();
@@ -3012,6 +3461,18 @@ document.getElementById("dateOfBirth").addEventListener("change", () => {
   updateAgePreview();
   updateDeathSumAssuredRange();
   renderRiderUI();
+});
+
+document.getElementById("policyOwnerDateOfBirth")?.addEventListener("input", (event) => {
+  applyDateOfBirthMask(event);
+  updatePolicyOwnerAgePreview();
+  validatePolicyOwnerFields({ showMessage: true });
+  updateSummaryExportAvailability();
+});
+document.getElementById("policyOwnerDateOfBirth")?.addEventListener("change", () => {
+  updatePolicyOwnerAgePreview();
+  validatePolicyOwnerFields({ showMessage: true });
+  updateSummaryExportAvailability();
 });
 
 document.querySelectorAll(".money-input").forEach((input) => {
@@ -3112,11 +3573,36 @@ document.addEventListener("keydown", (event) => {
   if (isMainProductDropdownOpen) closeMainProductDropdown();
 });
 document.querySelectorAll(".gender-button").forEach((button) => {
+  if (button.dataset.policyOwnerGenderValue) return;
   button.addEventListener("click", () => {
     const genderSelect = document.getElementById("gender");
     genderSelect.value = button.dataset.genderValue;
     genderSelect.dispatchEvent(new Event("change", { bubbles: true }));
     genderSelect.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+});
+document.querySelectorAll("[data-policy-owner-mode]").forEach((button) => {
+  button.addEventListener("click", () => setPolicyOwnerMode(button.dataset.policyOwnerMode));
+});
+document.querySelectorAll("[data-person-form-tab]").forEach((button) => {
+  button.addEventListener("click", () => setActivePersonFormTab(button.dataset.personFormTab));
+});
+document.querySelectorAll("[data-policy-owner-gender-value]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const genderSelect = document.getElementById("policyOwnerGender");
+    if (!genderSelect) return;
+    const genderButtons = getPolicyOwnerGenderButtons();
+    const buttonIndex = genderButtons.indexOf(button);
+    genderSelect.selectedIndex = buttonIndex >= 0 ? buttonIndex : 1;
+    syncPolicyOwnerGenderButtons();
+    validatePolicyOwnerFields({ showMessage: true });
+    updateSummaryExportAvailability();
+  });
+});
+["policyOwnerName"].forEach((inputId) => {
+  document.getElementById(inputId)?.addEventListener("input", () => {
+    validatePolicyOwnerFields({ showMessage: true });
+    updateSummaryExportAvailability();
   });
 });
 document.querySelectorAll("[data-life-care-term]").forEach((button) => {
@@ -3141,8 +3627,25 @@ document.getElementById("occupationJob")?.addEventListener("keydown", (event) =>
 document.getElementById("occupationJob")?.addEventListener("blur", () => {
   window.setTimeout(hideOccupationSuggestions, 150);
 });
+document.getElementById("policyOwnerOccupation")?.addEventListener("focus", (event) => {
+  if (event.currentTarget.value.trim()) {
+    event.currentTarget.value = "";
+    setPolicyOwnerOccupationGroup(DEFAULT_JOB_GROUP);
+    setPolicyOwnerOccupationNote("");
+  }
+  renderPolicyOwnerOccupationSuggestions(filterJobs(event.currentTarget.value));
+});
+document.getElementById("policyOwnerOccupation")?.addEventListener("input", handlePolicyOwnerOccupationInput);
+document.getElementById("policyOwnerOccupation")?.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") hidePolicyOwnerOccupationSuggestions();
+});
+document.getElementById("policyOwnerOccupation")?.addEventListener("blur", () => {
+  window.setTimeout(hidePolicyOwnerOccupationSuggestions, 150);
+});
 window.addEventListener("resize", updateOccupationSuggestionPosition);
 window.addEventListener("scroll", updateOccupationSuggestionPosition, true);
+window.addEventListener("resize", updatePolicyOwnerOccupationSuggestionPosition);
+window.addEventListener("scroll", updatePolicyOwnerOccupationSuggestionPosition, true);
 document.getElementById("occupationGroup").addEventListener("change", renderRiderUI);
 document.getElementById("paymentMode").addEventListener("change", renderRiderUI);
 document.querySelectorAll(".tab-button").forEach((button) => {
@@ -3169,9 +3672,15 @@ document.getElementById("saveRiderPlan")?.addEventListener("click", saveRiderPla
 document.getElementById("resetButton")?.addEventListener("click", () => {
   const form = document.getElementById("illustrationForm");
   form.reset();
+  setPolicyOwnerMode("same");
+  setActivePersonFormTab("insured");
+  setDefaultPolicyOwnerGender();
   setOccupationGroup(DEFAULT_JOB_GROUP);
+  setPolicyOwnerOccupationGroup(DEFAULT_JOB_GROUP);
   setOccupationNote("");
+  setPolicyOwnerOccupationNote("");
   hideOccupationSuggestions();
+  hidePolicyOwnerOccupationSuggestions();
   updateAgePreview();
   updateDeathSumAssuredRange();
   updateDisabilitySumAssured();
@@ -3243,6 +3752,7 @@ function buildSummarySnapshot() {
   updateAgePreview();
   updateDeathSumAssuredRange();
   updateDisabilitySumAssured();
+  validatePolicyOwnerFields({ showMessage: true });
 
   if (!form.checkValidity()) {
     const invalidField = form.querySelector(":invalid");
@@ -3292,6 +3802,9 @@ function buildSummarySnapshot() {
       dateOfBirth: input.dateOfBirth,
       age,
       gender: input.gender,
+      insuredPerson: input.insuredPerson,
+      policyOwner: input.policyOwner,
+      isPolicyOwnerSameAsInsured: input.isPolicyOwnerSameAsInsured,
       mainProduct: input.mainProduct,
       productName: MAIN_PRODUCTS.LIFE_CARE_20,
       mainSumInsured: input.deathSumAssured,
@@ -3372,6 +3885,9 @@ function buildSummarySnapshot() {
     dateOfBirth: input.dateOfBirth,
     age: context.age,
     gender: input.gender,
+    insuredPerson: input.insuredPerson,
+    policyOwner: input.policyOwner,
+    isPolicyOwnerSameAsInsured: input.isPolicyOwnerSameAsInsured,
     mainProduct: input.mainProduct,
     productName: MAIN_PRODUCTS[input.mainProduct] || MAIN_PRODUCTS.ATHD,
     mainSumInsured: input.deathSumAssured,
@@ -3400,11 +3916,13 @@ function buildSummarySnapshot() {
 function updateSummaryExportAvailability() {
   const exportTargets = [
     {
+      source: "main",
       bar: document.getElementById("summaryExportBar"),
       button: document.getElementById("exportSummaryButton"),
       status: document.getElementById("summaryExportStatus")
     },
     {
+      source: "riders",
       bar: document.getElementById("riderSummaryExportBar"),
       button: document.getElementById("riderExportSummaryButton"),
       status: document.getElementById("riderSummaryExportStatus")
@@ -3413,10 +3931,10 @@ function updateSummaryExportAvailability() {
   if (!exportTargets.length) return;
 
   const snapshot = buildSummarySnapshot();
-  exportTargets.forEach(({ bar, button, status }) => {
-    bar.hidden = !snapshot.valid;
+  exportTargets.forEach(({ source, bar, button, status }) => {
+    bar.hidden = source === "main" ? !snapshot.valid : false;
     button.disabled = !snapshot.valid;
-    status.textContent = "";
+    status.textContent = snapshot.valid ? "" : snapshot.message || "Phương án minh họa chưa hợp lệ.";
   });
 }
 
@@ -3494,7 +4012,7 @@ function drawSummaryCard(ctx, title, rows, x, y, width, options = {}) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  drawText(ctx, title, x + 32, y + 28, { size: options.titleSize || 33, weight: 750, color: "#003b7a" });
+  drawText(ctx, title, x + 32, y + 28, { size: options.titleSize || 33, weight: 750, color: "#004b7a" });
   rows.forEach((row, index) => {
     const rowY = y + 86 + index * rowHeight;
     ctx.fillStyle = index % 2 === 0 ? "#f6f9fc" : "#ffffff";
@@ -3543,6 +4061,12 @@ function drawOfficialInfoTable(ctx, snapshot, x, y, width) {
   const rowH = 54;
   const blueFill = "#b7e2f5";
   const paleFill = "#f8fbff";
+  const insured = snapshot.insuredPerson || {
+    name: snapshot.customerName,
+    age: snapshot.age,
+    gender: snapshot.gender
+  };
+  const owner = snapshot.policyOwner || insured;
 
   drawOfficialCell(ctx, "", x, y, 110, rowH, { fill: blueFill });
   drawOfficialCell(ctx, "Họ tên", x + 110, y, 230, rowH, { fill: blueFill, size: 20 });
@@ -3550,14 +4074,14 @@ function drawOfficialInfoTable(ctx, snapshot, x, y, width) {
   drawOfficialCell(ctx, "Giới tính", x + 434, y, leftWidth - 434, rowH, { fill: blueFill, size: 20, align: "center" });
 
   drawOfficialCell(ctx, "BMBH", x, y + rowH, 110, rowH, { fill: blueFill, size: 20 });
-  drawOfficialCell(ctx, snapshot.customerName, x + 110, y + rowH, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
-  drawOfficialCell(ctx, snapshot.age === null ? "-" : String(snapshot.age), x + 340, y + rowH, 94, rowH, { fill: paleFill, size: 20, align: "center" });
-  drawOfficialCell(ctx, snapshot.gender, x + 434, y + rowH, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, owner.name || "-", x + 110, y + rowH, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
+  drawOfficialCell(ctx, owner.age === null || owner.age === undefined ? "-" : String(owner.age), x + 340, y + rowH, 94, rowH, { fill: paleFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, owner.gender || "-", x + 434, y + rowH, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
 
   drawOfficialCell(ctx, "NĐBH", x, y + rowH * 2, 110, rowH, { fill: blueFill, size: 20 });
-  drawOfficialCell(ctx, snapshot.customerName, x + 110, y + rowH * 2, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
-  drawOfficialCell(ctx, snapshot.age === null ? "-" : String(snapshot.age), x + 340, y + rowH * 2, 94, rowH, { fill: paleFill, size: 20, align: "center" });
-  drawOfficialCell(ctx, snapshot.gender, x + 434, y + rowH * 2, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, insured.name || snapshot.customerName || "-", x + 110, y + rowH * 2, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
+  drawOfficialCell(ctx, insured.age === null || insured.age === undefined ? "-" : String(insured.age), x + 340, y + rowH * 2, 94, rowH, { fill: paleFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, insured.gender || "-", x + 434, y + rowH * 2, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
 
   const contractRows = [
     ["Thời hạn Hợp đồng:", `${snapshot.policyTermYears} năm`],
@@ -3671,14 +4195,14 @@ function renderSummaryCanvas(snapshot) {
   canvas.width = SUMMARY_IMAGE_WIDTH;
   canvas.height = SUMMARY_IMAGE_HEIGHT;
   const ctx = canvas.getContext("2d");
-  const blue = "#003b7a";
+  const blue = "#004b7a";
   const gold = "#f4c542";
 
   ctx.fillStyle = "#f4f8fc";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const headerGradient = ctx.createLinearGradient(0, 0, 1080, 400);
-  headerGradient.addColorStop(0, "#003b7a");
+  headerGradient.addColorStop(0, "#004b7a");
   headerGradient.addColorStop(1, "#0067b1");
   ctx.fillStyle = headerGradient;
   ctx.fillRect(0, 0, 1080, 400);
@@ -3753,7 +4277,7 @@ function renderOfficialSummaryCanvas(snapshot) {
   canvas.height = SUMMARY_IMAGE_HEIGHT;
   const ctx = canvas.getContext("2d");
   const blue = "#004487";
-  const deepBlue = "#003b7a";
+  const deepBlue = "#004b7a";
   const brightBlue = "#0059b8";
   const orange = "#d85b00";
   const gold = "#f4b321";
@@ -3850,12 +4374,21 @@ function renderOfficialSummaryCanvas(snapshot) {
   const rightW = pageW - leftW - 28;
   const labelW = 255;
   const rowH = infoH / 4;
-  const infoRows = [
-    ["Tên khách hàng", snapshot.customerName],
-    ["Ngày tháng năm sinh", snapshot.dateOfBirth || "-"],
-    ["Tuổi bảo hiểm", snapshot.age === null || snapshot.age === undefined ? "-" : String(snapshot.age)],
-    ["Giới tính", snapshot.gender || "-"]
-  ];
+  const insured = snapshot.insuredPerson || { name: snapshot.customerName, dateOfBirth: snapshot.dateOfBirth, age: snapshot.age, gender: snapshot.gender };
+  const owner = snapshot.policyOwner || insured;
+  const infoRows = snapshot.isPolicyOwnerSameAsInsured
+    ? [
+        ["BMBH/NĐBH", insured.name || snapshot.customerName || "-"],
+        ["Ngày tháng năm sinh", insured.dateOfBirth || snapshot.dateOfBirth || "-"],
+        ["Tuổi bảo hiểm", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
+        ["Giới tính", insured.gender || "-"]
+      ]
+    : [
+        ["Người được bảo hiểm", insured.name || snapshot.customerName || "-"],
+        ["Bên mua bảo hiểm", owner.name || "-"],
+        ["Tuổi NĐBH", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
+        ["Giới tính NĐBH", insured.gender || "-"]
+      ];
   infoRows.forEach((row, index) => {
     const rowY = y + index * rowH;
     fillCell(pageX, rowY, labelW, rowH);
@@ -4023,7 +4556,7 @@ function renderLifeCareSummaryCanvas(snapshot) {
   const ctx = canvas.getContext("2d");
   const margin = 38;
   const contentW = canvas.width - margin * 2;
-  const blue = "#0b56d8";
+  const blue = "#004b7a";
   const deepBlue = "#002f6c";
   const ink = "#12395d";
   const muted = "#526b82";
@@ -4088,11 +4621,13 @@ function renderLifeCareSummaryCanvas(snapshot) {
   drawText(ctx, "THÔNG TIN KHÁCH HÀNG", customerCardX + 24, y + 22, {
     size: 21, weight: 900, color: blue
   });
+  const insuredInfo = snapshot.insuredPerson || { name: snapshot.customerName, dateOfBirth: snapshot.dateOfBirth, age: snapshot.age, gender: snapshot.gender };
+  const ownerInfo = snapshot.policyOwner || insuredInfo;
   const customerRows = [
-    ["Họ và tên", snapshot.customerName],
-    ["Ngày sinh", snapshot.dateOfBirth || "-"],
-    ["Tuổi bảo hiểm", `${snapshot.age} tuổi`],
-    ["Giới tính", snapshot.gender]
+    [snapshot.isPolicyOwnerSameAsInsured ? "BMBH/NĐBH" : "NĐBH", insuredInfo.name || snapshot.customerName],
+    [snapshot.isPolicyOwnerSameAsInsured ? "Ngày sinh" : "BMBH", snapshot.isPolicyOwnerSameAsInsured ? (insuredInfo.dateOfBirth || "-") : (ownerInfo.name || "-")],
+    ["Tuổi NĐBH", insuredInfo.age === null || insuredInfo.age === undefined ? "-" : `${insuredInfo.age} tuổi`],
+    ["Giới tính NĐBH", insuredInfo.gender || "-"]
   ];
   customerRows.forEach((row, index) => {
     labelValue(
@@ -4209,7 +4744,7 @@ function renderDashboardSummaryCanvas(snapshot) {
   canvas.height = SUMMARY_IMAGE_HEIGHT + 220 + (snapshot.riders.length ? 190 : 0);
   const ctx = canvas.getContext("2d");
   const colors = {
-    navy: "#003b7a",
+    navy: "#004b7a",
     deep: "#06245f",
     blue: "#075db8",
     cyan: "#18bdb4",
@@ -4333,8 +4868,13 @@ function renderDashboardSummaryCanvas(snapshot) {
   let y = 126;
   card(margin, y, contentW, 104, 16);
   icon(margin + 68, y + 59, colors.blue, "👤", true);
-  drawText(ctx, "KHÁCH HÀNG", margin + 122, y + 31, { size: 18, weight: 800, color: colors.blue });
-  drawText(ctx, snapshot.customerName, margin + 122, y + 60, { size: 27, weight: 900, color: colors.ink, fitWidth: 260, minSize: 22 });
+  const headerInsured = snapshot.insuredPerson || { name: snapshot.customerName };
+  const headerOwner = snapshot.policyOwner || headerInsured;
+  drawText(ctx, snapshot.isPolicyOwnerSameAsInsured ? "BMBH/NĐBH" : "NĐBH", margin + 122, y + 31, { size: 18, weight: 800, color: colors.blue });
+  drawText(ctx, headerInsured.name || snapshot.customerName, margin + 122, y + 60, { size: 27, weight: 900, color: colors.ink, fitWidth: 260, minSize: 22 });
+  if (!snapshot.isPolicyOwnerSameAsInsured) {
+    drawText(ctx, `BMBH: ${headerOwner.name || "-"}`, margin + 122, y + 86, { size: 16, weight: 750, color: colors.muted, fitWidth: 260, minSize: 14 });
+  }
   ctx.strokeStyle = colors.line;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -4694,15 +5234,16 @@ function renderAddonBenefitPreviewImages(images) {
 }
 
 function buildAddonBenefitSummaryInput(snapshot) {
+  const insured = snapshot.insuredPerson || {
+    name: snapshot.customerName,
+    age: snapshot.age,
+    gender: snapshot.gender
+  };
   return {
     mainProduct: snapshot.productName,
     mainDeathBenefit: snapshot.mainSumInsured,
     annualBasicPremium: snapshot.mainPremium,
-    insured: {
-      name: snapshot.customerName,
-      age: snapshot.age,
-      gender: snapshot.gender
-    },
+    insured,
     selectedAddons: snapshot.riders
   };
 }
@@ -4902,12 +5443,16 @@ syncMainProductSelector();
 updateDeathSumAssuredRange();
 updateDisabilitySumAssured();
 setOccupationGroup(DEFAULT_JOB_GROUP);
+setPolicyOwnerMode("same");
+setActivePersonFormTab("insured");
+setDefaultPolicyOwnerGender();
 hideOccupationSuggestions();
 refreshIllustration();
 loadRiderPlan();
 renderRiderUI();
 syncGenderButtons();
 setActiveTab("main");
+setDefaultPolicyOwnerGender();
 updateSummaryExportAvailability();
 window.ATPN_DATA_READY?.then(() => {
   validateAtpnSampleIllustration();
