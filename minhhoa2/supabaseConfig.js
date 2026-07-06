@@ -1,0 +1,4 @@
+window.SUPABASE_ACCESS_LOGGER_CONFIG = {
+  url: "https://pnzjiresefokkmzbyeyv.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuemppcmVzZWZva2ttemJ5ZXl2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTQwMjg0MCwiZXhwIjoyMDk2OTc4ODQwfQ.Gb0VB6OfqeEEnTceEDniNt2CtgHJd7pMO9vBH5II1Iw"
+};
