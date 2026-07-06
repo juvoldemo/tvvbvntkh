@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="150" viewBox="0 0 1240 150">
+  <defs>
+    <linearGradient id="headerBlue" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#004a99"/>
+      <stop offset="0.52" stop-color="#0057ad"/>
+      <stop offset="1" stop-color="#003579"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ffd76a"/>
+      <stop offset="0.55" stop-color="#f4b321"/>
+      <stop offset="1" stop-color="#c98300"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00285f" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1240" height="150" fill="url(#headerBlue)"/>
+
+  <text x="30" y="45" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="800" letter-spacing=".2">
+    SẢN PHẨM BẢO HIỂM
+  </text>
+  <text x="30" y="83" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="800" letter-spacing=".2">
+    LIÊN KẾT CHUNG
+  </text>
+
+  <g transform="translate(318 22)" filter="url(#softShadow)">
+    <path d="M12 0h70v66c-9 16-22 28-35 36C34 94 21 82 12 66V0z" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M25 72V28c14 9 27 21 40 39V28" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="430" y="79" fill="#f4b321" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">
+    An Tâm Hoạch Định
+  </text>
+
+  <g transform="translate(930 28)">
+    <text x="0" y="31" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="35" font-weight="900">BAOVIET</text>
+    <circle cx="174" cy="20" r="22" fill="url(#gold)"/>
+    <circle cx="174" cy="20" r="18" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+    <path d="M156 20c12-9 24-9 36 0-12 9-24 9-36 0z" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+    <path d="M174 2c7 12 7 24 0 36" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+    <text x="203" y="31" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="35" font-weight="800">Life</text>
+    <text x="66" y="70" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700">BẢO VIỆT NHÂN THỌ</text>
+  </g>
+</svg>

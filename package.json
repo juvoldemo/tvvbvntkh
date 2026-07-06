@@ -1,0 +1,41 @@
+{
+  "name": "baoviet-revenue-dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "fetch:data": "tsx scripts/fetch-bc02.ts",
+    "test:competition-bc02": "tsx scripts/test-competition-bc02.ts",
+    "test:tvv-policy": "tsx scripts/test-tvv-policy-rewards.ts",
+    "test:team-leader-policy": "tsx scripts/test-team-leader-policy.ts",
+    "test:star-viet": "tsx scripts/test-star-viet.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "clsx": "^2.1.1",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "lucide-react": "^0.468.0",
+    "next": "^14.2.16",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.15.4",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.16",
+    "playwright": "^1.61.0",
+    "tsx": "^4.22.4",
+    "typescript": "^5.6.3"
+  }
+}
