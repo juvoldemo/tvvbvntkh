@@ -664,9 +664,7 @@ export default function TvvMobilePage() {
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
       )}
-      {illustrationLoaded && (userProfile?.dashboard_role === "team_leader"
-        ? <TeamLeaderPolicyIllustration active={tab === "illustration"} rewards={teamRewards} />
-        : <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />)}
+      {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader"} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
     </main>
