@@ -16960,12 +16960,12 @@ body .tvv-app .tvv-contest-detail {
 .tvv-app .team-kpi-grid .team-kpi-card {
   display: flex;
   min-width: 0;
-  min-height: 128px;
+  min-height: 96px;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0;
-  padding: 12px 6px 9px;
+  padding: 8px 6px;
   overflow: hidden;
   border: 1px solid #e3e9f2;
   border-radius: 10px;
@@ -16976,27 +16976,14 @@ body .tvv-app .tvv-contest-detail {
   width: 21px;
   height: 21px;
   flex: 0 0 21px;
-  margin: 0 0 7px;
-}
-
-.tvv-app .team-kpi-grid .team-kpi-card > span {
-  display: flex;
-  width: 100%;
-  min-height: 27px;
-  align-items: center;
-  justify-content: center;
-  color: #004b7a;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1.25;
-  text-align: center;
+  margin: 0 0 8px;
 }
 
 .tvv-app .team-kpi-grid .team-kpi-card > strong {
   display: block;
   width: 100%;
-  margin: 4px 0 6px;
-  font-size: 20px;
+  margin: 0;
+  font-size: 18px;
   line-height: 1.05;
   text-align: center;
 }
@@ -17218,7 +17205,7 @@ body .tvv-app .tvv-contest-detail {
 @media (max-width: 390px) {
   .tvv-app .team-dashboard { padding-inline: 10px; gap: 12px; }
   .tvv-app .team-kpi-grid { gap: 5px; }
-  .tvv-app .team-kpi-grid .team-kpi-card { min-height: 122px; padding-inline: 3px; }
+  .tvv-app .team-kpi-grid .team-kpi-card { min-height: 94px; padding-inline: 3px; }
   .tvv-app .team-ranking-panel .team-agent-list { gap: 4px; }
   .tvv-app .team-ranking-panel .team-agent-card {
     grid-template-columns: 20px 26px minmax(0, 1fr);
@@ -17235,26 +17222,20 @@ body .tvv-app .tvv-contest-detail {
 }
 
 .tvv-app .team-kpi-grid .team-kpi-card {
-  min-height: 112px;
-  padding: 14px 6px 11px;
+  min-height: 92px;
+  padding: 8px 6px;
 }
 
 .tvv-app .team-kpi-card > svg {
   width: 24px;
   height: 24px;
   flex-basis: 24px;
-  margin-bottom: 9px;
-}
-
-.tvv-app .team-kpi-grid .team-kpi-card > span {
-  min-height: 31px;
-  font-size: 10px;
-  line-height: 1.3;
+  margin-bottom: 8px;
 }
 
 .tvv-app .team-kpi-grid .team-kpi-card > strong {
-  margin: 5px 0 7px;
-  font-size: 22px;
+  margin: 0;
+  font-size: 18px;
 }
 
 .tvv-app .team-kpi-grid .team-kpi-card > small {
@@ -17470,6 +17451,157 @@ body .tvv-app .tvv-contest-detail {
   text-align: center;
 }
 
+.team-kpi-grid .team-kpi-card.clickable {
+  cursor: pointer;
+}
+
+.team-kpi-grid button.team-kpi-card {
+  border: 1px solid #e8edf5;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.tvv-app .team-kpi-grid button.team-kpi-card.clickable {
+  border-color: #e3e9f2 !important;
+  background: #fff !important;
+  color: #004b7a !important;
+  box-shadow: 0 3px 10px rgba(44, 68, 105, .06) !important;
+}
+
+.tvv-app .team-kpi-grid button.team-kpi-card.clickable:active {
+  background: #f7fbff !important;
+}
+
+.team-activity-modal {
+  width: min(100%, 560px);
+  max-height: min(82vh, 720px);
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 20px 20px 14px 14px;
+  background: #fff;
+  box-shadow: 0 22px 60px rgba(15, 35, 70, .28);
+}
+
+.team-activity-modal > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid #e8edf4;
+}
+
+.team-activity-modal h2,
+.team-activity-modal p,
+.team-activity-group h3 {
+  margin: 0;
+}
+
+.team-activity-modal h2 {
+  color: #004b7a;
+  font-size: 18px;
+}
+
+.team-activity-modal header p {
+  margin-top: 3px;
+  color: #004b7a;
+  font-size: 12px;
+}
+
+.team-activity-modal header button {
+  display: grid;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: #004b7a;
+  color: #fff !important;
+}
+
+.team-activity-modal-list {
+  display: grid;
+  gap: 14px;
+  max-height: calc(min(82vh, 720px) - 83px);
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.team-activity-group {
+  display: grid;
+  gap: 8px;
+}
+
+.team-activity-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #004b7a;
+}
+
+.team-activity-group-head h3 {
+  font-size: 14px;
+}
+
+.team-activity-group-head span {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.team-activity-agent-list {
+  display: grid;
+  gap: 8px;
+}
+
+.team-activity-agent {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e8edf4;
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+.team-activity-agent strong {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  color: #004b7a;
+  font-size: 12px;
+}
+
+.team-activity-agent strong em {
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #fff0d6;
+  color: #d67800;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.team-activity-agent small {
+  display: block;
+  margin-top: 2px;
+  color: #5d7891;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.team-activity-agent > span {
+  color: #004b7a;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 @media (min-width: 700px) {
   .team-contract-modal-backdrop { align-items: center; }
   .team-contract-modal { border-radius: 18px; }
@@ -17545,11 +17677,10 @@ body .tvv-app .tvv-contest-detail {
 
 @media (max-width: 390px) {
   .tvv-app .team-kpi-grid .team-kpi-card {
-    min-height: 108px;
-    padding-inline: 3px;
+    min-height: 88px;
+    padding: 7px 3px;
   }
-  .tvv-app .team-kpi-grid .team-kpi-card > span { font-size: 9px; }
-  .tvv-app .team-kpi-grid .team-kpi-card > strong { font-size: 19px; }
+  .tvv-app .team-kpi-grid .team-kpi-card > strong { font-size: 17px; }
   .tvv-app .team-kpi-grid .team-kpi-card > small { font-size: 8px; }
   .tvv-app .team-ranking-panel .team-agent-card {
     grid-template-columns: 24px 32px minmax(0, 1fr);
@@ -17723,20 +17854,6 @@ body .tvv-app .tvv-contest-detail {
 .team-policy-card-head h2,
 .team-policy-quarters h2 { margin: 0; color: #004b7a; font-size: 14px; }
 .team-policy-card-head > strong { color: #004b7a; font-size: 15px; }
-.team-policy-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-.team-policy-stats span {
-  padding: 5px 8px;
-  border-radius: 999px;
-  background: #f0f5fb;
-  color: #004b7a;
-  font-size: 9px;
-  font-weight: 700;
-}
 .team-policy-next { margin-top: 12px; }
 .team-policy-next > span,
 .team-policy-next > strong { font-size: 10px; }
@@ -17777,40 +17894,6 @@ body .tvv-app .tvv-contest-detail {
   text-align: center;
 }
 .team-policy-quarters em.achieved { background: #e5f8ec; color: #16803c; }
-.team-policy-contract-toggle {
-  display: flex;
-  width: 100%;
-  min-height: 34px;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 12px;
-  border-radius: 8px;
-  background: #edf5ff;
-  color: #004b7a;
-  font-size: 10px;
-}
-.team-policy-contracts {
-  display: grid;
-  gap: 5px;
-  max-height: 260px;
-  margin-top: 8px;
-  overflow-y: auto;
-}
-.team-policy-contracts > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 8px;
-  border-radius: 7px;
-  background: #f8fafc;
-}
-.team-policy-contracts span,
-.team-policy-contracts small { display: block; }
-.team-policy-contracts b { font-size: 9px; }
-.team-policy-contracts small { margin-top: 2px; color: #004b7a; font-size: 8px; }
-.team-policy-contracts strong { color: #004b7a; font-size: 9px; white-space: nowrap; }
 
 .team-leader-calculator { padding-bottom: 110px; }
 .team-leader-calc-form {
@@ -17879,3 +17962,5 @@ body .tvv-app .tvv-contest-detail {
   color: #004b7a;
   font-size: 11px;
 }
+
+

@@ -655,7 +655,7 @@ export default function TvvMobilePage() {
             <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && (userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview data={teamData} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} />
+            ? <TeamLeaderOverview data={teamData} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} />
             : <Overview stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader"} />}
           {tab === "contests" && (userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -717,8 +717,9 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
-function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard }: any) {
-  const [selectedTeamStatus, setSelectedTeamStatus] = useState<"issued" | "pending" | "refunded" | null>(null);
+function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests }: any) {
+  const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
+  const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp hoạt động của nhóm…</p></section>;
   const summary = data.summary ?? {};
@@ -727,19 +728,12 @@ function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month,
     { label: "Doanh thu AFYP", value: formatCompactVnd(summary.afyp), tone: "blue", icon: BarChart3 },
     { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "green", icon: Users },
     { label: "Hợp đồng", value: summary.contracts, tone: "orange", icon: FileText },
-    { label: "Cần theo dõi", value: summary.pending + summary.dgrr + summary.invalid, tone: "purple", icon: Trophy }
+    { label: "Có hiệu lực", value: summary.issued, tone: "purple", icon: Trophy }
   ];
-  const statuses = [
-    { key: "issued" as const, label: "Đã phát hành", value: summary.issued, tone: "green", icon: CheckCircle2 },
-    { key: "pending" as const, label: "Chờ xử lý", value: summary.pending + summary.dgrr, tone: "orange", icon: Hourglass },
-    { key: "refunded" as const, label: "Hoàn phí", value: summary.invalid, tone: "red", icon: XCircle }
-  ];
-  const selectedStatus = statuses.find((item) => item.key === selectedTeamStatus);
-  const selectedContracts = selectedTeamStatus
-    ? (data.contracts ?? [])
-      .filter((row: any) => contractStatusGroup(row) === selectedTeamStatus)
-      .sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")))
-    : [];
+  const allTeamContracts = (data.contracts ?? []).slice().sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")));
+  const teamAgents = data.allAgents?.length ? data.allAgents : data.agents ?? [];
+  const activeTeamAgents = teamAgents.filter((agent: any) => Number(agent.afyp || agent.ip || 0) > 0);
+  const inactiveTeamAgents = teamAgents.filter((agent: any) => Number(agent.afyp || agent.ip || 0) <= 0);
   const visibleTeamAgents = showAllTeamAgents ? (data.agents ?? []) : (data.agents ?? []).slice(0, 5);
   return <section className="tvv-content team-dashboard">
     <div className="team-dashboard-toolbar team-dashboard-toolbar-compact">
@@ -749,11 +743,15 @@ function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month,
     <div className="team-kpi-grid">
       {kpis.map((item) => {
         const Icon = item.icon;
-        return <article className={`team-kpi-card ${item.tone}`} key={item.label}>
+        const isActivityCard = item.label.includes("TVV");
+        const isContractsCard = item.label.includes("Hợp");
+        const isInteractive = isActivityCard || isContractsCard;
+        const CardTag = isInteractive ? "button" : "article";
+        const onClick = isActivityCard ? () => setShowTeamActivity(true) : isContractsCard ? () => setShowAllTeamContracts(true) : undefined;
+        return <CardTag className={`team-kpi-card ${item.tone}${isInteractive ? " clickable" : ""}`} key={item.label} type={isInteractive ? "button" : undefined} onClick={onClick}>
           <Icon size={20} />
-          <span>{item.label}</span>
           <strong>{item.value}</strong>
-        </article>;
+        </CardTag>;
       })}
     </div>
 
@@ -776,31 +774,34 @@ function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month,
       </div>
     </section>
 
-    <section className="team-overview-panel team-status-panel">
-      <div className="team-panel-header">
-        <div><div><h2>Tình hình hợp đồng</h2></div></div>
-      </div>
-      <div className="team-status-grid">
-        {statuses.map((item) => {
-          const Icon = item.icon;
-          return <button type="button" className={item.tone} key={item.label} onClick={() => setSelectedTeamStatus(item.key)} aria-label={`Xem ${item.value} GYC ${item.label}`}>
-            <div><Icon size={18} /><span>{item.label}</span></div>
-            <strong>{item.value}</strong>
-          </button>;
-        })}
-      </div>
-    </section>
+    <ContestPreview estimate={contestEstimate} onAll={onOpenContests} />
+    <TeamLeaderStarJourney row={data?.starViet} />
 
     <LeaderboardPreview leaderboard={leaderboard} onOpen={onOpenLeaderboard} />
-    {selectedTeamStatus && typeof document !== "undefined" && createPortal(
-      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedTeamStatus(null); }}>
-        <section className="team-contract-modal" role="dialog" aria-modal="true" aria-label={`Danh sách GYC ${selectedStatus?.label}`}>
+    {showTeamActivity && typeof document !== "undefined" && createPortal(
+      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowTeamActivity(false); }}>
+        <section className="team-activity-modal" role="dialog" aria-modal="true" aria-label="Danh sách TVV hoạt động">
           <header>
-            <div><h2>{selectedStatus?.label}</h2><p>{selectedContracts.length} GYC trong tháng</p></div>
-            <button type="button" onClick={() => setSelectedTeamStatus(null)} aria-label="Đóng"><XCircle size={24} /></button>
+            <div><h2>TVV hoạt động</h2><p>{activeTeamAgents.length}/{totalTeamAdvisors} TVV có doanh thu</p></div>
+            <button type="button" onClick={() => setShowTeamActivity(false)} aria-label="Đóng"><XCircle size={24} /></button>
+          </header>
+          <div className="team-activity-modal-list">
+            <TeamActivityGroup title="TVV chưa hoạt động" count={inactiveTeamAgents.length} agents={inactiveTeamAgents} />
+            <TeamActivityGroup title="TVV đã hoạt động" count={activeTeamAgents.length} agents={activeTeamAgents} />
+          </div>
+        </section>
+      </div>,
+      document.body
+    )}
+    {showAllTeamContracts && typeof document !== "undefined" && createPortal(
+      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowAllTeamContracts(false); }}>
+        <section className="team-contract-modal" role="dialog" aria-modal="true" aria-label="Danh sách toàn bộ GYC của nhóm">
+          <header>
+            <div><h2>Tất cả hợp đồng của nhóm</h2><p>{allTeamContracts.length} GYC trong tháng</p></div>
+            <button type="button" onClick={() => setShowAllTeamContracts(false)} aria-label="Đóng"><XCircle size={24} /></button>
           </header>
           <div className="team-contract-modal-list">
-            {selectedContracts.map((row: any) => (
+            {allTeamContracts.map((row: any) => (
               <article key={row.id || row.application_no || row.contract_no}>
                 <div><span>BMBH</span><strong>{row.policy_owner || row.raw_data?.["BÊN MUA BẢO HIỂM (BMBH)"] || "—"}</strong></div>
                 <div><span>TVV</span><strong>{row.agent_name || "—"}</strong></div>
@@ -810,12 +811,31 @@ function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month,
                 <em className={contractStatusGroup(row)}>{row.policy_status || "Chờ xử lý"}</em>
               </article>
             ))}
-            {!selectedContracts.length && <p className="team-contract-modal-empty">Không có GYC ở trạng thái này.</p>}
+            {!allTeamContracts.length && <p className="team-contract-modal-empty">Nhóm chưa có GYC trong tháng này.</p>}
           </div>
         </section>
       </div>,
       document.body
     )}
+  </section>;
+}
+
+function TeamActivityGroup({ title, count, agents }: { title: string; count: number; agents: any[] }) {
+  return <section className="team-activity-group">
+    <div className="team-activity-group-head"><h3>{title}</h3><span>{count} TVV</span></div>
+    <div className="team-activity-agent-list">
+      {agents.map((agent: any) => (
+        <article className="team-activity-agent" key={agent.agentCode || agent.agentName}>
+          <div className="team-agent-avatar">{agent.avatarUrl ? <img src={agent.avatarUrl} alt="" /> : <UserRound size={18} />}</div>
+          <div>
+            <strong>{agent.agentName || "TVV"}{agent.isNewAdvisor && <em>new</em>}</strong>
+            <small>{agent.agentCode || "Chưa có mã TVV"}</small>
+          </div>
+          <span>{formatCompactVnd(Number(agent.afyp || 0))}</span>
+        </article>
+      ))}
+      {!agents.length && <p className="team-empty">Không có TVV trong danh sách này.</p>}
+    </div>
   </section>;
 }
 
@@ -829,6 +849,17 @@ function TeamLeaderRewardSummary({ rewards }: { rewards: any }) {
   return <section className="team-overview-panel team-reward-summary">
     <div className="team-reward-summary-head"><div><Gift size={18} /><span><h2>Thưởng chính sách Trưởng nhóm</h2><p>Tạm tính theo dữ liệu hiện tại</p></span></div><strong>{formatVnd(rewards.totalEstimatedReward || 0)}</strong></div>
     <div className="team-reward-summary-grid">{items.map(([label, value, note]) => <article key={String(label)}><span>{label}</span><strong>{formatVnd(Number(value) || 0)}</strong><small>{note}</small></article>)}</div>
+  </section>;
+}
+
+function TeamLeaderStarJourney({ row }: { row?: any }) {
+  if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của nhóm trong tháng này.</p></section>;
+  const totalFyp = Number(row.totalAfyp || 0);
+  const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
+  return <section className="tvv-card tvv-star-journey">
+    <div className="tvv-star-title"><span><Sparkles size={17} /> Hành trình Sao Việt</span><em>{row.currentTickets > 0 ? `${row.currentTickets} vé` : row.currentRank}</em></div>
+    <div className="tvv-star-main"><div><small>FYP KTM Nhóm</small><strong>{formatVnd(totalFyp)}</strong></div><img className="tvv-star-achievement-icon" src="/images/star-viet-achievement.png" alt="" /></div>
+    <div className="tvv-star-progress"><div><span>Mốc tiếp theo</span><b>{row.remainingToNext > 0 ? row.nextRank : "Đã đạt mốc cao nhất"}</b></div><i><u style={{ width: `${progress}%` }} /></i><div><span>{progress.toFixed(1).replace(".0", "")}%</span>{row.remainingToNext > 0 && <b>Còn {formatVnd(row.remainingToNext)}</b>}</div></div>
   </section>;
 }
 
@@ -871,8 +902,7 @@ function TeamLeaderContestPage({ rewards, estimate }: { rewards: any; estimate: 
 }
 
 function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; embedded?: boolean }) {
-  const [openProgram, setOpenProgram] = useState("");
-  const [selectedPolicyProgram, setSelectedPolicyProgram] = useState<any>(null);
+    const [selectedPolicyProgram, setSelectedPolicyProgram] = useState<any>(null);
   if (!rewards) return <section className="tvv-content tvv-subpage tvv-after-sub-header"><p className="tvv-empty">Đang tính chính sách Trưởng nhóm…</p></section>;
   const programs = [
     {
@@ -956,10 +986,7 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
     {!embedded && <div className="team-policy-total"><span>Tổng thưởng tạm tính</span><strong>{formatVnd(rewards.totalEstimatedReward)}</strong><small>Nhóm {rewards.groupName}</small></div>}
     {programs.map((program) => <article className="team-policy-card team-policy-card-clickable" key={program.title} role="button" tabIndex={0} onClick={() => openPolicyMilestone(program)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openPolicyMilestone(program); } }}>
       <div className="team-policy-card-head"><div><Trophy size={19} /><h2>{program.title}</h2></div><strong>{formatVnd(program.reward)}</strong></div>
-      <div className="team-policy-stats">{program.stats.map((item) => <span key={item}>{item}</span>)}</div>
       {program.target && <div className="team-policy-next"><span>Mốc FYP tiếp theo <b>{formatVnd(program.target)}</b></span><strong>Còn {formatVnd(program.remaining)}</strong><i><u style={{ width: `${Math.min(100, ((program.target - program.remaining) / program.target) * 100)}%` }} /></i></div>}
-      {program.contracts.length > 0 && <><button className="team-policy-contract-toggle" type="button" onClick={(event) => { event.stopPropagation(); setOpenProgram((value) => value === program.title ? "" : program.title); }}>{openProgram === program.title ? "Ẩn hợp đồng" : `Xem ${program.contracts.length} HĐ đóng góp`} <ChevronDown size={14} /></button>
-      {openProgram === program.title && <div className="team-policy-contracts">{program.contracts.map((row: any) => <div key={row.id || row.application_no || row.contract_no}><span><b>{row.application_no || row.contract_no}</b><small>{row.agent_name}</small></span><strong>{formatVnd(row.ip)}</strong></div>)}</div>}</>}
     </article>)}
     <section className="team-policy-quarters"><h2>Tiến độ thưởng năm</h2>{rewards.annual.quarters.map((item: any) => <div key={item.quarter}><span>Quý {item.quarter}</span><strong>{formatVnd(item.ip)}</strong><em className={item.achieved ? "achieved" : ""}>{item.achieved ? "Đạt" : "Chưa đạt"}</em></div>)}</section>
   </section>{selectedPolicyProgram && <ContestDetailModal item={selectedPolicyProgram} onClose={() => setSelectedPolicyProgram(null)} />}</>;
@@ -1911,3 +1938,5 @@ function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
   return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }
+
+

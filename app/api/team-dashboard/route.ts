@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds, toMonthStart } from "@/lib/format";
 import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
+import { buildGroupStarVietSummary } from "@/lib/star-viet";
+import { readStarVietRecords } from "@/lib/star-viet-data";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import type { RevenueRecord } from "@/lib/types";
 
 const MONTHLY_MILESTONES = [12_000_000, 24_000_000, 50_000_000];
+const PAGE_SIZE = 1000;
+
+async function readAll<T>(queryFactory: (from: number, to: number) => any) {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await queryFactory(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...((data ?? []) as T[]));
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
 
 function previousMonth(month: string) {
   const date = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1);
@@ -26,6 +40,22 @@ function nextMilestone(revenue: number) {
   return target
     ? { target, remaining: target - revenue, achievedAll: false }
     : { target: MONTHLY_MILESTONES.at(-1)!, remaining: 0, achievedAll: true };
+}
+
+function quarterBounds(month: string) {
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7)) - 1;
+  const quarterStartMonth = Math.floor(monthIndex / 3) * 3;
+  const start = new Date(Date.UTC(year, quarterStartMonth, 1)).toISOString().slice(0, 10);
+  const end = new Date(Date.UTC(year, quarterStartMonth + 3, 0)).toISOString().slice(0, 10);
+  return { start, end };
+}
+
+function isNewAdvisor(startDate: unknown, month: string) {
+  const date = String(startDate || "").slice(0, 10);
+  if (!date) return false;
+  const { start, end } = quarterBounds(month);
+  return date >= start && date <= end;
 }
 
 export async function GET(request: NextRequest) {
@@ -51,7 +81,7 @@ export async function GET(request: NextRequest) {
     const previousMonthKey = previousMonth(month);
     const previousMonthBounds = monthBounds(previousMonthKey);
     const year = month.slice(0, 4);
-    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }] = await Promise.all([
+    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietRecords] = await Promise.all([
       supabase.from("revenue_records").select("*")
         .eq("data_month", toMonthStart(month)).eq("group_name", groupName)
         .gte("paid_date", start).lte("paid_date", end),
@@ -59,7 +89,12 @@ export async function GET(request: NextRequest) {
         .eq("data_month", toMonthStart(previousMonthKey)).eq("group_name", groupName)
         .gte("paid_date", previousMonthBounds.start).lte("paid_date", previousMonthBounds.end),
       supabase.from("revenue_records").select("*")
-        .neq("data_month", "2099-01-01").eq("group_name", groupName).gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`)
+        .neq("data_month", "2099-01-01").eq("group_name", groupName).gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`),
+      readAll<Pick<RevenueRecord, "agent_code" | "agent_name" | "group_name" | "paid_date" | "issued_date">>((from, to) =>
+        supabase.from("revenue_records").select("agent_code,agent_name,group_name,paid_date,issued_date")
+          .neq("data_month", "2099-01-01").eq("group_name", groupName).range(from, to)
+      ),
+      readStarVietRecords(supabase, month.slice(0, 7))
     ]);
     if (monthError) throw monthError;
     if (previousError) throw previousError;
@@ -87,17 +122,50 @@ export async function GET(request: NextRequest) {
       agents.set(key, current);
     }
 
-    const advisorCodes = [...agents.values()].map((row) => row.agentCode).filter(Boolean);
+    const latestAdvisorByCode = new Map<string, any>();
+    for (const row of allTeamRows) {
+      const code = String(row.agent_code || row.agent_name || "").trim();
+      if (!code) continue;
+      const current = latestAdvisorByCode.get(code);
+      const currentDate = String(current?.issued_date || current?.paid_date || "");
+      const rowDate = String(row.issued_date || row.paid_date || "");
+      if (!current || rowDate >= currentDate) latestAdvisorByCode.set(code, row);
+    }
+
+    const advisorCodes = [...new Set([...agents.values(), ...latestAdvisorByCode.values()].map((row: any) => row.agentCode || row.agent_code).filter(Boolean))];
     const { data: advisorProfiles } = advisorCodes.length
-      ? await supabase.from("authorized_users").select("advisor_code,avatar_url").in("advisor_code", advisorCodes)
-      : { data: [] as Array<{ advisor_code: string; avatar_url: string | null }> };
+      ? await supabase.from("authorized_users").select("advisor_code,full_name,start_date,avatar_url").in("advisor_code", advisorCodes)
+      : { data: [] as Array<{ advisor_code: string; full_name: string | null; start_date: string | null; avatar_url: string | null }> };
     const avatarByCode = new Map((advisorProfiles ?? []).map((row) => [row.advisor_code, row.avatar_url]));
+    const profileByCode = new Map((advisorProfiles ?? []).map((row) => [row.advisor_code, row]));
 
     const ranking = [...agents.values()]
-      .map((row) => ({ ...row, avatarUrl: avatarByCode.get(row.agentCode) ?? null }))
+      .map((row) => ({ ...row, agentName: profileByCode.get(row.agentCode)?.full_name || row.agentName, startDate: profileByCode.get(row.agentCode)?.start_date ?? null, isNewAdvisor: isNewAdvisor(profileByCode.get(row.agentCode)?.start_date, month), avatarUrl: avatarByCode.get(row.agentCode) ?? null }))
       .map((row) => ({ ...row, nextMilestone: nextMilestone(row.ip) }))
       .sort((a, b) => b.ip - a.ip)
       .map((row, index) => ({ ...row, rank: index + 1 }));
+    const rankedByCode = new Map(ranking.map((row) => [String(row.agentCode || row.agentName), row]));
+    const allAgents = [...latestAdvisorByCode.values()]
+      .map((row) => {
+        const agentCode = String(row.agent_code || "").trim();
+        const key = agentCode || String(row.agent_name || "").trim();
+        const profile = agentCode ? profileByCode.get(agentCode) : undefined;
+        return rankedByCode.get(key) ?? {
+          agentCode,
+          agentName: profile?.full_name || row.agent_name || "TVV",
+          afyp: 0,
+          ip: 0,
+          contracts: 0,
+          issued: 0,
+          pending: 0,
+          dgrr: 0,
+          invalid: 0,
+          avatarUrl: profile?.avatar_url ?? null,
+          startDate: profile?.start_date ?? null,
+          isNewAdvisor: isNewAdvisor(profile?.start_date, month)
+        };
+      })
+      .sort((a, b) => Number(b.ip || 0) - Number(a.ip || 0) || String(a.agentName).localeCompare(String(b.agentName), "vi"));
     const issued = contracts.filter((row) => statusBucket(row.policy_status) === "issued").length;
     const invalid = contracts.filter((row) => statusBucket(row.policy_status) === "invalid").length;
     const dgrr = contracts.filter((row) => statusBucket(row.policy_status) === "dgrr").length;
@@ -116,6 +184,7 @@ export async function GET(request: NextRequest) {
     const comparison = (current: number, previous: number) => previous > 0
       ? ((current - previous) / previous) * 100
       : current > 0 ? 100 : 0;
+    const starViet = buildGroupStarVietSummary(starVietRecords, groupName);
 
     return NextResponse.json({
       role: "team_leader",
@@ -123,7 +192,7 @@ export async function GET(request: NextRequest) {
       groupName,
       leader: { code: profile.advisor_code, name: profile.full_name },
       summary: {
-        agents: ranking.length,
+        agents: allAgents.length || ranking.length,
         activeAgents: ranking.filter((row) => row.afyp > 0).length,
         afyp: counted.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0),
         ip: counted.reduce((sum, row) => sum + (Number(row.ip) || 0), 0),
@@ -140,6 +209,8 @@ export async function GET(request: NextRequest) {
         }
       },
       agents: ranking,
+      allAgents,
+      starViet,
       contracts,
       yearContracts,
       yearRevenue: yearContracts.filter((row: any) => isCountedRevenueRecord(row))

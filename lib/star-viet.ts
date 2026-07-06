@@ -41,6 +41,7 @@ const KPI04_CONTRACT_DATE_COLUMN_ALIASES = ["ngay hieu luc"];
 const DOUBLE_BONUS_START = new Date(2026, 2, 5);
 const DOUBLE_BONUS_END = new Date(2026, 2, 26);
 const DOUBLE_BONUS_CAP = 200_000_000;
+const GROUP_DOUBLE_BONUS_CAP = 400_000_000;
 const TOPUP_BONUS_RATE = 0.1;
 
 const EXCLUDED_BC02_STATUSES = new Set([
@@ -58,6 +59,15 @@ const STAR_VIET_LEVELS = [
   { key: "platinum_2", rank: "Hạng Bạch Kim", tickets: 2, threshold: 1_400_000_000, tone: "platinum" },
   { key: "diamond_1", rank: "Hạng Kim Cương", tickets: 1, threshold: 1_600_000_000, tone: "diamond" },
   { key: "diamond_2", rank: "Hạng Kim Cương", tickets: 2, threshold: 3_000_000_000, tone: "diamond" }
+];
+
+const TEAM_STAR_VIET_LEVELS = [
+  { key: "none", rank: "Chưa đạt", tickets: 0, threshold: 0, tone: "none" },
+  { key: "gold_1", rank: "Hạng Vàng", tickets: 1, threshold: 1_600_000_000, tone: "gold" },
+  { key: "platinum_1", rank: "Hạng Bạch Kim", tickets: 1, threshold: 3_500_000_000, tone: "platinum" },
+  { key: "platinum_2", rank: "Hạng Bạch Kim", tickets: 2, threshold: 5_500_000_000, tone: "platinum" },
+  { key: "diamond_1", rank: "Hạng Kim Cương", tickets: 1, threshold: 7_000_000_000, tone: "diamond" },
+  { key: "diamond_2", rank: "Hạng Kim Cương", tickets: 2, threshold: 13_000_000_000, tone: "diamond" }
 ];
 
 export function normalizeText(value: unknown) {
@@ -248,12 +258,12 @@ export function parseStarVietFile(buffer: ArrayBuffer, fileName: string, source:
     : parseSaoVietBC02(buffer, fileName, year);
 }
 
-function currentLevel(totalAfyp: number) {
-  return [...STAR_VIET_LEVELS].reverse().find((level) => totalAfyp >= level.threshold) ?? STAR_VIET_LEVELS[0];
+function currentLevel(totalAfyp: number, levels = STAR_VIET_LEVELS) {
+  return [...levels].reverse().find((level) => totalAfyp >= level.threshold) ?? levels[0];
 }
 
-function nextLevel(totalAfyp: number) {
-  return STAR_VIET_LEVELS.find((level) => level.threshold > totalAfyp) ?? null;
+function nextLevel(totalAfyp: number, levels = STAR_VIET_LEVELS) {
+  return levels.find((level) => level.threshold > totalAfyp) ?? null;
 }
 
 function rawValue(record: StarVietRecord, aliases: string[]) {
@@ -307,6 +317,12 @@ function getKpi04Fyp(record: StarVietRecord) {
 export function competitionMultiplier(competitionFyp: number) {
   if (competitionFyp >= 50_000_000) return 2;
   if (competitionFyp >= 30_000_000) return 1.5;
+  return 1;
+}
+
+export function groupCompetitionMultiplier(competitionFyp: number) {
+  if (competitionFyp >= 120_000_000) return 2;
+  if (competitionFyp >= 80_000_000) return 1.5;
   return 1;
 }
 
@@ -396,5 +412,37 @@ export function buildStarVietReport(records: StarVietRecord[]) {
       groups: [...new Set(rows.map((row) => row.groupName).filter(Boolean))].sort((a, b) => a.localeCompare(b, "vi")),
       ranks: ["Chưa đạt", "Hạng Vàng", "Hạng Bạch Kim", "Hạng Kim Cương"]
     }
+  };
+}
+
+export function buildGroupStarVietSummary(records: StarVietRecord[], groupName: string) {
+  const normalizedGroupName = normalizeText(groupName);
+  const groupRecords = records.filter((record) => normalizeText(record.group_name) === normalizedGroupName);
+  const bc02Items = groupRecords.filter((record) => record.source === "bc02");
+  const kpi04Items = groupRecords.filter((record) => record.source === "kpi04");
+  const kpi04Fyp = kpi04Items.reduce((sum, item) => sum + getKpi04Fyp(item), 0);
+  const competitionFyp = kpi04Items.reduce((sum, item) => isDateInDoubleBonusPeriod(rawValue(item, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(item) : sum, 0);
+  const competitionFactor = groupCompetitionMultiplier(competitionFyp);
+  const doubleBonusFyp = Math.min(competitionFyp * (competitionFactor - 1), GROUP_DOUBLE_BONUS_CAP);
+  const bc02Afyp = bc02Items.reduce((sum, item) => sum + Number(item.afyp || 0), 0);
+  const totalAfyp = kpi04Fyp + doubleBonusFyp + bc02Afyp + calculateTopupBonus(groupRecords);
+  const level = currentLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
+  const next = nextLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
+  return {
+    groupName,
+    kpi04Fyp,
+    competitionFyp,
+    competitionFactor,
+    doubleBonusAfyp: doubleBonusFyp,
+    bc02Afyp,
+    topupBonusAfyp: calculateTopupBonus(groupRecords),
+    totalAfyp,
+    currentRank: level.rank,
+    currentTickets: level.tickets,
+    rankTone: level.tone,
+    nextRank: next ? `${next.rank} ${String(next.tickets).padStart(2, "0")} vé` : "Đã đạt mốc cao nhất",
+    nextThreshold: next?.threshold ?? totalAfyp,
+    remainingToNext: next ? Math.max(next.threshold - totalAfyp, 0) : 0,
+    progress: next ? Math.min(100, (totalAfyp / next.threshold) * 100) : 100
   };
 }
