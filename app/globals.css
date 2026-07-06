@@ -17644,6 +17644,53 @@ body .tvv-app .tvv-contest-detail {
 .team-reward-summary-grid small { color: #7b879a; font-size: 8px; }
 
 .team-policy-page { display: grid; gap: 12px; padding-bottom: 110px; }
+.team-policy-page-embedded { padding-bottom: 0; }
+.team-policy-list-panel { gap: 12px !important; }
+.team-policy-card-clickable { cursor: pointer; }
+.team-policy-card-clickable:focus-visible {
+  outline: 3px solid rgba(0, 75, 122, .25);
+  outline-offset: 2px;
+}
+.tvv-team-achieved-advisors {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #dce8f8;
+  border-radius: 14px;
+  background: #fff;
+}
+.tvv-team-achieved-head,
+.tvv-team-achieved-advisors article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tvv-team-achieved-head { color: #004b7a; font-size: 12px; font-weight: 800; }
+.tvv-team-achieved-advisors > div { display: grid; gap: 8px; }
+.tvv-team-achieved-advisors article {
+  padding: 10px;
+  border-radius: 11px;
+  background: #f5f9ff;
+}
+.tvv-team-achieved-advisors article > div { min-width: 0; flex: 1; }
+.tvv-team-achieved-advisors article b,
+.tvv-team-achieved-advisors article small { display: block; }
+.tvv-team-achieved-advisors article b { color: #004b7a; font-size: 11px; }
+.tvv-team-achieved-advisors article small { margin-top: 2px; color: #718096; font-size: 9px; }
+.tvv-team-achieved-advisors article > span:last-child { text-align: right; }
+.tvv-team-achieved-rank {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  flex: 0 0 25px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e7f1ff;
+  color: #004b7a;
+  font-size: 10px;
+  font-weight: 850;
+}
 .team-policy-total {
   padding: 18px;
   border-radius: 16px;

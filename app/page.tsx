@@ -626,7 +626,7 @@ export default function TvvMobilePage() {
                 <h1>Xin chào, {userProfile?.full_name || advisor?.name || "TVV"} <span>👋</span></h1>
                 <p>{userProfile?.dashboard_role === "team_leader" ? `Trưởng nhóm ${teamData?.groupName || userProfile?.managed_group_name || ""}` : `TVV - ${advisor?.code || "Chưa có mã"}`}</p>
                 {userProfile?.dashboard_role === "team_leader"
-                  ? <strong className="tvv-current-rank"><Users size={13} />{teamData ? `${teamData.summary.activeAgents}/${teamData.summary.agents} TVV có doanh thu` : "Đang tải hoạt động nhóm"}</strong>
+                  ? <strong className="tvv-current-rank"><Users size={13} />{teamData ? `${teamData.summary.activeAgents}/${Number(teamRewards?.currentTeamAdvisorCount) || teamData.summary.agents} TVV có doanh thu` : "Đang tải hoạt động nhóm"}</strong>
                   : <strong className="tvv-current-rank"><Trophy size={13} />{currentAdvisorRank ? `Hạng ${currentAdvisorRank} tháng này` : "Chưa có xếp hạng tháng này"}</strong>}
               </div>
               <button ref={notificationButtonRef} className={`tvv-icon-button${notificationCount > 0 ? " tvv-notification-alert" : ""}`} type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
@@ -655,10 +655,10 @@ export default function TvvMobilePage() {
             <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && (userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview data={teamData} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} />
+            ? <TeamLeaderOverview data={teamData} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} />
             : <Overview stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader"} />}
-          {tab === "contests" && (userProfile?.dashboard_role === "team_leader" ? <TeamLeaderPolicyPage rewards={teamRewards} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
+          {tab === "contests" && (userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
@@ -717,14 +717,15 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
-function TeamLeaderOverview({ data, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard }: any) {
+function TeamLeaderOverview({ data, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard }: any) {
   const [selectedTeamStatus, setSelectedTeamStatus] = useState<"issued" | "pending" | "refunded" | null>(null);
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp hoạt động của nhóm…</p></section>;
   const summary = data.summary ?? {};
+  const totalTeamAdvisors = Number(currentTeamAdvisorCount) || summary.agents;
   const kpis = [
     { label: "Doanh thu AFYP", value: formatCompactVnd(summary.afyp), tone: "blue", icon: BarChart3 },
-    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${summary.agents}`, tone: "green", icon: Users },
+    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "green", icon: Users },
     { label: "Hợp đồng", value: summary.contracts, tone: "orange", icon: FileText },
     { label: "Cần theo dõi", value: summary.pending + summary.dgrr + summary.invalid, tone: "purple", icon: Trophy }
   ];
@@ -831,54 +832,137 @@ function TeamLeaderRewardSummary({ rewards }: { rewards: any }) {
   </section>;
 }
 
-function TeamLeaderPolicyPage({ rewards }: { rewards: any }) {
+function TeamLeaderContestPage({ rewards, estimate }: { rewards: any; estimate: any }) {
+  const [view, setView] = useState<"ongoing" | "ended" | "policy">("ongoing");
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const ongoingPrograms = rewards?.ongoingPrograms ?? estimate?.ongoingPrograms ?? [];
+  const endedPrograms = rewards?.endedPrograms ?? estimate?.endedPrograms ?? [];
+  const totalPolicyReward = Number(rewards?.totalEstimatedReward ?? 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const soonEndingCount = ongoingPrograms.filter((item: any) => {
+    const end = String(item.endDate ?? "");
+    if (!end) return false;
+    const diff = (new Date(`${end}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  }).length;
+  const tabs = [
+    { id: "ongoing" as const, label: `Đang diễn ra (${ongoingPrograms.length})`, value: ongoingPrograms.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0) },
+    { id: "ended" as const, label: `Đã kết thúc (${endedPrograms.length})`, value: endedPrograms.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0) },
+    { id: "policy" as const, label: "Thưởng chính sách", value: totalPolicyReward }
+  ];
+  const visiblePrograms = view === "ongoing" ? ongoingPrograms : endedPrograms;
+
+  return <><section className="tvv-content tvv-subpage tvv-after-sub-header tvv-contest-page team-contest-page">
+    <section className="tvv-contest-summary"><h2>Tổng quan thi đua</h2><div>
+      <span><b>Đang diễn ra</b><strong>{ongoingPrograms.length}</strong><em>chương trình</em></span>
+      <span><b>Sắp kết thúc</b><strong>{soonEndingCount}</strong><em>chương trình</em></span>
+      <span><b>Ước tính thưởng</b><strong>{formatVnd(totalPolicyReward)}</strong><em>Thưởng Trưởng nhóm</em></span>
+    </div></section>
+    <div className="tvv-contest-filter">{tabs.map((tabItem) => <button key={tabItem.id} type="button" className={view === tabItem.id ? "active" : ""} onClick={() => setView(tabItem.id)}><span>{tabItem.label}</span><strong>{formatVnd(tabItem.value)}</strong></button>)}</div>
+    <section className={`tvv-contest-list-panel${view === "policy" ? " team-policy-list-panel" : ""}`}>
+      {view === "policy"
+        ? <TeamLeaderPolicyPage rewards={rewards} embedded />
+        : visiblePrograms.length
+          ? visiblePrograms.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} onOpen={setSelectedProgram} />)
+          : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : "Chưa có chương trình thi đua đã kết thúc."}</p>}
+    </section>
+    <p className="tvv-contest-note"><Info size={17} /><span>Thưởng chính sách Trưởng nhóm được tính theo cơ chế riêng dựa trên kết quả của nhóm. Mức thưởng chính thức được xác nhận khi đủ điều kiện chi trả.</span></p>
+  </section>{selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}</>;
+}
+
+function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; embedded?: boolean }) {
   const [openProgram, setOpenProgram] = useState("");
+  const [selectedPolicyProgram, setSelectedPolicyProgram] = useState<any>(null);
   if (!rewards) return <section className="tvv-content tvv-subpage tvv-after-sub-header"><p className="tvv-empty">Đang tính chính sách Trưởng nhóm…</p></section>;
   const programs = [
     {
+      id: "team-policy-monthly",
       title: "Thưởng PTKD tháng",
+      period: `Tháng ${Number(rewards.month.slice(5, 7))}/${rewards.month.slice(0, 4)}`,
+      poster: "/Thưởng tháng trưởng nhóm.png",
       reward: rewards.monthly.reward,
-      stats: [`IP ${formatVnd(rewards.monthly.ip)}`, `FYC ${formatVnd(rewards.monthly.fyc)}`, `${rewards.monthly.hdc} TVV HĐC`, `Tỷ lệ ${Math.round(rewards.monthly.rate * 100)}%`],
+      basisLabel: "IP nhóm tháng",
+      currentBasis: rewards.monthly.ip,
+      currentRateLabel: `${Math.round(rewards.monthly.rate * 100)}%`,
+      milestones: rewards.monthly.milestones ?? [],
+      stats: [`IP ${formatVnd(rewards.monthly.ip)}`, `FYC ${formatVnd(rewards.monthly.fyc)}`, `KPI04 ${formatVnd(rewards.monthly.kpi04Fyc)}`, `KPI05 ${formatVnd(rewards.monthly.kpi05Fyc)}`, `BC02 bổ sung ${formatVnd(rewards.monthly.bc02Fyc)}`, `${rewards.monthly.hdc} TVV HĐC`, `Tỷ lệ ${Math.round(rewards.monthly.rate * 100)}%`],
       target: rewards.monthly.nextIpTarget,
       remaining: rewards.monthly.remainingIp,
       contracts: rewards.monthly.contracts
     },
     {
+      id: "team-policy-quarterly",
       title: `Thưởng Quý ${rewards.quarterly.quarter}`,
+      period: `Quý ${rewards.quarterly.quarter}/${rewards.annual.year}`,
+      poster: "/Thưởng Quý trưởng nhóm.png",
       reward: rewards.quarterly.reward,
-      stats: [`FYC quý ${formatVnd(rewards.quarterly.fyc)}`, `KPI04 ${formatVnd(rewards.quarterly.kpiFyc)}`, `BC02 bổ sung ${formatVnd(rewards.quarterly.supplementalFyc)}`, rewards.quarterly.hasNewAdvisor ? "Có TVV mới HĐC" : "Chưa có TVV mới HĐC", `Tỷ lệ ${Math.round(rewards.quarterly.rate * 100)}%`],
+      basisLabel: "IP nhóm quý",
+      currentBasis: rewards.quarterly.ip,
+      currentRateLabel: `${Math.round(rewards.quarterly.rate * 100)}%`,
+      milestones: rewards.quarterly.milestones ?? [],
+      stats: [`FYC quý ${formatVnd(rewards.quarterly.fyc)}`, `KPI04 ${formatVnd(rewards.quarterly.kpi04Fyc)}`, `KPI05 ${formatVnd(rewards.quarterly.kpi05Fyc)}`, `BC02 bổ sung ${formatVnd(rewards.quarterly.bc02Fyc)}`, rewards.quarterly.hasNewAdvisor ? "Có TVV mới HĐC" : "Chưa có TVV mới HĐC", `Tỷ lệ ${Math.round(rewards.quarterly.rate * 100)}%`],
       target: rewards.quarterly.nextIpTarget,
       remaining: rewards.quarterly.remainingIp,
       contracts: rewards.quarterly.contracts
     },
     {
+      id: "team-policy-annual",
       title: `Thưởng năm ${rewards.annual.year}`,
+      period: `Năm ${rewards.annual.year}`,
+      poster: "/Thưởng tháng 13 trưởng nhóm.png",
       reward: rewards.annual.reward,
-      stats: [`FYP năm ${formatVnd(rewards.annual.ip)}`, `${rewards.annual.achievedQuarters}/4 quý đạt`, "Tạm tính, chi trả một lần"],
+      basisLabel: "Quý đạt",
+      currentBasis: rewards.annual.achievedQuarters,
+      currentRateLabel: "",
+      milestones: rewards.annual.milestones ?? [],
+      stats: [`FYP năm ${formatVnd(rewards.annual.fyp)}`, `KPI04 ${formatVnd(rewards.annual.kpi04Fyc)}`, `KPI05 ${formatVnd(rewards.annual.kpi05Fyc)}`, `BC02 bổ sung ${formatVnd(rewards.annual.bc02Fyc)}`, `${rewards.annual.achievedQuarters}/4 quý đạt`, rewards.annual.fypFallback ? "Tạm dùng FYC do chưa có FYP" : "Tạm tính, chi trả một lần"],
       target: null,
       remaining: 0,
       contracts: []
     },
     ...(rewards.newManager ? [{
+      id: "team-policy-new-manager",
       title: "Thưởng Quản lý mới",
+      period: `Hiệu lực đến ${formatDateVi(rewards.newManager.validUntil)}`,
+      poster: "",
       reward: rewards.newManager.reward,
+      basisLabel: "IP nhóm tháng",
+      currentBasis: rewards.newManager.ip,
+      currentRateLabel: "",
+      milestones: [],
       stats: [`FYP tháng ${formatVnd(rewards.newManager.ip)}`, `${rewards.newManager.hdc} TVV HĐC`, `Hiệu lực đến ${formatDateVi(rewards.newManager.validUntil)}`],
       target: null,
       remaining: 0,
       contracts: rewards.newManager.contracts
     }] : [])
   ];
-  return <section className="tvv-content tvv-subpage tvv-after-sub-header team-policy-page">
-    <div className="team-policy-total"><span>Tổng thưởng tạm tính</span><strong>{formatVnd(rewards.totalEstimatedReward)}</strong><small>Nhóm {rewards.groupName}</small></div>
-    {programs.map((program) => <article className="team-policy-card" key={program.title}>
+  const openPolicyMilestone = (program: any) => setSelectedPolicyProgram({
+    programId: program.id,
+    programName: program.title,
+    period: program.period,
+    originalFileUrl: program.poster || null,
+    estimatedReward: program.reward,
+    milestoneType: "team-policy",
+    isTeamPolicy: true,
+    teamPolicy: {
+      basisLabel: program.basisLabel,
+      currentBasis: program.currentBasis,
+      currentReward: program.reward,
+      currentRateLabel: program.currentRateLabel,
+      nextTiers: program.milestones
+    }
+  });
+  return <><section className={`${embedded ? "team-policy-page team-policy-page-embedded" : "tvv-content tvv-subpage tvv-after-sub-header team-policy-page"}`}>
+    {!embedded && <div className="team-policy-total"><span>Tổng thưởng tạm tính</span><strong>{formatVnd(rewards.totalEstimatedReward)}</strong><small>Nhóm {rewards.groupName}</small></div>}
+    {programs.map((program) => <article className="team-policy-card team-policy-card-clickable" key={program.title} role="button" tabIndex={0} onClick={() => openPolicyMilestone(program)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openPolicyMilestone(program); } }}>
       <div className="team-policy-card-head"><div><Trophy size={19} /><h2>{program.title}</h2></div><strong>{formatVnd(program.reward)}</strong></div>
       <div className="team-policy-stats">{program.stats.map((item) => <span key={item}>{item}</span>)}</div>
       {program.target && <div className="team-policy-next"><span>Mốc FYP tiếp theo <b>{formatVnd(program.target)}</b></span><strong>Còn {formatVnd(program.remaining)}</strong><i><u style={{ width: `${Math.min(100, ((program.target - program.remaining) / program.target) * 100)}%` }} /></i></div>}
-      {program.contracts.length > 0 && <><button className="team-policy-contract-toggle" type="button" onClick={() => setOpenProgram((value) => value === program.title ? "" : program.title)}>{openProgram === program.title ? "Ẩn hợp đồng" : `Xem ${program.contracts.length} HĐ đóng góp`} <ChevronDown size={14} /></button>
+      {program.contracts.length > 0 && <><button className="team-policy-contract-toggle" type="button" onClick={(event) => { event.stopPropagation(); setOpenProgram((value) => value === program.title ? "" : program.title); }}>{openProgram === program.title ? "Ẩn hợp đồng" : `Xem ${program.contracts.length} HĐ đóng góp`} <ChevronDown size={14} /></button>
       {openProgram === program.title && <div className="team-policy-contracts">{program.contracts.map((row: any) => <div key={row.id || row.application_no || row.contract_no}><span><b>{row.application_no || row.contract_no}</b><small>{row.agent_name}</small></span><strong>{formatVnd(row.ip)}</strong></div>)}</div>}</>}
     </article>)}
     <section className="team-policy-quarters"><h2>Tiến độ thưởng năm</h2>{rewards.annual.quarters.map((item: any) => <div key={item.quarter}><span>Quý {item.quarter}</span><strong>{formatVnd(item.ip)}</strong><em className={item.achieved ? "achieved" : ""}>{item.achieved ? "Đạt" : "Chưa đạt"}</em></div>)}</section>
-  </section>;
+  </section>{selectedPolicyProgram && <ContestDetailModal item={selectedPolicyProgram} onClose={() => setSelectedPolicyProgram(null)} />}</>;
 }
 
 function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
@@ -1126,6 +1210,17 @@ function ContestRow({ item, index, compact = false, onOpen }: any) {
 }
 
 function contestNextMilestones(item: any) {
+  if (item.milestoneType === "team-policy" && item.teamPolicy) {
+    return {
+      basisLabel: item.teamPolicy.basisLabel || "Tiến độ nhóm",
+      currentBasis: Number(item.teamPolicy.currentBasis ?? 0),
+      currentReward: Number(item.teamPolicy.currentReward ?? item.estimatedReward ?? 0),
+      currentRate: 0,
+      currentRateLabel: item.teamPolicy.currentRateLabel || "",
+      nextTiers: Array.isArray(item.teamPolicy.nextTiers) ? item.teamPolicy.nextTiers : []
+    };
+  }
+
   if (item.isCommission) {
     const reward = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
     return {
@@ -1282,19 +1377,19 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
   }, [onClose, previewUrl]);
   return <div className="tvv-contest-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contest-detail" role="dialog" aria-modal="true" aria-label="Nội dung chương trình thi đua" onClick={(event) => event.stopPropagation()}>
     <header><div>{policyOptions.length ? <div className="tvv-policy-modal-period"><MonthPicker value={policyPickerValue(item.programId, policyMonth!)} options={policyOptions} onChange={onPolicyMonthChange!} ariaLabel="Chọn kỳ thưởng chính sách" /></div> : <em>{item.period || "ĐANG DIỄN RA"}</em>}<h2>{item.programName || "Chương trình thi đua"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
-    {!policyRows && <p className="tvv-contest-detail-date">
+    {!policyRows && !item.isTeamPolicy && <p className="tvv-contest-detail-date">
       <span><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</span>
       {item.issueDeadline && <span className="tvv-contest-issue-deadline">Phát hành đến {formatDateVi(item.issueDeadline)}</span>}
     </p>}
     {policyRows && tabs.length > 1 && <nav className="tvv-policy-detail-tabs">{tabs.map(([id, label]) => <button type="button" className={detailTab === id ? "active" : ""} key={id} onClick={() => setDetailTab(id)}>{label}</button>)}</nav>}
-    {(item.originalFileUrl || !policyRows) && <div className="tvv-contest-poster">
+    {(item.originalFileUrl || (!policyRows && !item.isTeamPolicy)) && <div className="tvv-contest-poster">
       {item.originalFileUrl ? <button type="button" onClick={() => setPreviewUrl(item.originalFileUrl)} aria-label={`Xem poster ${item.programName || "chương trình thi đua"}`}>
         <img src={item.originalFileUrl} alt={`Poster ${item.programName || "chương trình thi đua"}`} />
       </button> : <div className="tvv-contest-poster-empty">Chưa có ảnh</div>}
     </div>}
     {(!policyRows || detailTab === "overview") && <div className="tvv-current-tier-card">
       <span>Hiện tại</span>
-      <strong>{milestoneInfo.basisLabel === "hợp đồng" || milestoneInfo.basisLabel === "HĐ đủ điều kiện" ? `${milestoneInfo.currentBasis} HĐ` : formatCompactVnd(milestoneInfo.currentBasis)}</strong>
+      <strong>{milestoneInfo.basisLabel === "hợp đồng" || milestoneInfo.basisLabel === "HĐ đủ điều kiện" ? `${milestoneInfo.currentBasis} HĐ` : milestoneInfo.basisLabel === "Quý đạt" ? `${milestoneInfo.currentBasis}/4 quý` : formatCompactVnd(milestoneInfo.currentBasis)}</strong>
       {milestoneInfo.currentRateLabel && <em>Bậc hiện tại: {milestoneInfo.currentRateLabel}</em>}
       {policyRows && milestoneInfo.policyRow && <div className="tvv-policy-current-breakdown">
         <article><span>{item.programId === "policy-quarterly" ? "FYP thực đạt" : "IP tháng"}</span><strong>{formatVnd(Number(item.programId === "policy-quarterly" ? milestoneInfo.policyRow.actualFyp ?? milestoneInfo.policyRow.fyp : milestoneInfo.policyRow.ip ?? 0))}</strong></article>
@@ -1313,7 +1408,17 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
         </article>)}
       </div>}
     </div>}
-    {(!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
+    {!policyRows && item.teamScoped && <div className="tvv-team-achieved-advisors">
+      <div className="tvv-team-achieved-head"><span>TVV trong nhóm đang đạt</span><strong>{item.achievedAdvisors?.length || 0} TVV</strong></div>
+      {Array.isArray(item.achievedAdvisors) && item.achievedAdvisors.length > 0
+        ? <div>{item.achievedAdvisors.map((advisor: any, index: number) => <article key={advisor.advisorCode || `${advisor.advisorName}-${index}`}>
+          <span className="tvv-team-achieved-rank">{index + 1}</span>
+          <div><b>{advisor.advisorName}</b><small>{advisor.advisorCode || "Chưa có mã"} · {advisor.contractCount || 0} HĐ</small></div>
+          <span><b>{formatVnd(Number(advisor.reward || 0))}</b><small>IP {formatCompactVnd(Number(advisor.totalIP || 0))}</small></span>
+        </article>)}</div>
+        : <p className="tvv-empty">Chưa có TVV nào trong nhóm đạt chương trình này.</p>}
+    </div>}
+    {!item.teamScoped && (!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
       <div className="tvv-next-milestones-head">
         <span>Mốc tiếp theo</span>
       </div>
@@ -1323,11 +1428,11 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
             <b>{tier.title}</b>
             <small>{tier.subtitle}</small>
           </div>
-          <p>Cần thêm <strong>{tier.missingLabel === "hợp đồng" ? `${tier.missing} HĐ` : formatCompactVnd(tier.missing)}</strong>{tier.missingLabel !== "hợp đồng" && ` ${tier.missingLabel}`}</p>
+          <p>Cần thêm <strong>{tier.missingLabel === "hợp đồng" ? `${tier.missing} HĐ` : String(tier.missingLabel || "").includes("quý") ? tier.missing : formatCompactVnd(tier.missing)}</strong>{tier.missingLabel !== "hợp đồng" && ` ${tier.missingLabel}`}</p>
           <footer><span>Dự kiến thưởng</span><strong>{tier.projectedReward > 0 ? formatVnd(tier.projectedReward) : "Chưa đủ dữ liệu"}</strong></footer>
           {tier.incrementalReward > 0 && <em>+{formatVnd(tier.incrementalReward)} so với hiện tại</em>}
         </article>
-      ))}</div> : <p className="tvv-empty">TVV đã ở mốc cao nhất hiện có của chương trình này.</p>}
+      ))}</div> : <p className="tvv-empty">{item.isTeamPolicy ? "Nhóm đã ở mốc cao nhất hiện có của chính sách này." : "TVV đã ở mốc cao nhất hiện có của chương trình này."}</p>}
     </div>}
     {policyRows && ["achieved", "missing", "quarters"].includes(detailTab) && <div className="tvv-policy-agent-list">
       {(visibleRows ?? []).map((row: any) => <article key={row.agentCode}><div><b>{row.agentName}</b><small>{row.agentCode} · {row.group || row.ban}</small></div><span>{detailTab === "quarters" ? `Quý ${(row.achievedQuarters ?? []).join(", ") || "—"}` : formatVnd(row.reward)}</span></article>)}
@@ -1621,7 +1726,7 @@ function TeamLeaderPolicyIllustration({ active, rewards }: { active: boolean; re
   if (!active) return null;
   return <section className="tvv-content tvv-subpage tvv-after-sub-header team-policy-illustration">
     <article><h2>1. Thưởng PTKD tháng</h2><p><b>Thưởng = Tỷ lệ × FYC nhóm/tháng</b></p><p>Tỷ lệ được xác định theo tổng IP nhóm và số TVV có IP trên 12 triệu.</p>{rewards && <strong>Hiện tại: {Math.round(rewards.monthly.rate * 100)}% × {formatVnd(rewards.monthly.fyc)} = {formatVnd(rewards.monthly.reward)}</strong>}</article>
-    <article><h2>2. Thưởng Quý</h2><p><b>Thưởng = Tỷ lệ × FYC nhóm/quý</b></p><p>FYC quý gồm FYC KPI04 và 30% IP của GYC phát hành trong BC02 chưa được ghi nhận trong KPI04.</p>{rewards && <strong>Hiện tại: {Math.round(rewards.quarterly.rate * 100)}% × {formatVnd(rewards.quarterly.fyc)} = {formatVnd(rewards.quarterly.reward)}</strong>}</article>
+    <article><h2>2. Thưởng Quý</h2><p><b>Thưởng = Tỷ lệ × FYC nhóm/quý</b></p><p>Nguồn FYC áp dụng giống TVV: KPI05 thay KPI04 và BC02 theo từng TVV/tháng; tháng chưa có KPI05 dùng KPI04 cộng 30% IP của GYC BC02 chưa trùng.</p>{rewards && <strong>Hiện tại: {Math.round(rewards.quarterly.rate * 100)}% × {formatVnd(rewards.quarterly.fyc)} = {formatVnd(rewards.quarterly.reward)}</strong>}</article>
     <article><h2>3. Thưởng năm</h2><p>4 quý: 20 triệu · 3 quý: 10 triệu · 2 quý: 6 triệu · 1 quý và FYP năm ≥300 triệu: 3 triệu.</p>{rewards && <strong>Tạm tính: {rewards.annual.achievedQuarters} quý đạt — {formatVnd(rewards.annual.reward)}</strong>}</article>
     {rewards?.newManager && <article><h2>4. Quản lý mới</h2><p>Áp dụng trong 12 tháng đầu kể từ ngày hiệu lực chức vụ. Xét theo FYP nhóm và số TVV HĐC từng tháng.</p><strong>Hiện tại: {formatVnd(rewards.newManager.reward)}</strong></article>}
   </section>;

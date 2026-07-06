@@ -1,7 +1,19 @@
 import { isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
+import { combineKpi04AndBc02 } from "@/lib/tvv-policy-rewards";
 import type { RevenueRecord } from "@/lib/types";
 
-type FycRow = { data_month?: string | null; agent_code?: string | null; fyc?: number | null; raw_data?: Record<string, unknown> | null };
+type FycRow = {
+  data_month?: string | null;
+  reward_source?: string | null;
+  source?: string | null;
+  agent_code?: string | null;
+  agent_name?: string | null;
+  group_name?: string | null;
+  ip?: number | null;
+  fyp?: number | null;
+  fyc?: number | null;
+  raw_data?: Record<string, unknown> | null;
+};
 type AdvisorProfile = { advisor_code?: string | null; start_date?: string | null };
 
 export type TeamLeaderDraft = {
@@ -135,21 +147,26 @@ export function calculateTeamLeaderPolicy(params: {
         return rowMonth >= startMonth && rowMonth <= endMonth;
       })
       .filter((row) => latestGroupByAdvisor.get(String(row.agent_code ?? "").trim()) === groupName);
-    const recordedApplications = new Set<string>();
-    policyRows.forEach((row) => {
-      const applications = row.raw_data?.application_nos;
-      if (Array.isArray(applications)) applications.forEach((value) => {
-        const application = String(value ?? "").trim();
-        if (application) recordedApplications.add(application);
-      });
-    });
-    const kpiFyc = policyRows.reduce((sum, row) => sum + (Number(row.fyc) || 0), 0);
-    const supplementalContracts = issuedContracts.filter((row) => {
-      const application = String(row.application_no || row.contract_no || "").trim();
-      return application && !recordedApplications.has(application);
-    });
-    const supplementalFyc = supplementalContracts.reduce((sum, row) => sum + (Number(row.ip) || 0) * 0.3, 0);
-    return { total: kpiFyc + supplementalFyc, kpiFyc, supplementalFyc, supplementalContracts };
+    const combinedRows = combineKpi04AndBc02(policyRows, issuedContracts);
+    const rowsBySource = (source: "kpi04" | "kpi05" | "bc02") =>
+      combinedRows.filter((row) => String(row.source ?? "").toLowerCase() === source);
+    const kpi04Rows = rowsBySource("kpi04");
+    const kpi05Rows = rowsBySource("kpi05");
+    const bc02Rows = rowsBySource("bc02");
+    const kpi04Fyc = kpi04Rows.reduce((sum, row) => sum + (Number(row.fyc) || 0), 0);
+    const kpi05Fyc = kpi05Rows.reduce((sum, row) => sum + (Number(row.fyc) || 0), 0);
+    const bc02Fyc = bc02Rows.reduce((sum, row) => sum + (Number(row.estimated_fyc) || 0), 0);
+    const fyp = combinedRows.reduce((sum, row) => sum + (Number(row.fyp) || 0), 0);
+    return {
+      total: kpi04Fyc + kpi05Fyc + bc02Fyc,
+      fyp,
+      kpiFyc: kpi04Fyc + kpi05Fyc,
+      kpi04Fyc,
+      kpi05Fyc,
+      supplementalFyc: bc02Fyc,
+      bc02Fyc,
+      supplementalContracts: bc02Rows as RevenueRecord[]
+    };
   }
 
   const monthlyFyc = fycForPeriod(month, month, monthly.issued);
@@ -175,6 +192,8 @@ export function calculateTeamLeaderPolicy(params: {
   const quarterEndKey = quarterEnd.slice(0, 7);
   const quarterlyFyc = fycForPeriod(quarterStartKey, quarterEndKey, quarterData.issued);
   const recruitmentReward = Math.round(quarterlyFyc.total * recruitmentRate);
+  const annualSources = fycForPeriod(`${year}-01`, `${year}-12`, yearData.issued);
+  const annualFyp = annualSources.fyp > 0 ? annualSources.fyp : annualSources.total;
 
   const quarters = [1, 2, 3, 4].map((quarterNo) => {
     const startMonth = (quarterNo - 1) * 3 + 1;
@@ -187,7 +206,7 @@ export function calculateTeamLeaderPolicy(params: {
   const annualReward = achievedQuarters >= 4 ? 20_000_000
     : achievedQuarters === 3 ? 10_000_000
       : achievedQuarters === 2 ? 6_000_000
-        : achievedQuarters === 1 && yearData.ip >= 300_000_000 ? 3_000_000 : 0;
+        : achievedQuarters === 1 && annualFyp >= 300_000_000 ? 3_000_000 : 0;
 
   const anniversaryDate = positionEffectiveDate ? addYears(positionEffectiveDate, 1) : null;
   const newManagerEligible = Boolean(
@@ -203,6 +222,55 @@ export function calculateTeamLeaderPolicy(params: {
 
   const nextMonthlyIp = nextIpThreshold(monthly.ip);
   const nextQuarterIp = [150, 270, 450, 600].map((value) => value * 1_000_000).find((value) => value > quarterData.ip) ?? null;
+  const monthlyMilestones = [50, 100, 200, 400]
+    .map((value) => value * 1_000_000)
+    .filter((target) => target > monthly.ip)
+    .slice(0, 2)
+    .map((target) => {
+      const missing = target - monthly.ip;
+      const rate = monthlyRate(target, monthly.hdc);
+      const projectedReward = Math.round((fyc + missing * 0.3) * rate);
+      return {
+        title: `IP nhóm tháng đạt ${target.toLocaleString("vi-VN")} đ`,
+        subtitle: `Bậc thưởng ${Math.round(rate * 100)}% với ${monthly.hdc} TVV HĐC`,
+        missing,
+        missingLabel: "IP nhóm",
+        estimatedContracts: 0,
+        projectedReward,
+        incrementalReward: Math.max(0, projectedReward - developmentReward)
+      };
+    });
+  const quarterlyMilestones = [150, 270, 450, 600]
+    .map((value) => value * 1_000_000)
+    .filter((target) => target > quarterData.ip)
+    .slice(0, 2)
+    .map((target) => {
+      const missing = target - quarterData.ip;
+      const rate = quarterRate(target, hasNewAdvisor);
+      const projectedReward = Math.round((quarterlyFyc.total + missing * 0.3) * rate);
+      return {
+        title: `IP nhóm quý đạt ${target.toLocaleString("vi-VN")} đ`,
+        subtitle: `Bậc thưởng ${Math.round(rate * 100)}%${hasNewAdvisor ? " có TVV mới HĐC" : ""}`,
+        missing,
+        missingLabel: "IP nhóm",
+        estimatedContracts: 0,
+        projectedReward,
+        incrementalReward: Math.max(0, projectedReward - recruitmentReward)
+      };
+    });
+  const annualRewardByQuarter: Record<number, number> = { 1: 3_000_000, 2: 6_000_000, 3: 10_000_000, 4: 20_000_000 };
+  const annualMilestones = [1, 2, 3, 4]
+    .filter((target) => target > achievedQuarters)
+    .slice(0, 2)
+    .map((target) => ({
+      title: `Đạt ${target}/4 quý`,
+      subtitle: target === 1 ? "Cần FYP năm từ 300 triệu để nhận thưởng" : "Mốc thưởng năm Trưởng nhóm",
+      missing: target - achievedQuarters,
+      missingLabel: "quý đạt",
+      estimatedContracts: 0,
+      projectedReward: annualRewardByQuarter[target],
+      incrementalReward: Math.max(0, annualRewardByQuarter[target] - annualReward)
+    }));
 
   return {
     month,
@@ -212,23 +280,40 @@ export function calculateTeamLeaderPolicy(params: {
     monthly: {
       ip: monthly.ip, fyc, hdc: monthly.hdc, rate: developmentRate,
       kpiFyc: monthlyFyc.kpiFyc,
+      kpi04Fyc: monthlyFyc.kpi04Fyc,
+      kpi05Fyc: monthlyFyc.kpi05Fyc,
       supplementalFyc: monthlyFyc.supplementalFyc,
+      bc02Fyc: monthlyFyc.bc02Fyc,
       reward: developmentReward,
       nextIpTarget: nextMonthlyIp,
       remainingIp: nextMonthlyIp ? Math.max(0, nextMonthlyIp - monthly.ip) : 0,
+      milestones: monthlyMilestones,
       contracts: monthly.valid
     },
     quarterly: {
       quarter, ip: quarterData.ip, fyc: quarterlyFyc.total,
-      kpiFyc: quarterlyFyc.kpiFyc, supplementalFyc: quarterlyFyc.supplementalFyc,
+      kpiFyc: quarterlyFyc.kpiFyc,
+      kpi04Fyc: quarterlyFyc.kpi04Fyc,
+      kpi05Fyc: quarterlyFyc.kpi05Fyc,
+      supplementalFyc: quarterlyFyc.supplementalFyc,
+      bc02Fyc: quarterlyFyc.bc02Fyc,
       rate: recruitmentRate, reward: recruitmentReward,
       hasNewAdvisor, recruitedAdvisorCodes: recruitedAdvisors,
       nextIpTarget: nextQuarterIp,
       remainingIp: nextQuarterIp ? Math.max(0, nextQuarterIp - quarterData.ip) : 0,
+      milestones: quarterlyMilestones,
       contracts: quarterData.valid
     },
     annual: {
-      year, ip: yearData.ip, achievedQuarters, quarters, reward: annualReward,
+      year,
+      ip: yearData.ip,
+      fyp: annualFyp,
+      fypFallback: annualSources.fyp <= 0 && annualSources.total > 0,
+      kpi04Fyc: annualSources.kpi04Fyc,
+      kpi05Fyc: annualSources.kpi05Fyc,
+      bc02Fyc: annualSources.bc02Fyc,
+      achievedQuarters, quarters, reward: annualReward,
+      milestones: annualMilestones,
       projected: true
     },
     newManager: newManagerEligible ? {

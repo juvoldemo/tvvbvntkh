@@ -4,6 +4,7 @@ import { getVietnamToday } from "@/lib/format";
 import { managedTeamName } from "@/lib/team-scope";
 import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import type { RevenueRecord } from "@/lib/types";
 
 async function readAll(queryFactory: (from: number, to: number) => any) {
@@ -38,6 +39,107 @@ function deduplicateRevenue(rows: RevenueRecord[]) {
   return [...byContract.values()];
 }
 
+function normalizedText(value: unknown) {
+  return String(value ?? "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "D")
+    .toLowerCase();
+}
+
+function programSummary(program: any, contracts: RevenueRecord[]) {
+  const storedRule = program.confirmed_rule || program.ai_rule || {};
+  const rule = {
+    ...storedRule,
+    id: program.id,
+    program_name: program.program_name || storedRule.program_name || "Chương trình thi đua",
+    start_date: program.start_date || storedRule.start_date,
+    end_date: program.end_date || storedRule.end_date,
+    issue_deadline: program.issue_deadline || storedRule.issue_deadline
+  };
+  const result = calculateCompetitionReward(rule, contracts);
+  const primaryRule = rule.reward_rules?.[0] ?? {};
+  const milestoneTiers = primaryRule.thresholds ?? rule.thresholds ?? rule.tiers ?? [];
+  const metricText = normalizedText(primaryRule.calculation_logic ?? rule.calculation_logic ?? rule.metric_type);
+  const usesIp = metricText.includes("ip") || metricText.includes("pdt") || metricText.includes("phi dau tien");
+  const participatingContracts = getBaseEligibleCompetitionContracts(rule, contracts);
+  const currentBasis = participatingContracts.reduce(
+    (sum: number, contract: any) => sum + Number(usesIp ? contract.ip : contract.afyp),
+    0
+  );
+  const groupReward = result.groupRewardResults.reduce((sum, row) => sum + Number(row.totalReward ?? row.group_reward_amount ?? 0), 0);
+  const advisorReward = result.tvvRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
+  const contractReward = result.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
+  const estimatedReward = groupReward || advisorReward + contractReward;
+  const advisorCodeByName = new Map(contracts.map((row) => [normalizedText(row.agent_name), row.agent_code]));
+  const achievedByAdvisor = new Map<string, {
+    advisorName: string;
+    advisorCode: string;
+    contractCount: number;
+    totalIP: number;
+    totalAFYP: number;
+    reward: number;
+  }>();
+  const addAchievedAdvisor = (row: any, reward = 0) => {
+    const advisorName = String(row.advisor || row.agent_name || "").trim();
+    const key = normalizedText(advisorName);
+    if (!key) return;
+    const current = achievedByAdvisor.get(key) ?? {
+      advisorName,
+      advisorCode: String(advisorCodeByName.get(key) || ""),
+      contractCount: 0,
+      totalIP: 0,
+      totalAFYP: 0,
+      reward: 0
+    };
+    current.contractCount = Math.max(current.contractCount, Number(row.contractCount ?? 0));
+    current.totalIP = Math.max(current.totalIP, Number(row.totalIP ?? row.ip ?? 0));
+    current.totalAFYP = Math.max(current.totalAFYP, Number(row.totalAFYP ?? row.afyp ?? 0));
+    current.reward = Math.max(current.reward, Number(reward || row.rewardAmount || 0));
+    achievedByAdvisor.set(key, current);
+  };
+  result.tvvRewardResults.forEach((row) => addAchievedAdvisor(row));
+  result.groupRewardResults
+    .filter((row) => Number(row.totalReward ?? row.group_reward_amount ?? 0) > 0)
+    .forEach((row) => row.advisors.forEach((advisor) => addAchievedAdvisor(advisor, Number(row.rewardPerAdvisor ?? row.reward_per_tvv ?? 0))));
+  result.contractRewardResults.forEach((row) => addAchievedAdvisor({
+    advisor: row.advisor,
+    contractCount: 1,
+    totalIP: row.ip,
+    totalAFYP: row.afyp
+  }, row.rewardAmount));
+
+  return {
+    programId: program.id,
+    programName: rule.program_name,
+    originalFileUrl: program.original_file_url || null,
+    originalFileName: program.original_file_name || null,
+    issueDeadline: rule.issue_deadline || null,
+    status: program.status,
+    startDate: String(rule.start_date || "").slice(0, 10),
+    endDate: String(rule.end_date || "").slice(0, 10),
+    estimatedReward,
+    actualContractCount: participatingContracts.length,
+    matchedContracts: participatingContracts,
+    isEligible: estimatedReward > 0,
+    milestoneType: milestoneTiers.length ? "revenue-tier" : undefined,
+    milestoneMetricLabel: usesIp ? "Phí đầu tiên (IP) nhóm" : "AFYP nhóm",
+    milestoneCurrentBasis: currentBasis,
+    milestoneCurrentReward: estimatedReward,
+    milestoneContractCount: participatingContracts.length,
+    milestoneTiers,
+    teamScoped: true,
+    achievedAdvisors: [...achievedByAdvisor.values()].sort((a, b) => b.reward - a.reward || b.totalIP - a.totalIP),
+    participatingContracts: participatingContracts.map((contract: any) => ({
+      applicationNo: contract.applicationNo || contract.gyc_no || "",
+      policyOwner: contract.customer || contract.customer_name || "Chưa có tên BMBH",
+      status: contract.status || "Chưa có trạng thái"
+    }))
+  };
+}
+
 async function calculate(request: NextRequest, body: any = {}) {
   const code = userCodeFromRequest(request);
   if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
@@ -51,10 +153,11 @@ async function calculate(request: NextRequest, body: any = {}) {
   if (!groupName) return NextResponse.json({ error: "Tài khoản không phải Trưởng nhóm hoặc chưa được gán nhóm." }, { status: 403 });
 
   const year = month.slice(0, 4);
-  const [allRevenue, fycRows, advisorProfiles] = await Promise.all([
+  const [allRevenue, fycRows, advisorProfiles, competitionPrograms] = await Promise.all([
     readAll((from, to) => supabase.from("revenue_records").select("*").order("paid_date").range(from, to)),
-    readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,agent_code,fyc,raw_data,reward_source").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
-    readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date").range(from, to))
+    readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,reward_source,agent_code,agent_name,group_name,ip,fyp,fyc,raw_data").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
+    readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date").range(from, to)),
+    readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to))
   ]);
   const uniqueRevenue = deduplicateRevenue(allRevenue as RevenueRecord[]).sort((a, b) => String(a.paid_date).localeCompare(String(b.paid_date)));
   const latestGroupByAdvisor = new Map<string, string>();
@@ -62,7 +165,23 @@ async function calculate(request: NextRequest, body: any = {}) {
     const advisorCode = String(row.agent_code ?? "").trim();
     if (advisorCode && row.group_name) latestGroupByAdvisor.set(advisorCode, row.group_name);
   }
+  const currentTeamAdvisorCount = [...latestGroupByAdvisor.values()]
+    .filter((advisorGroupName) => advisorGroupName === groupName).length;
   const groupRecords = uniqueRevenue.filter((row) => row.group_name === groupName && row.issued_date?.startsWith(year));
+  const teamCompetitionContracts = uniqueRevenue.filter((row) => row.group_name === groupName);
+  const today = getVietnamToday();
+  const competitionSummaries = competitionPrograms
+    .filter((program: any) => program.is_hidden !== true && program.confirmed_rule)
+    .map((program: any) => {
+      try {
+        return programSummary(program, teamCompetitionContracts);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+  const ongoingPrograms = competitionSummaries.filter((program: any) => program.startDate <= today && program.endDate >= today);
+  const endedPrograms = competitionSummaries.filter((program: any) => program.endDate < today);
   const result = calculateTeamLeaderPolicy({
     month,
     groupName,
@@ -74,7 +193,13 @@ async function calculate(request: NextRequest, body: any = {}) {
     asOfDate: getVietnamToday(),
     drafts: Array.isArray(body.draftContracts) ? body.draftContracts : []
   });
-  return NextResponse.json({ ...result, leader: { code, name: profile.full_name } });
+  return NextResponse.json({
+    ...result,
+    currentTeamAdvisorCount,
+    ongoingPrograms,
+    endedPrograms,
+    leader: { code, name: profile.full_name }
+  });
 }
 
 export async function GET(request: NextRequest) {
