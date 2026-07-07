@@ -49,6 +49,19 @@ function normalizedText(value: unknown) {
     .toLowerCase();
 }
 
+async function readTeamRosterCount(supabase: ReturnType<typeof getSupabaseAdmin>, groupName: string) {
+  const { count, error } = await supabase
+    .from("authorized_users")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true)
+    .eq("group_name", groupName);
+  if (error) {
+    console.warn("[team-leader-rewards] Cannot read APM01 team roster count", error.message);
+    return 0;
+  }
+  return count ?? 0;
+}
+
 function programSummary(program: any, contracts: RevenueRecord[]) {
   const storedRule = program.confirmed_rule || program.ai_rule || {};
   const rule = {
@@ -153,11 +166,12 @@ async function calculate(request: NextRequest, body: any = {}) {
   if (!groupName) return NextResponse.json({ error: "Tài khoản không phải Trưởng nhóm hoặc chưa được gán nhóm." }, { status: 403 });
 
   const year = month.slice(0, 4);
-  const [allRevenue, fycRows, advisorProfiles, competitionPrograms] = await Promise.all([
+  const [allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount] = await Promise.all([
     readAll((from, to) => supabase.from("revenue_records").select("*").order("paid_date").range(from, to)),
     readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,reward_source,agent_code,agent_name,group_name,ip,fyp,fyc,raw_data").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
     readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date").range(from, to)),
-    readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to))
+    readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)),
+    readTeamRosterCount(supabase, groupName)
   ]);
   const uniqueRevenue = deduplicateRevenue(allRevenue as RevenueRecord[]).sort((a, b) => String(a.paid_date).localeCompare(String(b.paid_date)));
   const latestGroupByAdvisor = new Map<string, string>();
@@ -165,7 +179,7 @@ async function calculate(request: NextRequest, body: any = {}) {
     const advisorCode = String(row.agent_code ?? "").trim();
     if (advisorCode && row.group_name) latestGroupByAdvisor.set(advisorCode, row.group_name);
   }
-  const currentTeamAdvisorCount = [...latestGroupByAdvisor.values()]
+  const currentTeamAdvisorCount = rosterCount || [...latestGroupByAdvisor.values()]
     .filter((advisorGroupName) => advisorGroupName === groupName).length;
   const groupRecords = uniqueRevenue.filter((row) => row.group_name === groupName && row.issued_date?.startsWith(year));
   const teamCompetitionContracts = uniqueRevenue.filter((row) => row.group_name === groupName);

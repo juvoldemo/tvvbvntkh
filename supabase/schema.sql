@@ -343,6 +343,7 @@ create table if not exists authorized_users (
   advisor_code text not null unique,
   full_name text not null,
   phone text,
+  group_name text,
   start_date date,
   advisor_status text,
   advisor_position text,
@@ -357,6 +358,7 @@ create table if not exists authorized_users (
 );
 
 alter table authorized_users add column if not exists start_date date;
+alter table authorized_users add column if not exists group_name text;
 alter table authorized_users add column if not exists advisor_status text;
 alter table authorized_users add column if not exists advisor_position text;
 alter table authorized_users add column if not exists position_effective_date date;
@@ -366,6 +368,24 @@ alter table authorized_users add column if not exists password_hash text;
 alter table authorized_users add column if not exists avatar_url text;
 
 create index if not exists idx_authorized_users_active on authorized_users(is_active);
+
+create table if not exists team_target_registrations (
+  id uuid primary key default gen_random_uuid(),
+  target_month date not null,
+  leader_code text not null,
+  leader_name text,
+  group_name text not null,
+  revenue_target numeric not null default 0,
+  active_advisor_target integer not null default 0,
+  reward_target numeric not null default 0,
+  selected_advisors jsonb not null default '[]'::jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(target_month, group_name)
+);
+
+create index if not exists idx_team_target_registrations_month on team_target_registrations(target_month desc);
+create index if not exists idx_team_target_registrations_group on team_target_registrations(group_name);
 
 create table if not exists admin_events (
   id uuid primary key default gen_random_uuid(),

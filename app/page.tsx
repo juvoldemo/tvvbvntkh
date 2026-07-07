@@ -2,7 +2,8 @@
 
 import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, Download, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Medal, Search, ShieldCheck, Sparkles, Trash2, Trophy, UserRound, Users, XCircle } from "lucide-react";
+import Image from "next/image";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, Download, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserRound, Users, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
@@ -62,6 +63,28 @@ function moneyInput(value: string) {
 
 function parseMoneyInput(value: string) {
   return Number(value.replace(/\D/g, "")) || 0;
+}
+
+const TEAM_TARGET_MONTHLY_THRESHOLDS = [
+  { min: 400_000_000, rates: [0.3, 0.28, 0.26, 0.1] },
+  { min: 200_000_000, rates: [0.26, 0.22, 0.2, 0.1] },
+  { min: 100_000_000, rates: [0.22, 0.2, 0.18, 0.1] },
+  { min: 50_000_000, rates: [0.2, 0.18, 0.14, 0.1] },
+  { min: 0, rates: [0, 0.16, 0.14, 0.1] }
+];
+
+function teamTargetHdcColumn(activeAdvisors: number) {
+  if (activeAdvisors >= 5) return 0;
+  if (activeAdvisors >= 3) return 1;
+  if (activeAdvisors === 2) return 2;
+  return 3;
+}
+
+function calculateTeamTargetPtkdReward(targetIp: number, activeAdvisors: number) {
+  const threshold = TEAM_TARGET_MONTHLY_THRESHOLDS.find((item) => targetIp >= item.min) ?? TEAM_TARGET_MONTHLY_THRESHOLDS.at(-1)!;
+  const rate = threshold.rates[teamTargetHdcColumn(activeAdvisors)] ?? 0;
+  const targetFyc = targetIp * 0.3;
+  return Math.round(targetFyc * rate);
 }
 
 function formatCompactVnd(value: unknown) {
@@ -260,6 +283,8 @@ export default function TvvMobilePage() {
   const [teamData, setTeamData] = useState<any>(null);
   const [teamContractData, setTeamContractData] = useState<any>(null);
   const [teamRewards, setTeamRewards] = useState<any>(null);
+  const [teamTarget, setTeamTarget] = useState<any>(null);
+  const [targetModalOpen, setTargetModalOpen] = useState(false);
   useEffect(() => {
     if (tab === "illustration") setIllustrationLoaded(true);
   }, [tab]);
@@ -300,6 +325,17 @@ export default function TvvMobilePage() {
       setTeamRewards(null);
     });
     return () => controller.abort();
+  }, [month, signedIn, userProfile?.dashboard_role]);
+
+  useEffect(() => {
+    if (!signedIn || userProfile?.dashboard_role !== "team_leader") {
+      setTeamTarget(null);
+      return;
+    }
+    fetch(`/api/team-target-registration?month=${month}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { registration: null })
+      .then((payload) => setTeamTarget(payload.registration ?? null))
+      .catch(() => setTeamTarget(null));
   }, [month, signedIn, userProfile?.dashboard_role]);
 
   useEffect(() => {
@@ -547,6 +583,8 @@ export default function TvvMobilePage() {
   const unreadNotifications = useMemo(() => adminEvents.filter((item) => !readEventIds.includes(item.id)), [adminEvents, readEventIds]);
   const unreadNotificationKey = unreadNotifications.map((item) => item.id).join("|");
   const notificationCount = Math.min(99, unreadNotifications.length);
+  const targetRevenue = Number(teamTarget?.revenue_target ?? 0);
+  const targetCompletion = targetRevenue > 0 ? Math.min(999, Math.round((Number(teamData?.summary?.afyp ?? 0) / targetRevenue) * 100)) : 0;
   const displayedNotifications = notificationView === "unread"
     ? adminEvents.filter((item) => openedNotificationIds.includes(item.id))
     : adminEvents.filter((item) => readEventIds.includes(item.id));
@@ -629,6 +667,12 @@ export default function TvvMobilePage() {
                   ? <strong className="tvv-current-rank"><Users size={13} />{teamData ? `${teamData.summary.activeAgents}/${Number(teamRewards?.currentTeamAdvisorCount) || teamData.summary.agents} TVV có doanh thu` : "Đang tải hoạt động nhóm"}</strong>
                   : <strong className="tvv-current-rank"><Trophy size={13} />{currentAdvisorRank ? `Hạng ${currentAdvisorRank} tháng này` : "Chưa có xếp hạng tháng này"}</strong>}
               </div>
+              {userProfile?.dashboard_role === "team_leader" && (
+                <button className="tvv-icon-button tvv-target-button" type="button" aria-label="Đăng ký mục tiêu" onClick={() => setTargetModalOpen(true)}>
+                  <Target size={27} />
+                  <span className="tvv-target-percent">{targetCompletion}%</span>
+                </button>
+              )}
               <button ref={notificationButtonRef} className={`tvv-icon-button${notificationCount > 0 ? " tvv-notification-alert" : ""}`} type="button" aria-label={`Thông báo (${notificationCount})`} aria-expanded={notificationsOpen} onClick={toggleNotifications}>
                 <Bell size={28} />
                 {notificationCount > 0 && <b>{notificationCount}</b>}
@@ -665,6 +709,7 @@ export default function TvvMobilePage() {
         </>
       )}
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
+      {targetModalOpen && <TeamTargetRegistrationModal month={month} teamData={teamData} registration={teamTarget} onSaved={setTeamTarget} onClose={() => setTargetModalOpen(false)} />}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader"} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
     </main>
@@ -715,10 +760,98 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
+function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, onClose }: { month: string; teamData: any; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
+  const advisors = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
+  const [revenueTarget, setRevenueTarget] = useState(() => moneyInput(String(Math.round(Number(registration?.revenue_target ?? 0) || 0))));
+  const [activeAdvisorTarget, setActiveAdvisorTarget] = useState(() => String(Number(registration?.active_advisor_target ?? 0) || ""));
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(() => new Set((registration?.selected_advisors ?? []).map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean)));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const targetReward = useMemo(
+    () => calculateTeamTargetPtkdReward(parseMoneyInput(revenueTarget), Number(activeAdvisorTarget) || 0),
+    [activeAdvisorTarget, revenueTarget]
+  );
+
+  function toggleAdvisor(code: string) {
+    setSelectedCodes((current) => {
+      const next = new Set(current);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      setActiveAdvisorTarget(String(next.size));
+      return next;
+    });
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const selectedAdvisors = advisors
+      .filter((item: any) => selectedCodes.has(String(item.agentCode || item.advisor_code || "").trim()))
+      .map((item: any) => ({ advisor_code: item.agentCode || item.advisor_code, full_name: item.agentName || item.full_name }));
+    try {
+      const response = await fetch("/api/team-target-registration", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          month,
+          revenueTarget: parseMoneyInput(revenueTarget),
+          activeAdvisorTarget: Number(activeAdvisorTarget) || selectedAdvisors.length,
+          rewardTarget: targetReward,
+          selectedAdvisors
+        })
+      });
+      const responseText = await response.text();
+      let payload: any = {};
+      try {
+        payload = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        payload = { error: responseText };
+      }
+      if (!response.ok) throw new Error(payload.error || "Không gửi được đăng ký mục tiêu.");
+      onSaved(payload.registration);
+      onClose();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không gửi được đăng ký mục tiêu.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return createPortal(
+    <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}>
+      <form className="tvv-contract-detail team-target-modal" role="dialog" aria-modal="true" aria-label="Đăng ký mục tiêu" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
+        <header><div><p>ĐĂNG KÝ MỤC TIÊU</p><h2>Tháng {month.slice(5, 7)}/{month.slice(0, 4)}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+        <div className="team-target-fields">
+          <label>Doanh thu mục tiêu<input className="team-target-revenue-input" value={revenueTarget} onChange={(event) => setRevenueTarget(moneyInput(event.target.value))} inputMode="numeric" placeholder="0" /></label>
+          <label>Lượt hoạt động<input className="team-target-active-input" value={activeAdvisorTarget} onChange={(event) => setActiveAdvisorTarget(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="0" /></label>
+          <label>Tiền thưởng mục tiêu<input className="team-target-reward-input" value={moneyInput(String(targetReward)) || "0"} readOnly aria-readonly="true" /></label>
+        </div>
+        <section className="team-target-roster">
+          <div><strong>Danh sách TVV của nhóm</strong><span>{selectedCodes.size}/{advisors.length} TVV dự kiến có doanh thu</span></div>
+          <div className="team-target-agent-list">
+            {advisors.map((agent: any) => {
+              const code = String(agent.agentCode || agent.advisor_code || "").trim();
+              return <label key={code || agent.agentName || agent.full_name}>
+                <input type="checkbox" checked={selectedCodes.has(code)} onChange={() => toggleAdvisor(code)} />
+                <span><b>{agent.agentName || agent.full_name || "TVV"}{agent.isNewAdvisor && <em>new</em>}</b></span>
+              </label>;
+            })}
+          </div>
+        </section>
+        {message && <p className="error-list">{message}</p>}
+        <button type="submit" disabled={busy}>{busy ? "Đang gửi..." : "Gửi đăng ký"}</button>
+      </form>
+    </div>,
+    document.body
+  );
+}
+
 function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
+  const [selectedActivityStarAgent, setSelectedActivityStarAgent] = useState<any>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp hoạt động của nhóm…</p></section>;
   const summary = data.summary ?? {};
   const totalTeamAdvisors = Number(currentTeamAdvisorCount) || summary.agents;
@@ -784,9 +917,21 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
             <button type="button" onClick={() => setShowTeamActivity(false)} aria-label="Đóng"><XCircle size={24} /></button>
           </header>
           <div className="team-activity-modal-list">
-            <TeamActivityGroup title="TVV chưa hoạt động" count={inactiveTeamAgents.length} agents={inactiveTeamAgents} />
-            <TeamActivityGroup title="TVV đã hoạt động" count={activeTeamAgents.length} agents={activeTeamAgents} />
+            <TeamActivityGroup title="TVV chưa hoạt động" count={inactiveTeamAgents.length} agents={inactiveTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={setSelectedActivityStarAgent} />
+            <TeamActivityGroup title="TVV đã hoạt động" count={activeTeamAgents.length} agents={activeTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={setSelectedActivityStarAgent} />
           </div>
+        </section>
+      </div>,
+      document.body
+    )}
+    {selectedActivityStarAgent && typeof document !== "undefined" && createPortal(
+      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedActivityStarAgent(null); }}>
+        <section className="tvv-contract-detail team-star-agent-modal" role="dialog" aria-modal="true" aria-label="Hành trình Sao Việt TVV" onMouseDown={(event) => event.stopPropagation()}>
+          <header>
+            <div><p>HÀNH TRÌNH SAO VIỆT</p><h2>{selectedActivityStarAgent.agent?.agentName || selectedActivityStarAgent.agent?.full_name || selectedActivityStarAgent.agent?.agentCode || "TVV"}</h2></div>
+            <button type="button" onClick={() => setSelectedActivityStarAgent(null)} aria-label="Đóng">×</button>
+          </header>
+          <PersonalStarJourney row={selectedActivityStarAgent.star} warning="" />
         </section>
       </div>,
       document.body
@@ -818,20 +963,26 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
   </section>;
 }
 
-function TeamActivityGroup({ title, count, agents }: { title: string; count: number; agents: any[] }) {
+function TeamActivityGroup({ title, count, agents, starRows = [], onOpenStar }: { title: string; count: number; agents: any[]; starRows?: any[]; onOpenStar?: (value: any) => void }) {
+  const normalize = (value: unknown) => String(value ?? "").trim().toLowerCase();
+  const findStar = (agent: any) => starRows.find((row: any) =>
+    (normalize(agent.agentCode) && normalize(row.agentCode) === normalize(agent.agentCode)) ||
+    (normalize(agent.agentName) && normalize(row.agentName) === normalize(agent.agentName))
+  ) ?? null;
   return <section className="team-activity-group">
     <div className="team-activity-group-head"><h3>{title}</h3><span>{count} TVV</span></div>
     <div className="team-activity-agent-list">
-      {agents.map((agent: any) => (
-        <article className="team-activity-agent" key={agent.agentCode || agent.agentName}>
+      {agents.map((agent: any) => {
+        const star = findStar(agent);
+        return <button type="button" className="team-activity-agent" key={agent.agentCode || agent.agentName} onClick={() => onOpenStar?.({ agent, star })}>
           <div className="team-agent-avatar">{agent.avatarUrl ? <img src={agent.avatarUrl} alt="" /> : <UserRound size={18} />}</div>
           <div>
             <strong>{agent.agentName || "TVV"}{agent.isNewAdvisor && <em>new</em>}</strong>
             <small>{agent.agentCode || "Chưa có mã TVV"}</small>
           </div>
           <span>{formatCompactVnd(Number(agent.afyp || 0))}</span>
-        </article>
-      ))}
+        </button>;
+      })}
       {!agents.length && <p className="team-empty">Không có TVV trong danh sách này.</p>}
     </div>
   </section>;
@@ -897,16 +1048,14 @@ function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthl
   const title = type === "monthly" ? "Thưởng PTKD tháng" : "Thưởng Quý";
   const basisLabel = type === "monthly" ? "IP nhóm tháng hiện tại" : "IP nhóm quý hiện tại";
   const fycLabel = type === "monthly" ? "FYC tháng hiện tại" : "FYC quý hiện tại";
-  const ruleLines = type === "monthly"
-    ? ["Tính trên FYC của nhóm trong tháng.", "Tỷ lệ thưởng phụ thuộc IP nhóm tháng và số TVV HĐC.", "TVV HĐC là TVV có IP phát hành trên 12 triệu trong kỳ."]
-    : ["Tính trên FYC của nhóm trong quý.", "Chỉ có thưởng khi IP nhóm quý từ 150 triệu trở lên.", "Có TVV mới HĐC trong quý sẽ áp dụng bậc thưởng cao hơn."];
+  const posterUrl = type === "monthly" ? "/Thưởng tháng trưởng nhóm.png" : "/Thưởng Quý trưởng nhóm.png";
   const currentRate = Math.round((detail?.rate || 0) * 100);
   const milestones = Array.isArray(detail?.milestones) ? detail.milestones : [];
 
   return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}>
     <section className="tvv-contract-detail team-policy-detail-modal" role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}>
       <header><div><p>CHI TIẾT CHƯƠNG TRÌNH</p><h2>{title}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
-      <div className="team-policy-detail-section"><span>Thể lệ CTTĐ</span><div className="team-policy-rule-list">{ruleLines.map((line) => <article key={line}>{line}</article>)}</div></div>
+      <div className="team-policy-detail-section"><span>Thể lệ CTTĐ</span><div className="team-policy-poster"><Image src={posterUrl} alt={`Poster thể lệ ${title}`} width={900} height={1273} sizes="(max-width: 700px) 100vw, 420px" /></div></div>
       <div className="team-policy-detail-grid">
         <article><span>{basisLabel}</span><strong>{formatVnd(Number(detail?.ip || 0))}</strong></article>
         <article><span>{fycLabel}</span><strong>{formatVnd(Number(detail?.fyc || 0))}</strong></article>
@@ -1069,7 +1218,47 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
   const [result, setResult] = useState<any>(baseline);
   const [calculating, setCalculating] = useState(false);
   const [formError, setFormError] = useState("");
+  const [selectedAdvisorReward, setSelectedAdvisorReward] = useState<any>(null);
+  const [advisorRewardLoading, setAdvisorRewardLoading] = useState(false);
+  const [advisorRewardError, setAdvisorRewardError] = useState("");
   const advisorList = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
+
+  async function openAdvisorReward(draft: any) {
+    const advisorInfo = advisorList.find((item: any) => item.agentCode === draft.advisorCode || item.advisor_code === draft.advisorCode);
+    setSelectedAdvisorReward({ advisor: advisorInfo, draft, estimate: null });
+    setAdvisorRewardLoading(true);
+    setAdvisorRewardError("");
+    try {
+      const response = await fetch("/api/tvv-reward-estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          month,
+          advisor: {
+            code: draft.advisorCode,
+            name: advisorInfo?.agentName || advisorInfo?.full_name || "",
+            group: advisorInfo?.groupName || advisorInfo?.group_name || "",
+            ban: advisorInfo?.banName || advisorInfo?.ban_name || "",
+            ads: advisorInfo?.adsName || advisorInfo?.ads_name || ""
+          },
+          draftContracts: [{
+            id: draft.id,
+            premium: Number(draft.ip) || 0,
+            expectedPaidDate: draft.expectedPaidDate,
+            expectedIssueDate: draft.expectedIssueDate || draft.expectedPaidDate,
+            productName: "Hop dong du kien"
+          }]
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Khong tinh duoc thuong TVV.");
+      setSelectedAdvisorReward({ advisor: advisorInfo, draft, estimate: payload });
+    } catch (error) {
+      setAdvisorRewardError(error instanceof Error ? error.message : "Khong tinh duoc thuong TVV.");
+    } finally {
+      setAdvisorRewardLoading(false);
+    }
+  }
 
   async function calculate(nextDrafts = draftContracts) {
     setCalculating(true);
@@ -1101,16 +1290,52 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
     <section className="tvv-calc-card team-leader-entry-card">
       <div className="team-leader-entry-head"><div><h2>Thêm hợp đồng dự kiến</h2></div><span className="team-fyc-badge">FYC = 30% IP</span></div>
       <div className="team-leader-calc-form">
-        <label><span>TVV</span><select value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); if (formError) setFormError(""); }}><option value="">Chọn TVV</option>{advisorList.map((item: any) => <option key={item.agentCode} value={item.agentCode}>{item.agentName}</option>)}</select></label>
+        <label><span>TVV</span><select value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); if (formError) setFormError(""); }}><option value="">Chọn TVV</option>{advisorList.map((item: any) => <option key={item.agentCode} value={item.agentCode}>{item.agentName}{item.isNewAdvisor ? "  NEW" : ""}</option>)}</select></label>
         <label><span>IP dự kiến</span><input value={ipText} onChange={(event) => { setIpText(moneyInput(event.target.value)); if (formError) setFormError(""); }} placeholder="0" /></label>
         <label className="team-date-field"><span>Ngày thu phí</span><div className="team-date-input"><strong>{formatDateVi(expectedPaidDate)}</strong><CalendarDays size={18} /><input type="date" value={expectedPaidDate} onChange={(event) => { setExpectedPaidDate(event.target.value); if (formError) setFormError(""); }} /></div></label>
       </div>
       {formError && <p className="team-form-error">{formError}</p>}
       <div className="team-leader-entry-foot"><button className="tvv-primary" type="button" onClick={addDraft}>+ Thêm và tính lại</button></div>
     </section>
-    {draftContracts.length > 0 && <section className="tvv-calc-card"><h2>Hợp đồng dự kiến ({draftContracts.length})</h2>{draftContracts.map((draft) => <article className="team-draft-contract" key={draft.id}><span>{advisorList.find((item: any) => item.agentCode === draft.advisorCode)?.agentName || draft.advisorCode}</span><strong>{formatVnd(draft.ip)}</strong><button type="button" onClick={() => { const next = draftContracts.filter((item) => item.id !== draft.id); setDraftContracts(next); void calculate(next); }}><Trash2 size={16} /></button></article>)}</section>}
+    {draftContracts.length > 0 && <section className="tvv-calc-card"><h2>Hợp đồng dự kiến ({draftContracts.length})</h2>{draftContracts.map((draft) => {
+      const advisorInfo = advisorList.find((item: any) => item.agentCode === draft.advisorCode || item.advisor_code === draft.advisorCode);
+      return <article className="team-draft-contract" key={draft.id}><button className="team-draft-advisor-button" type="button" onClick={() => void openAdvisorReward(draft)}>{advisorInfo?.agentName || advisorInfo?.full_name || draft.advisorCode}</button><strong>{formatVnd(draft.ip)}</strong><button type="button" onClick={() => { const next = draftContracts.filter((item) => item.id !== draft.id); setDraftContracts(next); void calculate(next); }}><Trash2 size={16} /></button></article>;
+    })}</section>}
     <section className="tvv-calc-card tvv-reward-summary-card team-calc-result"><h2>Kết quả mô phỏng</h2>{calculating ? <p>Đang tính…</p> : result ? <><TeamLeaderRewardSummaryCard rewards={result} baseline={baseline} /><div className="team-calc-increase"><span>Tăng thêm so với hiện tại</span><strong>+{formatVnd(Math.max(0, Number(result.totalEstimatedReward) - Number(baseline?.totalEstimatedReward || 0)))}</strong></div></> : <p>Chưa có kết quả.</p>}</section>
+    {selectedAdvisorReward && <AdvisorRewardPopup data={selectedAdvisorReward} loading={advisorRewardLoading} error={advisorRewardError} onClose={() => setSelectedAdvisorReward(null)} />}
   </section>;
+}
+
+function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; loading: boolean; error: string; onClose: () => void }) {
+  const estimate = data?.estimate;
+  const advisor = data?.advisor ?? {};
+  const draft = data?.draft ?? {};
+  const programs = [...(estimate?.calculatorPrograms ?? [])]
+    .filter((item: any) => item.programId !== "policy-month-13")
+    .sort((a: any, b: any) => calculatorProgramOrder(a) - calculatorProgramOrder(b));
+  const total = Number(estimate?.calculatorTotalEstimatedReward ?? 0);
+  return <div className="tvv-contract-detail-backdrop advisor-reward-popup-backdrop" role="presentation" onClick={onClose}>
+    <section className="tvv-contract-detail tvv-reward-summary-card advisor-reward-popup" role="dialog" aria-modal="true" aria-label="Thuong TVV du kien" onClick={(event) => event.stopPropagation()}>
+      <header><div><p>THƯỞNG TVV DỰ KIẾN</p><h2>{advisor.agentName || advisor.full_name || draft.advisorCode || "TVV"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+      <div className="advisor-reward-meta"><span>IP dự kiến</span><strong>{formatVnd(Number(draft.ip || 0))}</strong><span>Ngày thu phí</span><strong>{formatDateVi(draft.expectedPaidDate)}</strong></div>
+      {loading && <p className="tvv-empty">Đang tính thưởng TVV...</p>}
+      {error && <p className="team-form-error">{error}</p>}
+      {!loading && !error && <>
+        <div className="tvv-total"><span>Tổng thưởng cộng thêm dự kiến</span><strong>+{formatVnd(total)}</strong></div>
+        <div className="tvv-result-table tvv-result-table-standalone">
+          <div className="tvv-result-head"><span>Chương trình</span><span>Thưởng cộng thêm</span></div>
+          {programs.map((item: any, index: number) => {
+            const increase = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
+            const currentReward = Number(item.currentReward ?? 0);
+            return <div className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`} key={item.programId || index}>
+              <div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div>
+              <strong className={increase > 0 ? "increase" : ""}>{!item.isCommission && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong>
+            </div>;
+          })}
+        </div>
+      </>}
+    </section>
+  </div>;
 }
 
 function Overview({ stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {

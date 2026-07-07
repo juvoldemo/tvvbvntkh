@@ -6,6 +6,7 @@ import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
+import { managedTeamName } from "@/lib/team-scope";
 
 function programDateRange(program: any, month: string) {
   const rule = program.confirmed_rule || program.ai_rule || {};
@@ -50,19 +51,42 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     const signedInAdvisorCode = userCodeFromRequest(request);
     const month = String(payload.month || new Date().toISOString().slice(0, 7)).slice(0, 7);
-    const advisor = {
-      code: signedInAdvisorCode || String(payload.advisor?.code || ""),
+    const requestedAdvisor = {
+      code: String(payload.advisor?.code || "").trim().toUpperCase(),
       name: String(payload.advisor?.name || ""),
       ban: String(payload.advisor?.ban || ""),
       group: String(payload.advisor?.group || ""),
       ads: String(payload.advisor?.ads || "")
     };
+    const supabase = getSupabaseAdmin();
+    let advisor = {
+      ...requestedAdvisor,
+      code: signedInAdvisorCode || requestedAdvisor.code
+    };
     const draftContracts = (Array.isArray(payload.draftContracts) ? payload.draftContracts : []) as DraftRewardContract[];
+    if (signedInAdvisorCode && requestedAdvisor.code && requestedAdvisor.code !== signedInAdvisorCode) {
+      const [{ data: signedInProfile, error: signedInError }, { data: targetProfile, error: targetError }] = await Promise.all([
+        supabase.from("authorized_users").select("advisor_code,full_name,advisor_position,group_name").eq("advisor_code", signedInAdvisorCode).single(),
+        supabase.from("authorized_users").select("advisor_code,full_name,group_name").eq("advisor_code", requestedAdvisor.code).single()
+      ]);
+      if (signedInError) throw signedInError;
+      if (targetError) throw targetError;
+      const managedGroup = managedTeamName(signedInProfile.advisor_code, signedInProfile.advisor_position);
+      if (!managedGroup || String(targetProfile.group_name || "").trim() !== managedGroup) {
+        return NextResponse.json({ error: "Khong co quyen tinh thuong cho TVV nay." }, { status: 403 });
+      }
+      advisor = {
+        code: targetProfile.advisor_code,
+        name: targetProfile.full_name || requestedAdvisor.name,
+        ban: requestedAdvisor.ban,
+        group: targetProfile.group_name || requestedAdvisor.group,
+        ads: requestedAdvisor.ads
+      };
+    }
     if (!advisor.name && !advisor.code) {
       return NextResponse.json({ error: "Thiếu thông tin TVV." }, { status: 400 });
     }
 
-    const supabase = getSupabaseAdmin();
     const year = month.slice(0, 4);
     const advisorProfileQuery = advisor.code
       ? supabase.from("authorized_users").select("advisor_code,start_date").eq("advisor_code", advisor.code)

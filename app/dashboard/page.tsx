@@ -5,6 +5,7 @@ import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, FileText, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Share2, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
+import Image from "next/image";
 import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
@@ -3494,12 +3495,29 @@ function competitionRewardTierRows(item: any) {
   });
 }
 
-function CompetitionRuleVisualPreview({ rule, extractedText }: { rule: any; extractedText?: string | null }) {
+function competitionPosterUrl(rule: any, programName?: string | null) {
+  const text = normalizeViText([programName, rule?.program_name, rule?.reward_name].filter(Boolean).join(" "));
+  const isLeader = text.includes("truong nhom") || text.includes("ptkd") || text.includes("nhom");
+  if (text.includes("sao viet")) return "/images/star-viet-achievement.png";
+  if (text.includes("thang 13")) return isLeader ? "/Thưởng tháng 13 trưởng nhóm.png" : "/Thưởng tháng 13.png";
+  if (text.includes("quy")) return isLeader ? "/Thưởng Quý trưởng nhóm.png" : "/Thưởng Quý.png";
+  if (text.includes("nang suat thang")) return "/Thưởng năng suất tháng.png";
+  if (text.includes("thang")) return isLeader ? "/Thưởng tháng trưởng nhóm.png" : "/Thưởng năng suất tháng.png";
+  return null;
+}
+
+function CompetitionRuleVisualPreview({ rule, extractedText, programName }: { rule: any; extractedText?: string | null; programName?: string | null }) {
   const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
   const eligibleProducts = ruleListText(rule?.eligible_products);
   const minIp = Number(rule?.min_policy_ip ?? 0);
+  const posterUrl = competitionPosterUrl(rule, programName);
   return (
     <div className="contest-rule-visual contest-rule-simple">
+      {posterUrl && (
+        <section className="contest-rule-poster" aria-label="Poster thể lệ chương trình">
+          <Image src={posterUrl} alt={`Poster thể lệ ${programName || rule?.program_name || "chương trình thi đua"}`} width={900} height={1273} sizes="(max-width: 700px) 100vw, 680px" />
+        </section>
+      )}
       <section className="contest-content-section">
         <h3>Điều kiện tham gia</h3>
         <div className="contest-condition-list">
@@ -3765,6 +3783,7 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                   <CompetitionRuleVisualPreview
                     rule={program.confirmedRule ?? program.aiRule ?? {}}
                     extractedText={program.extractedText}
+                    programName={program.programName}
                   />
                 </div>
               )}

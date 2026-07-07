@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await supabase
       .from("authorized_users")
-      .select("id,advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,is_active,created_at")
+      .select("id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,is_active,created_at")
       .order("full_name")
       .range(from, from + pageSize - 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
     const users = rows.map((row) => ({
       advisor_code: normalizeAdvisorCode(text(row, ["mã tvv", "ma tvv", "advisor_code", "code"])),
       full_name: text(row, ["tên tvv", "ten tvv", "full_name", "name"]),
+      group_name: text(row, ["nhóm", "nhom", "group_name", "group"]) || null,
       start_date: dateValue(row, ["ngày bắt đầu làm việc", "ngay bat dau lam viec"]),
       advisor_status: text(row, ["trạng thái tvv", "trang thai tvv"]) || null,
       advisor_position: text(row, ["chức vụ tvv", "chuc vu tvv"]) || null,

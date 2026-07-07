@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds, toMonthStart } from "@/lib/format";
 import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
-import { buildGroupStarVietSummary } from "@/lib/star-viet";
+import { buildGroupStarVietSummary, buildStarVietReport } from "@/lib/star-viet";
 import { readStarVietRecords } from "@/lib/star-viet-data";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
@@ -54,8 +54,26 @@ function quarterBounds(month: string) {
 function isNewAdvisor(startDate: unknown, month: string) {
   const date = String(startDate || "").slice(0, 10);
   if (!date) return false;
-  const { start, end } = quarterBounds(month);
-  return date >= start && date <= end;
+  const [startYear, startMonth, startDay] = date.split("-").map(Number);
+  if (!startYear || !startMonth || !startDay) return false;
+  const [year, monthNo] = month.split("-").map(Number);
+  const periodEnd = new Date(Date.UTC(year, monthNo, 0));
+  const twelveMonthMark = new Date(Date.UTC(startYear, startMonth - 1 + 12, startDay));
+  return periodEnd >= new Date(Date.UTC(startYear, startMonth - 1, startDay)) && periodEnd < twelveMonthMark;
+}
+
+async function readTeamRoster(supabase: ReturnType<typeof getSupabaseAdmin>, groupName: string) {
+  const { data, error } = await supabase
+    .from("authorized_users")
+    .select("advisor_code,full_name,start_date,avatar_url,group_name")
+    .eq("is_active", true)
+    .eq("group_name", groupName)
+    .order("full_name");
+  if (error) {
+    console.warn("[team-dashboard] Cannot read APM01 team roster", error.message);
+    return [];
+  }
+  return data ?? [];
 }
 
 export async function GET(request: NextRequest) {
@@ -81,7 +99,7 @@ export async function GET(request: NextRequest) {
     const previousMonthKey = previousMonth(month);
     const previousMonthBounds = monthBounds(previousMonthKey);
     const year = month.slice(0, 4);
-    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietRecords] = await Promise.all([
+    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietRecords, teamRoster] = await Promise.all([
       supabase.from("revenue_records").select("*")
         .eq("data_month", toMonthStart(month)).eq("group_name", groupName)
         .gte("paid_date", start).lte("paid_date", end),
@@ -94,7 +112,8 @@ export async function GET(request: NextRequest) {
         supabase.from("revenue_records").select("agent_code,agent_name,group_name,paid_date,issued_date")
           .neq("data_month", "2099-01-01").eq("group_name", groupName).range(from, to)
       ),
-      readStarVietRecords(supabase, month.slice(0, 7))
+      readStarVietRecords(supabase, month.slice(0, 7)),
+      readTeamRoster(supabase, groupName)
     ]);
     if (monthError) throw monthError;
     if (previousError) throw previousError;
@@ -132,7 +151,7 @@ export async function GET(request: NextRequest) {
       if (!current || rowDate >= currentDate) latestAdvisorByCode.set(code, row);
     }
 
-    const advisorCodes = [...new Set([...agents.values(), ...latestAdvisorByCode.values()].map((row: any) => row.agentCode || row.agent_code).filter(Boolean))];
+    const advisorCodes = [...new Set([...agents.values(), ...latestAdvisorByCode.values(), ...teamRoster].map((row: any) => row.agentCode || row.agent_code || row.advisor_code).filter(Boolean))];
     const { data: advisorProfiles } = advisorCodes.length
       ? await supabase.from("authorized_users").select("advisor_code,full_name,start_date,avatar_url").in("advisor_code", advisorCodes)
       : { data: [] as Array<{ advisor_code: string; full_name: string | null; start_date: string | null; avatar_url: string | null }> };
@@ -145,14 +164,15 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.ip - a.ip)
       .map((row, index) => ({ ...row, rank: index + 1 }));
     const rankedByCode = new Map(ranking.map((row) => [String(row.agentCode || row.agentName), row]));
-    const allAgents = [...latestAdvisorByCode.values()]
+    const rosterSource = teamRoster.length ? teamRoster : [...latestAdvisorByCode.values()];
+    const allAgents = rosterSource
       .map((row) => {
-        const agentCode = String(row.agent_code || "").trim();
-        const key = agentCode || String(row.agent_name || "").trim();
+        const agentCode = String(row.advisor_code || row.agent_code || "").trim();
+        const key = agentCode || String(row.full_name || row.agent_name || "").trim();
         const profile = agentCode ? profileByCode.get(agentCode) : undefined;
         return rankedByCode.get(key) ?? {
           agentCode,
-          agentName: profile?.full_name || row.agent_name || "TVV",
+          agentName: row.full_name || profile?.full_name || row.agent_name || "TVV",
           afyp: 0,
           ip: 0,
           contracts: 0,
@@ -185,6 +205,7 @@ export async function GET(request: NextRequest) {
       ? ((current - previous) / previous) * 100
       : current > 0 ? 100 : 0;
     const starViet = buildGroupStarVietSummary(starVietRecords, groupName);
+    const starVietRows = buildStarVietReport(starVietRecords).rows.filter((row) => row.groupName === groupName);
 
     return NextResponse.json({
       role: "team_leader",
@@ -211,6 +232,7 @@ export async function GET(request: NextRequest) {
       agents: ranking,
       allAgents,
       starViet,
+      starVietRows,
       contracts,
       yearContracts,
       yearRevenue: yearContracts.filter((row: any) => isCountedRevenueRecord(row))
