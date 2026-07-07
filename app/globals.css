@@ -18480,10 +18480,10 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   padding-right: 1px;
 }
 .team-target-agent-list label {
+  position: relative;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
   border: 1px solid #dfe8f5;
   border-radius: 10px;
   background: #f8fbff;
@@ -18493,42 +18493,49 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   overflow: hidden;
 }
 .team-target-agent-list input {
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 1px !important;
+  min-height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+.team-target-agent-list input:focus-visible {
+  outline: none;
+}
+.team-target-agent-list span {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.team-target-agent-list span::before {
+  content: "";
+  display: block;
   width: 22px;
   height: 22px;
-  min-width: 22px;
-  margin: 0;
   border: 2px solid #8d97a6;
   border-radius: 8px;
   background: #fff;
   box-sizing: border-box;
-  flex: 0 0 22px;
-  place-self: center;
 }
-.team-target-agent-list input:checked {
+.team-target-agent-list input:checked + span::before {
   border-color: #004b7a;
   background: #004b7a;
+  box-shadow: inset 0 0 0 4px #fff;
 }
-.team-target-agent-list input:checked::after {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 2px;
-  width: 6px;
-  height: 11px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-.team-target-agent-list input:focus-visible {
+.team-target-agent-list input:focus-visible + span::before {
   outline: 3px solid rgba(0, 91, 143, .22);
   outline-offset: 2px;
-}
-.team-target-agent-list span {
-  display: block;
-  min-width: 0;
 }
 .team-target-agent-list b {
   display: inline-flex;
