@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { hashPassword, normalizeAdvisorCode, randomStrongPassword } from "@/lib/user-auth";
+import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
 
-const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_plain,is_active,created_at";
-const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,is_active,created_at";
+const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,password_plain,is_active,created_at";
+const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,is_active,created_at";
 
 function missingPasswordPlainColumn(error: unknown) {
   return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
@@ -58,10 +58,14 @@ export async function GET(request: NextRequest) {
         .select(accessListFallbackFields)
         .order("full_name")
         .range(from, from + pageSize - 1);
-      data = fallback.data?.map((user) => ({ ...user, password_plain: null })) ?? [];
+      data = fallback.data?.map((user) => ({ ...user, password_plain: revealVisiblePassword(String(user.password_hash || "")) || null })) ?? [];
       error = fallback.error;
     }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    data = (data ?? []).map((user) => ({
+      ...user,
+      password_plain: revealVisiblePassword(String(user.password_hash || "")) || user.password_plain || null
+    }));
     users.push(...(data ?? []));
     if ((data ?? []).length < pageSize) break;
   }
@@ -98,12 +102,24 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { data: existing } = await supabase.from("authorized_users").select("advisor_code,password_hash,password_plain");
+    let { data: existing, error: existingError } = await supabase.from("authorized_users").select("advisor_code,password_hash,password_plain");
+    let hasPasswordPlainColumn = true;
+    if (existingError && missingPasswordPlainColumn(existingError)) {
+      const fallback = await supabase.from("authorized_users").select("advisor_code,password_hash");
+      existing = fallback.data?.map((item) => ({ ...item, password_plain: revealVisiblePassword(String(item.password_hash || "")) || null })) ?? [];
+      existingError = fallback.error;
+      hasPasswordPlainColumn = false;
+    }
+    if (existingError) throw existingError;
     const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
     const usersWithPasswords = users.map((user) => {
       const current = passwords.get(user.advisor_code);
       const plainPassword = current?.plain || randomStrongPassword();
-      return { ...user, password_hash: current?.hash || hashPassword(plainPassword), password_plain: plainPassword, updated_at: new Date().toISOString() };
+      const currentVisibleHash = current?.plain ? current.hash : "";
+      const passwordFields = hasPasswordPlainColumn
+        ? { password_hash: currentVisibleHash || visiblePasswordRecord(plainPassword), password_plain: plainPassword }
+        : { password_hash: currentVisibleHash || visiblePasswordRecord(plainPassword) };
+      return { ...user, ...passwordFields, updated_at: new Date().toISOString() };
     });
     const { error: disableError } = await supabase.from("authorized_users").update({ is_active: false }).eq("is_active", true);
     if (disableError) throw disableError;
@@ -138,14 +154,16 @@ export async function PUT(request: NextRequest) {
       return {
         id: user.id,
         advisor_code: user.advisor_code,
-        password_hash: hashPassword(password),
-        password_plain: password,
+        password_hash: visiblePasswordRecord(password),
         updated_at: now
       };
     });
 
-    for (let index = 0; index < updates.length; index += 500) {
-      const { error } = await supabase.from("authorized_users").upsert(updates.slice(index, index + 500), { onConflict: "id" });
+    for (const update of updates) {
+      const { error } = await supabase
+        .from("authorized_users")
+        .update({ password_hash: update.password_hash, updated_at: update.updated_at })
+        .eq("id", update.id);
       if (error) throw error;
     }
 

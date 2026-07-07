@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { hashPassword, userCodeFromRequest, verifyPassword } from "@/lib/user-auth";
+import { userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
 import { managedTeamName } from "@/lib/team-scope";
 
 const fields = "advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url";
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Mật khẩu hiện tại không đúng." }, { status: 401 });
   }
   const nextPassword = String(newPassword);
-  const { error } = await supabase.from("authorized_users").update({ password_hash: hashPassword(nextPassword), password_plain: nextPassword, updated_at: new Date().toISOString() }).eq("advisor_code", code);
+  const { error } = await supabase.from("authorized_users").update({ password_hash: visiblePasswordRecord(nextPassword), updated_at: new Date().toISOString() }).eq("advisor_code", code);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

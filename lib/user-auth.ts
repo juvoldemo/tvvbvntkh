@@ -17,6 +17,21 @@ export function hashPassword(password: string) {
   return `${salt}:${hash}`;
 }
 
+const VISIBLE_PASSWORD_PREFIX = "plain:";
+
+export function visiblePasswordRecord(password: string) {
+  return `${VISIBLE_PASSWORD_PREFIX}${Buffer.from(password, "utf8").toString("base64url")}`;
+}
+
+export function revealVisiblePassword(stored: string) {
+  if (!stored.startsWith(VISIBLE_PASSWORD_PREFIX)) return "";
+  try {
+    return Buffer.from(stored.slice(VISIBLE_PASSWORD_PREFIX.length), "base64url").toString("utf8");
+  } catch {
+    return "";
+  }
+}
+
 export function randomStrongPassword(length = 12) {
   const groups = [
     "ABCDEFGHJKLMNPQRSTUVWXYZ",
@@ -35,6 +50,11 @@ export function randomStrongPassword(length = 12) {
 }
 
 export function verifyPassword(password: string, stored: string) {
+  const visiblePassword = revealVisiblePassword(stored);
+  if (visiblePassword) {
+    return Buffer.byteLength(password) === Buffer.byteLength(visiblePassword)
+      && timingSafeEqual(Buffer.from(password), Buffer.from(visiblePassword));
+  }
   const [salt, expected] = stored.split(":");
   if (!salt || !expected) return false;
   const actual = pbkdf2Sync(password, salt, 120000, 32, "sha256").toString("hex");
