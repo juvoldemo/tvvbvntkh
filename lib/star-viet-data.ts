@@ -38,7 +38,7 @@ export async function readStarVietRecords(
   const bc02 = await readAllPages<StarVietRecord>((from, to) => {
     let query = supabase
       .from("revenue_records")
-      .select("agent_name,agent_code,group_name,ban_name,afyp,policy_status,paid_date,raw_data")
+      .select("agent_name,agent_code,group_name,ban_name,ip,policy_status,paid_date,raw_data")
       .eq("data_month", `${selectedMonth}-01`)
       .gte("paid_date", `${selectedMonth}-01`)
       .lte("paid_date", monthEnd(selectedMonth));
@@ -51,7 +51,8 @@ export async function readStarVietRecords(
     ...bc02.map((record) => ({
       ...record,
       data_year: selectedYear,
-      source: "bc02" as const
+      source: "bc02" as const,
+      afyp: Number((record as any).ip ?? record.afyp ?? 0)
     }))
   ];
 }

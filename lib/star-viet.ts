@@ -15,6 +15,15 @@ export type StarVietRecord = {
   raw_data?: Record<string, unknown>;
 };
 
+export type StarVietKpi05GroupRow = {
+  data_month?: string | null;
+  reward_source?: string | null;
+  group_name?: string | null;
+  ban_name?: string | null;
+  fyp?: number | null;
+  raw_data?: Record<string, unknown> | null;
+};
+
 export type StarVietParseResult = {
   records: StarVietRecord[];
   preview: StarVietRecord[];
@@ -38,6 +47,13 @@ const FYP_COLUMN_ALIASES = ["fyp"];
 const TOPUP_COLUMN_ALIASES = ["phi dong them", "phi dong them ngay"];
 // Chương trình nhân đôi xét ngày hiệu lực hợp đồng, không xét ngày phát hành.
 const KPI04_CONTRACT_DATE_COLUMN_ALIASES = ["ngay hieu luc"];
+const KPI04_CANCEL_BEFORE_COLUMN_ALIASES = ["ngay huy truoc ngay huy can nhac", "truoc ngay huy can nhac"];
+const TVV_CODE_COLUMN_ALIASES = ["agent code", "agent_code", "ma tvv hoat dong", "ma dai ly", "ma tvv", "ma dl"];
+const GROUP_NAME_COLUMN_ALIASES = ["ten nhom", "nhom", "group name", "group_name"];
+const BAN_NAME_COLUMN_ALIASES = ["ten ban", "ban", "ban name", "ban_name"];
+const KPI05_BASE_FYP_ALIASES = ["base fyp", "base_fyp"];
+const KPI05_DOUBLE_BONUS_ALIASES = ["double bonus afyp", "double_bonus_afyp"];
+const KPI05_TOTAL_ALIASES = ["kpi05 group total", "kpi05_group_total", "total fyp", "total_fyp"];
 const DOUBLE_BONUS_START = new Date(2026, 2, 5);
 const DOUBLE_BONUS_END = new Date(2026, 2, 26);
 const DOUBLE_BONUS_CAP = 200_000_000;
@@ -274,6 +290,14 @@ function rawValue(record: StarVietRecord, aliases: string[]) {
   return "";
 }
 
+function rawRowValue(row: { raw_data?: Record<string, unknown> | null }, aliases: string[]) {
+  const rawData = row.raw_data ?? {};
+  for (const [key, value] of Object.entries(rawData)) {
+    if (matchesAlias(key, aliases)) return value;
+  }
+  return "";
+}
+
 export function parseDateValue(value: unknown) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return new Date(value.getFullYear(), value.getMonth(), value.getDate());
@@ -314,6 +338,47 @@ function getKpi04Fyp(record: StarVietRecord) {
   return parseMoney(rawValue(record, FYP_COLUMN_ALIASES));
 }
 
+function isKpi04RecordCounted(record: StarVietRecord) {
+  if (record.source !== "kpi04") return true;
+  return !parseDateValue(rawValue(record, KPI04_CANCEL_BEFORE_COLUMN_ALIASES));
+}
+
+function tvvKey(record: StarVietRecord, codeByName: Map<string, string>) {
+  const nameKey = normalizeText(record.agent_name);
+  const rawCode = rawValue(record, TVV_CODE_COLUMN_ALIASES);
+  return normalizeText(record.agent_code) || normalizeText(rawCode) || codeByName.get(nameKey) || nameKey;
+}
+
+function groupKey(record: StarVietRecord) {
+  const recordGroup = String(record.group_name || "").trim();
+  const rawGroup = String(recordGroup && recordGroup !== DEFAULT_GROUP_NAME ? recordGroup : rawValue(record, GROUP_NAME_COLUMN_ALIASES) || "").trim();
+  if (rawGroup) return { key: normalizeText(rawGroup), name: rawGroup, level: "group" as const };
+  const rawBan = String(rawValue(record, BAN_NAME_COLUMN_ALIASES) || record.ban_name || "").trim();
+  return { key: normalizeText(rawBan), name: rawBan, level: "ban" as const };
+}
+
+function groupCompetitionMultiplierByLevel(competitionFyp: number, level: "group" | "ban") {
+  if (level === "ban") {
+    if (competitionFyp >= 300_000_000) return 2;
+    if (competitionFyp >= 150_000_000) return 1.5;
+    return 1;
+  }
+  return groupCompetitionMultiplier(competitionFyp);
+}
+
+function groupBonusCap(level: "group" | "ban") {
+  return level === "ban" ? 800_000_000 : GROUP_DOUBLE_BONUS_CAP;
+}
+
+function kpi05GroupTotal(row: StarVietKpi05GroupRow) {
+  const explicitTotal = parseMoney(rawRowValue(row, KPI05_TOTAL_ALIASES));
+  if (explicitTotal > 0) return explicitTotal;
+  const baseFyp = parseMoney(rawRowValue(row, KPI05_BASE_FYP_ALIASES));
+  const doubleBonus = parseMoney(rawRowValue(row, KPI05_DOUBLE_BONUS_ALIASES));
+  if (baseFyp > 0 || doubleBonus > 0) return baseFyp + doubleBonus;
+  return Number(row.fyp || 0);
+}
+
 export function competitionMultiplier(competitionFyp: number) {
   if (competitionFyp >= 50_000_000) return 2;
   if (competitionFyp >= 30_000_000) return 1.5;
@@ -332,7 +397,7 @@ export function calculateTopupBonus(records: StarVietRecord[]) {
 }
 
 export function calculateTotalSaoVietAfyp(records: StarVietRecord[]) {
-  const kpi04Items = records.filter((record) => record.source === "kpi04");
+  const kpi04Items = records.filter((record) => record.source === "kpi04" && isKpi04RecordCounted(record));
   const bc02Afyp = records.filter((record) => record.source === "bc02").reduce((sum, record) => sum + Number(record.afyp || 0), 0);
   const competitionFyp = kpi04Items.reduce((sum, record) => isDateInDoubleBonusPeriod(rawValue(record, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(record) : sum, 0);
   const kpi04FypTotal = kpi04Items.reduce((sum, record) => sum + getKpi04Fyp(record), 0);
@@ -343,15 +408,15 @@ export function calculateTotalSaoVietAfyp(records: StarVietRecord[]) {
 export function buildStarVietReport(records: StarVietRecord[]) {
   const codeByName = new Map<string, string>();
   records.forEach((record) => {
-    const code = normalizeText(record.agent_code);
+    const code = normalizeText(record.agent_code) || normalizeText(rawValue(record, TVV_CODE_COLUMN_ALIASES));
     const name = normalizeText(record.agent_name);
     if (code && name) codeByName.set(name, code);
   });
   const grouped = new Map<string, StarVietRecord[]>();
   records.forEach((record) => {
     if (record.source === "bc02" && !isBc02Counted(record.policy_status)) return;
-    const nameKey = normalizeText(record.agent_name);
-    const key = normalizeText(record.agent_code) || codeByName.get(nameKey) || nameKey;
+    if (!isKpi04RecordCounted(record)) return;
+    const key = tvvKey(record, codeByName);
     if (!key) return;
     grouped.set(key, [...(grouped.get(key) ?? []), record]);
   });
@@ -359,7 +424,7 @@ export function buildStarVietReport(records: StarVietRecord[]) {
   const rows = [...grouped.values()]
     .map((items) => {
       const bc02Items = items.filter((item) => item.source === "bc02");
-      const kpi04Items = items.filter((item) => item.source === "kpi04");
+      const kpi04Items = items.filter((item) => item.source === "kpi04" && isKpi04RecordCounted(item));
       const kpi04Fyp = kpi04Items.reduce((sum, item) => sum + getKpi04Fyp(item), 0);
       const competitionFyp = kpi04Items.reduce((sum, item) => isDateInDoubleBonusPeriod(rawValue(item, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(item) : sum, 0);
       const competitionFactor = competitionMultiplier(competitionFyp);
@@ -373,7 +438,7 @@ export function buildStarVietReport(records: StarVietRecord[]) {
       const nextThreshold = next?.threshold ?? totalAfyp;
       const progress = next ? Math.min(100, (totalAfyp / next.threshold) * 100) : 100;
       return {
-        agentCode: bc02Items.find((item) => item.agent_code)?.agent_code ?? items.find((item) => item.agent_code)?.agent_code ?? "",
+        agentCode: bc02Items.find((item) => item.agent_code)?.agent_code ?? items.find((item) => item.agent_code)?.agent_code ?? String(rawValue(items[0], TVV_CODE_COLUMN_ALIASES) || ""),
         agentName: items[0]?.agent_name ?? "",
         groupName: bc02Items.find((item) => item.group_name)?.group_name
           ?? kpi04Items.find((item) => item.group_name)?.group_name
@@ -415,18 +480,46 @@ export function buildStarVietReport(records: StarVietRecord[]) {
   };
 }
 
-export function buildGroupStarVietSummary(records: StarVietRecord[], groupName: string) {
+export function buildGroupStarVietSummary(records: StarVietRecord[], groupName: string, kpi05Rows: StarVietKpi05GroupRow[] = []) {
   const normalizedGroupName = normalizeText(groupName);
-  const groupRecords = records.filter((record) => normalizeText(record.group_name) === normalizedGroupName);
+  const groupRecords = records.filter((record) => groupKey(record).key === normalizedGroupName);
   const bc02Items = groupRecords.filter((record) => record.source === "bc02");
-  const kpi04Items = groupRecords.filter((record) => record.source === "kpi04");
+  const kpi04Items = groupRecords.filter((record) => record.source === "kpi04" && isKpi04RecordCounted(record));
+  const level = groupRecords.map(groupKey).find((item) => item.key === normalizedGroupName)?.level ?? "group";
+  const bc02Afyp = bc02Items.reduce((sum, item) => sum + Number(item.afyp || 0), 0);
+  if (kpi04Items.length === 0) {
+    const kpi05Total = kpi05Rows
+      .filter((row) => String(row.reward_source || "").toLowerCase() === "kpi05")
+      .filter((row) => normalizeText(row.group_name || row.ban_name) === normalizedGroupName)
+      .reduce((sum, row) => sum + kpi05GroupTotal(row), 0);
+    const totalAfyp = kpi05Total + bc02Afyp;
+    const fallbackLevel = currentLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
+    const next = nextLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
+    return {
+      groupName,
+      kpi04Fyp: 0,
+      kpi05GroupTotal: kpi05Total,
+      competitionFyp: 0,
+      competitionFactor: 1,
+      doubleBonusAfyp: 0,
+      bc02Afyp,
+      topupBonusAfyp: 0,
+      totalAfyp,
+      currentRank: fallbackLevel.rank,
+      currentTickets: fallbackLevel.tickets,
+      rankTone: fallbackLevel.tone,
+      nextRank: next ? `${next.rank} ${String(next.tickets).padStart(2, "0")} vé` : "Đã đạt mốc cao nhất",
+      nextThreshold: next?.threshold ?? totalAfyp,
+      remainingToNext: next ? Math.max(next.threshold - totalAfyp, 0) : 0,
+      progress: next ? Math.min(100, (totalAfyp / next.threshold) * 100) : 100
+    };
+  }
   const kpi04Fyp = kpi04Items.reduce((sum, item) => sum + getKpi04Fyp(item), 0);
   const competitionFyp = kpi04Items.reduce((sum, item) => isDateInDoubleBonusPeriod(rawValue(item, KPI04_CONTRACT_DATE_COLUMN_ALIASES)) ? sum + getKpi04Fyp(item) : sum, 0);
-  const competitionFactor = groupCompetitionMultiplier(competitionFyp);
-  const doubleBonusFyp = Math.min(competitionFyp * (competitionFactor - 1), GROUP_DOUBLE_BONUS_CAP);
-  const bc02Afyp = bc02Items.reduce((sum, item) => sum + Number(item.afyp || 0), 0);
-  const totalAfyp = kpi04Fyp + doubleBonusFyp + bc02Afyp + calculateTopupBonus(groupRecords);
-  const level = currentLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
+  const competitionFactor = groupCompetitionMultiplierByLevel(competitionFyp, level);
+  const doubleBonusFyp = Math.min(competitionFyp * (competitionFactor - 1), groupBonusCap(level));
+  const totalAfyp = kpi04Fyp + doubleBonusFyp + bc02Afyp;
+  const starLevel = currentLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
   const next = nextLevel(totalAfyp, TEAM_STAR_VIET_LEVELS);
   return {
     groupName,
@@ -435,11 +528,11 @@ export function buildGroupStarVietSummary(records: StarVietRecord[], groupName: 
     competitionFactor,
     doubleBonusAfyp: doubleBonusFyp,
     bc02Afyp,
-    topupBonusAfyp: calculateTopupBonus(groupRecords),
+    topupBonusAfyp: 0,
     totalAfyp,
-    currentRank: level.rank,
-    currentTickets: level.tickets,
-    rankTone: level.tone,
+    currentRank: starLevel.rank,
+    currentTickets: starLevel.tickets,
+    rankTone: starLevel.tone,
     nextRank: next ? `${next.rank} ${String(next.tickets).padStart(2, "0")} vé` : "Đã đạt mốc cao nhất",
     nextThreshold: next?.threshold ?? totalAfyp,
     remainingToNext: next ? Math.max(next.threshold - totalAfyp, 0) : 0,

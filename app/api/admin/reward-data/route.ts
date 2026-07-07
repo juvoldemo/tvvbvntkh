@@ -216,7 +216,10 @@ export async function GET(request: NextRequest) {
       const code = String(row.agent_code ?? "").trim();
       if (code && row.group_name) latestGroupByAdvisor.set(code, row.group_name);
     });
-    const groups = [...new Set(contracts.map((row) => String(row.group_name || "").trim()).filter(Boolean))];
+    const groups = [...new Set([
+      ...contracts.map((row) => String(row.group_name || "").trim()).filter(Boolean),
+      ...policyRows.filter((row: any) => String(row.reward_source || "").toLowerCase() === "kpi05").map((row: any) => String(row.group_name || row.ban_name || "").trim()).filter(Boolean)
+    ])];
     const leaderPolicyRows = groups.map((groupName) => {
       const leader = advisorProfiles.find((profile: any) => normalizeText(profile.full_name).includes(normalizeText(groupName)) || normalizeText(profile.advisor_position).includes("truong"));
       const result = calculateTeamLeaderPolicy({
@@ -268,7 +271,7 @@ export async function GET(request: NextRequest) {
         detail: `${row.currentRank} · ${row.currentTickets} vé · AFYP ${Math.round(Number(row.totalAfyp ?? 0)).toLocaleString("vi-VN")} đ`
       })));
     const starVietGroupProgram = toProgram("star-viet-group", `Sao Việt Trưởng nhóm ${year}`, `Lũy kế đến ${period === "quarter" ? `quý ${selectedRange.quarter}` : `tháng ${month.slice(5, 7)}`}/${year}`, groups
-      .map((groupName) => buildGroupStarVietSummary(starVietRecords, groupName))
+      .map((groupName) => buildGroupStarVietSummary(starVietRecords, groupName, policyRows))
       .filter((row: any) => row.currentRank !== "Chưa đạt" || Number(row.totalAfyp ?? 0) > 0)
       .map((row: any) => ({
         code: "",
