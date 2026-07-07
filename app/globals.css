@@ -18357,7 +18357,9 @@ body .tvv-app .tvv-contest-detail {
 
 .team-target-modal {
   display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: 12px;
+  overflow: hidden !important;
 }
 .team-target-fields {
   display: grid;
@@ -18445,41 +18447,84 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
 }
 .team-target-roster {
   display: grid;
+  min-height: 0;
   gap: 10px;
 }
 .team-target-roster > div:first-child {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
   color: #004b7a;
+}
+.team-target-roster > div:first-child strong {
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.2;
 }
 .team-target-roster > div:first-child span {
   color: #6f7f96;
   font-size: 12px;
   font-weight: 700;
+  line-height: 1.25;
+  text-align: right;
 }
 .team-target-agent-list {
   display: grid;
   gap: 6px;
-  max-height: 300px;
+  min-height: 0;
+  max-height: min(300px, 34vh);
   overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 1px;
 }
 .team-target-agent-list label {
-  display: flex;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   border: 1px solid #dfe8f5;
   border-radius: 10px;
   background: #f8fbff;
   min-height: 44px;
   padding: 8px 10px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 .team-target-agent-list input {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 17px;
-  accent-color: #004b7a;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  margin: 0;
+  border: 2px solid #8d97a6;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+  flex: 0 0 22px;
+  place-self: center;
+}
+.team-target-agent-list input:checked {
+  border-color: #004b7a;
+  background: #004b7a;
+}
+.team-target-agent-list input:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.team-target-agent-list input:focus-visible {
+  outline: 3px solid rgba(0, 91, 143, .22);
+  outline-offset: 2px;
 }
 .team-target-agent-list span {
   display: block;
@@ -18492,6 +18537,7 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   color: #004b7a;
   font-size: 13px;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 .team-target-agent-list b em {
   display: inline-grid;
@@ -18514,8 +18560,19 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   font-weight: 700;
 }
 @media (max-width: 520px) {
+  .team-target-modal {
+    width: calc(100vw - 32px) !important;
+    max-height: calc(100svh - 48px) !important;
+  }
   .team-target-fields {
     grid-template-columns: minmax(0, 1fr) minmax(96px, .7fr);
+  }
+  .team-target-roster > div:first-child span {
+    width: 100%;
+    text-align: left;
+  }
+  .team-target-agent-list {
+    max-height: min(288px, 32svh);
   }
 }
 
