@@ -884,7 +884,7 @@ function TeamLeaderRewardSummaryCard({ rewards, baseline }: { rewards: any; base
         } : {};
         return <div className={`tvv-result-row team-reward-program-row${item.interactive ? " interactive" : ""}`} key={item.id} {...interactiveProps}>
           <div><span className={`tvv-result-icon tone-${index % 3}`}><Icon size={22} /></span><b>{item.label}</b><small>{item.note}{item.interactive ? " · Bấm để xem chi tiết" : ""}</small></div>
-          <strong className="team-reward-program-amount"><small>Hiện tại {formatVnd(currentValue)}</small>{formatVnd(projectedValue)}<em>{increaseValue > 0 ? `+${formatVnd(increaseValue)}` : "+0 đ"}</em></strong>
+          <strong className="team-reward-program-amount"><small>Hiện tại {formatVnd(currentValue)}</small><em>{increaseValue > 0 ? `+${formatVnd(increaseValue)}` : "+0 đ"}</em></strong>
         </div>;
       })}
     </div>
@@ -1063,7 +1063,7 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
 function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
   const [advisorCode, setAdvisorCode] = useState("");
   const [ipText, setIpText] = useState("");
-  const [expectedPaidDate, setExpectedPaidDate] = useState(`${month}-01`);
+  const [expectedPaidDate, setExpectedPaidDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [isNewAdvisor, setIsNewAdvisor] = useState(false);
   const [draftContracts, setDraftContracts] = useState<any[]>([]);
   const [result, setResult] = useState<any>(baseline);

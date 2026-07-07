@@ -17754,6 +17754,12 @@ body .tvv-app .tvv-contest-detail {
 .team-reward-program-amount em {
   display: block;
 }
+.team-reward-program-amount {
+  color: #004b7a !important;
+}
+.team-reward-program-row > strong.team-reward-program-amount {
+  color: #004b7a !important;
+}
 .team-reward-program-amount small {
   margin-bottom: 4px;
   color: #718096;
