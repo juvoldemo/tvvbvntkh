@@ -9,7 +9,7 @@
     radial-gradient(circle at 16% 10%, rgba(21, 113, 255, 0.48), transparent 28%),
     radial-gradient(circle at 84% 5%, rgba(0, 83, 193, 0.42), transparent 30%),
     linear-gradient(145deg, #031a4e 0%, #073b86 48%, #02163f 100%);
-  font-family: var(--ds-font);
+  font-family: var(--font-family-app);
 }
 
 .poster::before,
@@ -66,7 +66,7 @@
   display: grid;
   place-items: center;
   color: #ffd763;
-  font-size: 104px;
+  font-size: var(--typo-32);
   filter: drop-shadow(0 8px 18px rgba(255, 198, 45, 0.35));
 }
 
@@ -76,8 +76,8 @@
   top: 22px;
   color: #efbd38;
   content: "❯❯❯";
-  font-size: 46px;
-  letter-spacing: -12px;
+  font-size: var(--typo-32);
+  letter-spacing: 0;
   writing-mode: vertical-rl;
 }
 
@@ -103,7 +103,7 @@
 
 .titles h1 {
   color: #ffe477;
-  font-size: 84px;
+  font-size: var(--typo-32);
   font-weight: 700;
   letter-spacing: 5px;
   line-height: 0.98;
@@ -118,7 +118,7 @@
 .titles h2 {
   margin-top: 14px;
   color: #fff;
-  font-size: 42px;
+  font-size: var(--typo-32);
   font-weight: 700;
   letter-spacing: 1.5px;
 }
@@ -126,7 +126,7 @@
 .titles p {
   margin-top: 4px;
   color: #ffdc68;
-  font-size: 44px;
+  font-size: var(--typo-32);
   font-weight: 700;
 }
 
@@ -172,7 +172,7 @@
   border-collapse: collapse;
   table-layout: fixed;
   color: #08265f;
-  font-size: 18px;
+  font-size: var(--typo-18);
   font-weight: 400;
 }
 
@@ -183,7 +183,7 @@
   border-right: 1px solid rgba(130, 174, 225, 0.45);
   background: linear-gradient(180deg, #08489b, #052d70);
   color: #fff;
-  font-size: 16px;
+  font-size: var(--typo-16);
   font-weight: 700;
   text-align: center;
 }
@@ -220,25 +220,25 @@
 
 .moneyCell {
   text-align: center;
-  font-size: 22px;
+  font-size: var(--typo-20);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 
 .nameCell {
   text-align: left;
-  font-size: 24px;
+  font-size: var(--typo-24);
   font-weight: 400;
 }
 
 .agentTable {
-  font-size: 16px;
+  font-size: var(--typo-16);
 }
 
 .agentTable th {
   padding-right: 6px;
   padding-left: 6px;
-  font-size: 13px;
+  font-size: var(--typo-12);
 }
 
 .agentCodeCell,
@@ -253,34 +253,34 @@
 }
 
 .agentCodeCell {
-  font-size: 15px;
+  font-size: var(--typo-14);
   font-weight: 700;
 }
 
 .agentNameCell {
-  font-size: 17px;
+  font-size: var(--typo-16);
   font-weight: 600;
 }
 
 .agentTextCell {
-  font-size: 16px;
+  font-size: var(--typo-16);
 }
 
 .agentTable .moneyCell,
 .agentTable .countCell {
   padding-right: 6px;
   padding-left: 6px;
-  font-size: 18px;
+  font-size: var(--typo-18);
 }
 
 .agentTable .agentAfypCell {
-  font-size: 17px;
+  font-size: var(--typo-16);
   font-weight: 600;
 }
 
 .countCell,
 .percentCell {
-  font-size: 22px;
+  font-size: var(--typo-20);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
@@ -293,7 +293,7 @@
   border: 2px solid rgba(255, 255, 255, 0.75);
   border-radius: 50%;
   color: #09275e;
-  font-size: 18px;
+  font-size: var(--typo-18);
   font-weight: 700;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 }
@@ -312,7 +312,7 @@
 
 .rank {
   color: #09275e;
-  font-size: 21px;
+  font-size: var(--typo-20);
   font-weight: 700;
 }
 
@@ -325,7 +325,7 @@
   justify-content: flex-end;
   padding: 0 26px;
   color: #fff;
-  font-size: 20px;
+  font-size: var(--typo-20);
   font-weight: 700;
   letter-spacing: 0.3px;
 }
@@ -338,5 +338,5 @@
 
 .footer b {
   color: #ffd45b;
-  font-size: 27px;
+  font-size: var(--typo-28);
 }

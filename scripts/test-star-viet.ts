@@ -79,4 +79,10 @@ const fallbackSummary = buildGroupStarVietSummary([], "Nhom KPI05", [
 ]);
 assert.equal(fallbackSummary.totalAfyp, 123_000_000);
 
+
+const julyFallbackSummary = buildGroupStarVietSummary([], "Pham Thu", [
+  { data_month: "2026-06-01", reward_source: "kpi05", group_name: "Pham Thu", fyp: 2_000_000_000 },
+  { data_month: "2026-07-01", reward_source: "kpi05", group_name: "Pham Thu", fyp: 300_000_000 }
+]);
+assert.equal(julyFallbackSummary.totalAfyp, 2_300_000_000);
 console.log("Star Việt boundary tests passed.");

@@ -1,7 +1,7 @@
 ﻿(function () {
   const IMAGE_WIDTH = 1240;
   const IMAGE_HEIGHT = 1754;
-  const FONT_FAMILY = '"Segoe UI", Tahoma, Arial, sans-serif';
+  const FONT_FAMILY = 'Inter, "SF Pro Display", "Segoe UI", sans-serif';
   const COLORS = {
     blue: "#004487",
     lightBlue: "#eaf5ff",

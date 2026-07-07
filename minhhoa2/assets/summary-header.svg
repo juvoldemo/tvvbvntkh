@@ -17,10 +17,10 @@
 
   <rect width="1240" height="150" fill="url(#headerBlue)"/>
 
-  <text x="30" y="45" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="800" letter-spacing=".2">
+  <text x="30" y="45" fill="#fff" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="20" font-weight="700" letter-spacing="0">
     SẢN PHẨM BẢO HIỂM
   </text>
-  <text x="30" y="83" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="800" letter-spacing=".2">
+  <text x="30" y="83" fill="#fff" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="20" font-weight="700" letter-spacing="0">
     LIÊN KẾT CHUNG
   </text>
 
@@ -29,17 +29,17 @@
     <path d="M25 72V28c14 9 27 21 40 39V28" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
-  <text x="430" y="79" fill="#f4b321" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">
+  <text x="430" y="79" fill="#f4b321" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="32" font-weight="700">
     An Tâm Hoạch Định
   </text>
 
   <g transform="translate(930 28)">
-    <text x="0" y="31" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="35" font-weight="900">BAOVIET</text>
+    <text x="0" y="31" fill="#fff" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="32" font-weight="700">BAOVIET</text>
     <circle cx="174" cy="20" r="22" fill="url(#gold)"/>
     <circle cx="174" cy="20" r="18" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
     <path d="M156 20c12-9 24-9 36 0-12 9-24 9-36 0z" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
     <path d="M174 2c7 12 7 24 0 36" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
-    <text x="203" y="31" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="35" font-weight="800">Life</text>
-    <text x="66" y="70" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700">BẢO VIỆT NHÂN THỌ</text>
+    <text x="203" y="31" fill="#fff" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="32" font-weight="700">Life</text>
+    <text x="66" y="70" fill="#fff" font-family="Inter, SF Pro Display, Segoe UI, sans-serif" font-size="16" font-weight="700">BẢO VIỆT NHÂN THỌ</text>
   </g>
 </svg>

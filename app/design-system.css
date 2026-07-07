@@ -3,7 +3,43 @@
  * Keep business components intact; all visual decisions live in these tokens.
  */
 :root {
-  --ds-font: Roboto, system-ui, "Segoe UI", sans-serif;
+  --ds-font: Inter, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-family-app: Inter, "SF Pro Display", "Segoe UI", sans-serif;
+
+  --typo-10: 10px;
+  --typo-12: 12px;
+  --typo-14: 14px;
+  --typo-16: 16px;
+  --typo-18: 18px;
+  --typo-20: 20px;
+  --typo-24: 24px;
+  --typo-28: 28px;
+  --typo-32: 32px;
+  --typo-hidden: 0;
+
+  --leading-10: 16px;
+  --leading-12: 18px;
+  --leading-14: 20px;
+  --leading-16: 24px;
+  --leading-18: 26px;
+  --leading-20: 28px;
+  --leading-24: 32px;
+  --leading-28: 36px;
+  --leading-32: 40px;
+
+  --text-display: var(--typo-32);
+  --text-h1: var(--typo-24);
+  --text-h2: var(--typo-20);
+  --text-title: var(--typo-18);
+  --text-subtitle: var(--typo-16);
+  --text-body: var(--typo-14);
+  --text-label: var(--typo-12);
+  --text-caption: var(--typo-12);
+  --text-button: var(--typo-14);
+  --text-money: var(--typo-32);
+  --text-money-mobile: var(--typo-28);
+  --text-money-small: var(--typo-18);
+  --text-value-small: var(--typo-16);
 
   --ds-blue-900: #004b7a;
   --ds-blue-800: #004b7a;
@@ -52,14 +88,14 @@
   --ds-shadow-float: 0 16px 42px rgba(18, 47, 91, .16);
   --ds-transition: 180ms ease;
 
-  --ds-text-display: 28px;
-  --ds-text-h1: 24px;
-  --ds-text-h2: 20px;
-  --ds-text-h3: 18px;
-  --ds-text-large: 16px;
-  --ds-text-body: 15px;
-  --ds-text-small: 13px;
-  --ds-text-caption: 12px;
+  --ds-text-display: var(--text-display);
+  --ds-text-h1: var(--text-h1);
+  --ds-text-h2: var(--text-h2);
+  --ds-text-h3: var(--text-title);
+  --ds-text-large: var(--text-subtitle);
+  --ds-text-body: var(--text-body);
+  --ds-text-small: var(--text-label);
+  --ds-text-caption: var(--text-caption);
 
   --ds-control-height: 48px;
   --ds-touch-target: 44px;
@@ -68,7 +104,7 @@
 html {
   background: var(--ds-bg);
   color: var(--ds-text-primary);
-  font-family: var(--ds-font);
+  font-family: var(--font-family-app);
   overflow-y: scroll;
   scrollbar-gutter: stable;
   text-rendering: optimizeLegibility;
@@ -81,12 +117,12 @@ input,
 select,
 textarea,
 table {
-  font-family: var(--ds-font);
+  font-family: var(--font-family-app);
   letter-spacing: 0 !important;
 }
 
 body {
-  --ds-font: var(--font-roboto), Roboto, system-ui, "Segoe UI", sans-serif;
+  --ds-font: var(--font-family-app);
   color: var(--ds-text-primary);
   font-size: var(--ds-text-body);
   font-weight: 400;
@@ -160,7 +196,7 @@ textarea {
   background: var(--ds-white) !important;
   color: var(--ds-text-primary) !important;
   padding: 0 var(--ds-space-3) 0 calc(var(--ds-space-3) + 42px) !important;
-  font-size: 16px !important;
+  font-size: var(--typo-16) !important;
   font-weight: 500 !important;
   line-height: 1.45;
   transition: border-color var(--ds-transition), box-shadow var(--ds-transition);
@@ -401,7 +437,7 @@ textarea:focus {
   border-radius: var(--ds-radius-card) !important;
   background: var(--ds-white) !important;
   padding: var(--ds-space-5) !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   color: var(--ds-text-primary) !important;
 }
 
@@ -424,7 +460,7 @@ textarea:focus {
   background: var(--ds-red-100) !important;
   color: var(--ds-red-700) !important;
   padding: 4px 9px !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-caption) !important;
   font-style: normal !important;
   font-weight: 600 !important;
@@ -433,7 +469,7 @@ textarea:focus {
 .tvv-contest-detail header h2 {
   margin: 0 !important;
   color: var(--ds-blue-900) !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-h2) !important;
   font-weight: 700 !important;
   line-height: 1.3 !important;
@@ -451,8 +487,8 @@ textarea:focus {
   background: var(--ds-blue-100) !important;
   color: var(--ds-blue-700) !important;
   padding: 0 !important;
-  font-family: var(--ds-font) !important;
-  font-size: 25px !important;
+  font-family: var(--font-family-app);
+  font-size: var(--typo-24) !important;
   font-weight: 400 !important;
   line-height: 1 !important;
   box-shadow: none !important;
@@ -475,7 +511,7 @@ textarea:focus {
   background: var(--ds-blue-50) !important;
   color: var(--ds-blue-800) !important;
   padding: var(--ds-space-2) !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-small) !important;
   font-weight: 600 !important;
   line-height: 1.3 !important;
@@ -512,7 +548,7 @@ textarea:focus {
 
 .tvv-policy-overview small {
   color: var(--ds-text-secondary) !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-caption) !important;
   font-weight: 500 !important;
 }
@@ -520,7 +556,7 @@ textarea:focus {
 .tvv-policy-overview strong {
   margin-top: var(--ds-space-2) !important;
   color: var(--ds-blue-700) !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-small) !important;
   font-weight: 700 !important;
   line-height: 1.35 !important;
@@ -753,7 +789,7 @@ textarea:focus {
   background: transparent !important;
   color: var(--ds-text-primary) !important;
   padding: var(--ds-space-2) 10px !important;
-  font-family: var(--ds-font) !important;
+  font-family: var(--font-family-app);
   font-size: var(--ds-text-body) !important;
   font-weight: 500 !important;
   text-align: left;
@@ -972,13 +1008,13 @@ textarea:focus {
   }
 
   body .tvv-app .tvv-hero h1 {
-    font-size: 16px !important;
+    font-size: var(--typo-16) !important;
     line-height: 1.2 !important;
   }
 
   body .tvv-app .tvv-hero p {
     margin-top: 2px !important;
-    font-size: 12px !important;
+    font-size: var(--typo-12) !important;
   }
 
   body .tvv-app .tvv-hero-period-row {
@@ -1010,7 +1046,7 @@ textarea:focus {
     display: block !important;
     overflow: visible !important;
     color: var(--ds-white) !important;
-    font-size: 12px !important;
+    font-size: var(--typo-12) !important;
     line-height: 1 !important;
     white-space: nowrap !important;
     opacity: 1 !important;
@@ -1030,7 +1066,232 @@ textarea:focus {
 
   body .tvv-app .tvv-ip-periods small,
   body .tvv-app .tvv-ip-periods strong {
-    font-size: 12px !important;
+    font-size: var(--typo-12) !important;
     line-height: 1.15 !important;
   }
 }
+
+/* Typography semantic layer: all screens share the same readable hierarchy. */
+body {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+}
+
+.topbar h1,
+.dashboard-header h1,
+.tvv-hero h1,
+.team-leader-hero h1,
+.admin-header h1 {
+  font-size: var(--text-h2) !important;
+  line-height: var(--leading-20) !important;
+  font-weight: 700 !important;
+}
+
+.panel h2,
+.panel-header h2,
+.tvv-section-head h2,
+.tvv-card h2,
+.card-title,
+.admin-card-title h2,
+.admin-section-header h2,
+.team-reward-program-title,
+.tvv-sub-header h2 {
+  font-size: var(--text-title) !important;
+  line-height: var(--leading-18) !important;
+  font-weight: 700 !important;
+}
+
+.section-label,
+.panel h3,
+.tvv-card h3,
+.filter-title,
+.table-title,
+.tvv-result-row b,
+.team-policy-detail-section > span {
+  font-size: var(--text-subtitle) !important;
+  line-height: var(--leading-16) !important;
+  font-weight: 600 !important;
+}
+
+label,
+.label,
+.filter-field label,
+.form-field label,
+.admin-upload-row label,
+.tvv-user-login label,
+.tvv-profile-form label {
+  font-size: var(--text-label) !important;
+  line-height: var(--leading-12) !important;
+  font-weight: 600 !important;
+}
+
+button,
+[role="button"],
+.button,
+.primary,
+.ghost,
+.month-button,
+.tab,
+.tvv-bottom-nav button {
+  font-size: var(--text-button) !important;
+  line-height: var(--leading-14) !important;
+  font-weight: 600 !important;
+}
+
+input,
+select,
+textarea {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+  font-weight: 500 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  font-size: var(--text-body) !important;
+  font-weight: 400 !important;
+}
+
+th,
+.table-wrap th,
+.data-table th {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+  font-weight: 600 !important;
+}
+
+td,
+.table-wrap td,
+.data-table td {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+}
+
+td b,
+td strong,
+.table-wrap td strong,
+.data-table td strong {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+  font-weight: 600 !important;
+}
+
+small,
+caption,
+.caption,
+.muted,
+.table-wrap td small,
+.data-table td small {
+  font-size: var(--text-caption) !important;
+  line-height: var(--leading-12) !important;
+  font-weight: 400 !important;
+}
+
+.kpi span,
+.kpi-label,
+.kpi-copy span {
+  font-size: var(--text-body) !important;
+  line-height: var(--leading-14) !important;
+  font-weight: 600 !important;
+}
+
+.kpi strong,
+.kpi-number,
+.overview-plan-total strong {
+  font-size: var(--text-money) !important;
+  line-height: var(--leading-32) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.money,
+.amount,
+.team-reward-program-amount em,
+.tvv-star-main strong,
+.personal-star-total strong {
+  font-size: var(--text-money-small) !important;
+  line-height: var(--leading-18) !important;
+  font-weight: 700 !important;
+}
+
+.tvv-bottom-nav span,
+.tvv-bottom-nav b,
+.bottom-nav span,
+.bottom-nav b {
+  font-size: var(--text-label) !important;
+  line-height: var(--leading-12) !important;
+  font-weight: 600 !important;
+}
+
+.tvv-bottom-nav .active span,
+.tvv-bottom-nav .active b,
+.bottom-nav .active span,
+.bottom-nav .active b {
+  font-weight: 700 !important;
+}
+
+@media (max-width: 560px) {
+  .kpi strong,
+  .kpi-number,
+  .overview-plan-total strong {
+    font-size: var(--text-money-mobile) !important;
+    line-height: var(--leading-28) !important;
+  }
+}
+
+/* Compact contract status card: keep labels inside the narrow mobile KPI tile. */
+.ct-status-summary {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.ct-status-summary > div {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.ct-status-summary small {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: var(--text-caption) !important;
+  line-height: var(--leading-12) !important;
+}
+
+.ct-status-summary div > strong {
+  min-width: 10px !important;
+  text-align: right !important;
+  font-size: var(--text-caption) !important;
+  line-height: var(--leading-12) !important;
+  font-weight: 700 !important;
+}
+
+.ct-status-tabs {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  padding: 5px 6px !important;
+}
+
+.ct-status-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ct-status-tabs button {
+  flex: 1 1 calc(50% - 6px) !important;
+  width: auto !important;
+  max-width: 100% !important;
+  font-size: var(--text-caption) !important;
+  line-height: var(--leading-12) !important;
+  white-space: nowrap !important;
+  padding: 0 9px !important;
+}
+

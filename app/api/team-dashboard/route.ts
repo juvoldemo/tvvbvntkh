@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { monthBounds, toMonthStart } from "@/lib/format";
+import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
 import { buildGroupStarVietSummary, buildStarVietReport, type StarVietKpi05GroupRow } from "@/lib/star-viet";
 import { readStarVietRecords } from "@/lib/star-viet-data";
@@ -95,10 +95,12 @@ export async function GET(request: NextRequest) {
     }
 
     const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const currentStarVietMonth = getVietnamToday().slice(0, 7);
     const { start, end } = monthBounds(month);
     const previousMonthKey = previousMonth(month);
     const previousMonthBounds = monthBounds(previousMonthKey);
     const year = month.slice(0, 4);
+    const currentStarVietYear = currentStarVietMonth.slice(0, 4);
     const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietRecords, teamRoster, kpi05Rows] = await Promise.all([
       supabase.from("revenue_records").select("*")
         .eq("data_month", toMonthStart(month)).eq("group_name", groupName)
@@ -112,14 +114,14 @@ export async function GET(request: NextRequest) {
         supabase.from("revenue_records").select("agent_code,agent_name,group_name,paid_date,issued_date")
           .neq("data_month", "2099-01-01").eq("group_name", groupName).range(from, to)
       ),
-      readStarVietRecords(supabase, month.slice(0, 7)),
+      readStarVietRecords(supabase, currentStarVietMonth),
       readTeamRoster(supabase, groupName),
       readAll<StarVietKpi05GroupRow>((from, to) => supabase
         .from("tvv_reward_policy_records")
         .select("data_month,reward_source,group_name,ban_name,fyp,raw_data")
         .eq("reward_source", "kpi05")
-        .gte("data_month", `${year}-01-01`)
-        .lte("data_month", `${year}-12-31`)
+        .gte("data_month", `${currentStarVietYear}-01-01`)
+        .lte("data_month", `${currentStarVietYear}-12-31`)
         .range(from, to)
       )
     ]);

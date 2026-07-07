@@ -3784,7 +3784,7 @@ document.addEventListener("keydown", (event) => {
 
 const SUMMARY_IMAGE_WIDTH = 1080;
 const SUMMARY_IMAGE_HEIGHT = 1620;
-const SUMMARY_FONT_FAMILY = '"Segoe UI", Tahoma, Arial, sans-serif';
+const SUMMARY_FONT_FAMILY = 'Inter, "SF Pro Display", "Segoe UI", sans-serif';
 let latestSummaryImage = null;
 let latestAddonBenefitImages = [];
 let addonBenefitReferenceMarkdown = null;

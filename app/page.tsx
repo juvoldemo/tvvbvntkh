@@ -1856,7 +1856,6 @@ function ContractsListV2({ contracts, month, monthOptions, periodMode, onPeriodM
     <div className="ct-summary">
       <article><span>IP {periodMode === "month" ? "tháng" : periodMode === "quarter" ? "quý" : "năm"}</span><i><BarChart3 size={20} /></i><strong>{formatVnd(totalIp)}</strong></article>
       <article><span>Số hợp đồng</span><i><FileText size={19} /></i><strong>{advisorScopedContracts.length}</strong></article>
-      <article className="ct-status-summary"><span>Trạng thái</span><div><small><b className="green" />Đã phát hành</small><strong>{issued}</strong></div><div><small><b className="orange" />Chờ phát hành</small><strong>{pending}</strong></div><div><small><b className="red" />Hoàn phí</small><strong>{refunded}</strong></div></article>
     </div>
     <div className="ct-status-tabs" role="tablist" aria-label="Lọc trạng thái hợp đồng">
       {filters.map(([id, label, count, tone]: any) => <button key={id} type="button" role="tab" aria-selected={statusFilter === id} onClick={() => setStatusFilter(id)}><b className={tone} />{label} ({count})</button>)}
@@ -2248,5 +2247,6 @@ function BottomNav({ tab, setTab }: { tab: Tab; setTab: (tab: Tab) => void }) {
   const items: Array<[Tab, string, any]> = [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
   return <nav className="tvv-bottom-nav" aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}><Icon size={25} /><span>{label}</span></button>)}</nav>;
 }
+
 
 

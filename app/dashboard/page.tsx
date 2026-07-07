@@ -14,6 +14,7 @@ import { formatCompactVnd, formatPercent, formatVnd } from "@/lib/format";
 import { groupLeaderName } from "@/lib/group-leaders";
 import { getUploadUserName } from "@/lib/upload-users";
 import { getAdsPlan, getAdsMonthlyTarget, getAdsQuarterTarget, getAdsYearTarget } from "@/lib/ads-plan";
+import { Typography } from "@/lib/typography";
 
 type DashboardData = any;
 type Tab = "overview" | "groups" | "agents" | "status" | "time" | "ads" | "contests" | "starviet" | "admin" | "upload";
@@ -1263,7 +1264,7 @@ function Overview({ data, month, selectedAds, onViewDetails, onGoGroups, onGoAge
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartRows} margin={{ top: 10, right: 8, left: 0, bottom: hideMobileCategoryLabels ? 4 : chartMode === "day" ? 0 : 18 }} barCategoryGap={hideMobileCategoryLabels ? "6%" : "18%"} barGap={hideMobileCategoryLabels ? 2 : 6}>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} />
-                  <XAxis dataKey="label" tick={hideMobileCategoryLabels ? false : { fontSize: isMobileChart ? 10 : 12 }} tickLine={false} axisLine={false} interval={0} angle={chartMode === "day" ? 0 : isMobileChart ? 0 : -18} textAnchor={chartMode === "day" || isMobileChart ? "middle" : "end"} height={hideMobileCategoryLabels ? 8 : chartMode === "day" ? 30 : isMobileChart ? 34 : 66} tickFormatter={(value) => chartMode === "day" || isMobileChart ? value : truncateChartLabel(value)} />
+                  <XAxis dataKey="label" tick={hideMobileCategoryLabels ? false : { fontSize: isMobileChart ? Typography.label : Typography.caption }} tickLine={false} axisLine={false} interval={0} angle={chartMode === "day" ? 0 : isMobileChart ? 0 : -18} textAnchor={chartMode === "day" || isMobileChart ? "middle" : "end"} height={hideMobileCategoryLabels ? 8 : chartMode === "day" ? 30 : isMobileChart ? 34 : 66} tickFormatter={(value) => chartMode === "day" || isMobileChart ? value : truncateChartLabel(value)} />
                   <YAxis yAxisId="afyp" tickLine={false} axisLine={false} tickFormatter={(value) => `${Math.round(Number(value) / 1_000_000)}tr`} />
                   <YAxis yAxisId="count" orientation="right" tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={(value) => `${Number(value).toLocaleString("vi-VN")}`} />
                   <Tooltip content={<OverviewChartTooltip mode={chartMode} countLabel={chartMeta.countLabel} />} />
