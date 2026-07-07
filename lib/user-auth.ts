@@ -17,6 +17,23 @@ export function hashPassword(password: string) {
   return `${salt}:${hash}`;
 }
 
+export function randomStrongPassword(length = 12) {
+  const groups = [
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnopqrstuvwxyz",
+    "23456789",
+    "!@#$%^&*_-+=?"
+  ];
+  const alphabet = groups.join("");
+  const chars = groups.map((group) => group[randomBytes(1)[0] % group.length]);
+  while (chars.length < length) chars.push(alphabet[randomBytes(1)[0] % alphabet.length]);
+  for (let index = chars.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomBytes(1)[0] % (index + 1);
+    [chars[index], chars[swapIndex]] = [chars[swapIndex], chars[index]];
+  }
+  return chars.join("");
+}
+
 export function verifyPassword(password: string, stored: string) {
   const [salt, expected] = stored.split(":");
   if (!salt || !expected) return false;

@@ -351,6 +351,7 @@ create table if not exists authorized_users (
   birth_day smallint,
   birth_month smallint,
   password_hash text,
+  password_plain text,
   avatar_url text,
   is_active boolean not null default true,
   created_at timestamptz default now(),
@@ -365,6 +366,7 @@ alter table authorized_users add column if not exists position_effective_date da
 alter table authorized_users add column if not exists birth_day smallint;
 alter table authorized_users add column if not exists birth_month smallint;
 alter table authorized_users add column if not exists password_hash text;
+alter table authorized_users add column if not exists password_plain text;
 alter table authorized_users add column if not exists avatar_url text;
 
 create index if not exists idx_authorized_users_active on authorized_users(is_active);

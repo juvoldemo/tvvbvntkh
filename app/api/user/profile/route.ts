@@ -29,7 +29,8 @@ export async function PUT(request: NextRequest) {
   if (!data || !verifyPassword(String(currentPassword), data.password_hash || "")) {
     return NextResponse.json({ error: "Mật khẩu hiện tại không đúng." }, { status: 401 });
   }
-  const { error } = await supabase.from("authorized_users").update({ password_hash: hashPassword(String(newPassword)), updated_at: new Date().toISOString() }).eq("advisor_code", code);
+  const nextPassword = String(newPassword);
+  const { error } = await supabase.from("authorized_users").update({ password_hash: hashPassword(nextPassword), password_plain: nextPassword, updated_at: new Date().toISOString() }).eq("advisor_code", code);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

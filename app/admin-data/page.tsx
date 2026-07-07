@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { BarChart3, Bell, BookOpen, CalendarPlus, FileText, HelpCircle, LogOut, Plus, Save, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; created_at: string };
-type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; is_active: boolean };
+type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
 type AdminTab = "events" | "data" | "targets" | "archive" | "access";
 type AdminRewardAudience = "tvv" | "leaders";
 type AdminRewardPeriod = "month" | "quarter";
@@ -157,6 +157,18 @@ export default function AdminDataPage() {
     }
   }
 
+  async function randomizeAccessPasswords() {
+    if (!window.confirm("Tạo mật khẩu random mới cho tất cả TVV đang được cấp quyền? Mật khẩu cũ sẽ không dùng để đăng nhập nữa.")) return;
+    setBusy(true);
+    setMessage("");
+    const response = await fetch("/api/admin/access-list", { method: "PUT" });
+    const payload = await response.json().catch(() => ({}));
+    setBusy(false);
+    if (!response.ok) return setMessage(payload.error || "Không tạo được mật khẩu random.");
+    setMessage(`Đã tạo mật khẩu random mới cho ${payload.count} TVV.`);
+    await loadData();
+  }
+
   async function createEvent(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -222,14 +234,15 @@ export default function AdminDataPage() {
 
       <section className="admin-panel-area">
         {activeTab === "access" && <article className="admin-card">
-          <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu mặc định 123456.</p></div></div>
+          <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
             <label className="admin-file"><Upload /><span>Chọn file dữ liệu TVV theo định dạng APM01</span><input name="file" type="file" accept=".xlsx,.xls,.csv" required /></label>
             <button disabled={busy}>Upload danh sách</button>
           </form>
+          <button type="button" className="admin-secondary admin-access-password-button" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu random cho tất cả TVV</button>
           <div className="admin-count">{users.filter((user) => user.is_active).length} người đang được cấp quyền</div>
-          <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Trạng thái</th><th>Chức vụ</th></tr></thead><tbody>
-            {users.filter((user) => user.is_active).map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}
+          <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Trạng thái</th><th>Chức vụ</th></tr></thead><tbody>
+            {users.filter((user) => user.is_active).map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td><code className="admin-password-code">{user.password_plain || "Chưa tạo"}</code></td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}
           </tbody></table></div>
         </article>}
 

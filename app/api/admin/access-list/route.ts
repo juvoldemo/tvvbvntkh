@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { hashPassword, normalizeAdvisorCode } from "@/lib/user-auth";
+import { hashPassword, normalizeAdvisorCode, randomStrongPassword } from "@/lib/user-auth";
+
+const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_plain,is_active,created_at";
+const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,is_active,created_at";
+
+function missingPasswordPlainColumn(error: unknown) {
+  return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
+}
 
 function text(row: Record<string, unknown>, names: string[]) {
   const key = Object.keys(row).find((item) => names.includes(item.trim().toLowerCase()));
@@ -40,11 +47,20 @@ export async function GET(request: NextRequest) {
   const users: Record<string, unknown>[] = [];
   const pageSize = 1000;
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("authorized_users")
-      .select("id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,is_active,created_at")
+      .select(accessListFields)
       .order("full_name")
       .range(from, from + pageSize - 1);
+    if (error && missingPasswordPlainColumn(error)) {
+      const fallback = await supabase
+        .from("authorized_users")
+        .select(accessListFallbackFields)
+        .order("full_name")
+        .range(from, from + pageSize - 1);
+      data = fallback.data?.map((user) => ({ ...user, password_plain: null })) ?? [];
+      error = fallback.error;
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     users.push(...(data ?? []));
     if ((data ?? []).length < pageSize) break;
@@ -82,10 +98,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { data: existing } = await supabase.from("authorized_users").select("advisor_code,password_hash");
-    const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, item.password_hash]));
-    const defaultPasswordHash = hashPassword("123456");
-    const usersWithPasswords = users.map((user) => ({ ...user, password_hash: passwords.get(user.advisor_code) || defaultPasswordHash, updated_at: new Date().toISOString() }));
+    const { data: existing } = await supabase.from("authorized_users").select("advisor_code,password_hash,password_plain");
+    const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
+    const usersWithPasswords = users.map((user) => {
+      const current = passwords.get(user.advisor_code);
+      const plainPassword = current?.plain || randomStrongPassword();
+      return { ...user, password_hash: current?.hash || hashPassword(plainPassword), password_plain: plainPassword, updated_at: new Date().toISOString() };
+    });
     const { error: disableError } = await supabase.from("authorized_users").update({ is_active: false }).eq("is_active", true);
     if (disableError) throw disableError;
     const { error } = await supabase.from("authorized_users").upsert(usersWithPasswords, { onConflict: "advisor_code" });
@@ -93,5 +112,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, count: users.length });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không đọc được file." }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
+  try {
+    const supabase = getSupabaseAdmin();
+    const rows: Array<{ id: string; advisor_code: string }> = [];
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from("authorized_users")
+        .select("id,advisor_code")
+        .eq("is_active", true)
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      rows.push(...(data ?? []));
+      if ((data ?? []).length < pageSize) break;
+    }
+
+    const now = new Date().toISOString();
+    const updates = rows.map((user) => {
+      const password = randomStrongPassword();
+      return {
+        id: user.id,
+        advisor_code: user.advisor_code,
+        password_hash: hashPassword(password),
+        password_plain: password,
+        updated_at: now
+      };
+    });
+
+    for (let index = 0; index < updates.length; index += 500) {
+      const { error } = await supabase.from("authorized_users").upsert(updates.slice(index, index + 500), { onConflict: "id" });
+      if (error) throw error;
+    }
+
+    return NextResponse.json({ ok: true, count: updates.length });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Không tạo được mật khẩu random." }, { status: 500 });
   }
 }
