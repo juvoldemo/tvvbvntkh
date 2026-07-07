@@ -857,9 +857,9 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
   const totalTeamAdvisors = Number(currentTeamAdvisorCount) || summary.agents;
   const kpis = [
     { label: "Doanh thu AFYP", value: formatCompactVnd(summary.afyp), tone: "blue", icon: BarChart3 },
-    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "green", icon: Users },
+    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "red", icon: Users },
     { label: "Hợp đồng", value: summary.contracts, tone: "orange", icon: FileText },
-    { label: "Có hiệu lực", value: summary.issued, tone: "purple", icon: Trophy }
+    { label: "Có hiệu lực", value: summary.issued, tone: "green", icon: CheckCircle2 }
   ];
   const allTeamContracts = (data.contracts ?? []).slice().sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")));
   const teamAgents = data.allAgents?.length ? data.allAgents : data.agents ?? [];

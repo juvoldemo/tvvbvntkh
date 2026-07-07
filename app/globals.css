@@ -16764,6 +16764,8 @@ body .tvv-app .tvv-contest-detail {
 .team-kpi-card.blue strong { color: #004b7a; }
 .team-kpi-card.green > svg,
 .team-kpi-card.green strong { color: #29b919; }
+.team-kpi-card.red > svg,
+.team-kpi-card.red strong { color: #d92d42; }
 .team-kpi-card.orange > svg,
 .team-kpi-card.orange strong { color: #ff9700; }
 .team-kpi-card.purple > svg,
