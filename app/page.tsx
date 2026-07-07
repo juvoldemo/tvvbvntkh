@@ -710,7 +710,7 @@ export default function TvvMobilePage() {
       )}
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
       {targetModalOpen && <TeamTargetRegistrationModal month={month} teamData={teamData} registration={teamTarget} onSaved={setTeamTarget} onClose={() => setTargetModalOpen(false)} />}
-      {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader"} onClose={() => setSelectedContract(null)} />}
+      {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader"} hideCustomerNames={userProfile?.dashboard_role === "team_leader"} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
     </main>
   );
@@ -1893,7 +1893,7 @@ function ContractsListV2({ contracts, month, monthOptions, periodMode, onPeriodM
           </div>}
         </div>
       </header>
-      {filteredContracts.length ? filteredContracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} />) : <p className="ct-empty">Chưa có hợp đồng trong {periodTitle.toLowerCase()}.</p>}
+      {filteredContracts.length ? filteredContracts.map((row: any) => <ContractRow key={row.id || row.contract_no} row={row} onOpen={onOpenContract} hideCustomerName={showAdvisorFilter} />) : <p className="ct-empty">Chưa có hợp đồng trong {periodTitle.toLowerCase()}.</p>}
     </section>
   </section>;
 }
@@ -1937,14 +1937,15 @@ function contractDisplay(row: any) {
   return { policyOwner, insuredName, applicationNo, paidDate, issuedDate };
 }
 
-function ContractRow({ row, onOpen }: any) {
+function ContractRow({ row, onOpen, hideCustomerName = false }: any) {
   const tone = statusTone(row.policy_status);
   const Icon = tone.icon;
   const display = contractDisplay(row);
-  return <button className="tvv-contract-row" type="button" onClick={() => onOpen?.(row)}><span className={tone.tone}><Icon size={22} /></span><div><b>{display.policyOwner}</b><p>{display.applicationNo}</p></div><strong>{formatVnd(Number(row.ip || row.afyp || 0))}<small>{formatDateVi(display.paidDate)}</small></strong><em className={tone.tone}>{tone.label}</em><ChevronRight size={20} /></button>;
+  const title = hideCustomerName ? row.agent_name || "TVV" : display.policyOwner;
+  return <button className="tvv-contract-row" type="button" onClick={() => onOpen?.(row)}><span className={tone.tone}><Icon size={22} /></span><div><b>{title}</b><p>{display.applicationNo}</p></div><strong>{formatVnd(Number(row.ip || row.afyp || 0))}<small>{formatDateVi(display.paidDate)}</small></strong><em className={tone.tone}>{tone.label}</em><ChevronRight size={20} /></button>;
 }
 
-function ContractDetailModal({ row, onClose, showAdvisorName = false }: { row: any; onClose: () => void; showAdvisorName?: boolean }) {
+function ContractDetailModal({ row, onClose, showAdvisorName = false, hideCustomerNames = false }: { row: any; onClose: () => void; showAdvisorName?: boolean; hideCustomerNames?: boolean }) {
   const display = contractDisplay(row);
   const detailRows = [
     ["BMBH", display.policyOwner || ""],
@@ -1953,7 +1954,7 @@ function ContractDetailModal({ row, onClose, showAdvisorName = false }: { row: a
     ["Ngày phát hành", display.issuedDate ? formatDateVi(display.issuedDate) : ""],
     ["IP", formatVnd(Number(row.ip || 0))],
     ["AFYP", formatVnd(Number(row.afyp || 0))]
-  ];
+  ].filter((_, index) => !hideCustomerNames || index > 1);
   return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contract-detail" role="dialog" aria-modal="true" aria-label="Chi tiết hợp đồng" onClick={(event) => event.stopPropagation()}><header><div><p>{display.applicationNo}</p><h2>{showAdvisorName ? row.agent_name || "TVV" : display.policyOwner}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header><div className="tvv-contract-detail-grid">{detailRows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section></div>;
 }
 
@@ -2185,15 +2186,20 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
   const [profile, setProfile] = useState<any>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [avatarFileName, setAvatarFileName] = useState("");
   useEffect(() => { fetch("/api/user/profile", { cache: "no-store" }).then((response) => response.json()).then((payload) => setProfile(payload.profile ?? null)); }, []);
   async function changePassword(event: FormEvent) {
     event.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      setMessage("Mật khẩu mới nhập lại chưa khớp.");
+      return;
+    }
     const response = await fetch("/api/user/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword, newPassword }) });
     const payload = await response.json();
     setMessage(response.ok ? "Đã thay đổi mật khẩu." : payload.error);
-    if (response.ok) { setCurrentPassword(""); setNewPassword(""); }
+    if (response.ok) { setCurrentPassword(""); setNewPassword(""); setConfirmNewPassword(""); }
   }
   async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2227,7 +2233,13 @@ function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {
       <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" required onChange={(event) => setAvatarFileName(event.target.files?.[0]?.name || "")} />
     </label>
     <small className="tvv-avatar-limit">Dung lượng ảnh phải nhỏ hơn 5 MB.</small><button disabled={!avatarFileName}>Cập nhật avatar</button></form>
-  <form className="tvv-profile-form" onSubmit={changePassword}><h3>Đổi mật khẩu</h3><input type="password" placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /><input type="password" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required minLength={6} /><button>Đổi mật khẩu</button></form>
+  <form className="tvv-profile-form" onSubmit={changePassword}>
+    <h3>Đổi mật khẩu</h3>
+    <input type="password" placeholder="Mật khẩu hiện tại" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
+    <input type="password" placeholder="Mật khẩu mới (ít nhất 6 ký tự)" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required minLength={6} />
+    <input type="password" placeholder="Nhập lại mật khẩu mới" value={confirmNewPassword} onChange={(event) => setConfirmNewPassword(event.target.value)} required minLength={6} />
+    <button>Đổi mật khẩu</button>
+  </form>
   <button className="tvv-logout-button" onClick={logout}>Đăng xuất</button>
   </section></section>;
 }
