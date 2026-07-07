@@ -850,6 +850,76 @@ function TeamLeaderRewardSummary({ rewards }: { rewards: any }) {
   </section>;
 }
 
+function TeamLeaderRewardSummaryCard({ rewards, baseline }: { rewards: any; baseline?: any }) {
+  const [selectedDetail, setSelectedDetail] = useState<"monthly" | "quarterly" | null>(null);
+  const items = [
+    { id: "monthly", label: "Thưởng PTKD tháng", currentValue: baseline?.monthly?.reward ?? 0, value: rewards.monthly?.reward, note: `${Math.round((rewards.monthly?.rate || 0) * 100)}% FYC`, icon: Trophy, interactive: true },
+    { id: "quarterly", label: "Thưởng Quý", currentValue: baseline?.quarterly?.reward ?? 0, value: rewards.quarterly?.reward, note: `${Math.round((rewards.quarterly?.rate || 0) * 100)}% FYC`, icon: Gift, interactive: true },
+    { id: "annual", label: "Thưởng năm", currentValue: baseline?.annual?.reward ?? 0, value: rewards.annual?.reward, note: `${rewards.annual?.achievedQuarters || 0}/4 quý đạt`, icon: Medal, interactive: false },
+    { id: "new-manager", label: "Quản lý mới", currentValue: baseline?.newManager?.reward ?? 0, value: rewards.newManager?.reward, note: rewards.newManager ? `Đến ${formatDateVi(rewards.newManager.validUntil)}` : "Không áp dụng", icon: Crown, interactive: false }
+  ];
+
+  return <>
+    <div className="tvv-reward-summary-title team-reward-summary-title">
+      <span><Gift size={18} /></span>
+      <div><h2>Thưởng chính sách Trưởng nhóm</h2><p>Tạm tính theo dữ liệu hiện tại</p></div>
+    </div>
+    <div className="tvv-total team-reward-total"><span>Tổng thưởng dự kiến</span><strong>{formatVnd(rewards.totalEstimatedReward || 0)}</strong></div>
+    <div className="tvv-result-table tvv-result-table-standalone team-reward-programs">
+      <div className="tvv-result-head"><span>Chương trình</span><span>Hiện tại / Dự kiến</span></div>
+      {items.map((item, index) => {
+        const Icon = item.icon;
+        const currentValue = Number(item.currentValue) || 0;
+        const projectedValue = Number(item.value) || 0;
+        const increaseValue = Math.max(0, projectedValue - currentValue);
+        const interactiveProps = item.interactive ? {
+          role: "button" as const,
+          tabIndex: 0,
+          onClick: () => setSelectedDetail(item.id as "monthly" | "quarterly"),
+          onKeyDown: (event: ReactKeyboardEvent<HTMLDivElement>) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            setSelectedDetail(item.id as "monthly" | "quarterly");
+          }
+        } : {};
+        return <div className={`tvv-result-row team-reward-program-row${item.interactive ? " interactive" : ""}`} key={item.id} {...interactiveProps}>
+          <div><span className={`tvv-result-icon tone-${index % 3}`}><Icon size={22} /></span><b>{item.label}</b><small>{item.note}{item.interactive ? " · Bấm để xem chi tiết" : ""}</small></div>
+          <strong className="team-reward-program-amount"><small>Hiện tại {formatVnd(currentValue)}</small>{formatVnd(projectedValue)}<em>{increaseValue > 0 ? `+${formatVnd(increaseValue)}` : "+0 đ"}</em></strong>
+        </div>;
+      })}
+    </div>
+    {selectedDetail && <TeamLeaderPolicyDetailModal type={selectedDetail} rewards={rewards} onClose={() => setSelectedDetail(null)} />}
+  </>;
+}
+
+function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthly" | "quarterly"; rewards: any; onClose: () => void }) {
+  const detail = type === "monthly" ? rewards.monthly : rewards.quarterly;
+  const title = type === "monthly" ? "Thưởng PTKD tháng" : "Thưởng Quý";
+  const basisLabel = type === "monthly" ? "IP nhóm tháng hiện tại" : "IP nhóm quý hiện tại";
+  const fycLabel = type === "monthly" ? "FYC tháng hiện tại" : "FYC quý hiện tại";
+  const ruleLines = type === "monthly"
+    ? ["Tính trên FYC của nhóm trong tháng.", "Tỷ lệ thưởng phụ thuộc IP nhóm tháng và số TVV HĐC.", "TVV HĐC là TVV có IP phát hành trên 12 triệu trong kỳ."]
+    : ["Tính trên FYC của nhóm trong quý.", "Chỉ có thưởng khi IP nhóm quý từ 150 triệu trở lên.", "Có TVV mới HĐC trong quý sẽ áp dụng bậc thưởng cao hơn."];
+  const currentRate = Math.round((detail?.rate || 0) * 100);
+  const milestones = Array.isArray(detail?.milestones) ? detail.milestones : [];
+
+  return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}>
+    <section className="tvv-contract-detail team-policy-detail-modal" role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}>
+      <header><div><p>CHI TIẾT CHƯƠNG TRÌNH</p><h2>{title}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+      <div className="team-policy-detail-section"><span>Thể lệ CTTĐ</span><div className="team-policy-rule-list">{ruleLines.map((line) => <article key={line}>{line}</article>)}</div></div>
+      <div className="team-policy-detail-grid">
+        <article><span>{basisLabel}</span><strong>{formatVnd(Number(detail?.ip || 0))}</strong></article>
+        <article><span>{fycLabel}</span><strong>{formatVnd(Number(detail?.fyc || 0))}</strong></article>
+        <article><span>Bậc hiện tại</span><strong>{currentRate}% FYC</strong></article>
+        <article><span>Thưởng hiện tại</span><strong>{formatVnd(Number(detail?.reward || 0))}</strong></article>
+      </div>
+      {type === "monthly" && <div className="team-policy-detail-note"><span>TVV HĐC hiện tại</span><strong>{Number(detail?.hdc || 0)} TVV</strong></div>}
+      {type === "quarterly" && <div className="team-policy-detail-note"><span>Điều kiện TVV mới HĐC</span><strong>{detail?.hasNewAdvisor ? "Đã đạt" : "Chưa đạt"}</strong></div>}
+      <div className="team-policy-detail-section"><span>Mốc tiếp theo</span>{milestones.length ? <div className="team-policy-next-list">{milestones.map((item: any) => <article key={item.title}><b>{item.title}</b><small>{item.subtitle}</small><div><span>Còn thiếu {formatVnd(Number(item.missing || 0))}</span><strong>{formatVnd(Number(item.projectedReward || 0))}</strong></div><em>+{formatVnd(Number(item.incrementalReward || 0))} so với hiện tại</em></article>)}</div> : <p className="tvv-empty">Đã đạt mốc cao nhất của chương trình này.</p>}</div>
+    </section>
+  </div>;
+}
+
 function TeamLeaderStarJourney({ row }: { row?: any }) {
   if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của nhóm trong tháng này.</p></section>;
   const totalFyp = Number(row.totalAfyp || 0);
@@ -998,6 +1068,8 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
   const [draftContracts, setDraftContracts] = useState<any[]>([]);
   const [result, setResult] = useState<any>(baseline);
   const [calculating, setCalculating] = useState(false);
+  const [formError, setFormError] = useState("");
+  const advisorList = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
 
   async function calculate(nextDrafts = draftContracts) {
     setCalculating(true);
@@ -1014,7 +1086,10 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
 
   function addDraft() {
     const ip = parseMoneyInput(ipText);
-    if (!advisorCode || ip <= 0 || !expectedPaidDate) return;
+    if (!advisorCode) return setFormError("Vui lòng chọn TVV trước khi thêm hợp đồng dự kiến.");
+    if (ip <= 0) return setFormError("Vui lòng nhập IP dự kiến lớn hơn 0.");
+    if (!expectedPaidDate) return setFormError("Vui lòng chọn ngày thu phí.");
+    setFormError("");
     const next = [...draftContracts, { id: crypto.randomUUID(), advisorCode, ip, expectedPaidDate, expectedIssueDate: expectedPaidDate, isNewAdvisor }];
     setDraftContracts(next);
     setIpText("");
@@ -1023,18 +1098,18 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
 
   return <section className="tvv-calculator team-leader-calculator">
     <TvvSubHeader title="Mô phỏng thưởng Trưởng nhóm" onBack={onBack} />
-    <section className="tvv-calc-card"><h2>Thêm hợp đồng dự kiến</h2>
+    <section className="tvv-calc-card team-leader-entry-card">
+      <div className="team-leader-entry-head"><div><h2>Thêm hợp đồng dự kiến</h2></div><span className="team-fyc-badge">FYC = 30% IP</span></div>
       <div className="team-leader-calc-form">
-        <label>TVV<select value={advisorCode} onChange={(event) => setAdvisorCode(event.target.value)}><option value="">Chọn TVV</option>{(teamData?.agents ?? []).map((item: any) => <option key={item.agentCode} value={item.agentCode}>{item.agentName}</option>)}</select></label>
-        <label>IP dự kiến<input value={ipText} onChange={(event) => setIpText(moneyInput(event.target.value))} placeholder="0" /></label>
-        <label>Ngày thu phí<input type="date" value={expectedPaidDate} onChange={(event) => setExpectedPaidDate(event.target.value)} /></label>
-        <label className="team-new-advisor-check"><input type="checkbox" checked={isNewAdvisor} onChange={(event) => setIsNewAdvisor(event.target.checked)} /> TVV mới trong quý</label>
+        <label><span>TVV</span><select value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); if (formError) setFormError(""); }}><option value="">Chọn TVV</option>{advisorList.map((item: any) => <option key={item.agentCode} value={item.agentCode}>{item.agentName}</option>)}</select></label>
+        <label><span>IP dự kiến</span><input value={ipText} onChange={(event) => { setIpText(moneyInput(event.target.value)); if (formError) setFormError(""); }} placeholder="0" /></label>
+        <label className="team-date-field"><span>Ngày thu phí</span><div className="team-date-input"><strong>{formatDateVi(expectedPaidDate)}</strong><CalendarDays size={18} /><input type="date" value={expectedPaidDate} onChange={(event) => { setExpectedPaidDate(event.target.value); if (formError) setFormError(""); }} /></div></label>
       </div>
-      <p className="team-fyc-note">FYC dự kiến tự động tính bằng 30% IP.</p>
-      <button className="tvv-primary" type="button" onClick={addDraft}>+ Thêm và tính lại</button>
+      {formError && <p className="team-form-error">{formError}</p>}
+      <div className="team-leader-entry-foot"><button className="tvv-primary" type="button" onClick={addDraft}>+ Thêm và tính lại</button></div>
     </section>
-    {draftContracts.length > 0 && <section className="tvv-calc-card"><h2>Hợp đồng dự kiến ({draftContracts.length})</h2>{draftContracts.map((draft) => <article className="team-draft-contract" key={draft.id}><span>{teamData?.agents?.find((item: any) => item.agentCode === draft.advisorCode)?.agentName || draft.advisorCode}</span><strong>{formatVnd(draft.ip)}</strong><button type="button" onClick={() => { const next = draftContracts.filter((item) => item.id !== draft.id); setDraftContracts(next); void calculate(next); }}><Trash2 size={16} /></button></article>)}</section>}
-    <section className="tvv-calc-card team-calc-result"><h2>Kết quả mô phỏng</h2>{calculating ? <p>Đang tính…</p> : result ? <><TeamLeaderRewardSummary rewards={result} /><div className="team-calc-increase"><span>Tăng thêm so với hiện tại</span><strong>+{formatVnd(Math.max(0, Number(result.totalEstimatedReward) - Number(baseline?.totalEstimatedReward || 0)))}</strong></div></> : <p>Chưa có kết quả.</p>}</section>
+    {draftContracts.length > 0 && <section className="tvv-calc-card"><h2>Hợp đồng dự kiến ({draftContracts.length})</h2>{draftContracts.map((draft) => <article className="team-draft-contract" key={draft.id}><span>{advisorList.find((item: any) => item.agentCode === draft.advisorCode)?.agentName || draft.advisorCode}</span><strong>{formatVnd(draft.ip)}</strong><button type="button" onClick={() => { const next = draftContracts.filter((item) => item.id !== draft.id); setDraftContracts(next); void calculate(next); }}><Trash2 size={16} /></button></article>)}</section>}
+    <section className="tvv-calc-card tvv-reward-summary-card team-calc-result"><h2>Kết quả mô phỏng</h2>{calculating ? <p>Đang tính…</p> : result ? <><TeamLeaderRewardSummaryCard rewards={result} baseline={baseline} /><div className="team-calc-increase"><span>Tăng thêm so với hiện tại</span><strong>+{formatVnd(Math.max(0, Number(result.totalEstimatedReward) - Number(baseline?.totalEstimatedReward || 0)))}</strong></div></> : <p>Chưa có kết quả.</p>}</section>
   </section>;
 }
 
