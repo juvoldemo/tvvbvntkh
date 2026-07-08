@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       .single();
     if (profileError) throw profileError;
 
-    const groupName = managedTeamName(profile.advisor_code, profile.advisor_position);
+    const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name);
     if (!groupName) {
       return NextResponse.json({ error: "Tài khoản chưa được gán nhóm quản lý." }, { status: 403 });
     }

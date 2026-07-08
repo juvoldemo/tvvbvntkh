@@ -1,4 +1,4 @@
-const TEAM_BY_LEADER_CODE: Record<string, string> = {
+﻿const TEAM_BY_LEADER_CODE: Record<string, string> = {
   D251200445: "Phát Thắng",
   D251143802: "Ánh Dương",
   D1021A3RSK: "Sen Vàng",
@@ -23,8 +23,26 @@ const TEAM_BY_LEADER_CODE: Record<string, string> = {
   D102100541: "Hưng Thịnh"
 };
 
-export function managedTeamName(advisorCode: unknown, position?: unknown) {
-  if (String(position ?? "").trim() !== "Trưởng nhóm") return "";
-  return TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
+const TEAM_BY_BOARD_LEADER_NAME: Record<string, string> = {
+  "luu thanh son": "Tâm Phát",
+  "nguyen thi minh trang": "Nguyên Phát",
+  "huynh thi van anh": "Hoàng Phát"
+};
+
+function normalizeText(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u0111\u0110]/g, "d")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
+export function managedTeamName(advisorCode: unknown, position?: unknown, fullName?: unknown) {
+  const normalizedPosition = normalizeText(position);
+  const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
+  if (normalizedPosition === "truong nhom") return codeGroup;
+  if (normalizedPosition === "truong ban") return TEAM_BY_BOARD_LEADER_NAME[normalizeText(fullName)] ?? codeGroup;
+  return "";
+}

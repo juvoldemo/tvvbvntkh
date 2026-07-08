@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       ]);
       if (signedInError) throw signedInError;
       if (targetError) throw targetError;
-      const managedGroup = managedTeamName(signedInProfile.advisor_code, signedInProfile.advisor_position);
+      const managedGroup = managedTeamName(signedInProfile.advisor_code, signedInProfile.advisor_position, signedInProfile.full_name);
       if (!managedGroup || String(targetProfile.group_name || "").trim() !== managedGroup) {
         return NextResponse.json({ error: "Khong co quyen tinh thuong cho TVV nay." }, { status: 403 });
       }

@@ -162,7 +162,7 @@ async function calculate(request: NextRequest, body: any = {}) {
     .select("advisor_code,full_name,advisor_position,position_effective_date")
     .eq("advisor_code", code).single();
   if (error) throw error;
-  const groupName = managedTeamName(code, profile.advisor_position);
+  const groupName = managedTeamName(code, profile.advisor_position, profile.full_name);
   if (!groupName) return NextResponse.json({ error: "Tài khoản không phải Trưởng nhóm hoặc chưa được gán nhóm." }, { status: 403 });
 
   const year = month.slice(0, 4);

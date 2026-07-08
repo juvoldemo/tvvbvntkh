@@ -32,7 +32,7 @@ async function teamContext(request: NextRequest) {
     .eq("advisor_code", code)
     .single();
   if (error) throw error;
-  const groupName = managedTeamName(profile.advisor_code, profile.advisor_position);
+  const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name);
   if (!groupName) return { error: NextResponse.json({ error: "Tai khoan chua duoc gan nhom quan ly." }, { status: 403 }) };
   return { supabase, profile, groupName };
 }

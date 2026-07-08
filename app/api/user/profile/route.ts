@@ -10,11 +10,12 @@ export async function GET(request: NextRequest) {
   if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
   const { data, error } = await getSupabaseAdmin().from("authorized_users").select(fields).eq("advisor_code", code).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const managedGroupName = managedTeamName(data.advisor_code, data.advisor_position, data.full_name);
   return NextResponse.json({
     profile: {
       ...data,
-      managed_group_name: managedTeamName(data.advisor_code, data.advisor_position),
-      dashboard_role: data.advisor_position === "Trưởng nhóm" ? "team_leader" : "advisor"
+      managed_group_name: managedGroupName,
+      dashboard_role: managedGroupName ? "team_leader" : "advisor"
     }
   });
 }
@@ -52,3 +53,5 @@ export async function POST(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ avatarUrl });
 }
+
+
