@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { parseAccessListDate } from "@/lib/access-list-dates";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
@@ -30,25 +31,7 @@ function text(row: Record<string, unknown>, names: string[]) {
 function dateValue(row: Record<string, unknown>, names: string[]) {
   const normalizedNames = names.map(normalizeHeader);
   const key = Object.keys(row).find((item) => normalizedNames.includes(normalizeHeader(item)));
-  if (!key || row[key] === "") return null;
-  const value = row[key];
-  if (typeof value === "number") {
-    const parsed = XLSX.SSF.parse_date_code(value);
-    if (parsed) return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
-  }
-  const raw = String(value).trim();
-  const match = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-  if (match) {
-    const first = Number(match[1]);
-    const second = Number(match[2]);
-    const month = first <= 12 ? first : second;
-    const day = first <= 12 ? second : first;
-    const candidate = `${match[3]}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const parsedCandidate = new Date(`${candidate}T00:00:00Z`);
-    if (!Number.isNaN(parsedCandidate.getTime()) && parsedCandidate.toISOString().slice(0, 10) === candidate) return candidate;
-  }
-  const date = new Date(raw);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+  return key ? parseAccessListDate(row[key]) : null;
 }
 
 function scoreUserRow(row: Record<string, unknown>) {
