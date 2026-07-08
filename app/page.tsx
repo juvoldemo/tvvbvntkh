@@ -269,6 +269,9 @@ export default function TvvMobilePage() {
   const [leaderboard, setLeaderboard] = useState<any>({ agents: [], groups: [] });
   const [advisorKey, setAdvisorKey] = useState("");
   const [loading, setLoading] = useState(true);
+  const [profileReady, setProfileReady] = useState(false);
+  const [teamOverviewReady, setTeamOverviewReady] = useState(true);
+  const [leaderboardReady, setLeaderboardReady] = useState(false);
   const [drafts, setDrafts] = useState<DraftContract[]>([]);
   const [productName, setProductName] = useState("An Thịnh Phúc Niên");
   const [premiumText, setPremiumText] = useState("35.000.000");
@@ -296,11 +299,6 @@ export default function TvvMobilePage() {
   const [targetModalOpen, setTargetModalOpen] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowSplash(false), 1800);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     if (tab === "illustration") setIllustrationLoaded(true);
   }, [tab]);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
@@ -316,19 +314,28 @@ export default function TvvMobilePage() {
   }, []);
 
   useEffect(() => {
-    if (!signedIn) return;
+    if (!signedIn) {
+      setProfileReady(false);
+      setUserProfile(null);
+      return;
+    }
+    setProfileReady(false);
     fetch("/api/user/profile", { cache: "no-store" })
       .then((response) => response.json())
-      .then((payload) => setUserProfile(payload.profile ?? null));
+      .then((payload) => setUserProfile(payload.profile ?? null))
+      .catch(() => setUserProfile(null))
+      .finally(() => setProfileReady(true));
   }, [signedIn]);
 
   useEffect(() => {
     if (!signedIn || userProfile?.dashboard_role !== "team_leader") {
       setTeamData(null);
       setTeamRewards(null);
+      setTeamOverviewReady(true);
       return;
     }
     const controller = new AbortController();
+    setTeamOverviewReady(false);
     Promise.all([
       fetchJsonWithRetry(`/api/team-dashboard?month=${month}`, controller.signal),
       fetchJsonWithRetry(`/api/team-leader-rewards?month=${month}`, controller.signal)
@@ -338,6 +345,8 @@ export default function TvvMobilePage() {
     }).catch(() => {
       setTeamData(null);
       setTeamRewards(null);
+    }).finally(() => {
+      setTeamOverviewReady(true);
     });
     return () => controller.abort();
   }, [month, signedIn, userProfile?.dashboard_role]);
@@ -468,9 +477,17 @@ export default function TvvMobilePage() {
 
   useEffect(() => {
     const code = authenticatedAdvisorCode || userProfile?.advisor_code;
-    if (!signedIn || !code) return;
+    if (!signedIn) {
+      setLeaderboardReady(false);
+      return;
+    }
+    if (!code) {
+      setLeaderboardReady(true);
+      return;
+    }
     let cancelled = false;
     const controller = new AbortController();
+    setLeaderboardReady(false);
     const advisorCode = encodeURIComponent(code);
     fetchJsonWithRetry(`/api/tvv-leaderboard?month=${month}&advisorCode=${advisorCode}`, controller.signal)
       .then((payload) => {
@@ -478,12 +495,26 @@ export default function TvvMobilePage() {
       })
       .catch(() => {
         // Preserve the last successful ranking during a temporary network failure.
+      })
+      .finally(() => {
+        if (!cancelled) setLeaderboardReady(true);
       });
     return () => {
       cancelled = true;
       controller.abort();
     };
   }, [authenticatedAdvisorCode, month, signedIn, userProfile?.advisor_code]);
+
+  useEffect(() => {
+    if (!showSplash || !authReady) return;
+    if (!signedIn) {
+      setShowSplash(false);
+      return;
+    }
+    if (profileReady && !loading && teamOverviewReady && leaderboardReady) {
+      setShowSplash(false);
+    }
+  }, [authReady, leaderboardReady, loading, profileReady, showSplash, signedIn, teamOverviewReady]);
 
   const advisorOptions = useMemo(() => (data?.agents ?? []).map((agent: any) => ({
     key: `${agent.agentCode || ""}__${agent.agentName || ""}`,
