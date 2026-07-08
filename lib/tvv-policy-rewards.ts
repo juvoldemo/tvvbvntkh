@@ -53,6 +53,7 @@ const monthKey = (value: unknown) => text(value).slice(0, 7);
 const quarterOf = (value: unknown) => Math.ceil(Number(monthKey(value).slice(5, 7)) / 3);
 const normalizeGyc = (value: unknown) => text(value).toUpperCase().replace(/\s+/g, "");
 const rewardSource = (row: Row) => text(row.reward_source || row.source || "kpi04").toLowerCase();
+const MONTHLY_PREVIOUS_GYC_MIN_IP = 3_000_000;
 
 function applicationNos(row: Row) {
   const raw = row.raw_data?.application_nos ?? row.line_items?.application_no ?? row.application_no ?? row.contract_no;
@@ -72,6 +73,11 @@ function agentMonthKey(row: Row) {
   const month = monthKey(row.paid_date || row.data_month);
   const agent = agentKey(row);
   return agent && month ? `${agent}__${month}` : "";
+}
+
+function previousMonthKey(month: string) {
+  const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 function matches(row: Row, filters: PolicyFilters) {
@@ -191,6 +197,7 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
   advisorStartDates?: Map<string, string>;
   quarterStart?: string;
   quarterEnd?: string;
+  qualifiedAgents?: Set<string>;
 } = {}) {
   return [...groupRows(rows).values()].map((agentRows) => {
     const totals = aggregate(agentRows);
@@ -210,10 +217,16 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
     }
     const basisValue = basis === "ip" ? totals.ip : qualificationFyp;
     const tier = tierResult(basisValue, tiers);
+    const qualified = !options.qualifiedAgents || options.qualifiedAgents.has(agentKey({
+      agent_code: totals.agentCode,
+      agent_name: totals.agentName
+    }));
     return {
       ...totals,
       ...tier,
-      reward: tier.rate * totals.totalFyc,
+      rate: qualified ? tier.rate : 0,
+      achieved: qualified ? tier.achieved : false,
+      reward: qualified ? tier.rate * totals.totalFyc : 0,
       fypFallback,
       actualFyp: basis === "fyp" ? totals.fyp : undefined,
       qualificationFyp: basis === "fyp" ? qualificationFyp : undefined,
@@ -233,19 +246,30 @@ export function calculatePolicyRewards(params: {
   const selectedMonth = params.selectedMonth.slice(0, 7);
   const selectedMonthNo = Number(selectedMonth.slice(5, 7));
   const selectedQuarter = Math.ceil(selectedMonthNo / 3);
+  const selectedYearStart = `${selectedMonth.slice(0, 4)}-01`;
   const filters = params.filters ?? {};
   const kpi = params.kpi04.filter((row) => matches(row, filters));
   const bc02 = params.bc02.filter((row) => matches(row, filters) && monthKey(row.paid_date || row.data_month) <= selectedMonth);
-  const rewardYearContracts = combineKpi04AndBc02(kpi, bc02)
+  const eligibleContracts = combineKpi04AndBc02(kpi, bc02)
     .filter((row) => monthKey(row.paid_date || row.data_month) <= selectedMonth);
+  const rewardYearContracts = eligibleContracts
+    .filter((row) => monthKey(row.paid_date || row.data_month) >= selectedYearStart);
   const rewardMonthContracts = rewardYearContracts.filter((row) => monthKey(row.paid_date || row.data_month) === selectedMonth);
+  const previousMonth = previousMonthKey(selectedMonth);
+  const monthlyQualifiedAgents = new Set(eligibleContracts
+    .filter((row) => monthKey(row.paid_date || row.data_month) === previousMonth)
+    .filter((row) => number(row.ip) >= MONTHLY_PREVIOUS_GYC_MIN_IP && applicationNos(row).length > 0)
+    .map(agentKey)
+    .filter(Boolean));
   const quarterRows = rewardYearContracts.filter((row) => quarterOf(row.paid_date || row.data_month) === selectedQuarter);
   const advisorStartDates = new Map((params.advisorProfiles ?? [])
     .map((row) => [text(row.advisor_code || row.agent_code), parseDate(row.start_date)] as const)
     .filter(([code, date]) => code && date) as [string, string][]);
   const selectedQuarterBounds = quarterBounds(selectedMonth);
 
-  const monthly = calculatePeriod(rewardMonthContracts, "ip", MONTH_TIERS);
+  const monthly = calculatePeriod(rewardMonthContracts, "ip", MONTH_TIERS, {
+    qualifiedAgents: monthlyQualifiedAgents
+  });
   const quarterly = calculatePeriod(quarterRows, "fyp", QUARTER_TIERS, {
     advisorStartDates,
     quarterStart: selectedQuarterBounds.start,
@@ -314,7 +338,9 @@ export function policyProgramSummaries(result: ReturnType<typeof calculatePolicy
     programId: id,
     programName: name,
     period,
-    conditionText,
+    conditionText: id === "policy-monthly"
+      ? "Tháng liền trước có GYC IP từ 3 triệu; IP tháng từ 12 triệu; thưởng 10%-18% tổng FYC."
+      : conditionText,
     originalFileUrl: posterByProgramId[id],
     estimatedReward: rows.reduce((sum, row) => sum + row.reward, 0),
     achievedCount: rows.filter((row) => row.achieved).length,

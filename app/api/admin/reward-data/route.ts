@@ -70,6 +70,11 @@ function monthRange(month: string) {
   return { start: `${month}-01`, end: `${month}-${String(endDay).padStart(2, "0")}` };
 }
 
+function previousMonthKey(month: string) {
+  const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 function quarterRange(month: string) {
   const year = Number(month.slice(0, 4));
   const monthNo = Number(month.slice(5, 7));
@@ -173,10 +178,13 @@ export async function GET(request: NextRequest) {
     const period = request.nextUrl.searchParams.get("period") === "quarter" ? "quarter" : "month";
     const selectedRange = period === "quarter" ? quarterRange(month) : { ...monthRange(month), quarter: Math.ceil(Number(month.slice(5, 7)) / 3) };
     const year = month.slice(0, 4);
+    const yearStart = `${year}-01`;
+    const previousMonth = previousMonthKey(month);
+    const dataStartMonth = previousMonth < yearStart ? previousMonth : yearStart;
     const supabase = getSupabaseAdmin();
     const [revenueRows, policyRows, advisorProfiles, programs, starVietRecords] = await Promise.all([
-      readAll((from, to) => supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`).range(from, to)),
-      readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
+      readAll((from, to) => supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${dataStartMonth}-01`).lte("paid_date", `${year}-12-31`).range(from, to)),
+      readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${dataStartMonth}-01`).lte("data_month", `${year}-12-31`).range(from, to)),
       readAll((from, to) => supabase.from("authorized_users").select("advisor_code,full_name,start_date,advisor_position,position_effective_date,is_active").range(from, to)),
       readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)),
       readStarVietRecords(supabase, month)

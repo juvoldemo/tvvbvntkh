@@ -17687,6 +17687,11 @@ body .tvv-app .tvv-contest-detail {
   text-transform: uppercase;
 }
 
+.team-activity-agent strong em.team-agent-sos {
+  background: #ffe3e8;
+  color: #d92d42;
+}
+
 .team-activity-agent small {
   display: block;
   margin-top: 2px;
@@ -18480,6 +18485,12 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   line-height: 1.25;
   text-align: right;
 }
+.team-target-unit-note {
+  margin: -2px 0 2px;
+  color: #6f7f96;
+  font-size: var(--typo-11);
+  font-weight: 700;
+}
 .team-target-agent-list {
   display: grid;
   gap: 6px;
@@ -18492,17 +18503,17 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
 .team-target-agent-list label {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 8px;
   align-items: center;
   border: 1px solid #dfe8f5;
   border-radius: 10px;
   background: #f8fbff;
-  min-height: 44px;
-  padding: 8px 10px;
+  min-height: 56px;
+  padding: 8px 12px;
   box-sizing: border-box;
-  overflow: hidden;
 }
-.team-target-agent-list input {
+.team-target-agent-list input[type="checkbox"] {
   position: absolute !important;
   left: 12px !important;
   top: 50% !important;
@@ -18518,7 +18529,7 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   transform: translateY(-50%) !important;
   pointer-events: none !important;
 }
-.team-target-agent-list input:focus-visible {
+.team-target-agent-list input[type="checkbox"]:focus-visible {
   outline: none;
 }
 .team-target-agent-list span {
@@ -18576,6 +18587,44 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   font-size: var(--typo-12);
   font-weight: 700;
 }
+.team-target-agent-revenue-wrap {
+  width: 76px;
+  height: 32px;
+  min-width: 0;
+  justify-self: end;
+}
+.team-target-agent-revenue {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 8px !important;
+  border: 1px solid #d8e6f7 !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
+  background: #fff !important;
+  color: #004b7a !important;
+  font-size: var(--typo-12) !important;
+  font-weight: 700 !important;
+  line-height: 32px !important;
+  text-align: right !important;
+  text-indent: 0 !important;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  outline: none !important;
+  box-shadow: none !important;
+  flex: 0 0 auto;
+}
+.team-target-agent-revenue:focus {
+  border-color: #005b8f !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 143, .14) !important;
+}
+.team-target-agent-revenue::placeholder {
+  color: #8ca0b6 !important;
+  text-align: right !important;
+  line-height: 32px;
+}
 @media (max-width: 520px) {
   .team-target-modal {
     width: calc(100vw - 32px) !important;
@@ -18590,6 +18639,16 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   }
   .team-target-agent-list {
     max-height: min(288px, 32svh);
+  }
+  .team-target-agent-list label {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    align-items: center;
+    gap: 6px;
+    min-height: 56px;
+    padding: 8px 10px;
+  }
+  .team-target-agent-revenue-wrap {
+    width: 76px;
   }
 }
 
@@ -18664,6 +18723,14 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   margin: 0 !important;
   padding: 0 4px !important;
   line-height: 1 !important;
+}
+
+.tvv-app .tvv-hero h1 {
+  font-size: calc(var(--typo-16) * 0.7) !important;
+}
+
+.tvv-app .tvv-hero h1 span {
+  font-size: calc(var(--typo-14) * 0.7) !important;
 }
 
 .tvv-app .tvv-hero .tvv-target-button > .tvv-target-percent {

@@ -11,13 +11,25 @@ function missingPasswordPlainColumn(error: unknown) {
   return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
 }
 
+function normalizeHeader(value: string) {
+  return value
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0111/g, "d")
+    .replace(/\u0110/g, "D")
+    .toLowerCase();
+}
+
 function text(row: Record<string, unknown>, names: string[]) {
-  const key = Object.keys(row).find((item) => names.includes(item.trim().toLowerCase()));
+  const normalizedNames = names.map(normalizeHeader);
+  const key = Object.keys(row).find((item) => normalizedNames.includes(normalizeHeader(item)));
   return key ? String(row[key] ?? "").trim() : "";
 }
 
 function dateValue(row: Record<string, unknown>, names: string[]) {
-  const key = Object.keys(row).find((item) => names.includes(item.trim().toLowerCase()));
+  const normalizedNames = names.map(normalizeHeader);
+  const key = Object.keys(row).find((item) => normalizedNames.includes(normalizeHeader(item)));
   if (!key || row[key] === "") return null;
   const value = row[key];
   if (typeof value === "number") {
@@ -29,8 +41,6 @@ function dateValue(row: Record<string, unknown>, names: string[]) {
   if (match) {
     const first = Number(match[1]);
     const second = Number(match[2]);
-    // File nhân sự dùng định dạng MM/DD/YYYY. Nếu phần đầu > 12 thì
-    // tự nhận diện lại là DD/MM/YYYY để vẫn hỗ trợ file Việt Nam.
     const month = first <= 12 ? first : second;
     const day = first <= 12 ? second : first;
     const candidate = `${match[3]}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -39,6 +49,19 @@ function dateValue(row: Record<string, unknown>, names: string[]) {
   }
   const date = new Date(raw);
   return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+}
+
+function scoreUserRow(row: Record<string, unknown>) {
+  return [
+    row.full_name,
+    row.group_name,
+    row.start_date,
+    row.advisor_status,
+    row.advisor_position,
+    row.position_effective_date,
+    row.birth_day,
+    row.birth_month
+  ].reduce((score, value) => score + (value ? 1 : 0), 0);
 }
 
 export async function GET(request: NextRequest) {
@@ -82,22 +105,27 @@ export async function POST(request: NextRequest) {
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
     const users = rows.map((row) => ({
-      advisor_code: normalizeAdvisorCode(text(row, ["mã tvv", "ma tvv", "advisor_code", "code"])),
-      full_name: text(row, ["tên tvv", "ten tvv", "full_name", "name"]),
-      group_name: text(row, ["nhóm", "nhom", "group_name", "group"]) || null,
-      start_date: dateValue(row, ["ngày bắt đầu làm việc", "ngay bat dau lam viec"]),
-      advisor_status: text(row, ["trạng thái tvv", "trang thai tvv"]) || null,
-      advisor_position: text(row, ["chức vụ tvv", "chuc vu tvv"]) || null,
-      position_effective_date: dateValue(row, ["ngày hiệu lực chức vụ", "ngay hieu luc chuc vu"]),
-      birth_day: Number(text(row, ["ngày sinh ( ngày )", "ngày sinh (ngày)", "ngay sinh ( ngay )", "ngay sinh (ngay)"])) || null,
-      birth_month: Number(text(row, ["ngày sinh ( tháng )", "ngày sinh (tháng)", "ngay sinh ( thang )", "ngay sinh (thang)"])) || null,
+      advisor_code: normalizeAdvisorCode(text(row, ["ma tvv", "advisor_code", "code"])),
+      full_name: text(row, ["ten tvv", "full_name", "name"]),
+      group_name: text(row, ["nhom", "group_name", "group"]) || null,
+      start_date: dateValue(row, ["ngay bat dau lam viec"]),
+      advisor_status: text(row, ["trang thai tvv"]) || null,
+      advisor_position: text(row, ["chuc vu tvv"]) || null,
+      position_effective_date: dateValue(row, ["ngay hieu luc chuc vu"]),
+      birth_day: Number(text(row, ["ngay sinh ( ngay )", "ngay sinh (ngay)"])) || null,
+      birth_month: Number(text(row, ["ngay sinh ( thang )", "ngay sinh (thang)"])) || null,
       is_active: true
     })).filter((row) =>
       row.advisor_code &&
       row.full_name &&
       String(row.advisor_status || "").trim().toUpperCase() !== "PA"
     );
-    if (!users.length) {
+    const uniqueUsers = [...users.reduce((map, row) => {
+      const current = map.get(row.advisor_code);
+      if (!current || scoreUserRow(row) >= scoreUserRow(current)) map.set(row.advisor_code, row);
+      return map;
+    }, new Map<string, typeof users[number]>()).values()];
+    if (!uniqueUsers.length) {
       return NextResponse.json({ error: "Không tìm thấy dữ liệu. File cần có cột “Mã TVV” và “Tên TVV”." }, { status: 422 });
     }
 
@@ -112,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
     if (existingError) throw existingError;
     const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
-    const usersWithPasswords = users.map((user) => {
+    const usersWithPasswords = uniqueUsers.map((user) => {
       const current = passwords.get(user.advisor_code);
       const plainPassword = current?.plain || randomStrongPassword();
       const currentVisibleHash = current?.plain ? current.hash : "";
@@ -125,7 +153,7 @@ export async function POST(request: NextRequest) {
     if (disableError) throw disableError;
     const { error } = await supabase.from("authorized_users").upsert(usersWithPasswords, { onConflict: "advisor_code" });
     if (error) throw error;
-    return NextResponse.json({ ok: true, count: users.length });
+    return NextResponse.json({ ok: true, count: uniqueUsers.length });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không đọc được file." }, { status: 500 });
   }

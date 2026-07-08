@@ -12,6 +12,27 @@ function numberValue(value: unknown) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
+const TEAM_TARGET_MONTHLY_THRESHOLDS = [
+  { min: 400_000_000, rates: [0.3, 0.28, 0.26, 0.1] },
+  { min: 200_000_000, rates: [0.26, 0.22, 0.2, 0.1] },
+  { min: 100_000_000, rates: [0.22, 0.2, 0.18, 0.1] },
+  { min: 50_000_000, rates: [0.2, 0.18, 0.14, 0.1] },
+  { min: 0, rates: [0, 0.16, 0.14, 0.1] }
+];
+
+function activeAdvisorColumn(activeAdvisors: number) {
+  if (activeAdvisors >= 5) return 0;
+  if (activeAdvisors >= 3) return 1;
+  if (activeAdvisors === 2) return 2;
+  return 3;
+}
+
+function calculateRewardTarget(revenueTarget: number, activeAdvisors: number) {
+  const threshold = TEAM_TARGET_MONTHLY_THRESHOLDS.find((item) => revenueTarget >= item.min) ?? TEAM_TARGET_MONTHLY_THRESHOLDS.at(-1)!;
+  const rate = threshold.rates[activeAdvisorColumn(activeAdvisors)] ?? 0;
+  return Math.round(revenueTarget * 0.3 * rate);
+}
+
 function errorText(error: unknown, fallback: string) {
   if (error instanceof Error) return error.message;
   if (error && typeof error === "object") {
@@ -66,17 +87,20 @@ export async function POST(request: NextRequest) {
     const selectedAdvisors = Array.isArray(body.selectedAdvisors)
       ? body.selectedAdvisors.map((item: any) => ({
         advisor_code: String(item.advisor_code || item.agentCode || "").trim(),
-        full_name: String(item.full_name || item.agentName || "").trim()
+        full_name: String(item.full_name || item.agentName || "").trim(),
+        revenue_target: numberValue(item.revenue_target ?? item.revenueTarget)
       })).filter((item: any) => item.advisor_code || item.full_name)
       : [];
+    const revenueTarget = selectedAdvisors.reduce((sum: number, item: any) => sum + numberValue(item.revenue_target), 0);
+    const activeAdvisorTarget = selectedAdvisors.length;
     const payload = {
       target_month: targetMonth,
       leader_code: profile.advisor_code,
       leader_name: profile.full_name,
       group_name: groupName,
-      revenue_target: numberValue(body.revenueTarget),
-      active_advisor_target: Math.round(numberValue(body.activeAdvisorTarget)),
-      reward_target: numberValue(body.rewardTarget),
+      revenue_target: revenueTarget,
+      active_advisor_target: activeAdvisorTarget,
+      reward_target: calculateRewardTarget(revenueTarget, activeAdvisorTarget),
       selected_advisors: selectedAdvisors,
       updated_at: new Date().toISOString()
     };

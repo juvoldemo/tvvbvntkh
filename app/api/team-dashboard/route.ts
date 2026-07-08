@@ -62,6 +62,15 @@ function isNewAdvisor(startDate: unknown, month: string) {
   return periodEnd >= new Date(Date.UTC(startYear, startMonth - 1, startDay)) && periodEnd < twelveMonthMark;
 }
 
+function monthsSince(referenceDate: unknown, month: string) {
+  const raw = String(referenceDate || "").slice(0, 10);
+  if (!raw) return null;
+  const [refYear, refMonth] = raw.split("-").map(Number);
+  const [year, monthNo] = month.split("-").map(Number);
+  if (!refYear || !refMonth || !year || !monthNo) return null;
+  return (year - refYear) * 12 + (monthNo - refMonth);
+}
+
 async function readTeamRoster(supabase: ReturnType<typeof getSupabaseAdmin>, groupName: string) {
   const { data, error } = await supabase
     .from("authorized_users")
@@ -180,6 +189,10 @@ export async function GET(request: NextRequest) {
         const agentCode = String(row.advisor_code || row.agent_code || "").trim();
         const key = agentCode || String(row.full_name || row.agent_name || "").trim();
         const profile = agentCode ? profileByCode.get(agentCode) : undefined;
+        const latestContract = latestAdvisorByCode.get(key);
+        const lastContractDate = String(latestContract?.issued_date || latestContract?.paid_date || "");
+        const referenceDate = lastContractDate || null;
+        const inactiveMonths = monthsSince(referenceDate, month);
         return rankedByCode.get(key) ?? {
           agentCode,
           agentName: row.full_name || profile?.full_name || row.agent_name || "TVV",
@@ -192,7 +205,23 @@ export async function GET(request: NextRequest) {
           invalid: 0,
           avatarUrl: profile?.avatar_url ?? null,
           startDate: profile?.start_date ?? null,
-          isNewAdvisor: isNewAdvisor(profile?.start_date, month)
+          isNewAdvisor: isNewAdvisor(profile?.start_date, month),
+          lastContractDate: lastContractDate || null,
+          inactiveMonths,
+          needsSos: inactiveMonths !== null && inactiveMonths >= 5
+        };
+      })
+      .map((agent) => {
+        if ("needsSos" in agent) return agent;
+        const latestContract = latestAdvisorByCode.get(String(agent.agentCode || agent.agentName || "").trim());
+        const lastContractDate = String(latestContract?.issued_date || latestContract?.paid_date || "");
+        const referenceDate = lastContractDate || null;
+        const inactiveMonths = monthsSince(referenceDate, month);
+        return {
+          ...agent,
+          lastContractDate: lastContractDate || null,
+          inactiveMonths,
+          needsSos: inactiveMonths !== null && inactiveMonths >= 5
         };
       })
       .sort((a, b) => Number(b.ip || 0) - Number(a.ip || 0) || String(a.agentName).localeCompare(String(b.agentName), "vi"));

@@ -147,6 +147,7 @@ function programSummary(program: any, contracts: RevenueRecord[]) {
     achievedAdvisors: [...achievedByAdvisor.values()].sort((a, b) => b.reward - a.reward || b.totalIP - a.totalIP),
     participatingContracts: participatingContracts.map((contract: any) => ({
       applicationNo: contract.applicationNo || contract.gyc_no || "",
+      advisorName: contract.tvv || contract.agent_name || "Chưa có tên TVV",
       policyOwner: contract.customer || contract.customer_name || "Chưa có tên BMBH",
       status: contract.status || "Chưa có trạng thái"
     }))

@@ -38,6 +38,11 @@ function normalizeAdvisorIdentity(value: unknown) {
     .toLowerCase();
 }
 
+function previousMonthKey(month: string) {
+  const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
 function contractBelongsToAdvisor(record: any, advisor: { code: string; name: string }) {
   const advisorCode = normalizeAdvisorIdentity(advisor.code);
   const advisorName = normalizeAdvisorIdentity(advisor.name);
@@ -113,13 +118,18 @@ export async function POST(request: NextRequest) {
     }
 
     const year = month.slice(0, 4);
+    const previousMonth = previousMonthKey(month);
+    const yearStart = `${year}-01`;
+    const dataStartMonth = previousMonth < yearStart ? previousMonth : yearStart;
+    const policyDataStart = `${dataStartMonth}-01`;
+    const revenueDataStart = `${dataStartMonth}-01`;
     const advisorProfileQuery = advisor.code
       ? supabase.from("authorized_users").select("advisor_code,start_date").eq("advisor_code", advisor.code)
       : supabase.from("authorized_users").select("advisor_code,start_date");
     const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }, { data: advisorProfiles, error: advisorProfilesError }] = await Promise.all([
       supabase.from("competition_programs").select("*"),
-      supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`),
-      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`),
+      supabase.from("tvv_reward_policy_records").select("*").gte("data_month", policyDataStart).lte("data_month", `${year}-12-31`),
+      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", revenueDataStart).lte("paid_date", `${year}-12-31`),
       advisorProfileQuery
     ]);
     if (programError) throw programError;

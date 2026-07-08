@@ -65,6 +65,14 @@ function parseMoneyInput(value: string) {
   return Number(value.replace(/\D/g, "")) || 0;
 }
 
+function millionInput(value: string) {
+  return value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+}
+
+function toMillionTarget(value: unknown) {
+  return Math.round((Number(value) || 0) / 1_000_000);
+}
+
 const TEAM_TARGET_MONTHLY_THRESHOLDS = [
   { min: 400_000_000, rates: [0.3, 0.28, 0.26, 0.1] },
   { min: 200_000_000, rates: [0.26, 0.22, 0.2, 0.1] },
@@ -762,13 +770,24 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
 
 function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, onClose }: { month: string; teamData: any; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
   const advisors = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
-  const [revenueTarget, setRevenueTarget] = useState(() => moneyInput(String(Math.round(Number(registration?.revenue_target ?? 0) || 0))));
-  const [activeAdvisorTarget, setActiveAdvisorTarget] = useState(() => String(Number(registration?.active_advisor_target ?? 0) || ""));
-  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(() => new Set((registration?.selected_advisors ?? []).map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean)));
+  const registeredSelectedAdvisors = registration?.selected_advisors ?? [];
+  const registeredSelectedCodes = registeredSelectedAdvisors.map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean);
+  const [activeAdvisorTarget, setActiveAdvisorTarget] = useState(() => String(Number(registration?.active_advisor_target ?? 0) || registeredSelectedCodes.length || ""));
+  const [selectedCodes, setSelectedCodes] = useState<Set<string>>(() => new Set(registeredSelectedCodes));
+  const [advisorTargets, setAdvisorTargets] = useState<Record<string, string>>(() => Object.fromEntries(registeredSelectedAdvisors
+    .map((item: any) => [String(item.advisor_code || item.agentCode || "").trim(), String(toMillionTarget(item.revenue_target ?? item.revenueTarget))])
+    .filter(([code]: [string, string]) => Boolean(code))));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const revenueTarget = useMemo(
+    () => advisors.reduce((sum: number, item: any) => {
+      const code = String(item.agentCode || item.advisor_code || "").trim();
+      return selectedCodes.has(code) ? sum + Number(advisorTargets[code] || 0) * 1_000_000 : sum;
+    }, 0),
+    [advisors, advisorTargets, selectedCodes]
+  );
   const targetReward = useMemo(
-    () => calculateTeamTargetPtkdReward(parseMoneyInput(revenueTarget), Number(activeAdvisorTarget) || 0),
+    () => calculateTeamTargetPtkdReward(revenueTarget, Number(activeAdvisorTarget) || 0),
     [activeAdvisorTarget, revenueTarget]
   );
 
@@ -782,20 +801,31 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
     });
   }
 
+  function updateAdvisorTarget(code: string, value: string) {
+    setAdvisorTargets((current) => ({ ...current, [code]: millionInput(value) }));
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
     setMessage("");
     const selectedAdvisors = advisors
       .filter((item: any) => selectedCodes.has(String(item.agentCode || item.advisor_code || "").trim()))
-      .map((item: any) => ({ advisor_code: item.agentCode || item.advisor_code, full_name: item.agentName || item.full_name }));
+      .map((item: any) => {
+        const code = String(item.agentCode || item.advisor_code || "").trim();
+        return {
+          advisor_code: item.agentCode || item.advisor_code,
+          full_name: item.agentName || item.full_name,
+          revenue_target: Number(advisorTargets[code] || 0) * 1_000_000
+        };
+      });
     try {
       const response = await fetch("/api/team-target-registration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           month,
-          revenueTarget: parseMoneyInput(revenueTarget),
+          revenueTarget,
           activeAdvisorTarget: Number(activeAdvisorTarget) || selectedAdvisors.length,
           rewardTarget: targetReward,
           selectedAdvisors
@@ -823,18 +853,20 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
       <form className="tvv-contract-detail team-target-modal" role="dialog" aria-modal="true" aria-label="Đăng ký mục tiêu" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
         <header><div><p>ĐĂNG KÝ MỤC TIÊU</p><h2>Tháng {month.slice(5, 7)}/{month.slice(0, 4)}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
         <div className="team-target-fields">
-          <label>Doanh thu mục tiêu<input className="team-target-revenue-input" value={revenueTarget} onChange={(event) => setRevenueTarget(moneyInput(event.target.value))} inputMode="numeric" placeholder="0" /></label>
-          <label>Lượt hoạt động<input className="team-target-active-input" value={activeAdvisorTarget} onChange={(event) => setActiveAdvisorTarget(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="0" /></label>
+          <label>Doanh thu mục tiêu<input className="team-target-revenue-input" value={moneyInput(String(revenueTarget)) || "0"} readOnly aria-readonly="true" /></label>
+          <label>Lượt hoạt động<input className="team-target-active-input" value={activeAdvisorTarget} readOnly aria-readonly="true" /></label>
           <label>Tiền thưởng mục tiêu<input className="team-target-reward-input" value={moneyInput(String(targetReward)) || "0"} readOnly aria-readonly="true" /></label>
         </div>
         <section className="team-target-roster">
           <div><strong>Danh sách TVV của nhóm</strong><span>{selectedCodes.size}/{advisors.length} TVV dự kiến có doanh thu</span></div>
+          <p className="team-target-unit-note">Đơn vị: Triệu đồng</p>
           <div className="team-target-agent-list">
             {advisors.map((agent: any) => {
               const code = String(agent.agentCode || agent.advisor_code || "").trim();
               return <label key={code || agent.agentName || agent.full_name}>
                 <input type="checkbox" checked={selectedCodes.has(code)} onChange={() => toggleAdvisor(code)} />
                 <span><b>{agent.agentName || agent.full_name || "TVV"}{agent.isNewAdvisor && <em>new</em>}</b></span>
+                <div className="team-target-agent-revenue-wrap"><input className="team-target-agent-revenue" value={advisorTargets[code] || ""} onChange={(event) => updateAdvisorTarget(code, event.target.value)} onFocus={() => { if (!selectedCodes.has(code)) toggleAdvisor(code); }} inputMode="numeric" placeholder="0" aria-label={`Mục tiêu doanh thu ${agent.agentName || agent.full_name || "TVV"} theo triệu`} /></div>
               </label>;
             })}
           </div>
@@ -865,6 +897,7 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
   const teamAgents = data.allAgents?.length ? data.allAgents : data.agents ?? [];
   const activeTeamAgents = teamAgents.filter((agent: any) => Number(agent.afyp || agent.ip || 0) > 0);
   const inactiveTeamAgents = teamAgents.filter((agent: any) => Number(agent.afyp || agent.ip || 0) <= 0);
+  const sosTeamAgents = inactiveTeamAgents.filter((agent: any) => agent.needsSos);
   const visibleTeamAgents = showAllTeamAgents ? (data.agents ?? []) : (data.agents ?? []).slice(0, 5);
   return <section className="tvv-content team-dashboard">
     <div className="team-dashboard-toolbar team-dashboard-toolbar-compact">
@@ -917,6 +950,7 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
             <button type="button" onClick={() => setShowTeamActivity(false)} aria-label="Đóng"><XCircle size={24} /></button>
           </header>
           <div className="team-activity-modal-list">
+            <TeamActivityGroup title="TVV cần SOS" count={sosTeamAgents.length} agents={sosTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={setSelectedActivityStarAgent} />
             <TeamActivityGroup title="TVV chưa hoạt động" count={inactiveTeamAgents.length} agents={inactiveTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={setSelectedActivityStarAgent} />
             <TeamActivityGroup title="TVV đã hoạt động" count={activeTeamAgents.length} agents={activeTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={setSelectedActivityStarAgent} />
           </div>
@@ -946,8 +980,8 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
           <div className="team-contract-modal-list">
             {allTeamContracts.map((row: any) => (
               <article key={row.id || row.application_no || row.contract_no}>
-                <div><span>BMBH</span><strong>{row.policy_owner || row.raw_data?.["BÊN MUA BẢO HIỂM (BMBH)"] || "—"}</strong></div>
                 <div><span>TVV</span><strong>{row.agent_name || "—"}</strong></div>
+                <div><span>BMBH</span><strong>{row.policy_owner || row.raw_data?.["BÊN MUA BẢO HIỂM (BMBH)"] || "—"}</strong></div>
                 <div><span>Ngày hiệu lực</span><strong>{formatDateVi(row.paid_date || row.raw_data?.["NGÀY THU"])}</strong></div>
                 <div><span>Ngày phát hành</span><strong>{formatDateVi(row.issued_date || row.raw_data?.["NGÀY PHÁT HÀNH"])}</strong></div>
                 <div><span>IP</span><strong>{Number(row.ip || 0).toLocaleString("vi-VN")}</strong></div>
@@ -977,7 +1011,8 @@ function TeamActivityGroup({ title, count, agents, starRows = [], onOpenStar }: 
         return <button type="button" className="team-activity-agent" key={agent.agentCode || agent.agentName} onClick={() => onOpenStar?.({ agent, star })}>
           <div className="team-agent-avatar">{agent.avatarUrl ? <img src={agent.avatarUrl} alt="" /> : <UserRound size={18} />}</div>
           <div>
-            <strong>{agent.agentName || "TVV"}{agent.isNewAdvisor && <em>new</em>}</strong>
+            <strong>{agent.agentName || "TVV"}{agent.isNewAdvisor && <em>new</em>}{agent.needsSos && <em className="team-agent-sos">SOS</em>}</strong>
+            <small>{agent.inactiveMonths ? `${agent.inactiveMonths} tháng chưa có HĐ` : "Chưa xác định"}</small>
             <small>{agent.agentCode || "Chưa có mã TVV"}</small>
           </div>
           <span>{formatCompactVnd(Number(agent.afyp || 0))}</span>
@@ -1181,7 +1216,34 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
       target: null,
       remaining: 0,
       contracts: rewards.newManager.contracts
-    }] : [])
+    }] : []),
+    {
+      id: "team-policy-recruitment",
+      title: "Thưởng tuyển luyện",
+      period: "Quyền lợi dành cho Trưởng nhóm",
+      poster: "/Thưởng tuyển luyện.png",
+      reward: 0,
+      infoOnly: true,
+      infoNote: "Chương trình này chỉ hiển thị để Trưởng nhóm theo dõi quyền lợi hiện có. Không tham gia vào phần tạm tính thưởng trên màn hình này."
+    },
+    {
+      id: "team-policy-system-growth",
+      title: "Thưởng phát triển hệ thống",
+      period: "Quyền lợi dành cho Trưởng nhóm",
+      poster: "/Thưởng phát triển hệ thống.png",
+      reward: 0,
+      infoOnly: true,
+      infoNote: "Chương trình này chỉ hiển thị để Trưởng nhóm biết các quyền lợi về phát triển hệ thống. Dashboard không tự tính số thưởng cho mục này."
+    },
+    {
+      id: "team-policy-new-management-benefit",
+      title: "Thưởng quản lý mới",
+      period: "Quyền lợi dành cho Trưởng nhóm",
+      poster: "/Thưởng quản lý mới.png",
+      reward: 0,
+      infoOnly: true,
+      infoNote: "Chương trình này chỉ hiển thị poster và thông tin tham khảo về quyền lợi quản lý mới, không tham gia vào phần tính thưởng hiện tại."
+    }
   ];
   const openPolicyMilestone = (program: any) => setSelectedPolicyProgram({
     programId: program.id,
@@ -1189,6 +1251,8 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
     period: program.period,
     originalFileUrl: program.poster || null,
     estimatedReward: program.reward,
+    infoOnly: Boolean(program.infoOnly),
+    infoNote: program.infoNote || "",
     milestoneType: "team-policy",
     isTeamPolicy: true,
     teamPolicy: {
@@ -1202,10 +1266,9 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
   return <><section className={`${embedded ? "team-policy-page team-policy-page-embedded" : "tvv-content tvv-subpage tvv-after-sub-header team-policy-page"}`}>
     {!embedded && <div className="team-policy-total"><span>Tổng thưởng tạm tính</span><strong>{formatVnd(rewards.totalEstimatedReward)}</strong><small>Nhóm {rewards.groupName}</small></div>}
     {programs.map((program) => <article className="team-policy-card team-policy-card-clickable" key={program.title} role="button" tabIndex={0} onClick={() => openPolicyMilestone(program)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openPolicyMilestone(program); } }}>
-      <div className="team-policy-card-head"><div><Trophy size={19} /><h2>{program.title}</h2></div><strong>{formatVnd(program.reward)}</strong></div>
+      <div className="team-policy-card-head"><div><Trophy size={19} /><h2>{program.title}</h2></div><strong>{program.infoOnly ? "Quyền lợi" : formatVnd(program.reward)}</strong></div>
       {program.target && <div className="team-policy-next"><span>Mốc FYP tiếp theo <b>{formatVnd(program.target)}</b></span><strong>Còn {formatVnd(program.remaining)}</strong><i><u style={{ width: `${Math.min(100, ((program.target - program.remaining) / program.target) * 100)}%` }} /></i></div>}
     </article>)}
-    <section className="team-policy-quarters"><h2>Tiến độ thưởng năm</h2>{rewards.annual.quarters.map((item: any) => <div key={item.quarter}><span>Quý {item.quarter}</span><strong>{formatVnd(item.ip)}</strong><em className={item.achieved ? "achieved" : ""}>{item.achieved ? "Đạt" : "Chưa đạt"}</em></div>)}</section>
   </section>{selectedPolicyProgram && <ContestDetailModal item={selectedPolicyProgram} onClose={() => setSelectedPolicyProgram(null)} />}</>;
 }
 
@@ -1712,7 +1775,7 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
         <img src={item.originalFileUrl} alt={`Poster ${item.programName || "chương trình thi đua"}`} />
       </button> : <div className="tvv-contest-poster-empty">Chưa có ảnh</div>}
     </div>}
-    {(!policyRows || detailTab === "overview") && <div className="tvv-current-tier-card">
+    {!item.infoOnly && (!policyRows || detailTab === "overview") && <div className="tvv-current-tier-card">
       <span>Hiện tại</span>
       <strong>{milestoneInfo.basisLabel === "hợp đồng" || milestoneInfo.basisLabel === "HĐ đủ điều kiện" ? `${milestoneInfo.currentBasis} HĐ` : milestoneInfo.basisLabel === "Quý đạt" ? `${milestoneInfo.currentBasis}/4 quý` : formatCompactVnd(milestoneInfo.currentBasis)}</strong>
       {milestoneInfo.currentRateLabel && <em>Bậc hiện tại: {milestoneInfo.currentRateLabel}</em>}
@@ -1728,7 +1791,7 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
       </div>}
       {!policyRows && Array.isArray(item.participatingContracts) && item.participatingContracts.length > 0 && <div className="tvv-current-contracts">
         {item.participatingContracts.map((contract: any, index: number) => <article key={`${contract.applicationNo}-${index}`}>
-          <div><b>{contract.policyOwner}</b><small>GYC {contract.applicationNo || "—"}</small></div>
+          <div><b>{contract.advisorName || contract.policyOwner}</b><small>GYC {contract.applicationNo || "—"}</small></div>
           <span>{contract.status}</span>
         </article>)}
       </div>}
@@ -1743,7 +1806,7 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
         </article>)}</div>
         : <p className="tvv-empty">Chưa có TVV nào trong nhóm đạt chương trình này.</p>}
     </div>}
-    {!item.teamScoped && (!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
+    {!item.infoOnly && !item.teamScoped && (!policyRows || detailTab === "overview") && <div className="tvv-next-milestones">
       <div className="tvv-next-milestones-head">
         <span>Mốc tiếp theo</span>
       </div>

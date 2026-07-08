@@ -29,8 +29,11 @@ const bc02 = (date: string, applicationNo: string, overrides: Record<string, any
   ...overrides
 });
 
-const monthly = calculatePolicyRewards({ selectedMonth: "2026-01", kpi04: [kpi("2026-01")], bc02: [] });
+const monthly = calculatePolicyRewards({ selectedMonth: "2026-01", kpi04: [kpi("2025-12", { ip: 3_000_000 }), kpi("2026-01")], bc02: [] });
 assert.equal(monthly.monthly[0].reward, 1_000_000, "thưởng tháng dùng 10% tổng FYC");
+
+const monthlyWithoutPreviousGyc = calculatePolicyRewards({ selectedMonth: "2026-01", kpi04: [kpi("2026-01")], bc02: [] });
+assert.equal(monthlyWithoutPreviousGyc.monthly[0].reward, 0, "monthly reward requires previous month GYC with IP from 3 million");
 
 const quarterly = calculatePolicyRewards({
   selectedMonth: "2026-03",
