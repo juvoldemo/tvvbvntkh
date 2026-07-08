@@ -8405,6 +8405,48 @@ body,
   display: block !important;
 }
 
+@media (min-width: 768px) {
+  .tvv-splash-screen {
+    position: relative;
+    inset: auto;
+    width: min(100%, 430px);
+    width: min(100dvw, 430px);
+    min-width: 0;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto;
+  }
+
+  .tvv-splash-image {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .team-contract-modal-backdrop,
+  .tvv-contract-detail-backdrop {
+    left: 50% !important;
+    right: auto !important;
+    width: min(100vw, 430px) !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .team-contract-modal-backdrop {
+    justify-items: center !important;
+  }
+
+  .team-star-agent-modal,
+  .team-policy-detail-modal,
+  .advisor-reward-popup,
+  .tvv-contract-detail-backdrop .tvv-contract-detail {
+    width: min(100%, 398px) !important;
+    max-width: calc(430px - 32px) !important;
+  }
+}
+
 .tvv-app {
   width: min(100%, 430px) !important;
   background: linear-gradient(180deg, #eaf2fb 0, #f8fbff 260px, #f7faff 100%) !important;
