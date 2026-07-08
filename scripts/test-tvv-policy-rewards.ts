@@ -84,6 +84,37 @@ const month13 = calculatePolicyRewards({
 assert.deepEqual(month13.month13[0].achievedQuarters, [1, 2]);
 assert.equal(month13.month13[0].reward, 3_000_000);
 
+const newAdvisorMonthly = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [],
+  bc02: [bc02("2026-06-20", "NEW-MONTH", { ip: 12_000_000 })],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-06-11" }]
+});
+assert.equal(newAdvisorMonthly.newAdvisorMonthly[0].reward, 1_000_000, "TVV mới mặc định hoàn thành đào tạo và nhận 1 triệu khi IP tháng từ 12 triệu");
+
+const newAdvisorStage = calculatePolicyRewards({
+  selectedMonth: "2026-07",
+  kpi04: [],
+  bc02: [
+    bc02("2026-06-20", "NEW-STAGE-1", { ip: 50_000_000 }),
+    bc02("2026-07-20", "NEW-STAGE-2", { ip: 50_000_000 })
+  ],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-06-11" }]
+});
+assert.equal(newAdvisorStage.newAdvisorStage[0].stageReward, 0, "không trả lại mốc 50 triệu nếu chặng đã đạt từ tháng trước");
+assert.equal(newAdvisorStage.newAdvisorStage[0].fastReward, 3_000_000, "chặng 1 đạt 100 triệu cộng thêm thưởng xuất phát nhanh 3 triệu");
+assert.equal(newAdvisorStage.newAdvisorStage[0].reward, 3_000_000);
+
+const newAdvisorStageSingleFastStart = calculatePolicyRewards({
+  selectedMonth: "2026-07",
+  kpi04: [],
+  bc02: [bc02("2026-07-20", "NEW-STAGE-FAST", { ip: 100_000_000 })],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-07-01" }]
+});
+assert.equal(newAdvisorStageSingleFastStart.newAdvisorStage[0].stageReward, 3_000_000, "1 HĐ 100 triệu phải đạt vượt chặng 50 triệu");
+assert.equal(newAdvisorStageSingleFastStart.newAdvisorStage[0].fastReward, 3_000_000, "1 HĐ 100 triệu phải đạt thêm xuất phát nhanh");
+assert.equal(newAdvisorStageSingleFastStart.newAdvisorStage[0].reward, 6_000_000);
+
 const deduped = calculatePolicyRewards({
   selectedMonth: "2026-01",
   kpi04: [kpi("2026-01", { raw_data: { application_nos: [" gyc 001 "] } })],

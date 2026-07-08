@@ -315,8 +315,9 @@ export async function POST(request: NextRequest) {
     });
     const projectedPolicyPrograms = missingPolicyTable ? [] : policyProgramSummaries(projectedPolicyResult, month);
     const draftEstimatedFyc = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0) * 0.3, 0);
-    const calculatorPolicyPrograms = projectedPolicyPrograms.map((projected, index) => {
-      const current = calculatedPolicyPrograms[index];
+    const calculatedPolicyById = new Map(calculatedPolicyPrograms.map((program) => [program.programId, program]));
+    const calculatorPolicyPrograms = projectedPolicyPrograms.map((projected) => {
+      const current = calculatedPolicyById.get(projected.programId);
       const currentRow = current?.rows?.[0];
       const projectedRow = projected.rows?.[0];
       const currentReward = Number(current?.estimatedReward ?? 0);

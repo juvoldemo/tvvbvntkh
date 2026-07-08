@@ -65,6 +65,11 @@ function parseMoneyInput(value: string) {
   return Number(value.replace(/\D/g, "")) || 0;
 }
 
+function parseMillionMoneyInput(value: string) {
+  const amount = parseMoneyInput(value);
+  return amount > 0 && amount < 1_000 ? amount * 1_000_000 : amount;
+}
+
 function millionInput(value: string) {
   return value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
 }
@@ -163,6 +168,8 @@ function calculatorProgramOrder(item: any) {
   if (id === "acquisition-commission" || name.includes("hoa hong khai thac")) return 1;
   if (id === "policy-quarterly" || name.includes("thuong quy tvv")) return 2;
   if (id === "policy-monthly" || name.includes("thuong nang suat thang")) return 3;
+  if (id === "policy-new-advisor-monthly" || name.includes("thuong thang tvv moi")) return 4;
+  if (id === "policy-new-advisor-stage" || name.includes("thuong chang tvv moi")) return 5;
   return 10;
 }
 
@@ -1207,7 +1214,10 @@ function TeamLeaderRewardSummaryCard({ rewards, baseline }: { rewards: any; base
       <span><Gift size={18} /></span>
       <div><h2>Thưởng chính sách Trưởng nhóm</h2><p>Tạm tính theo dữ liệu hiện tại</p></div>
     </div>
-    <div className="tvv-total team-reward-total"><span>Tổng thưởng dự kiến</span><strong>{formatVnd(rewards.totalEstimatedReward || 0)}</strong></div>
+    <div className="team-reward-total team-reward-total-stack">
+      <div><span>Tổng thưởng dự kiến</span><strong>+{formatVnd(rewards.totalEstimatedReward || 0)}</strong></div>
+      <div className="team-reward-total-ip"><span>Tổng IP dự kiến</span><strong>{formatVnd(rewards.monthly?.ip || 0)}</strong></div>
+    </div>
     <div className="tvv-result-table tvv-result-table-standalone team-reward-programs">
       <div className="tvv-result-head"><span>Chương trình</span><span>Hiện tại / Dự kiến</span></div>
       {items.map((item, index) => {
@@ -1494,7 +1504,7 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
   }
 
   function addDraft() {
-    const ip = parseMoneyInput(ipText);
+    const ip = parseMillionMoneyInput(ipText);
     if (!advisorCode) return setFormError("Vui lòng chọn TVV trước khi thêm hợp đồng dự kiến.");
     if (ip <= 0) return setFormError("Vui lòng nhập IP dự kiến lớn hơn 0.");
     if (!expectedPaidDate) return setFormError("Vui lòng chọn ngày thu phí.");
@@ -1508,10 +1518,10 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
   return <section className="tvv-calculator team-leader-calculator">
     <TvvSubHeader title="Mô phỏng thưởng Trưởng nhóm" onBack={onBack} />
     <section className="tvv-calc-card team-leader-entry-card">
-      <div className="team-leader-entry-head"><div><h2>Thêm hợp đồng dự kiến</h2></div><span className="team-fyc-badge">FYC = 30% IP</span></div>
+      <div className="team-leader-entry-head"><div><h2>Thêm hợp đồng dự kiến</h2></div><span>Đơn vị: triệu đồng</span></div>
       <div className="team-leader-calc-form">
         <label><span>TVV</span><select value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); if (formError) setFormError(""); }}><option value="">Chọn TVV</option>{advisorList.map((item: any) => <option key={item.agentCode} value={item.agentCode}>{item.agentName}{item.isNewAdvisor ? "  NEW" : ""}</option>)}</select></label>
-        <label><span>IP dự kiến</span><input value={ipText} onChange={(event) => { setIpText(moneyInput(event.target.value)); if (formError) setFormError(""); }} placeholder="0" /></label>
+        <label><span>IP dự kiến</span><input className="team-ip-input" value={ipText} onChange={(event) => { setIpText(millionInput(event.target.value)); if (formError) setFormError(""); }} placeholder="0" inputMode="numeric" /></label>
         <label className="team-date-field"><span>Ngày thu phí</span><div className="team-date-input"><strong>{formatDateVi(expectedPaidDate)}</strong><CalendarDays size={18} /><input type="date" value={expectedPaidDate} onChange={(event) => { setExpectedPaidDate(event.target.value); if (formError) setFormError(""); }} /></div></label>
       </div>
       {formError && <p className="team-form-error">{formError}</p>}

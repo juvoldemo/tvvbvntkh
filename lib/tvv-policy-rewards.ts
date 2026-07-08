@@ -46,6 +46,12 @@ const QUARTER_TIERS = [
   { minimum: 500_000_000, rate: 0.25 }
 ];
 const MONTH_13_REWARDS: Record<number, number> = { 1: 1_000_000, 2: 3_000_000, 3: 5_000_000, 4: 10_000_000 };
+const NEW_ADVISOR_MONTHLY_IP = 12_000_000;
+const NEW_ADVISOR_MONTHLY_REWARD = 1_000_000;
+const NEW_ADVISOR_STAGE_IP = 50_000_000;
+const NEW_ADVISOR_STAGE_REWARD = 3_000_000;
+const NEW_ADVISOR_FAST_START_IP = 100_000_000;
+const NEW_ADVISOR_FAST_START_REWARD = 3_000_000;
 
 const number = (value: unknown) => Number(value) || 0;
 const text = (value: unknown) => String(value ?? "").trim();
@@ -78,6 +84,16 @@ function agentMonthKey(row: Row) {
 function previousMonthKey(month: string) {
   const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function addMonths(month: string, months: number) {
+  const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + months, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthDiff(startMonth: string, endMonth: string) {
+  return (Number(endMonth.slice(0, 4)) - Number(startMonth.slice(0, 4))) * 12
+    + Number(endMonth.slice(5, 7)) - Number(startMonth.slice(5, 7));
 }
 
 function matches(row: Row, filters: PolicyFilters) {
@@ -236,6 +252,75 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
   }).sort((a, b) => b.reward - a.reward || (basis === "ip" ? b.ip - a.ip : b.fyp - a.fyp));
 }
 
+function calculateNewAdvisorMonthly(rows: Row[], selectedMonth: string, advisorStartDates: Map<string, string>) {
+  return [...groupRows(rows).values()].map((agentRows) => {
+    const totals = aggregate(agentRows);
+    const startDate = advisorStartDates.get(totals.agentCode);
+    const startMonth = monthKey(startDate);
+    const tenureMonth = startMonth ? monthDiff(startMonth, selectedMonth) + 1 : 0;
+    const achieved = Boolean(startDate && tenureMonth >= 1 && tenureMonth <= 12 && totals.ip >= NEW_ADVISOR_MONTHLY_IP);
+    return {
+      ...totals,
+      rate: 0,
+      reward: achieved ? NEW_ADVISOR_MONTHLY_REWARD : 0,
+      achieved,
+      nextTierMinimum: achieved ? null : NEW_ADVISOR_MONTHLY_IP,
+      missingToNextTier: achieved ? 0 : Math.max(0, NEW_ADVISOR_MONTHLY_IP - totals.ip),
+      fypFallback: false,
+      newAdvisorStartDate: startDate ?? null,
+      tenureMonth,
+      trainingCompleted: true
+    };
+  }).filter((row) => row.newAdvisorStartDate).sort((a, b) => b.reward - a.reward || b.ip - a.ip);
+}
+
+function calculateNewAdvisorStage(rows: Row[], selectedMonth: string, advisorStartDates: Map<string, string>) {
+  const selectedRows = rows.filter((row) => monthKey(row.paid_date || row.data_month) <= selectedMonth);
+  return [...groupRows(selectedRows).values()].map((agentRows) => {
+    const firstTotals = aggregate(agentRows);
+    const startDate = advisorStartDates.get(firstTotals.agentCode);
+    const startMonth = monthKey(startDate);
+    const tenureMonth = startMonth ? monthDiff(startMonth, selectedMonth) + 1 : 0;
+    const stageNo = Math.ceil(tenureMonth / 3);
+    if (!startDate || tenureMonth < 1 || tenureMonth > 12 || stageNo < 1 || stageNo > 4) return null;
+
+    const stageStart = addMonths(startMonth, (stageNo - 1) * 3);
+    const stageEnd = addMonths(stageStart, 2);
+    const previousMonth = previousMonthKey(selectedMonth);
+    const stageRows = agentRows.filter((row) => {
+      const rowMonth = monthKey(row.paid_date || row.data_month);
+      return rowMonth >= stageStart && rowMonth <= stageEnd && rowMonth <= selectedMonth;
+    });
+    const previousStageRows = stageRows.filter((row) => monthKey(row.paid_date || row.data_month) <= previousMonth);
+    const totals = aggregate(stageRows);
+    const previousIp = previousStageRows.reduce((sum, row) => sum + number(row.ip), 0);
+    const stageReward = previousIp < NEW_ADVISOR_STAGE_IP && totals.ip >= NEW_ADVISOR_STAGE_IP ? NEW_ADVISOR_STAGE_REWARD : 0;
+    const fastReward = stageNo === 1 && previousIp < NEW_ADVISOR_FAST_START_IP && totals.ip >= NEW_ADVISOR_FAST_START_IP
+      ? NEW_ADVISOR_FAST_START_REWARD
+      : 0;
+    const reward = stageReward + fastReward;
+    return {
+      ...totals,
+      rate: 0,
+      reward,
+      achieved: reward > 0,
+      nextTierMinimum: totals.ip >= NEW_ADVISOR_STAGE_IP ? (stageNo === 1 && totals.ip < NEW_ADVISOR_FAST_START_IP ? NEW_ADVISOR_FAST_START_IP : null) : NEW_ADVISOR_STAGE_IP,
+      missingToNextTier: totals.ip >= NEW_ADVISOR_STAGE_IP
+        ? (stageNo === 1 ? Math.max(0, NEW_ADVISOR_FAST_START_IP - totals.ip) : 0)
+        : Math.max(0, NEW_ADVISOR_STAGE_IP - totals.ip),
+      fypFallback: false,
+      newAdvisorStartDate: startDate,
+      tenureMonth,
+      stageNo,
+      stageStart,
+      stageEnd,
+      trainingCompleted: true,
+      stageReward,
+      fastReward
+    };
+  }).filter((row): row is NonNullable<typeof row> => Boolean(row)).sort((a: any, b: any) => b.reward - a.reward || b.ip - a.ip);
+}
+
 export function calculatePolicyRewards(params: {
   selectedMonth: string;
   kpi04: Row[];
@@ -275,6 +360,8 @@ export function calculatePolicyRewards(params: {
     quarterStart: selectedQuarterBounds.start,
     quarterEnd: selectedQuarterBounds.end
   });
+  const newAdvisorMonthly = calculateNewAdvisorMonthly(rewardMonthContracts, selectedMonth, advisorStartDates);
+  const newAdvisorStage = calculateNewAdvisorStage(rewardYearContracts, selectedMonth, advisorStartDates);
   const quarterResults = new Map<string, PolicyRewardRow[]>();
   for (let quarter = 1; quarter <= selectedQuarter; quarter++) {
     const rows = rewardYearContracts.filter((row) => quarterOf(row.paid_date || row.data_month) === quarter);
@@ -313,6 +400,8 @@ export function calculatePolicyRewards(params: {
     rewardYearContracts,
     monthly,
     quarterly,
+    newAdvisorMonthly,
+    newAdvisorStage,
     month13,
     selectedQuarter,
     warnings: [
@@ -332,7 +421,9 @@ export function policyProgramSummaries(result: ReturnType<typeof calculatePolicy
   const posterByProgramId: Record<string, string> = {
     "policy-monthly": "/Thưởng năng suất tháng.png",
     "policy-quarterly": "/Thưởng Quý.png",
-    "policy-month-13": "/Thưởng tháng 13.png"
+    "policy-month-13": "/Thưởng tháng 13.png",
+    "policy-new-advisor-monthly": "/Thưởng năng suất tháng.png",
+    "policy-new-advisor-stage": "/Thưởng Quý.png"
   };
   const build = (id: string, name: string, period: string, conditionText: string, rows: PolicyRewardRow[]) => ({
     programId: id,
@@ -351,6 +442,8 @@ export function policyProgramSummaries(result: ReturnType<typeof calculatePolicy
   return [
     build("policy-monthly", "Thưởng Năng suất tháng TVV", `Tháng ${month}/${year}`, "IP tháng từ 12 triệu; thưởng 10%–18% tổng FYC.", result.monthly),
     build("policy-quarterly", "Thưởng Quý TVV", `Quý ${result.selectedQuarter}/${year}`, "FYP quý từ 24 triệu; PR15 mặc định đạt 100%.", result.quarterly),
+    build("policy-new-advisor-monthly", "Thưởng Tháng TVV mới", `Tháng ${month}/${year}`, "TVV mới trong 12 tháng đầu; mặc định hoàn thành đào tạo; IP tháng từ 12 triệu thưởng 1 triệu.", result.newAdvisorMonthly),
+    build("policy-new-advisor-stage", "Thưởng Chặng TVV mới", `Lũy kế chặng đến tháng ${month}/${year}`, "Mỗi chặng 3 tháng; IP chặng từ 50 triệu thưởng 3 triệu; riêng chặng 1 đạt 100 triệu cộng thêm 3 triệu.", result.newAdvisorStage),
     build("policy-month-13", "Thưởng Tháng 13", `Lũy kế đến tháng ${month}/${year}`, "Đạt 1–4 quý; trường hợp chỉ đạt 1 quý cần FYP năm từ 50 triệu.", result.month13)
-  ];
+  ].filter((program) => !program.programId.startsWith("policy-new-advisor-") || program.rows.length > 0);
 }
