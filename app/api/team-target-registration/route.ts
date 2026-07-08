@@ -28,11 +28,11 @@ async function teamContext(request: NextRequest) {
   const supabase = getSupabaseAdmin();
   const { data: profile, error } = await supabase
     .from("authorized_users")
-    .select("advisor_code,full_name,advisor_position")
+    .select("advisor_code,full_name,advisor_position,group_name")
     .eq("advisor_code", code)
     .single();
   if (error) throw error;
-  const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name);
+  const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name, profile.group_name);
   if (!groupName) return { error: NextResponse.json({ error: "Tai khoan chua duoc gan nhom quan ly." }, { status: 403 }) };
   return { supabase, profile, groupName };
 }

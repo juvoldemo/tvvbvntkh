@@ -66,6 +66,10 @@ function addYears(date: string, years: number) {
   return value.toISOString().slice(0, 10);
 }
 
+function earlierDate(left: string, right: string) {
+  return left <= right ? left : right;
+}
+
 function monthRange(month: string) {
   const year = Number(month.slice(0, 4));
   const monthNo = Number(month.slice(5, 7));
@@ -119,6 +123,7 @@ export function calculateTeamLeaderPolicy(params: {
   const quarterStart = `${year}-${String(quarterStartMonth).padStart(2, "0")}-01`;
   const quarterEnd = monthRange(`${year}-${String(quarterStartMonth + 2).padStart(2, "0")}`).end;
   const { start: monthStart, end: monthEnd } = monthRange(month);
+  const quarterlyEvaluationDate = earlierDate(asOfDate, quarterEnd);
 
   const syntheticRows = (params.drafts ?? []).map((draft, index) => ({
     id: `draft-${index}`,
@@ -182,7 +187,7 @@ export function calculateTeamLeaderPolicy(params: {
   });
   const recruitedAdvisors = [...quarterValidByAdvisor.entries()].filter(([code, rows]) => {
     const startDate = profileByCode.get(code)?.start_date;
-    if (!startDate || startDate > asOfDate || addYears(startDate, 1) <= asOfDate) return false;
+    if (!startDate || startDate > quarterlyEvaluationDate || addYears(startDate, 1) <= quarterlyEvaluationDate) return false;
     return rows.some((row) => String(row.issued_date || "") >= startDate && (Number(row.ip) || 0) > 12_000_000);
   }).map(([code]) => code);
   const hasDraftRecruit = (params.drafts ?? []).some((draft) => draft.isNewAdvisor && (Number(draft.ip) || 0) > 12_000_000);

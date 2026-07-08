@@ -159,10 +159,10 @@ async function calculate(request: NextRequest, body: any = {}) {
   const month = String(body.month || request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7)).slice(0, 7);
   const supabase = getSupabaseAdmin();
   const { data: profile, error } = await supabase.from("authorized_users")
-    .select("advisor_code,full_name,advisor_position,position_effective_date")
+    .select("advisor_code,full_name,advisor_position,position_effective_date,group_name")
     .eq("advisor_code", code).single();
   if (error) throw error;
-  const groupName = managedTeamName(code, profile.advisor_position, profile.full_name);
+  const groupName = managedTeamName(code, profile.advisor_position, profile.full_name, profile.group_name);
   if (!groupName) return NextResponse.json({ error: "Tài khoản không phải Trưởng nhóm hoặc chưa được gán nhóm." }, { status: 403 });
 
   const year = month.slice(0, 4);

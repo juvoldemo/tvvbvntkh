@@ -39,10 +39,13 @@ function normalizeText(value: unknown) {
     .trim();
 }
 
-export function managedTeamName(advisorCode: unknown, position?: unknown, fullName?: unknown) {
+export function managedTeamName(advisorCode: unknown, position?: unknown, fullName?: unknown, groupName?: unknown) {
   const normalizedPosition = normalizeText(position);
   const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
+  const explicitGroup = String(groupName ?? "").trim();
   if (normalizedPosition === "truong nhom") return codeGroup;
-  if (normalizedPosition === "truong ban") return TEAM_BY_BOARD_LEADER_NAME[normalizeText(fullName)] ?? codeGroup;
+  if (normalizedPosition === "truong ban") {
+    return TEAM_BY_BOARD_LEADER_NAME[normalizeText(fullName)] ?? (codeGroup || explicitGroup);
+  }
   return "";
 }

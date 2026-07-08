@@ -46,6 +46,23 @@ function contractBelongsToAdvisor(record: any, advisor: { code: string; name: st
   return Boolean((advisorCode && advisorCode === recordCode) || (advisorName && advisorName === recordName));
 }
 
+async function advisorBelongsToManagedGroup(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+  advisorCode: string,
+  managedGroup: string,
+  profileGroupName?: string | null
+) {
+  if (String(profileGroupName || "").trim() === managedGroup) return true;
+  const { data, error } = await supabase
+    .from("revenue_records")
+    .select("group_name")
+    .eq("agent_code", advisorCode)
+    .eq("group_name", managedGroup)
+    .limit(1);
+  if (error) throw error;
+  return Boolean(data?.length);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
@@ -71,8 +88,16 @@ export async function POST(request: NextRequest) {
       ]);
       if (signedInError) throw signedInError;
       if (targetError) throw targetError;
-      const managedGroup = managedTeamName(signedInProfile.advisor_code, signedInProfile.advisor_position, signedInProfile.full_name);
-      if (!managedGroup || String(targetProfile.group_name || "").trim() !== managedGroup) {
+      const managedGroup = managedTeamName(
+        signedInProfile.advisor_code,
+        signedInProfile.advisor_position,
+        signedInProfile.full_name,
+        signedInProfile.group_name
+      );
+      const hasPermission = managedGroup
+        ? await advisorBelongsToManagedGroup(supabase, requestedAdvisor.code, managedGroup, targetProfile.group_name)
+        : false;
+      if (!hasPermission) {
         return NextResponse.json({ error: "Khong co quyen tinh thuong cho TVV nay." }, { status: 403 });
       }
       advisor = {

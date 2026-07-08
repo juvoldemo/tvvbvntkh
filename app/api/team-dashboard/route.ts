@@ -84,12 +84,12 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { data: profile, error: profileError } = await supabase
       .from("authorized_users")
-      .select("advisor_code,full_name,advisor_position")
+      .select("advisor_code,full_name,advisor_position,group_name")
       .eq("advisor_code", advisorCode)
       .single();
     if (profileError) throw profileError;
 
-    const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name);
+    const groupName = managedTeamName(profile.advisor_code, profile.advisor_position, profile.full_name, profile.group_name);
     if (!groupName) {
       return NextResponse.json({ error: "Tài khoản chưa được gán nhóm quản lý." }, { status: 403 });
     }
