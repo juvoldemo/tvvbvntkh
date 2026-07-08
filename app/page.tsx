@@ -696,7 +696,7 @@ export default function TvvMobilePage() {
   if (showSplash) {
     return (
       <main className="tvv-splash-screen" aria-label="Đang mở ứng dụng">
-        <Image className="tvv-splash-image" src="/Hello.png" alt="" fill priority sizes="100vw" />
+        <Image className="tvv-splash-image" src="/Hi.png" alt="" fill priority sizes="100vw" />
       </main>
     );
   }
