@@ -11,7 +11,7 @@ type AdminRewardPeriod = "month" | "quarter";
 type RewardParticipant = { code: string; name: string; groupName?: string; contractCount: number; ip: number; fyp: number; fyc: number; reward: number; detail: string };
 type RewardProgram = { id: string; name: string; period: string; totalReward: number; achievedCount: number; participants: RewardParticipant[] };
 type AdminRewardData = { month: string; period: AdminRewardPeriod; tvv: RewardProgram[]; leaders: RewardProgram[] };
-type TargetRegistration = { id: string; target_month: string; leader_name: string | null; group_name: string; revenue_target: number; active_advisor_target: number; reward_target: number; selected_advisors: Array<{ advisor_code?: string; full_name?: string }>; updated_at: string };
+type TargetRegistration = { id: string; target_month: string; leader_name: string | null; group_name: string; revenue_target: number; active_advisor_target: number; reward_target: number; selected_advisors: Array<{ advisor_code?: string; agentCode?: string; full_name?: string; agentName?: string; revenue_target?: number; revenueTarget?: number }>; updated_at: string };
 type ArchiveTab = "forms" | "guides" | "faq";
 type ArchiveDocument = { id: string; title: string; file?: string; size?: string };
 type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
@@ -395,44 +395,104 @@ function AdminTargetSummary({ month, setMonth, registrations, loading, onReload,
   onReload: () => void;
   onDelete: (id: string, groupName: string) => void;
 }) {
+  const [view, setView] = useState<"overview" | "detail">("overview");
   const totals = registrations.reduce((sum, item) => ({
     revenue: sum.revenue + Number(item.revenue_target || 0),
     active: sum.active + Number(item.active_advisor_target || 0),
     reward: sum.reward + Number(item.reward_target || 0),
     advisors: sum.advisors + (Array.isArray(item.selected_advisors) ? item.selected_advisors.length : 0)
   }), { revenue: 0, active: 0, reward: 0, advisors: 0 });
+  const sortedRegistrations = [...registrations].sort((a, b) => Number(b.revenue_target || 0) - Number(a.revenue_target || 0));
+  const shortName = (value?: string) => {
+    const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+    return parts.length ? parts.at(-1) || value || "TVV" : "TVV";
+  };
 
   return (
     <article className="admin-card admin-target-card">
-      <div className="admin-card-title"><Target /><div><h2>Đăng ký mục tiêu</h2><p>Tổng hợp mục tiêu doanh thu, lượt hoạt động, tiền thưởng và TVV dự kiến hoạt động của các nhóm.</p></div></div>
+      <div className="admin-card-title"><Target /><div><h2>Đăng ký mục tiêu</h2><p>Theo dõi mục tiêu từng nhóm và doanh thu trưởng nhóm đăng ký cho từng TVV cụ thể.</p></div></div>
       <div className="admin-target-toolbar">
         <label>Tháng<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>
         <button type="button" disabled={loading} onClick={onReload}>{loading ? "Đang tải..." : "Tải dữ liệu"}</button>
       </div>
-      <div className="admin-data-overview">
+      <div className="admin-data-overview admin-target-overview">
         <div><strong>{registrations.length}</strong><span>nhóm đã đăng ký</span></div>
         <div><strong>{formatMoney(totals.revenue)}</strong><span>tổng doanh thu mục tiêu</span></div>
+        <div><strong>{totals.advisors}</strong><span>TVV được đăng ký mục tiêu</span></div>
         <div><strong>{totals.active}</strong><span>lượt hoạt động mục tiêu</span></div>
         <div><strong>{formatMoney(totals.reward)}</strong><span>tổng tiền thưởng mục tiêu</span></div>
+        <div><strong>{formatMoney(totals.advisors ? totals.revenue / totals.advisors : 0)}</strong><span>doanh thu mục tiêu bình quân/TVV</span></div>
       </div>
-      <div className="admin-table-wrap admin-reward-table">
-        <table>
-          <thead><tr><th>Nhóm</th><th>Trưởng nhóm</th><th>Doanh thu</th><th>Lượt HĐ</th><th>Tiền thưởng</th><th>TVV dự kiến</th><th>Cập nhật</th></tr></thead>
-          <tbody>
-            {registrations.length === 0 && <tr><td colSpan={7}>{loading ? "Đang tải dữ liệu..." : "Chưa có nhóm đăng ký mục tiêu tháng này."}</td></tr>}
-            {registrations.map((item) => (
-              <tr key={item.id}>
-                <td><b>{item.group_name}</b></td>
-                <td>{item.leader_name || "—"}</td>
-                <td>{formatMoney(item.revenue_target)}</td>
-                <td>{item.active_advisor_target}</td>
-                <td>{formatMoney(item.reward_target)}</td>
-                <td>{(item.selected_advisors ?? []).map((advisor) => advisor.full_name || advisor.advisor_code).filter(Boolean).join(", ") || "—"}</td>
-                <td><span>{item.updated_at ? new Date(item.updated_at).toLocaleString("vi-VN") : "—"}</span><button className="admin-danger admin-row-action" type="button" onClick={() => onDelete(item.id, item.group_name)}><Trash2 size={14} />Xóa</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="admin-target-view-tabs" role="tablist" aria-label="Chọn kiểu xem mục tiêu">
+        <button type="button" role="tab" aria-selected={view === "overview"} className={view === "overview" ? "active" : ""} onClick={() => setView("overview")}><BarChart3 size={16} />Tổng quát</button>
+        <button type="button" role="tab" aria-selected={view === "detail"} className={view === "detail" ? "active" : ""} onClick={() => setView("detail")}><Users size={16} />Chi tiết TVV</button>
+      </div>
+      <div className="admin-target-list">
+        {registrations.length === 0 && <p className="admin-data-empty">{loading ? "Đang tải dữ liệu..." : "Chưa có nhóm đăng ký mục tiêu tháng này."}</p>}
+        {view === "overview" && sortedRegistrations.map((item) => {
+          const advisors = [...(item.selected_advisors ?? [])];
+          return (
+            <section className="admin-target-summary-row" key={item.id}>
+              <div className="admin-target-summary-main">
+                <span>Nhóm</span>
+                <h3>{item.group_name}</h3>
+                <p>{item.leader_name || "Chưa có tên trưởng nhóm"}</p>
+              </div>
+              <div className="admin-target-summary-metric"><span>Doanh thu đăng ký</span><strong>{formatMoney(item.revenue_target)}</strong></div>
+              <div className="admin-target-summary-metric"><span>TVV hoạt động</span><strong>{item.active_advisor_target}</strong></div>
+              <div className="admin-target-summary-advisors">
+                <span>Gồm TVV</span>
+                <p>{advisors.map((advisor) => shortName(advisor.full_name || advisor.agentName)).join(", ") || "—"}</p>
+              </div>
+            </section>
+          );
+        })}
+        {view === "detail" && sortedRegistrations.map((item) => {
+          const advisors = [...(item.selected_advisors ?? [])].sort((a, b) => Number(b.revenue_target ?? b.revenueTarget ?? 0) - Number(a.revenue_target ?? a.revenueTarget ?? 0));
+          return (
+            <section className="admin-target-group" key={item.id}>
+              <header className="admin-target-group-head">
+                <div>
+                  <span>Nhóm</span>
+                  <h3>{item.group_name}</h3>
+                  <p>Trưởng nhóm: <b>{item.leader_name || "—"}</b></p>
+                </div>
+                <button className="admin-danger admin-row-action" type="button" onClick={() => onDelete(item.id, item.group_name)}><Trash2 size={14} />Xóa</button>
+              </header>
+              <div className="admin-target-group-metrics">
+                <div><span>Doanh thu nhóm</span><strong>{formatMoney(item.revenue_target)}</strong></div>
+                <div><span>TVV đăng ký</span><strong>{advisors.length}</strong></div>
+                <div><span>Lượt HĐ</span><strong>{item.active_advisor_target}</strong></div>
+                <div><span>Tiền thưởng</span><strong>{formatMoney(item.reward_target)}</strong></div>
+              </div>
+              <div className="admin-target-advisors">
+                <div className="admin-target-advisors-head"><strong>Doanh thu đăng ký từng TVV</strong><span>Cập nhật {item.updated_at ? new Date(item.updated_at).toLocaleString("vi-VN") : "—"}</span></div>
+                <div className="admin-target-advisor-table">
+                  <table>
+                    <thead><tr><th>TVV</th><th>Mã TVV</th><th>Doanh thu đăng ký</th><th>Tỷ trọng nhóm</th></tr></thead>
+                    <tbody>
+                      {advisors.length === 0 && <tr><td colSpan={4}>Chưa có TVV trong đăng ký này.</td></tr>}
+                      {advisors.map((advisor, index) => {
+                        const advisorTarget = Number(advisor.revenue_target ?? advisor.revenueTarget ?? 0);
+                        const advisorName = advisor.full_name || advisor.agentName || "TVV";
+                        const advisorCode = advisor.advisor_code || advisor.agentCode || "—";
+                        const share = Number(item.revenue_target || 0) > 0 ? Math.round((advisorTarget / Number(item.revenue_target || 0)) * 100) : 0;
+                        return (
+                          <tr key={`${advisorCode}-${advisorName}-${index}`}>
+                            <td><b>{advisorName}</b></td>
+                            <td>{advisorCode}</td>
+                            <td><strong>{formatMoney(advisorTarget)}</strong></td>
+                            <td><span className="admin-target-share"><i style={{ width: `${Math.min(100, share)}%` }} />{share}%</span></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          );
+        })}
       </div>
     </article>
   );

@@ -772,6 +772,7 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
   const advisors = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
   const registeredSelectedAdvisors = registration?.selected_advisors ?? [];
   const registeredSelectedCodes = registeredSelectedAdvisors.map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean);
+  const [targetView, setTargetView] = useState<"register" | "tracking">("register");
   const [activeAdvisorTarget, setActiveAdvisorTarget] = useState(() => String(Number(registration?.active_advisor_target ?? 0) || registeredSelectedCodes.length || ""));
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(() => new Set(registeredSelectedCodes));
   const [advisorTargets, setAdvisorTargets] = useState<Record<string, string>>(() => Object.fromEntries(registeredSelectedAdvisors
@@ -790,6 +791,25 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
     () => calculateTeamTargetPtkdReward(revenueTarget, Number(activeAdvisorTarget) || 0),
     [activeAdvisorTarget, revenueTarget]
   );
+  const advisorByCode = useMemo(() => new Map<string, any>(advisors.map((item: any) => [String(item.agentCode || item.advisor_code || "").trim(), item])), [advisors]);
+  const trackingRows = useMemo(() => registeredSelectedAdvisors.map((item: any) => {
+    const code = String(item.advisor_code || item.agentCode || "").trim();
+    const agent = advisorByCode.get(code) ?? {};
+    const target = Number(item.revenue_target ?? item.revenueTarget ?? 0) || 0;
+    const actual = Number(agent.ip ?? agent.afyp ?? 0) || 0;
+    const percent = target > 0 ? Math.min(999, Math.round((actual / target) * 100)) : 0;
+    return {
+      code,
+      name: item.full_name || item.agentName || agent.agentName || agent.full_name || "TVV",
+      target,
+      actual,
+      percent,
+      remaining: Math.max(0, target - actual)
+    };
+  }).sort((a: any, b: any) => b.percent - a.percent || b.actual - a.actual || String(a.name).localeCompare(String(b.name), "vi")), [advisorByCode, registeredSelectedAdvisors]);
+  const trackingTarget = trackingRows.reduce((sum: number, row: any) => sum + row.target, 0);
+  const trackingActual = trackingRows.reduce((sum: number, row: any) => sum + row.actual, 0);
+  const trackingPercent = trackingTarget > 0 ? Math.min(999, Math.round((trackingActual / trackingTarget) * 100)) : 0;
 
   function toggleAdvisor(code: string) {
     setSelectedCodes((current) => {
@@ -851,13 +871,17 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
   return createPortal(
     <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}>
       <form className="tvv-contract-detail team-target-modal" role="dialog" aria-modal="true" aria-label="Đăng ký mục tiêu" onClick={(event) => event.stopPropagation()} onSubmit={submit}>
-        <header><div><p>ĐĂNG KÝ MỤC TIÊU</p><h2>Tháng {month.slice(5, 7)}/{month.slice(0, 4)}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
-        <div className="team-target-fields">
-          <label>Doanh thu mục tiêu<input className="team-target-revenue-input" value={moneyInput(String(revenueTarget)) || "0"} readOnly aria-readonly="true" /></label>
-          <label>Lượt hoạt động<input className="team-target-active-input" value={activeAdvisorTarget} readOnly aria-readonly="true" /></label>
-          <label>Tiền thưởng mục tiêu<input className="team-target-reward-input" value={moneyInput(String(targetReward)) || "0"} readOnly aria-readonly="true" /></label>
+        <header><div><p>ĐĂNG KÝ MỤC TIÊU</p><h2>Tháng {month.slice(5, 7)}/{month.slice(0, 4)}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">X</button></header>
+        <div className="team-target-tabs" role="tablist" aria-label="Chọn chế độ mục tiêu">
+          <button type="button" role="tab" aria-selected={targetView === "register"} className={targetView === "register" ? "active" : ""} onClick={() => setTargetView("register")}><Target size={16} />Đăng ký</button>
+          <button type="button" role="tab" aria-selected={targetView === "tracking"} className={targetView === "tracking" ? "active" : ""} onClick={() => setTargetView("tracking")}><BarChart3 size={16} />Theo dõi</button>
         </div>
-        <section className="team-target-roster">
+        <div className="team-target-fields">
+          <label>{targetView === "tracking" ? "Doanh thu hiện tại" : "Doanh thu mục tiêu"}<input className="team-target-revenue-input" value={moneyInput(String(targetView === "tracking" ? trackingActual : revenueTarget)) || "0"} readOnly aria-readonly="true" /></label>
+          <label>{targetView === "tracking" ? "Tiến độ" : "Lượt hoạt động"}<input className="team-target-active-input" value={targetView === "tracking" ? `${trackingPercent}%` : activeAdvisorTarget} readOnly aria-readonly="true" /></label>
+          <label>{targetView === "tracking" ? "Mục tiêu đăng ký" : "Tiền thưởng mục tiêu"}<input className="team-target-reward-input" value={moneyInput(String(targetView === "tracking" ? trackingTarget : targetReward)) || "0"} readOnly aria-readonly="true" /></label>
+        </div>
+        {targetView === "register" ? <section className="team-target-roster">
           <div><strong>Danh sách TVV của nhóm</strong><span>{selectedCodes.size}/{advisors.length} TVV dự kiến có doanh thu</span></div>
           <p className="team-target-unit-note">Đơn vị: Triệu đồng</p>
           <div className="team-target-agent-list">
@@ -870,9 +894,22 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
               </label>;
             })}
           </div>
-        </section>
+        </section> : <section className="team-target-roster team-target-tracking">
+          <div><strong>Tiến độ TVV đã đăng ký</strong><span>{trackingRows.length} TVV</span></div>
+          <p className="team-target-unit-note">Theo doanh thu hiện tại / mục tiêu đăng ký</p>
+          <div className="team-target-tracking-list">
+            {trackingRows.map((row: any) => (
+              <article key={row.code || row.name} className={row.percent >= 100 ? "achieved" : ""}>
+                <div className="team-target-tracking-head"><b>{row.name}</b><strong>{row.percent}%</strong></div>
+                <div className="team-target-progress" aria-label={`Tiến độ ${row.name} ${row.percent}%`}><i style={{ width: `${Math.min(100, row.percent)}%` }} /></div>
+                <div className="team-target-tracking-meta"><span>{formatVnd(row.actual)} / {formatVnd(row.target)}</span><small>Còn {formatVnd(row.remaining)}</small></div>
+              </article>
+            ))}
+            {!trackingRows.length && <p className="team-target-tracking-empty">Chưa có TVV nào trong đăng ký mục tiêu.</p>}
+          </div>
+        </section>}
         {message && <p className="error-list">{message}</p>}
-        <button type="submit" disabled={busy}>{busy ? "Đang gửi..." : "Gửi đăng ký"}</button>
+        {targetView === "register" && <button type="submit" disabled={busy}>{busy ? "Đang gửi..." : "Gửi đăng ký"}</button>}
       </form>
     </div>,
     document.body
@@ -981,7 +1018,6 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
             {allTeamContracts.map((row: any) => (
               <article key={row.id || row.application_no || row.contract_no}>
                 <div><span>TVV</span><strong>{row.agent_name || "—"}</strong></div>
-                <div><span>BMBH</span><strong>{row.policy_owner || row.raw_data?.["BÊN MUA BẢO HIỂM (BMBH)"] || "—"}</strong></div>
                 <div><span>Ngày hiệu lực</span><strong>{formatDateVi(row.paid_date || row.raw_data?.["NGÀY THU"])}</strong></div>
                 <div><span>Ngày phát hành</span><strong>{formatDateVi(row.issued_date || row.raw_data?.["NGÀY PHÁT HÀNH"])}</strong></div>
                 <div><span>IP</span><strong>{Number(row.ip || 0).toLocaleString("vi-VN")}</strong></div>
