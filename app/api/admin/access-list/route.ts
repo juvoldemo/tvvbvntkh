@@ -61,7 +61,7 @@ function scoreUserRow(row: Record<string, unknown>) {
     row.position_effective_date,
     row.birth_day,
     row.birth_month
-  ].reduce((score, value) => score + (value ? 1 : 0), 0);
+  ].reduce((score: number, value: unknown) => score + (value ? 1 : 0), 0);
 }
 
 export async function GET(request: NextRequest) {
