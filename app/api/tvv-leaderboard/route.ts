@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds, toMonthStart } from "@/lib/format";
 import { buildAgentRanking, buildGroupRanking, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
 import type { RevenueRecord } from "@/lib/types";
+import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
 export async function GET(request: NextRequest) {
@@ -54,7 +55,21 @@ export async function GET(request: NextRequest) {
       ...row,
       avatarUrl: avatarByCode.get(String(row.agentCode).trim().toUpperCase()) ?? null
     }));
-    const groups = buildGroupRanking(countedRecords).slice(0, 10);
+    const topGroups = buildGroupRanking(countedRecords).slice(0, 10);
+    const { data: leaders } = await supabase
+      .from("authorized_users")
+      .select("advisor_code,full_name,advisor_position,group_name,avatar_url")
+      .eq("is_active", true)
+      .not("avatar_url", "is", null);
+    const leaderAvatarByGroup = new Map<string, string>();
+    (leaders ?? []).forEach((leader: any) => {
+      const groupName = managedTeamName(leader.advisor_code, leader.advisor_position, leader.full_name, leader.group_name);
+      if (groupName && leader.avatar_url && !leaderAvatarByGroup.has(groupName)) leaderAvatarByGroup.set(groupName, leader.avatar_url);
+    });
+    const groups = topGroups.map((row) => ({
+      ...row,
+      avatarUrl: leaderAvatarByGroup.get(row.groupName) ?? null
+    }));
 
     return NextResponse.json({ month, agents, groups, currentAdvisorRank, advisorStats });
   } catch (error) {

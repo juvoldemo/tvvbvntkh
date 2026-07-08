@@ -8369,6 +8369,24 @@ body,
 }
 
 /* TVV mobile app polish: tab views only, no data or routing changes. */
+.tvv-splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  background: #004b7a;
+  overflow: hidden;
+}
+
+.tvv-splash-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .tvv-app {
   width: min(100%, 430px) !important;
   background: linear-gradient(180deg, #eaf2fb 0, #f8fbff 260px, #f7faff 100%) !important;
@@ -12462,6 +12480,44 @@ body,
 
 .tvv-result-row > strong.increase {
   color: #04954c !important;
+}
+
+.tvv-result-row > strong.advisor-reward-breakdown {
+  display: grid !important;
+  gap: 4px !important;
+  color: #004b7a !important;
+}
+
+.tvv-result-row > strong.advisor-reward-breakdown small {
+  color: #004b7a !important;
+}
+
+.advisor-reward-breakdown em {
+  display: block;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.advisor-reward-breakdown .new-reward {
+  color: #04954c !important;
+  font-size: 80%;
+}
+
+.advisor-reward-breakdown .projected-reward {
+  color: #d92d42 !important;
+}
+
+.tvv-result-row > strong.advisor-reward-breakdown.commission-only {
+  align-content: center !important;
+}
+
+.tvv-result-row > strong.advisor-reward-breakdown.commission-only .projected-reward {
+  font-size: 100%;
+}
+
+.tvv-result-row > strong.advisor-reward-breakdown.commission-only .new-reward {
+  font-size: 100%;
 }
 
 .tvv-total {
@@ -18340,6 +18396,225 @@ body .tvv-app .tvv-contest-detail {
 }
 .team-policy-quarters em.achieved { background: #e5f8ec; color: #16803c; }
 
+.team-star-agent-modal {
+  gap: 12px;
+  width: min(400px, calc(100vw - 18px)) !important;
+  max-height: min(82vh, 620px);
+  overflow-y: auto !important;
+  padding: 16px !important;
+}
+
+.team-agent-detail-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #eef5fc;
+}
+
+.team-agent-detail-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  border: 1px solid #cfe2f7 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #005b8f !important;
+  padding: 8px 10px !important;
+  font-size: var(--typo-12) !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.team-agent-detail-tabs button.active,
+.team-agent-detail-tabs button[aria-selected="true"] {
+  border-color: #005b8f !important;
+  background: #005b8f !important;
+  color: #fff !important;
+}
+
+.team-agent-policy-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.team-agent-policy-total {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #dce7f8;
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 12px;
+}
+
+.team-agent-policy-total span,
+.team-agent-policy-card small,
+.team-agent-policy-current span,
+.team-agent-policy-next > span {
+  color: #6d7f96;
+  font-size: var(--typo-11);
+  font-weight: 700;
+}
+
+.team-agent-policy-total strong {
+  color: #004b7a;
+  font-size: var(--typo-20);
+}
+
+.team-agent-policy-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dce7f8;
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.team-agent-policy-card.monthly {
+  border-color: #bfdcff;
+  background: linear-gradient(180deg, #f5faff, #fff);
+}
+
+.team-agent-policy-card.quarter {
+  border-color: #bfe9dd;
+  background: linear-gradient(180deg, #f3fffb, #fff);
+}
+
+.team-agent-policy-card > header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.team-agent-policy-card > header div {
+  min-width: 0;
+}
+
+.team-agent-policy-card > header b {
+  display: block;
+  color: #004b7a;
+  font-size: var(--typo-13);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.team-agent-policy-card.quarter > header b {
+  color: #006b55;
+}
+
+.team-agent-policy-card > header strong {
+  justify-self: end;
+  color: #004b7a;
+  font-size: var(--typo-14);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.team-agent-policy-card.quarter > header strong {
+  color: #006b55;
+}
+
+.team-agent-policy-current {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border-radius: 10px;
+  background: #eef7ff;
+  padding: 9px 10px;
+}
+
+.team-agent-policy-card.quarter .team-agent-policy-current {
+  background: #eafaf5;
+}
+
+.team-agent-policy-current strong {
+  color: #004b7a;
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.team-agent-policy-current em {
+  grid-column: 1 / -1;
+  justify-self: end;
+  border-radius: 999px;
+  background: #e5f8ec;
+  color: #00834b;
+  padding: 3px 8px;
+  font-size: var(--typo-11);
+  font-style: normal;
+  font-weight: 800;
+}
+
+.team-agent-policy-card.monthly .team-agent-policy-current em {
+  background: #fff3cd;
+  color: #a86200;
+}
+
+.team-agent-policy-next {
+  display: grid;
+  gap: 8px;
+}
+
+.team-agent-policy-next > div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid #dceafe;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+.team-agent-policy-card.monthly .team-agent-policy-next > div {
+  border-left: 4px solid #f4b63f;
+}
+
+.team-agent-policy-card.quarter .team-agent-policy-next > div {
+  border-color: #d4f0e7;
+  border-left: 4px solid #10a37f;
+}
+
+.team-agent-policy-next b {
+  color: #004b7a;
+  font-size: var(--typo-12);
+}
+
+.team-agent-policy-card.quarter .team-agent-policy-next b {
+  color: #006b55;
+}
+
+.team-agent-policy-next p {
+  margin: 0;
+  color: #5e7189;
+  font-size: var(--typo-11);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.team-agent-policy-next footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: #6d7f96;
+  font-size: var(--typo-11);
+  font-weight: 700;
+}
+
+.team-agent-policy-next footer strong {
+  color: #004b7a;
+  min-width: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .team-leader-calculator { padding-bottom: 110px; }
 .team-leader-entry-card {
   display: grid;
@@ -18983,23 +19258,32 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   place-items: center !important;
   border-radius: 50% !important;
   overflow: visible !important;
-  background: linear-gradient(145deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .08)) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .42),
-    inset 0 -10px 18px rgba(0, 45, 90, .18),
-    0 7px 16px rgba(0, 44, 88, .18) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 .tvv-app .tvv-hero .tvv-target-button::before {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border-radius: inherit;
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 2px 8px rgba(0, 47, 92, .16);
-  z-index: 1;
-}
-.tvv-app .tvv-hero .tvv-target-button > svg {
+  content: none !important;
   display: none !important;
+}
+.tvv-app .tvv-hero .tvv-target-progress-ring {
+  display: block !important;
+  width: 52px !important;
+  height: 52px !important;
+  transform: rotate(-90deg) translateZ(0) !important;
+  overflow: visible !important;
+  z-index: 1 !important;
+}
+.tvv-app .tvv-hero .tvv-target-progress-ring circle {
+  fill: none !important;
+  stroke-linecap: round !important;
+  stroke-width: 4.5 !important;
+}
+.tvv-app .tvv-hero .tvv-target-progress-ring .track {
+  stroke: transparent !important;
+}
+.tvv-app .tvv-hero .tvv-target-progress-ring .value {
+  stroke: #fff !important;
+  transition: stroke-dashoffset .35s ease !important;
 }
 @media (max-width: 390px) {
   .tvv-app .tvv-hero .tvv-hero-main {
@@ -19012,8 +19296,9 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
     min-width: 42px !important;
     min-height: 42px !important;
   }
-  .tvv-app .tvv-hero .tvv-target-button::before {
-    inset: 4px;
+  .tvv-app .tvv-hero .tvv-target-progress-ring {
+    width: 42px !important;
+    height: 42px !important;
   }
 }
 
@@ -19059,12 +19344,126 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   padding: 0 5px !important;
   border-radius: 999px !important;
   background: transparent !important;
-  color: #004b7a !important;
+  color: #fff !important;
   font-size: var(--typo-14) !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   line-height: 22px !important;
   text-align: center !important;
   pointer-events: none !important;
   letter-spacing: 0 !important;
   font-variant-numeric: tabular-nums !important;
+}
+
+/* Template bottom navigation */
+body .tvv-app .tvv-bottom-nav {
+  left: 50% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  transform: translateX(-50%) !important;
+  width: min(430px, calc(100vw - 32px)) !important;
+  height: calc(66px + env(safe-area-inset-bottom)) !important;
+  min-height: calc(66px + env(safe-area-inset-bottom)) !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  gap: 2px !important;
+  padding: 10px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+  border: 1px solid #dbe7f7 !important;
+  border-bottom: 0 !important;
+  border-radius: 20px 20px 0 0 !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .99), rgba(255, 255, 255, .94)) !important;
+  box-shadow: 0 -5px 18px rgba(0, 54, 112, .10), inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+  overflow: visible !important;
+}
+
+body .tvv-app .tvv-bottom-nav button {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  align-content: center !important;
+  gap: 5px !important;
+  width: 100% !important;
+  height: 43px !important;
+  min-width: 0 !important;
+  min-height: 43px !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: transparent !important;
+  color: #14345f !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+body .tvv-app .tvv-bottom-nav button svg {
+  width: 19px !important;
+  height: 19px !important;
+  color: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+body .tvv-app .tvv-bottom-nav button span {
+  color: currentColor !important;
+  font-size: var(--typo-10) !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.active:not(.income-nav) {
+  color: #0b5fd3 !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.income-nav {
+  width: 51px !important;
+  height: 51px !important;
+  min-height: 51px !important;
+  justify-self: center !important;
+  margin-top: -20px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background:
+    radial-gradient(circle at 40% 36%, rgba(255, 255, 255, .96) 0%, rgba(255, 238, 169, .72) 34%, rgba(255, 213, 82, .34) 66%, rgba(255, 213, 82, .10) 100%) !important;
+  color: #fff !important;
+  box-shadow:
+    0 4px 10px rgba(176, 125, 0, .10),
+    0 0 0 4px rgba(255, 232, 132, .18),
+    0 0 12px 5px rgba(255, 222, 92, .09) !important;
+  z-index: 2 !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.income-nav::before {
+  display: none !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.income-nav svg {
+  width: 22px !important;
+  height: 22px !important;
+  color: #fff !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.income-nav img {
+  display: block !important;
+  width: 34px !important;
+  height: 34px !important;
+  object-fit: contain !important;
+}
+
+body .tvv-app .tvv-bottom-nav button.income-nav span {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
+
+body .tvv-app .tvv-bottom-nav button::after,
+body .tvv-app .tvv-bottom-nav button.income-nav::after {
+  display: none !important;
+}
+
+body .tvv-app {
+  padding-bottom: calc(74px + env(safe-area-inset-bottom)) !important;
 }

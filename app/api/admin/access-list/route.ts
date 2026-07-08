@@ -142,11 +142,16 @@ export async function POST(request: NextRequest) {
     const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
     const usersWithPasswords = uniqueUsers.map((user) => {
       const current = passwords.get(user.advisor_code);
+      if (current?.hash) {
+        const preservedFields = hasPasswordPlainColumn
+          ? { password_hash: current.hash, password_plain: current.plain ?? null }
+          : { password_hash: current.hash };
+        return { ...user, ...preservedFields, updated_at: new Date().toISOString() };
+      }
       const plainPassword = current?.plain || randomStrongPassword();
-      const currentVisibleHash = current?.plain ? current.hash : "";
       const passwordFields = hasPasswordPlainColumn
-        ? { password_hash: currentVisibleHash || visiblePasswordRecord(plainPassword), password_plain: plainPassword }
-        : { password_hash: currentVisibleHash || visiblePasswordRecord(plainPassword) };
+        ? { password_hash: visiblePasswordRecord(plainPassword), password_plain: plainPassword }
+        : { password_hash: visiblePasswordRecord(plainPassword) };
       return { ...user, ...passwordFields, updated_at: new Date().toISOString() };
     });
     const { error: disableError } = await supabase.from("authorized_users").update({ is_active: false }).eq("is_active", true);
