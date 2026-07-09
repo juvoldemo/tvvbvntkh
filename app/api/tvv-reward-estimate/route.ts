@@ -8,6 +8,26 @@ import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from 
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 import { managedTeamName } from "@/lib/team-scope";
 
+const ACQUISITION_COMMISSION_BREAKDOWN = [
+  { label: "Năm 1", rate: 0.3 },
+  { label: "Năm 2", rate: 0.15 },
+  { label: "Năm 3", rate: 0.075 },
+  { label: "Năm 4", rate: 0.04 }
+];
+const ACQUISITION_COMMISSION_TOTAL_RATE = ACQUISITION_COMMISSION_BREAKDOWN.reduce((sum, item) => sum + item.rate, 0);
+
+function acquisitionCommissionLabel() {
+  return ACQUISITION_COMMISSION_BREAKDOWN.map((item) => `${item.label} ${Math.round(item.rate * 1000) / 10}%`).join(" + ");
+}
+
+function acquisitionCommissionReward(premium: number) {
+  return premium * ACQUISITION_COMMISSION_TOTAL_RATE;
+}
+
+function firstYearAcquisitionCommissionReward(premium: number) {
+  return premium * ACQUISITION_COMMISSION_BREAKDOWN[0].rate;
+}
+
 function programDateRange(program: any, month: string) {
   const rule = program.confirmed_rule || program.ai_rule || {};
   const bounds = monthBounds(month);
@@ -349,7 +369,7 @@ export async function POST(request: NextRequest) {
       };
     }).filter((program) => program.programId !== "policy-month-13");
     const policyIncrementalReward = calculatorPolicyPrograms.reduce((sum, program) => sum + program.incrementalReward, 0);
-    const commissionReward = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0) * 0.3, 0);
+    const commissionReward = draftContracts.reduce((sum, draft) => sum + acquisitionCommissionReward(Number(draft.premium) || 0), 0);
     const totalDraftPremium = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0), 0);
     const competitionRewardByDraft = new Map(
       (result.rewardByDraftContract ?? []).map((row: any) => [row.draftId, Number(row.estimatedReward ?? 0)])
@@ -357,7 +377,7 @@ export async function POST(request: NextRequest) {
     const calculatorDraftRewards = draftContracts.map((draft) => {
       const premium = Number(draft.premium) || 0;
       const premiumShare = totalDraftPremium > 0 ? premium / totalDraftPremium : 0;
-      const commission = premium * 0.3;
+      const commission = acquisitionCommissionReward(premium);
       const competitionReward = Number(competitionRewardByDraft.get(draft.id) ?? 0);
       const policyReward = policyIncrementalReward * premiumShare;
       return {
@@ -380,7 +400,7 @@ export async function POST(request: NextRequest) {
       {
         programId: "acquisition-commission",
         programName: "Hoa hồng khai thác",
-        period: "Phí đóng × 30%",
+        period: acquisitionCommissionLabel(),
         estimatedReward: commissionReward,
         currentReward: 0,
         projectedReward: commissionReward,
@@ -400,7 +420,9 @@ export async function POST(request: NextRequest) {
       rewardMonthContracts: policyResult.rewardMonthContracts,
       rewardYearContracts: policyResult.rewardYearContracts,
       calculatorPrograms,
-      calculatorTotalEstimatedReward: Number(result.totalEstimatedReward ?? 0) + policyIncrementalReward + commissionReward,
+      calculatorTotalEstimatedReward: Number(result.totalEstimatedReward ?? 0)
+        + policyIncrementalReward
+        + draftContracts.reduce((sum, draft) => sum + firstYearAcquisitionCommissionReward(Number(draft.premium) || 0), 0),
       calculatorEligibleProgramCount: calculatorPrograms.filter((program: any) => !program.isCommission && Number(program.incrementalReward ?? 0) > 0).length,
       policyWarnings: missingPolicyTable
         ? ["Chưa có bảng dữ liệu thưởng chính sách. Vui lòng chạy migration tạo bảng trước khi upload."]

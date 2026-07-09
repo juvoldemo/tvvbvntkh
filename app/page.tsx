@@ -45,6 +45,31 @@ const POLICY_QUARTER_TIERS = [
   { minimum: 350_000_000, rate: 0.2 },
   { minimum: 500_000_000, rate: 0.25 }
 ];
+const ACQUISITION_COMMISSION_BREAKDOWN = [
+  { label: "Năm 1", rate: 0.3 },
+  { label: "Năm 2", rate: 0.15 },
+  { label: "Năm 3", rate: 0.075 },
+  { label: "Năm 4", rate: 0.04 }
+];
+const ACQUISITION_COMMISSION_TOTAL_RATE = ACQUISITION_COMMISSION_BREAKDOWN.reduce((sum, item) => sum + item.rate, 0);
+
+function acquisitionCommissionLabel() {
+  return ACQUISITION_COMMISSION_BREAKDOWN.map((item) => `${item.label} ${formatRate(item.rate)}`).join(" + ");
+}
+
+function acquisitionCommissionReward(premium: number) {
+  return premium * ACQUISITION_COMMISSION_TOTAL_RATE;
+}
+
+function AcquisitionCommissionBreakdown({ total }: { total: number }) {
+  const premium = ACQUISITION_COMMISSION_TOTAL_RATE > 0 ? total / ACQUISITION_COMMISSION_TOTAL_RATE : 0;
+  return <div className="commission-year-breakdown">
+    {ACQUISITION_COMMISSION_BREAKDOWN.map((item, index) => <div className={`commission-year-row${index === 0 ? " primary-year" : ""}`} key={item.label}>
+      <small>{item.label} ({formatRate(item.rate)})</small>
+      <em>+{formatVnd(premium * item.rate)}</em>
+    </div>)}
+  </div>;
+}
 
 function currentMonth() {
   return new Date().toISOString().slice(0, 7);
@@ -1559,8 +1584,8 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
             const currentReward = Number(item.currentReward ?? 0);
             const projectedReward = currentReward + increase;
             return <div className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`} key={item.programId || index}>
-              <div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div>
-              {item.isCommission ? <strong className="advisor-reward-breakdown commission-only"><em className="new-reward">+{formatVnd(increase)}</em></strong> : <strong className="advisor-reward-breakdown">
+              <div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{item.isCommission ? <AcquisitionCommissionBreakdown total={increase} /> : item.isPolicyProjection && <small>{item.period}</small>}</div>
+              {item.isCommission ? null : <strong className="advisor-reward-breakdown">
                 <small>Hiện tại {formatVnd(currentReward)}</small>
                 <em className="new-reward">+{formatVnd(increase)}</em>
                 <em className="projected-reward">+{formatVnd(projectedReward)}</em>
@@ -1785,14 +1810,14 @@ function contestNextMilestones(item: any) {
     const reward = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
     return {
       basisLabel: "Phí đóng",
-      currentBasis: reward / 0.3,
+      currentBasis: reward / ACQUISITION_COMMISSION_TOTAL_RATE,
       currentReward: reward,
       currentRate: 0,
-      currentRateLabel: "30%",
+      currentRateLabel: formatRate(ACQUISITION_COMMISSION_TOTAL_RATE),
       nextTiers: [
         {
           title: "Hoa hồng hợp đồng hiện tại",
-          subtitle: "Phí đóng × 30%",
+          subtitle: acquisitionCommissionLabel(),
           missing: 0,
           missingLabel: "hợp đồng",
           estimatedContracts: 1,
@@ -2195,13 +2220,13 @@ function ContractDetailModal({ row, onClose, showAdvisorName = false, hideCustom
 function CalculatorView(props: any) {
   const { drafts, estimate } = props;
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
-  const draftCommissionReward = drafts.reduce((sum: number, draft: DraftContract) => sum + (Number(draft.premium) || 0) * 0.3, 0);
+  const draftCommissionReward = drafts.reduce((sum: number, draft: DraftContract) => sum + acquisitionCommissionReward(Number(draft.premium) || 0), 0);
   const rawCalculatorPrograms = estimate?.calculatorPrograms ?? estimate?.rewardByProgram ?? [];
   const hasCommissionRow = rawCalculatorPrograms.some((item: any) => item.programId === "acquisition-commission");
   const localCommissionProgram = {
         programId: "acquisition-commission",
         programName: "Hoa hồng khai thác",
-        period: "Phí đóng × 30%",
+        period: acquisitionCommissionLabel(),
         estimatedReward: draftCommissionReward,
         currentReward: 0,
         projectedReward: draftCommissionReward,
@@ -2243,7 +2268,7 @@ function CalculatorView(props: any) {
         className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`}
         key={item.programId}
         {...interactiveProps}
-      ><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{(item.isPolicyProjection || item.isCommission) && <small>{item.period}</small>}</div><strong className={increase > 0 ? "increase" : ""}>{!item.isCommission && <small>Hiện tại {formatVnd(currentReward)}</small>}{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong></div>;
+      ><div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{item.isCommission ? <AcquisitionCommissionBreakdown total={increase} /> : item.isPolicyProjection && <small>{item.period}</small>}</div>{!item.isCommission && <strong className={increase > 0 ? "increase" : ""}><small>Hiện tại {formatVnd(currentReward)}</small>{increase > 0 ? `+${formatVnd(increase)}` : formatVnd(0)}</strong>}</div>;
     })}</div><p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Phần màu xanh là số thưởng tăng thêm so với dữ liệu hiện tại. Thưởng chính sách chỉ được xác nhận khi hợp đồng đủ điều kiện và phát hành thành công.</span></p></section>
     {selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}
   </section>;

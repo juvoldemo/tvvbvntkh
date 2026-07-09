@@ -12580,6 +12580,64 @@ body,
   font-size: 100%;
 }
 
+.tvv-result-row.commission > div {
+  grid-column: 1 / -1;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(110px, auto) !important;
+  column-gap: 10px !important;
+}
+
+.tvv-result-row.commission > div > b {
+  grid-column: 2 / -1;
+}
+
+.commission-year-breakdown {
+  grid-column: 2 / -1;
+  display: grid;
+  gap: 7px;
+}
+
+.commission-year-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.tvv-result-row .commission-year-row small {
+  color: #004b7a !important;
+  font-size: var(--typo-12) !important;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.commission-year-row em {
+  color: #04954c;
+  font-size: var(--typo-12);
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.25;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.commission-year-row.primary-year {
+  margin: -4px -6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #fff3c4;
+}
+
+.tvv-result-row .commission-year-row.primary-year small {
+  color: #8a5700 !important;
+  font-size: calc(var(--typo-12) + 1px) !important;
+  font-weight: 900;
+}
+
+.commission-year-row.primary-year em {
+  color: #008746;
+  font-size: calc(var(--typo-12) + 1px);
+}
+
 .tvv-total {
   min-height: 52px !important;
   border: 1px solid #bfead1 !important;
