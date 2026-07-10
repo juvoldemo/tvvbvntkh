@@ -158,9 +158,10 @@ export function combineKpi04AndBc02(kpiRows: Row[], bc02Rows: Row[]): Row[] {
       data_month: `${monthKey(row.paid_date || row.data_month)}-01`,
       paid_date: text(row.paid_date || row.data_month).slice(0, 10),
       fyc: 0,
-      // BC02 thật không được dùng AFYP thay FYP. Riêng bản ghi dự kiến từ
-      // máy tính có thể truyền estimated_fyp để ước lượng bậc thưởng quý.
-      fyp: number(row.estimated_fyp),
+      // Khi chưa có KPI04/KPI05, dùng AFYP (hoặc IP) của hợp đồng đã thu làm
+      // FYP dự kiến để TVV vẫn thấy thưởng quý tạm tính. Khi dữ liệu chính thức
+      // xuất hiện, cơ chế loại trùng theo TVV/tháng ở trên sẽ thay bản ghi này.
+      fyp: number(row.estimated_fyp) || number(row.afyp) || number(row.ip),
       estimated_fyc: number(row.ip) * 0.3,
       source: "bc02"
     }];
@@ -218,7 +219,9 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
   return [...groupRows(rows).values()].map((agentRows) => {
     const totals = aggregate(agentRows);
     const fypFallback = basis === "fyp" && totals.fyp <= 0 && totals.totalFyc > 0;
-    let qualificationFyp = fypFallback ? totals.totalFyc : totals.fyp;
+    // Chưa có FYP chính thức thì dùng IP của hợp đồng đã vào hệ thống làm
+    // căn cứ FYP tạm tính; không dùng FYC ước tính (chỉ khoảng 30% IP).
+    let qualificationFyp = fypFallback ? (totals.ip || totals.totalFyc) : totals.fyp;
     let newAdvisorFactor = 1;
     let newAdvisorStartDate: string | null = null;
     if (basis === "fyp" && options.quarterStart && options.quarterEnd) {
@@ -271,7 +274,8 @@ function calculateNewAdvisorMonthly(rows: Row[], selectedMonth: string, advisorS
       tenureMonth,
       trainingCompleted: true
     };
-  }).filter((row) => row.newAdvisorStartDate).sort((a, b) => b.reward - a.reward || b.ip - a.ip);
+  }).filter((row) => row.newAdvisorStartDate && row.tenureMonth >= 1 && row.tenureMonth <= 12)
+    .sort((a, b) => b.reward - a.reward || b.ip - a.ip);
 }
 
 function calculateNewAdvisorStage(rows: Row[], selectedMonth: string, advisorStartDates: Map<string, string>) {
@@ -409,7 +413,7 @@ export function calculatePolicyRewards(params: {
         ? ["Dữ liệu KPI04 hiện chưa có danh sách GYC để đối soát. Vui lòng upload lại KPI04 có cột Số GYC để loại trùng chính xác với BC02."]
         : []),
       ...(quarterly.some((row) => row.fypFallback)
-        ? ["Dữ liệu chưa có FYP; hệ thống đang tạm dùng FYC để xác định bậc thưởng quý."]
+        ? ["Dữ liệu chưa có FYP; hệ thống đang tạm dùng IP để xác định bậc thưởng quý."]
         : [])
     ]
   };

@@ -47,14 +47,14 @@ const bc02OnlyQuarter = calculatePolicyRewards({
   selectedMonth: "2026-03",
   kpi04: [],
   bc02: [
-    bc02("2026-01-10", "B01", { ip: 150_000_000 }),
-    bc02("2026-02-10", "B02", { ip: 150_000_000 }),
-    bc02("2026-03-10", "B03", { ip: 110_033_500 })
+    bc02("2026-01-10", "B01", { ip: 150_000_000, afyp: 150_000_000 }),
+    bc02("2026-02-10", "B02", { ip: 150_000_000, afyp: 150_000_000 }),
+    bc02("2026-03-10", "B03", { ip: 110_033_500, afyp: 110_033_500 })
   ]
 });
 assert.equal(bc02OnlyQuarter.quarterly[0].totalFyc, 123_010_050);
-assert.equal(bc02OnlyQuarter.quarterly[0].rate, 0.13, "BC02 không có FYP phải fallback bằng tổng FYC ước tính");
-assert.equal(bc02OnlyQuarter.quarterly[0].reward, 15_991_306.5);
+assert.equal(bc02OnlyQuarter.quarterly[0].rate, 0.2, "BC02 chưa có FYP dùng AFYP để tạm tính bậc thưởng quý");
+assert.equal(bc02OnlyQuarter.quarterly[0].reward, 24_602_010);
 
 const calculatorQuarter = calculatePolicyRewards({
   selectedMonth: "2026-07",
@@ -91,6 +91,14 @@ const newAdvisorMonthly = calculatePolicyRewards({
   advisorProfiles: [{ advisor_code: "A01", start_date: "2026-06-11" }]
 });
 assert.equal(newAdvisorMonthly.newAdvisorMonthly[0].reward, 1_000_000, "TVV mới mặc định hoàn thành đào tạo và nhận 1 triệu khi IP tháng từ 12 triệu");
+
+const oldAdvisorMonthly = calculatePolicyRewards({
+  selectedMonth: "2026-07",
+  kpi04: [kpi("2026-07")],
+  bc02: [],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2024-01-01" }]
+});
+assert.equal(oldAdvisorMonthly.newAdvisorMonthly.length, 0, "TVV cũ không hiển thị chương trình thưởng tháng TVV mới");
 
 const newAdvisorStage = calculatePolicyRewards({
   selectedMonth: "2026-07",

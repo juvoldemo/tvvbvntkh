@@ -17,6 +17,8 @@ export type RewardProgramInput = {
   programName: string;
   rule: CompetitionRuleInput;
   status?: string;
+  originalFileUrl?: string | null;
+  originalFileName?: string | null;
 };
 
 export type AdvisorRewardInput = {
@@ -184,6 +186,11 @@ export function estimateRewardsForDraftContracts(params: {
       rewardByProgram.push({
         programId: program.id,
         programName: program.programName || program.rule.program_name,
+        originalFileUrl: program.originalFileUrl || null,
+        originalFileName: program.originalFileName || null,
+        startDate: program.rule.start_date,
+        endDate: program.rule.end_date,
+        issueDeadline: program.rule.issue_deadline,
         matchedContracts: matchedContracts.map((contract) => ({
           draftId: draftIdByKey.get(getRewardContractKey(contract)),
           applicationNo: contract.applicationNo,

@@ -58,6 +58,37 @@ function normalizeAdvisorIdentity(value: unknown) {
     .toLowerCase();
 }
 
+function isGiftRewardRule(rule: any) {
+  if (rule?.gift_quantity != null || rule?.gift_value != null || rule?.reward?.quantity != null || rule?.reward?.value != null) return true;
+  const text = normalizeAdvisorIdentity([
+    rule?.reward_value_type,
+    rule?.reward_type,
+    rule?.reward_name,
+    rule?.prize_name,
+    rule?.reward?.type,
+    rule?.reward?.value_type
+  ].filter(Boolean).join(" "));
+  return text.includes("gift") || text.includes("qua") || text.includes("san pham") || text.includes("hien vat");
+}
+
+function giftLabelsFromResults(rows: any[]) {
+  return [...new Set(rows.flatMap((row: any) => [
+    ...(Array.isArray(row?.achievedRewardNames) ? row.achievedRewardNames : []),
+    row?.prizeName,
+    row?.rewardName
+  ]).map(normalizeGiftLabel).filter(Boolean))];
+}
+
+function normalizeGiftLabel(value: unknown) {
+  const original = String(value || "").trim();
+  const text = normalizeAdvisorIdentity(original);
+  if (text.includes("toshiba")) return "Quạt đứng Toshiba";
+  if (text.includes("xiaomi")) return "Máy tính bảng Xiaomi";
+  if (text.includes("samsung")) return "Máy tính bảng Samsung";
+  if (text.includes("xe") && (text.includes("may") || text.includes("dien"))) return "Xe máy điện";
+  return original;
+}
+
 function previousMonthKey(month: string) {
   const date = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 2, 1));
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -174,6 +205,8 @@ export async function POST(request: NextRequest) {
       id: program.id,
       programName: program.program_name || program.confirmed_rule?.program_name || "Chương trình thi đua",
       status: program.status,
+      originalFileUrl: program.original_file_url || null,
+      originalFileName: program.original_file_name || null,
       isHidden: program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1,
       range: programDateRange(program, month),
       rule: {
@@ -213,7 +246,13 @@ export async function POST(request: NextRequest) {
         const advisorContractCount = actual.tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.contractCount ?? 0), 0);
         const contractRewardCount = actual.contractRewardResults.length;
         const primaryRule = program.rule.reward_rules?.[0];
-        const milestoneTiers = primaryRule?.thresholds ?? program.rule.thresholds ?? program.rule.tiers ?? [];
+        const rewardRules = Array.isArray(program.rule.reward_rules) ? program.rule.reward_rules : [];
+        const giftRules = rewardRules.filter(isGiftRewardRule);
+        const rewardKind = giftRules.length > 0 ? "gift" : "cash";
+        const giftLabels = giftLabelsFromResults([...actual.tvvRewardResults, ...actual.contractRewardResults]);
+        const hasGiftReward = rewardKind === "gift" && giftLabels.length > 0;
+        const milestoneTiers = primaryRule?.thresholds ?? primaryRule?.tiers ?? primaryRule?.condition?.tiers
+          ?? program.rule.thresholds ?? program.rule.tiers ?? program.rule.condition?.tiers ?? [];
         const metricText = normalizeAdvisorIdentity(
           primaryRule?.calculation_logic ?? program.rule.calculation_logic ?? program.rule.metric_type
         );
@@ -228,13 +267,18 @@ export async function POST(request: NextRequest) {
             policyOwner: contract.customer || contract.customer_name || "Chưa có tên BMBH",
             status: contract.status || "Chưa có trạng thái"
           }));
+        const milestoneCurrentIp = actual.tvvRewardResults.reduce((sum: number, row: any) => sum + Number(row.totalIP ?? 0), 0)
+          || actual.contractRewardResults.reduce((sum: number, row: any) => sum + Number(row.ip ?? 0), 0);
         return [program.id, {
           actualContractCount: Math.max(advisorContractCount, contractRewardCount),
           actualReward: advisorReward + contractReward,
-          isEligible: advisorReward + contractReward > 0,
+          isEligible: advisorReward + contractReward > 0 || hasGiftReward,
+          rewardKind,
+          giftLabels,
           milestoneType: milestoneTiers.length ? "revenue-tier" : undefined,
           milestoneMetricLabel: usesIp ? "Phí đầu tiên (IP)" : "AFYP",
           milestoneCurrentBasis,
+          milestoneCurrentIp,
           milestoneCurrentReward: advisorReward + contractReward,
           milestoneContractCount: Math.max(advisorContractCount, contractRewardCount),
           milestoneTiers,
@@ -273,9 +317,12 @@ export async function POST(request: NextRequest) {
           actualContractCount: Number(actual?.actualContractCount ?? 0),
           matchedContracts: [],
           isEligible: Boolean(actual?.isEligible),
+          rewardKind: actual?.rewardKind ?? "cash",
+          giftLabels: actual?.giftLabels ?? [],
           milestoneType: actual?.milestoneType,
           milestoneMetricLabel: actual?.milestoneMetricLabel,
           milestoneCurrentBasis: Number(actual?.milestoneCurrentBasis ?? 0),
+          milestoneCurrentIp: Number(actual?.milestoneCurrentIp ?? 0),
           milestoneCurrentReward: Number(actual?.milestoneCurrentReward ?? 0),
           milestoneContractCount: Number(actual?.milestoneContractCount ?? 0),
           milestoneTiers: actual?.milestoneTiers ?? [],
