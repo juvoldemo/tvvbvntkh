@@ -1583,12 +1583,20 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
             const increase = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
             const currentReward = Number(item.currentReward ?? 0);
             const projectedReward = currentReward + increase;
+            const isGiftReward = item.rewardKind === "gift";
+            const currentGift = item.currentGiftLabels?.join(" · ") || "Chưa đạt quà";
+            const projectedGift = item.projectedGiftLabels?.join(" · ") || "Chưa đạt quà";
             return <div className={`tvv-result-row${item.isPolicyProjection ? " policy" : ""}${item.isCommission ? " commission" : ""}`} key={item.programId || index}>
               <div><span className={`tvv-result-icon tone-${index % 3}`}>{item.isPolicyProjection ? <ShieldCheck size={22} /> : item.isCommission ? <Calculator size={22} /> : index % 3 === 1 ? <Gift size={22} /> : <Trophy size={22} />}</span><b>{shortText(item.programName, 52)}</b>{item.isCommission ? <AcquisitionCommissionBreakdown total={increase} /> : item.isPolicyProjection && <small>{item.period}</small>}</div>
               {item.isCommission ? null : <strong className="advisor-reward-breakdown">
-                <small>Hiện tại {formatVnd(currentReward)}</small>
-                <em className="new-reward">+{formatVnd(increase)}</em>
-                <em className="projected-reward">+{formatVnd(projectedReward)}</em>
+                {isGiftReward ? <span className="gift-reward-breakdown">
+                  <b>Hiện tại {currentGift},</b>
+                  <em>{item.incrementalGiftLabels?.length ? "Nâng bậc quà" : "Giữ bậc quà"}, {projectedGift}</em>
+                </span> : <>
+                  <small>Hiện tại {formatVnd(currentReward)}</small>
+                  <em className="new-reward">+{formatVnd(increase)}</em>
+                  <em className="projected-reward">+{formatVnd(projectedReward)}</em>
+                </>}
               </strong>}
             </div>;
           })}
@@ -1946,6 +1954,8 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
   const policyRows = Array.isArray(item.rows) ? item.rows : null;
   const policyOptions = policyRows && policyMonth && onPolicyMonthChange ? policyPeriodOptions(item.programId, monthOptions) : [];
   const milestoneInfo = contestNextMilestones(item);
+  const isGiftReward = item.rewardKind === "gift";
+  const giftRewardLabel = Array.isArray(item.giftLabels) && item.giftLabels.length > 0 ? item.giftLabels.join(" · ") : "Quà tặng";
   const tabs = policyRows ? [
     ["overview", "Tổng quan"]
   ] as Array<[typeof detailTab, string]> : [];
@@ -1983,8 +1993,12 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
         <article className="reward"><span>Thưởng đang chọn</span><strong>{formatVnd(Number(milestoneInfo.policyRow.reward ?? item.estimatedReward ?? 0))}</strong></article>
       </div>}
       {!policyRows && Number(item.estimatedReward ?? 0) > 0 && <div className="tvv-current-tier-reward">
-        <span>Ước tính thưởng</span>
-        <strong>{formatVnd(Number(item.estimatedReward))}</strong>
+        <span>{isGiftReward ? "Quà đang đạt" : "Ước tính thưởng"}</span>
+        <strong>{isGiftReward ? <><Gift size={18} />{giftRewardLabel}</> : formatVnd(Number(item.estimatedReward))}</strong>
+      </div>}
+      {!policyRows && isGiftReward && Number(item.estimatedReward ?? 0) <= 0 && <div className="tvv-current-tier-reward is-gift">
+        <span>Quà đang đạt</span>
+        <strong><Gift size={18} />{giftRewardLabel}</strong>
       </div>}
       {!policyRows && Array.isArray(item.participatingContracts) && item.participatingContracts.length > 0 && <div className="tvv-current-contracts">
         {item.participatingContracts.map((contract: any, index: number) => <article key={`${contract.applicationNo}-${index}`}>
@@ -1999,7 +2013,7 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
         ? <div>{item.achievedAdvisors.map((advisor: any, index: number) => <article key={advisor.advisorCode || `${advisor.advisorName}-${index}`}>
           <span className="tvv-team-achieved-rank">{index + 1}</span>
           <div><b>{advisor.advisorName}</b><small>{advisor.advisorCode || "Chưa có mã"} · {advisor.contractCount || 0} HĐ</small></div>
-          <span><b>{formatVnd(Number(advisor.reward || 0))}</b><small>IP {formatCompactVnd(Number(advisor.totalIP || 0))}</small></span>
+          <span><b>{isGiftReward ? (advisor.giftLabels?.length ? <><Gift size={15} />{advisor.giftLabels.join(" · ")}</> : "Đạt điều kiện") : formatVnd(Number(advisor.reward || 0))}</b><small>IP {formatCompactVnd(Number(advisor.totalIP || 0))}</small></span>
         </article>)}</div>
         : <p className="tvv-empty">Chưa có TVV nào trong nhóm đạt chương trình này.</p>}
     </div>}

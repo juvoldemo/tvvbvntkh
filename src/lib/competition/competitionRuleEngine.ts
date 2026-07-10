@@ -458,6 +458,17 @@ function rewardKind(rule: CompetitionRewardRule) {
   return String(rule.reward_type || rule.type || rule.condition?.type || rule.reward?.type || "reward_per_contract");
 }
 
+function isGiftReward(rule: CompetitionRewardRule) {
+  const text = normalizeText([
+    (rule as AnyRecord).reward_value_type,
+    rule.reward_type,
+    rule.reward_name,
+    rule.prize_name,
+    rule.reward?.type
+  ].filter(Boolean).join(" "));
+  return text.includes("gift") || text.includes("qua tang") || text.includes("san pham");
+}
+
 function rewardName(rule: CompetitionRewardRule) {
   return String(rule.reward_name || rule.prize_name || rule.id || "Giải thưởng");
 }
@@ -647,6 +658,9 @@ function nextTier(tiers: AnyRecord[], value: number) {
 }
 
 function isGroupRevenueRule(rule: CompetitionRewardRule) {
+  // Bảng thưởng PĐT/HĐ luôn xét và trả thưởng theo từng hợp đồng. Tên rule có
+  // thể nhắc đến "nhóm TVV đạt" để chọn cột tỷ lệ, nhưng đó không phải KPI nhóm.
+  if (rewardKind(rule) === "reward_by_policy_pdt_table") return false;
   const targetText = normalizeText(String(rule.target_type || rule.result_tab || rule.condition?.target_type || rule.condition?.result_tab || ""));
   if (targetText.includes("nhom") || targetText.includes("group")) return true;
 
@@ -950,16 +964,21 @@ export function getBaseEligibleCompetitionContracts(rule: CompetitionRuleInput, 
 function calculateContractRewards(rule: CompetitionRewardRule, contracts: NormalizedCompetitionContract[], programMetric?: CompetitionRuleInput["metric_type"]) {
   const kind = rewardKind(rule);
   if (kind === "reward_by_policy_pdt_table") {
-    const configuredPdtTiers = rule.pdt_reward_tiers ?? [];
-    const thresholdTiers = (rule.thresholds ?? []).map((tier) => ({
-      min_pdt: tier.min_pdt ?? tier.min_ip ?? tier.min_value ?? tier.threshold_value,
-      spc_reward: tier.spc_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate,
+    const configuredPdtTiers: AnyRecord[] = (rule.pdt_reward_tiers ?? []).map((tier: AnyRecord) => ({
+      ...tier,
+      spc_reward: tier.spc_reward ?? tier.achieved_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate,
       other_reward: tier.other_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate
     }));
-    const tiers = [...(configuredPdtTiers.length > 0 ? configuredPdtTiers : thresholdTiers)]
+    const thresholdTiers: AnyRecord[] = (rule.thresholds ?? []).map((tier) => ({
+      min_pdt: tier.min_pdt ?? tier.min_ip ?? tier.min_value ?? tier.threshold_value,
+      spc_reward: tier.spc_reward ?? tier.achieved_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate,
+      other_reward: tier.other_reward ?? tier.reward ?? tier.reward_percent ?? tier.reward_rate
+    }));
+    const tiers: AnyRecord[] = [...(configuredPdtTiers.length > 0 ? configuredPdtTiers : thresholdTiers)]
       .filter((tier) => Number(tier.min_pdt) > 0)
       .sort((a, b) => Number(b.min_pdt) - Number(a.min_pdt));
     const spcProducts = new Set((rule.spc_products ?? []).map((product) => String(product ?? "").trim().toUpperCase()).filter(Boolean));
+    const priorQualifiedAdvisors = new Set(((rule as AnyRecord).prior_qualified_advisors ?? []).map(normalizeText).filter(Boolean));
     return contracts.flatMap((contract) => {
       const metricValue = competitionMetricValue(contract);
       const tier = tiers.find((item) => metricValue >= Number(item.min_pdt));
@@ -969,7 +988,7 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       }
       const rawProductField = rawContractProductCode(contract);
       const productCode = getContractProductCode(contract);
-      const isSpc = spcProducts.has(productCode);
+      const isSpc = spcProducts.has(productCode) || (spcProducts.size === 0 && priorQualifiedAdvisors.has(normalizeText(contract.tvv)));
       if (spcProducts.size > 0 && !productCode) {
         rewardDebugLog("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "product", raw_product_field: rawProductField, result: "missing_product" });
       }
@@ -1070,6 +1089,7 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
           : formulaPercent > 0
             ? total * formulaPercent / 100
             : Number(tier.reward_amount ?? tier.rewardAmount ?? tier.amount ?? rule.reward_amount ?? 0) || 0;
+      const tierPrizeName = String(tier.gift_name || tier.prize_name || tier.reward_name || rewardName(rule));
       return [{
         advisor,
         group: rows.find((row) => row.team)?.team ?? "",
@@ -1077,9 +1097,9 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
         contractCount: new Set(rows.map(getRewardContractKey).filter(Boolean)).size,
         totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
         totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
-        prizeName: rewardName(rule),
+        prizeName: tierPrizeName,
         rewardAmount: tierReward,
-        achievedRewardNames: [rewardName(rule)]
+        achievedRewardNames: [tierPrizeName]
       }];
     });
   }
@@ -1224,13 +1244,13 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
     }
     const advisorRewards: EligibleAdvisorReward[] = shouldCreateAdvisorRows(rewardRule, conditionScope, recipientScope) ? calculateAdvisorRewards(rewardRule, uniqueEligibleBaseContracts) : [];
     for (const advisor of advisorRewards) {
-      if (!(Number(advisor.rewardAmount) > 0)) continue;
+      if (!(Number(advisor.rewardAmount) > 0) && !isGiftReward(rewardRule)) continue;
       const candidate: EligibleAdvisorReward = {
         ...advisor,
         rulePriority,
-        prizeName: rewardName(rewardRule),
-        achievedRewardNames: [rewardName(rewardRule)],
-        note: advisor.note || rewardName(rewardRule)
+        prizeName: advisor.prizeName || rewardName(rewardRule),
+        achievedRewardNames: advisor.achievedRewardNames?.length ? advisor.achievedRewardNames : [advisor.prizeName || rewardName(rewardRule)],
+        note: advisor.note || advisor.prizeName || rewardName(rewardRule)
       };
       const key = advisorRewardKey(candidate);
       if (rewardRule.allow_multiple_rewards) {

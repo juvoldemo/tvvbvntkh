@@ -11479,6 +11479,14 @@ body,
   font-size: var(--typo-16);
 }
 
+.tvv-current-tier-reward strong:has(svg),
+.tvv-team-achieved-advisors article > span:last-child b:has(svg) {
+  align-items: center;
+  display: inline-flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
 .tvv-current-contracts {
   grid-column: 1 / -1;
   display: grid;
@@ -12566,6 +12574,28 @@ body,
 
 .advisor-reward-breakdown .projected-reward {
   color: #d92d42 !important;
+}
+
+.advisor-reward-breakdown .gift-reward-breakdown {
+  display: grid;
+  gap: 4px;
+  color: #004b7a;
+  font-size: var(--typo-12);
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.advisor-reward-breakdown .gift-reward-breakdown b,
+.advisor-reward-breakdown .gift-reward-breakdown em {
+  display: block;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.advisor-reward-breakdown .gift-reward-breakdown em {
+  color: #04954c !important;
+  font-style: italic;
 }
 
 .tvv-result-row > strong.advisor-reward-breakdown.commission-only {

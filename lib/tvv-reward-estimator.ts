@@ -37,6 +37,34 @@ function normalizeText(value: unknown) {
     .toLowerCase();
 }
 
+function normalizedGiftLabel(value: unknown) {
+  const original = String(value || "").trim();
+  const text = normalizeText(original);
+  if (text.includes("toshiba")) return "Quạt đứng Toshiba";
+  if (text.includes("xiaomi")) return "Máy tính bảng Xiaomi";
+  if (text.includes("samsung")) return "Máy tính bảng Samsung";
+  if ((text.includes("xe") && text.includes("may")) || text.includes("xe m?y")) return "Xe máy điện";
+  return original;
+}
+
+function isGiftRule(rule: AnyRecord) {
+  const text = normalizeText([
+    rule?.reward_value_type,
+    rule?.reward_type,
+    rule?.reward_name,
+    rule?.prize_name,
+    rule?.reward?.type
+  ].filter(Boolean).join(" "));
+  return text.includes("gift") || text.includes("qua") || text.includes("san pham");
+}
+
+function resultGiftLabels(rows: AnyRecord[]) {
+  return [...new Set(rows.flatMap((row) => [
+    ...(Array.isArray(row?.achievedRewardNames) ? row.achievedRewardNames : []),
+    row?.prizeName
+  ]).map(normalizedGiftLabel).filter(Boolean))];
+}
+
 function advisorMatches(record: AnyRecord, advisor: AdvisorRewardInput) {
   const code = normalizeText(advisor.code);
   const name = normalizeText(advisor.name);
@@ -134,9 +162,13 @@ export function estimateRewardsForDraftContracts(params: {
       const baselineTotal = baseline.contractRewardResults.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0)
         + baselineAdvisors.reduce((sum, row) => sum + Number(row.rewardAmount ?? 0), 0);
       const estimatedReward = Math.max(0, projectedTotal - baselineTotal);
-      if (estimatedReward <= 0) continue;
       const programRule = program.rule as AnyRecord;
       const primaryRule = programRule.reward_rules?.[0];
+      const giftProgram = (programRule.reward_rules ?? []).some(isGiftRule);
+      const currentGiftLabels = giftProgram ? resultGiftLabels(baselineAdvisors) : [];
+      const projectedGiftLabels = giftProgram ? resultGiftLabels(matchedAdvisors) : [];
+      const incrementalGiftLabels = projectedGiftLabels.filter((label) => !currentGiftLabels.includes(label));
+      if (estimatedReward <= 0 && projectedGiftLabels.length === 0) continue;
       const revenueTiers = primaryRule?.thresholds ?? programRule.thresholds ?? programRule.tiers ?? [];
       const metricText = normalizeText(String(primaryRule?.calculation_logic ?? programRule.calculation_logic ?? programRule.metric_type ?? ""));
       const usesIp = metricText.includes("ip") || metricText.includes("pdt");
@@ -163,6 +195,10 @@ export function estimateRewardsForDraftContracts(params: {
         estimatedReward,
         currentReward: baselineTotal,
         projectedReward: projectedTotal,
+        rewardKind: giftProgram ? "gift" : "cash",
+        currentGiftLabels,
+        projectedGiftLabels,
+        incrementalGiftLabels,
         milestoneType: revenueTiers.length ? "revenue-tier" : undefined,
         milestoneMetricLabel: usesIp ? "PĐT/IP" : "AFYP",
         milestoneCurrentBasis: projectedBasis,

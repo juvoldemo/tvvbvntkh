@@ -49,6 +49,34 @@ function normalizedText(value: unknown) {
     .toLowerCase();
 }
 
+function isGiftRewardRule(rule: any) {
+  if (rule?.gift_quantity != null || rule?.gift_value != null || rule?.reward?.quantity != null || rule?.reward?.value != null) return true;
+  const text = normalizedText([
+    rule?.reward_value_type,
+    rule?.reward_type,
+    rule?.type,
+    rule?.reward?.type,
+    rule?.reward?.value_type,
+    rule?.reward_name,
+    rule?.prize_name
+  ].filter(Boolean).join(" "));
+  return text.includes("gift") || text.includes("qua") || text.includes("san pham");
+}
+
+function normalizedGiftLabel(value: unknown) {
+  const original = String(value || "").trim();
+  const text = normalizedText(original);
+  if (text.includes("toshiba")) return "Quạt đứng Toshiba";
+  if (text.includes("xiaomi")) return "Máy tính bảng Xiaomi";
+  if (text.includes("samsung")) return "Máy tính bảng Samsung";
+  if ((text.includes("xe") && text.includes("may")) || text.includes("xe m?y")) return "Xe máy điện";
+  return original;
+}
+
+function giftRewardLabel(rule: any) {
+  return normalizedGiftLabel(rule?.reward_name || rule?.prize_name || rule?.reward?.name || "Quà tặng");
+}
+
 async function readTeamRosterCount(supabase: ReturnType<typeof getSupabaseAdmin>, groupName: string) {
   const { count, error } = await supabase
     .from("authorized_users")
@@ -74,6 +102,23 @@ function programSummary(program: any, contracts: RevenueRecord[]) {
   };
   const result = calculateCompetitionReward(rule, contracts);
   const primaryRule = rule.reward_rules?.[0] ?? {};
+  const rewardRules = Array.isArray(rule.reward_rules) ? rule.reward_rules : [];
+  const giftRules = rewardRules.filter(isGiftRewardRule);
+  const rewardKind = giftRules.length > 0 && giftRules.length === rewardRules.length ? "gift" : giftRules.length > 0 ? "mixed" : "cash";
+  const giftLabels = [...new Set(giftRules.flatMap((giftRule: any) => {
+    const tiers = giftRule?.thresholds ?? giftRule?.tiers ?? giftRule?.condition?.tiers ?? [];
+    const tierLabels = tiers.flatMap((tier: any) => [tier?.gift_name, tier?.prize_name, tier?.reward_name]);
+    return [...tierLabels, giftRewardLabel(giftRule)];
+  }).map(normalizedGiftLabel).filter(Boolean))];
+  const giftLabelKeys = new Set(giftLabels.map(normalizedText));
+  const giftLabelsFromResult = (row: any) => {
+    const names = [
+      ...(Array.isArray(row?.achievedRewardNames) ? row.achievedRewardNames : []),
+      row?.prizeName,
+      row?.rewardName
+    ].map(normalizedGiftLabel).filter(Boolean);
+    return [...new Set(names.filter((name) => giftLabelKeys.has(normalizedText(name))))];
+  };
   const milestoneTiers = primaryRule.thresholds ?? rule.thresholds ?? rule.tiers ?? [];
   const metricText = normalizedText(primaryRule.calculation_logic ?? rule.calculation_logic ?? rule.metric_type);
   const usesIp = metricText.includes("ip") || metricText.includes("pdt") || metricText.includes("phi dau tien");
@@ -94,8 +139,9 @@ function programSummary(program: any, contracts: RevenueRecord[]) {
     totalIP: number;
     totalAFYP: number;
     reward: number;
+    giftLabels: string[];
   }>();
-  const addAchievedAdvisor = (row: any, reward = 0) => {
+  const addAchievedAdvisor = (row: any, reward = 0, achievedGiftLabels: string[] = []) => {
     const advisorName = String(row.advisor || row.agent_name || "").trim();
     const key = normalizedText(advisorName);
     if (!key) return;
@@ -105,24 +151,27 @@ function programSummary(program: any, contracts: RevenueRecord[]) {
       contractCount: 0,
       totalIP: 0,
       totalAFYP: 0,
-      reward: 0
+      reward: 0,
+      giftLabels: []
     };
     current.contractCount = Math.max(current.contractCount, Number(row.contractCount ?? 0));
     current.totalIP = Math.max(current.totalIP, Number(row.totalIP ?? row.ip ?? 0));
     current.totalAFYP = Math.max(current.totalAFYP, Number(row.totalAFYP ?? row.afyp ?? 0));
     current.reward = Math.max(current.reward, Number(reward || row.rewardAmount || 0));
+    current.giftLabels = [...new Set([...current.giftLabels, ...achievedGiftLabels])];
     achievedByAdvisor.set(key, current);
   };
-  result.tvvRewardResults.forEach((row) => addAchievedAdvisor(row));
+  result.tvvRewardResults.forEach((row) => addAchievedAdvisor(row, undefined, giftLabelsFromResult(row)));
   result.groupRewardResults
     .filter((row) => Number(row.totalReward ?? row.group_reward_amount ?? 0) > 0)
-    .forEach((row) => row.advisors.forEach((advisor) => addAchievedAdvisor(advisor, Number(row.rewardPerAdvisor ?? row.reward_per_tvv ?? 0))));
+    .forEach((row) => row.advisors.forEach((advisor) => addAchievedAdvisor(advisor, Number(row.rewardPerAdvisor ?? row.reward_per_tvv ?? 0), giftLabelsFromResult(row))));
   result.contractRewardResults.forEach((row) => addAchievedAdvisor({
     advisor: row.advisor,
     contractCount: 1,
     totalIP: row.ip,
     totalAFYP: row.afyp
-  }, row.rewardAmount));
+  }, row.rewardAmount, giftLabelsFromResult(row)));
+  const achievedGiftLabels = [...new Set([...achievedByAdvisor.values()].flatMap((advisor) => advisor.giftLabels))];
 
   return {
     programId: program.id,
@@ -136,7 +185,9 @@ function programSummary(program: any, contracts: RevenueRecord[]) {
     estimatedReward,
     actualContractCount: participatingContracts.length,
     matchedContracts: participatingContracts,
-    isEligible: estimatedReward > 0,
+    isEligible: estimatedReward > 0 || achievedByAdvisor.size > 0,
+    rewardKind,
+    giftLabels: achievedGiftLabels,
     milestoneType: milestoneTiers.length ? "revenue-tier" : undefined,
     milestoneMetricLabel: usesIp ? "Phí đầu tiên (IP) nhóm" : "AFYP nhóm",
     milestoneCurrentBasis: currentBasis,
