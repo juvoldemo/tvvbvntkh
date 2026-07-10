@@ -905,6 +905,11 @@ function TvvTargetRegistrationModal({ month, registration, onSaved, onClose }: {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Không lưu được mục tiêu.");
       onSaved(payload.registration);
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("tvv-target-updates");
+        channel.postMessage({ type: "target-saved", month });
+        channel.close();
+      }
       onClose();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Không lưu được mục tiêu.");

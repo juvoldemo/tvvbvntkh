@@ -403,6 +403,16 @@ create table if not exists tvv_target_registrations (
 create index if not exists idx_tvv_target_registrations_advisor_month
   on tvv_target_registrations(advisor_code, target_month desc);
 
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tvv_target_registrations'
+  ) then
+    alter publication supabase_realtime add table public.tvv_target_registrations;
+  end if;
+end $$;
+
 create table if not exists admin_events (
   id uuid primary key default gen_random_uuid(),
   title text not null,

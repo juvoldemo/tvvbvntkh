@@ -10,6 +10,14 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : "Không lưu được mục tiêu TVV.";
 }
 
+function missingTable(error: any) {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
+
+function fallbackGroup(advisorCode: string) {
+  return `__TVV_TARGET__${advisorCode}`;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const advisorCode = userCodeFromRequest(request);
@@ -20,8 +28,21 @@ export async function GET(request: NextRequest) {
       .eq("target_month", monthStart(request.nextUrl.searchParams.get("month")))
       .eq("advisor_code", advisorCode)
       .maybeSingle();
-    if (error) throw error;
-    return NextResponse.json({ registration: data ?? null });
+    if (!error) return NextResponse.json({ registration: data ?? null });
+    if (!missingTable(error)) throw error;
+    const { data: fallback, error: fallbackError } = await supabase.from("team_target_registrations")
+      .select("*")
+      .eq("target_month", monthStart(request.nextUrl.searchParams.get("month")))
+      .eq("group_name", fallbackGroup(advisorCode))
+      .maybeSingle();
+    if (fallbackError) throw fallbackError;
+    return NextResponse.json({ registration: fallback ? {
+      target_month: fallback.target_month,
+      advisor_code: advisorCode,
+      advisor_name: fallback.leader_name,
+      revenue_target: fallback.revenue_target,
+      updated_at: fallback.updated_at
+    } : null });
   } catch (error) {
     return NextResponse.json({ error: errorText(error) }, { status: 500 });
   }
@@ -53,8 +74,31 @@ export async function POST(request: NextRequest) {
       .upsert(payload, { onConflict: "target_month,advisor_code" })
       .select("*")
       .single();
-    if (error) throw error;
-    return NextResponse.json({ registration: data });
+    if (!error) return NextResponse.json({ registration: data });
+    if (!missingTable(error)) throw error;
+    const fallbackPayload = {
+      target_month: payload.target_month,
+      leader_code: advisorCode,
+      leader_name: profile.full_name,
+      group_name: fallbackGroup(advisorCode),
+      revenue_target: payload.revenue_target,
+      active_advisor_target: 1,
+      reward_target: 0,
+      selected_advisors: [{ advisor_code: advisorCode, full_name: profile.full_name, revenue_target: payload.revenue_target }],
+      updated_at: payload.updated_at
+    };
+    const { data: fallback, error: fallbackError } = await supabase.from("team_target_registrations")
+      .upsert(fallbackPayload, { onConflict: "target_month,group_name" })
+      .select("*")
+      .single();
+    if (fallbackError) throw fallbackError;
+    return NextResponse.json({ registration: {
+      target_month: fallback.target_month,
+      advisor_code: advisorCode,
+      advisor_name: profile.full_name,
+      revenue_target: fallback.revenue_target,
+      updated_at: fallback.updated_at
+    } });
   } catch (error) {
     return NextResponse.json({ error: errorText(error) }, { status: 500 });
   }

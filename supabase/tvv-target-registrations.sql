@@ -11,3 +11,13 @@ create table if not exists public.tvv_target_registrations (
 
 create index if not exists idx_tvv_target_registrations_advisor_month
   on public.tvv_target_registrations(advisor_code, target_month desc);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'tvv_target_registrations'
+  ) then
+    alter publication supabase_realtime add table public.tvv_target_registrations;
+  end if;
+end $$;
