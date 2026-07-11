@@ -889,9 +889,10 @@ function TvvTargetRegistrationModal({ month, registration, onSaved, onClose }: {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    const revenueTarget = Number(revenueText || 0) * 1_000_000;
-    if (revenueTarget <= 0) {
-      setMessage("Vui lòng nhập doanh thu mục tiêu lớn hơn 0.");
+    const revenueMillions = Number(revenueText || 0);
+    const revenueTarget = revenueMillions * 1_000_000;
+    if (!Number.isInteger(revenueMillions) || revenueMillions < 15 || revenueMillions > 999) {
+      setMessage("Doanh thu mục tiêu chỉ được nhập từ 15 đến 999 triệu đồng.");
       return;
     }
     setBusy(true);
@@ -925,7 +926,7 @@ function TvvTargetRegistrationModal({ month, registration, onSaved, onClose }: {
         <p className="team-target-unit-note">Đơn vị: Triệu đồng</p>
         <label className="tvv-personal-target-field">
           <span><Target size={17} />Nhập doanh thu mục tiêu</span>
-          <div><input autoFocus value={revenueText} onChange={(event) => setRevenueText(millionInput(event.target.value))} inputMode="numeric" placeholder="Ví dụ: 100" aria-label="Doanh thu mục tiêu theo triệu đồng" /></div>
+          <div><input autoFocus value={revenueText} onChange={(event) => { const value = millionInput(event.target.value).slice(0, 3); if (!value || Number(value) <= 999) setRevenueText(value); }} inputMode="numeric" minLength={2} maxLength={3} placeholder="15 - 999" aria-label="Doanh thu mục tiêu từ 15 đến 999 triệu đồng" /></div>
         </label>
       </section>
       {message && <p className="tvv-form-message">{message}</p>}

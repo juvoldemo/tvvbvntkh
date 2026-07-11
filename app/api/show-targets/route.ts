@@ -101,3 +101,27 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không tải được bảng mục tiêu." }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    if (String(body.password || "") !== "159357") {
+      return NextResponse.json({ error: "Mật khẩu không đúng." }, { status: 403 });
+    }
+    const targetMonth = monthStart(String(body.month || ""));
+    const supabase = getSupabaseAdmin();
+    const { error: primaryError } = await supabase.from("tvv_target_registrations")
+      .delete()
+      .eq("target_month", targetMonth);
+    const missingPrimaryTable = primaryError?.code === "42P01" || primaryError?.code === "PGRST205";
+    if (primaryError && !missingPrimaryTable) throw primaryError;
+    const { error: fallbackError } = await supabase.from("team_target_registrations")
+      .delete()
+      .eq("target_month", targetMonth)
+      .like("group_name", "__TVV_TARGET__%");
+    if (fallbackError) throw fallbackError;
+    return NextResponse.json({ reset: true, month: targetMonth.slice(0, 7) });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Không reset được dữ liệu." }, { status: 500 });
+  }
+}

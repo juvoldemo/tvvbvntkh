@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
     if (!advisorCode) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
     const body = await request.json();
     const revenueTarget = Number(body.revenueTarget);
-    if (!Number.isFinite(revenueTarget) || revenueTarget <= 0) {
-      return NextResponse.json({ error: "Vui lòng nhập doanh thu mục tiêu lớn hơn 0." }, { status: 400 });
+    if (!Number.isInteger(revenueTarget) || revenueTarget < 15_000_000 || revenueTarget > 999_000_000 || revenueTarget % 1_000_000 !== 0) {
+      return NextResponse.json({ error: "Doanh thu mục tiêu phải từ 15 đến 999 triệu đồng." }, { status: 400 });
     }
     const supabase = getSupabaseAdmin();
     const { data: profile, error: profileError } = await supabase.from("authorized_users")

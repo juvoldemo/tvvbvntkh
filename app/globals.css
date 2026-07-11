@@ -19101,7 +19101,10 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-header > div > span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,.15); }
 .target-show-header h1 { margin: 0; color: #fff; font-size: clamp(20px, 2vw, 32px); }
 .target-show-header p, .target-show-header small { margin: 4px 0 0; color: #d9f1ff; font-weight: 700; }
-.target-show-header > small { display: inline-flex; align-items: center; gap: 8px; }
+.target-show-header > aside { display: flex; align-items: center; gap: 14px; }
+.target-show-header > aside small { display: inline-flex; align-items: center; gap: 8px; }
+.target-show-header > aside button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 1px solid rgba(255,255,255,.35); border-radius: 9px; background: rgba(255,255,255,.12); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.target-show-header > aside button:hover { background: rgba(255,255,255,.22); }
 .target-show-live-dot { width: 9px; height: 9px; border-radius: 50%; background: #56f29a; box-shadow: 0 0 0 5px rgba(86, 242, 154, .15); animation: target-show-live 1.8s ease-in-out infinite; }
 @keyframes target-show-live { 50% { opacity: .45; transform: scale(.82); } }
 .target-show-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
@@ -19143,12 +19146,25 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-advisors strong { flex: 0 0 auto; color: #04954c; font-size: 12px; white-space: nowrap; }
 .target-show-advisors > p { margin: 0; padding: 18px 10px; color: #9aa9b6; font-size: 11px; font-style: italic; text-align: center; }
 .target-show-error { width: min(1800px, 100%); margin: 0 auto 16px; padding: 12px; border-radius: 10px; background: #fff0f1; color: #c6283d; font-weight: 700; }
+.target-reset-backdrop { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 18px; background: rgba(4, 22, 42, .55); backdrop-filter: blur(4px); }
+.target-reset-modal { width: min(420px, calc(100vw - 36px)); display: grid; gap: 17px; padding: 20px; border-radius: 18px; background: #fff; box-shadow: 0 25px 70px rgba(0, 25, 55, .3); }
+.target-reset-modal header { display: grid; grid-template-columns: 42px minmax(0, 1fr) 34px; gap: 10px; align-items: start; }
+.target-reset-modal header > span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #fff0f1; color: #d92d42; }
+.target-reset-modal h2 { margin: 1px 0 4px; color: #004b7a; font-size: 17px; }
+.target-reset-modal header p { margin: 0; color: #718397; font-size: 12px; line-height: 1.4; }
+.target-reset-modal header button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #eef5fb; color: #004b7a; cursor: pointer; }
+.target-reset-modal label { display: grid; gap: 7px; color: #004b7a; font-size: 12px; font-weight: 800; }
+.target-reset-modal input { width: 100%; height: 48px; box-sizing: border-box; border: 1.5px solid #c9dced; border-radius: 11px; padding: 0 14px; outline: 0; color: #004b7a; font-size: 18px; font-weight: 800; letter-spacing: 3px; text-align: center; }
+.target-reset-modal input:focus { border-color: #d92d42; box-shadow: 0 0 0 4px rgba(217, 45, 66, .1); }
+.target-reset-error { margin: -6px 0 0; color: #d92d42; font-size: 12px; font-weight: 800; }
+.target-reset-submit { height: 46px; border: 0; border-radius: 11px; background: #d92d42; color: #fff; font-size: 14px; font-weight: 900; cursor: pointer; }
+.target-reset-submit:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 1400px) { .target-show-groups { grid-template-columns: repeat(4, minmax(210px, 1fr)); } }
 @media (max-width: 900px) { .target-show-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) {
   .target-show-page { padding: 12px; }
   .target-show-header { align-items: flex-start; padding: 15px; }
-  .target-show-header > small { display: none; }
+  .target-show-header > aside small { display: none; }
   .target-show-summary { grid-template-columns: 1fr; gap: 9px; }
   .target-show-summary article { padding: 12px 14px; }
   .target-show-groups { grid-template-columns: 1fr; }

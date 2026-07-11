@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Target, TrendingUp, UserRound, Users } from "lucide-react";
+import { LockKeyhole, Target, Trash2, TrendingUp, UserRound, Users, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
 type Advisor = { advisorCode: string; advisorName: string; revenueTarget: number };
@@ -21,6 +21,10 @@ export default function TargetShowPage() {
   const [data, setData] = useState<ShowData | null>(null);
   const [error, setError] = useState("");
   const [realtimeStatus, setRealtimeStatus] = useState("Đang kết nối Realtime");
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
   const hasData = useRef(false);
 
   useEffect(() => {
@@ -73,10 +77,37 @@ export default function TargetShowPage() {
     };
   }, []);
 
+  async function resetTargets(event: React.FormEvent) {
+    event.preventDefault();
+    setResetBusy(true);
+    setResetError("");
+    try {
+      const response = await fetch("/api/show-targets", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month: data?.month, password: resetPassword })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không reset được dữ liệu.");
+      setData((current) => current ? {
+        ...current,
+        advisorCount: 0,
+        revenueTarget: 0,
+        groups: current.groups.map((group) => ({ ...group, advisorCount: 0, revenueTarget: 0, advisors: [] }))
+      } : current);
+      setResetPassword("");
+      setResetOpen(false);
+    } catch (error) {
+      setResetError(error instanceof Error ? error.message : "Không reset được dữ liệu.");
+    } finally {
+      setResetBusy(false);
+    }
+  }
+
   return <main className="target-show-page">
     <header className="target-show-header">
       <div><span><Target size={28} /></span><div><h1>BẢNG ĐĂNG KÝ MỤC TIÊU DOANH THU</h1><p>Tháng {data ? `${data.month.slice(5, 7)}/${data.month.slice(0, 4)}` : "--/----"}</p></div></div>
-      <small><i className="target-show-live-dot" />{realtimeStatus}</small>
+      <aside><small><i className="target-show-live-dot" />{realtimeStatus}</small><button type="button" onClick={() => { setResetError(""); setResetOpen(true); }}><Trash2 size={15} />Reset dữ liệu</button></aside>
     </header>
     <section className="target-show-summary">
       <article><span><Users /></span><div><small>Tổng số nhóm</small><strong>{data?.groupCount ?? 22}</strong></div></article>
@@ -93,5 +124,11 @@ export default function TargetShowPage() {
         </div>
       </article>)}
     </section>
+    {resetOpen && <div className="target-reset-backdrop" role="presentation" onClick={() => setResetOpen(false)}><form className="target-reset-modal" role="dialog" aria-modal="true" aria-label="Reset dữ liệu đăng ký" onSubmit={resetTargets} onClick={(event) => event.stopPropagation()}>
+      <header><span><LockKeyhole size={20} /></span><div><h2>Reset dữ liệu tháng {data?.month.slice(5, 7)}/{data?.month.slice(0, 4)}</h2><p>Toàn bộ mục tiêu TVV trong tháng sẽ bị xóa.</p></div><button type="button" onClick={() => setResetOpen(false)} aria-label="Đóng"><X size={19} /></button></header>
+      <label>Mật khẩu xác nhận<input autoFocus type="password" value={resetPassword} onChange={(event) => setResetPassword(event.target.value)} inputMode="numeric" placeholder="Nhập mật khẩu" /></label>
+      {resetError && <p className="target-reset-error">{resetError}</p>}
+      <button className="target-reset-submit" type="submit" disabled={resetBusy || !resetPassword}>{resetBusy ? "Đang reset..." : "Xác nhận reset"}</button>
+    </form></div>}
   </main>;
 }
