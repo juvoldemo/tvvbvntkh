@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LockKeyhole, Target, Trash2, TrendingUp, UserRound, Users, X } from "lucide-react";
+import { LockKeyhole, RefreshCcw, Target, TrendingUp, UserRound, Users, X } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
 type Advisor = { advisorCode: string; advisorName: string; revenueTarget: number };
@@ -107,8 +107,8 @@ export default function TargetShowPage() {
 
   return <main className="target-show-page">
     <header className="target-show-header">
-      <div><span><Target size={28} /></span><div><h1>BẢNG ĐĂNG KÝ MỤC TIÊU DOANH THU</h1><p>Tháng {data ? `${data.month.slice(5, 7)}/${data.month.slice(0, 4)}` : "--/----"}</p></div></div>
-      <aside><small><i className="target-show-live-dot" />{realtimeStatus}</small><button type="button" onClick={() => { setResetError(""); setResetOpen(true); }}><Trash2 size={15} />Reset dữ liệu</button></aside>
+      <div><span><Target size={28} /></span><div><h1>Mục Tiêu Kinh Doanh</h1><p>Tháng {data ? `${data.month.slice(5, 7)}/${data.month.slice(0, 4)}` : "--/----"}</p></div></div>
+      <aside><small><i className="target-show-live-dot" />{realtimeStatus}</small><button type="button" aria-label="Reset dữ liệu" title="Reset dữ liệu" onClick={() => { setResetError(""); setResetOpen(true); }}><RefreshCcw size={18} /></button></aside>
     </header>
     <section className="target-show-summary">
       <article><span><Users /></span><div><small>Tổng số nhóm</small><strong>{data?.groupCount ?? 0}</strong></div></article>

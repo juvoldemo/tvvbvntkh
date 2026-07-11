@@ -19141,7 +19141,7 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-header p, .target-show-header small { margin: 4px 0 0; color: #d9f1ff; font-weight: 700; }
 .target-show-header > aside { display: flex; align-items: center; gap: 14px; }
 .target-show-header > aside small { display: inline-flex; align-items: center; gap: 8px; }
-.target-show-header > aside button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 1px solid rgba(255,255,255,.35); border-radius: 9px; background: rgba(255,255,255,.12); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.target-show-header > aside button { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
 .target-show-header > aside button:hover { background: rgba(255,255,255,.22); }
 .target-show-live-dot { width: 9px; height: 9px; border-radius: 50%; background: #56f29a; box-shadow: 0 0 0 5px rgba(86, 242, 154, .15); animation: target-show-live 1.8s ease-in-out infinite; }
 @keyframes target-show-live { 50% { opacity: .45; transform: scale(.82); } }
@@ -19203,6 +19203,7 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
   .target-show-page { padding: 12px; }
   .target-show-header { align-items: flex-start; padding: 15px; }
   .target-show-header > aside small { display: none; }
+  .target-show-header > aside button { display: none; }
   .target-show-summary { grid-template-columns: 1fr; gap: 9px; }
   .target-show-summary article { padding: 12px 14px; }
   .target-show-groups { grid-template-columns: 1fr; }
