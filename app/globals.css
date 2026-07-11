@@ -20115,3 +20115,17 @@ body .tvv-app .tvv-bottom-nav button.income-nav::after {
 body .tvv-app {
   padding-bottom: calc(74px + env(safe-area-inset-bottom)) !important;
 }
+.tvv-contest-row em.contest-status-ongoing {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.tvv-contest-row em.contest-status-ended {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+.tvv-contest-row em.contest-status-policy {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+}

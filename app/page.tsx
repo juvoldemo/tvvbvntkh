@@ -1478,7 +1478,8 @@ function TeamLeaderContestPage({ rewards, estimate }: { rewards: any; estimate: 
   const [view, setView] = useState<"ongoing" | "ended" | "policy">("ongoing");
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const ongoingPrograms = rewards?.ongoingPrograms ?? estimate?.ongoingPrograms ?? [];
-  const endedPrograms = rewards?.endedPrograms ?? estimate?.endedPrograms ?? [];
+  const endedPrograms = [...(rewards?.endedPrograms ?? estimate?.endedPrograms ?? [])]
+    .sort((a: any, b: any) => String(b.endDate ?? "").localeCompare(String(a.endDate ?? "")));
   const totalPolicyReward = Number(rewards?.totalEstimatedReward ?? 0);
   const today = new Date().toISOString().slice(0, 10);
   const soonEndingCount = ongoingPrograms.filter((item: any) => {
@@ -1505,7 +1506,7 @@ function TeamLeaderContestPage({ rewards, estimate }: { rewards: any; estimate: 
       {view === "policy"
         ? <TeamLeaderPolicyPage rewards={rewards} embedded />
         : visiblePrograms.length
-          ? visiblePrograms.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} onOpen={setSelectedProgram} />)
+          ? visiblePrograms.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} status={view} onOpen={setSelectedProgram} />)
           : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : "Chưa có chương trình thi đua đã kết thúc."}</p>}
     </section>
     <p className="tvv-contest-note"><Info size={17} /><span>Thưởng chính sách Trưởng nhóm được tính theo cơ chế riêng dựa trên kết quả của nhóm. Mức thưởng chính thức được xác nhận khi đủ điều kiện chi trả.</span></p>
@@ -1891,7 +1892,8 @@ function PolicyAwareContestList({ estimate, policyMonth, monthOptions, onPolicyM
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const groups = {
     ongoing: estimate?.ongoingPrograms?.length ? estimate.ongoingPrograms : [],
-    ended: estimate?.endedPrograms ?? [],
+    ended: [...(estimate?.endedPrograms ?? [])]
+      .sort((a: any, b: any) => String(b.endDate ?? "").localeCompare(String(a.endDate ?? ""))),
     policy: estimate?.policyRewardPrograms ?? []
   };
   const totalReward = groups.policy.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0);
@@ -1916,18 +1918,18 @@ function PolicyAwareContestList({ estimate, policyMonth, monthOptions, onPolicyM
   return <><section className="tvv-content tvv-subpage tvv-after-sub-header tvv-contest-page">
     <section className="tvv-contest-summary"><h2>Tổng quan thi đua</h2><div><span><b>Đang diễn ra</b><strong>{groups.ongoing.length}</strong><em>chương trình</em></span><span><b>Sắp kết thúc</b><strong>{soonEndingCount}</strong><em>chương trình</em></span><span><b>Ước tính thưởng</b><strong>{formatVnd(totalReward)}</strong><em>Tổng có thể nhận</em></span></div></section>
     <div className="tvv-contest-filter">{tabs.map(([id, label, rows]) => <button key={id} type="button" className={view === id ? "active" : ""} onClick={() => setView(id)}><span>{label}</span><strong>{formatVnd(rows.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0))}</strong></button>)}</div>
-    <section className="tvv-contest-list-panel">{programs.length ? programs.map((item: any, index: number) => <PolicyAwareContestRow key={item.programId} item={item} index={index} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={onPolicyMonthChange} onOpen={setSelectedProgram} />) : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : view === "ended" ? "Chưa có chương trình thi đua đã kết thúc." : "Chưa có thưởng chính sách."}</p>}</section>
+    <section className="tvv-contest-list-panel">{programs.length ? programs.map((item: any, index: number) => <PolicyAwareContestRow key={item.programId} item={item} index={index} status={view} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={onPolicyMonthChange} onOpen={setSelectedProgram} />) : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : view === "ended" ? "Chưa có chương trình thi đua đã kết thúc." : "Chưa có thưởng chính sách."}</p>}</section>
     <p className="tvv-contest-note"><Info size={17} /><span>Ước tính thưởng được cập nhật dựa trên dữ liệu hiện tại. Mức thưởng chính thức sẽ được xác nhận khi chương trình kết thúc.</span></p>
   </section>{selectedProgram && <ContestDetailModal item={selectedProgram} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={onPolicyMonthChange} onClose={() => setSelectedProgram(null)} />}</>;
 }
 
-function PolicyAwareContestRow({ item, onOpen }: any) {
+function PolicyAwareContestRow({ item, status, onOpen }: any) {
   const progress = Math.min(100, Math.max(26, (item.matchedContracts?.length ?? 1) * 34));
   const hasReward = Number(item.estimatedReward ?? 0) > 0 || Boolean(item.isEligible);
   const isPolicy = Array.isArray(item.rows);
   return <article className="tvv-contest-row" role="button" tabIndex={0} onClick={() => onOpen?.(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen?.(item); } }}>
     <div>
-      <em>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : "ĐANG DIỄN RA"}</em>
+      <em className={`contest-status contest-status-${isPolicy ? "policy" : status === "ended" ? "ended" : "ongoing"}`}>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : status === "ended" ? "ĐÃ KẾT THÚC" : "ĐANG DIỄN RA"}</em>
       <b>{shortText(item.programName, 74)}</b>
       <small><CalendarDays size={14} />{isPolicy ? item.period : `${formatDateVi(item.startDate)} - ${formatDateVi(item.endDate)}`}</small>
       {hasReward && !isPolicy && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}
@@ -1942,7 +1944,8 @@ function ContestList({ estimate }: any) {
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
   const groups = {
     ongoing: estimate?.ongoingPrograms?.length ? estimate.ongoingPrograms : [],
-    ended: estimate?.endedPrograms ?? [],
+    ended: [...(estimate?.endedPrograms ?? [])]
+      .sort((a: any, b: any) => String(b.endDate ?? "").localeCompare(String(a.endDate ?? ""))),
     policy: estimate?.policyRewardPrograms ?? []
   };
   const totalReward = groups.policy.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0);
@@ -1959,14 +1962,14 @@ function ContestList({ estimate }: any) {
     ["policy", "Thưởng chính sách", groups.policy]
   ] as const;
   const programs = groups[view] ?? [];
-  return <><section className="tvv-content tvv-subpage tvv-after-sub-header tvv-contest-page"><section className="tvv-contest-summary"><h2>Tổng quan thi đua</h2><div><span><b>Đang diễn ra</b><strong>{groups.ongoing.length}</strong><em>chương trình</em></span><span><b>Sắp kết thúc</b><strong>{soonEndingCount}</strong><em>chương trình</em></span><span><b>Ước tính thưởng</b><strong>{formatVnd(totalReward)}</strong><em>Tổng có thể nhận</em></span></div></section><div className="tvv-contest-filter">{tabs.map(([id, label, rows]) => <button key={id} type="button" className={view === id ? "active" : ""} onClick={() => setView(id)}><span>{label}</span><strong>{formatVnd(rows.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0))}</strong></button>)}</div><section className="tvv-contest-list-panel">{programs.length ? programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} onOpen={setSelectedProgram} />) : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : view === "ended" ? "Chưa có chương trình thi đua đã kết thúc." : "Chưa có thưởng chính sách."}</p>}</section><p className="tvv-contest-note"><Info size={17} /><span>Ước tính thưởng được cập nhật dựa trên dữ liệu hiện tại. Mức thưởng chính thức sẽ được xác nhận khi chương trình kết thúc.</span></p></section>{selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}</>;
+  return <><section className="tvv-content tvv-subpage tvv-after-sub-header tvv-contest-page"><section className="tvv-contest-summary"><h2>Tổng quan thi đua</h2><div><span><b>Đang diễn ra</b><strong>{groups.ongoing.length}</strong><em>chương trình</em></span><span><b>Sắp kết thúc</b><strong>{soonEndingCount}</strong><em>chương trình</em></span><span><b>Ước tính thưởng</b><strong>{formatVnd(totalReward)}</strong><em>Tổng có thể nhận</em></span></div></section><div className="tvv-contest-filter">{tabs.map(([id, label, rows]) => <button key={id} type="button" className={view === id ? "active" : ""} onClick={() => setView(id)}><span>{label}</span><strong>{formatVnd(rows.reduce((sum: number, item: any) => sum + Number(item.estimatedReward ?? 0), 0))}</strong></button>)}</div><section className="tvv-contest-list-panel">{programs.length ? programs.map((item: any, index: number) => <ContestRow key={item.programId} item={item} index={index} status={view} onOpen={setSelectedProgram} />) : <p className="tvv-empty">{view === "ongoing" ? "Chưa có chương trình thi đua đang diễn ra." : view === "ended" ? "Chưa có chương trình thi đua đã kết thúc." : "Chưa có thưởng chính sách."}</p>}</section><p className="tvv-contest-note"><Info size={17} /><span>Ước tính thưởng được cập nhật dựa trên dữ liệu hiện tại. Mức thưởng chính thức sẽ được xác nhận khi chương trình kết thúc.</span></p></section>{selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}</>;
 }
 
-function ContestRow({ item, index, compact = false, onOpen }: any) {
+function ContestRow({ item, index, compact = false, status = "ongoing", onOpen }: any) {
   const progress = Math.min(100, Math.max(26, (item.matchedContracts?.length ?? 1) * 34));
   const hasReward = Number(item.estimatedReward ?? 0) > 0 || Boolean(item.isEligible);
   const isPolicy = Array.isArray(item.rows);
-  return <article className={`tvv-contest-row${compact ? " compact" : ""}`} role="button" tabIndex={0} onClick={() => onOpen?.(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen?.(item); } }}><div><em>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : "ĐANG DIỄN RA"}</em><b>{shortText(item.programName, compact ? 62 : 74)}</b><small><CalendarDays size={14} />{isPolicy ? item.period : `${formatDateVi(item.startDate)} - ${formatDateVi(item.endDate)}`}</small>{hasReward && !compact && !isPolicy && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}</div>{(hasReward || isPolicy) && !compact && <strong>{formatVnd(item.estimatedReward)}</strong>}<ChevronRight size={24} /></article>;
+  return <article className={`tvv-contest-row${compact ? " compact" : ""}`} role="button" tabIndex={0} onClick={() => onOpen?.(item)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onOpen?.(item); } }}><div><em className={`contest-status contest-status-${isPolicy ? "policy" : status === "ended" ? "ended" : "ongoing"}`}>{isPolicy ? "THƯỞNG CHÍNH SÁCH" : status === "ended" ? "ĐÃ KẾT THÚC" : "ĐANG DIỄN RA"}</em><b>{shortText(item.programName, compact ? 62 : 74)}</b><small><CalendarDays size={14} />{isPolicy ? item.period : `${formatDateVi(item.startDate)} - ${formatDateVi(item.endDate)}`}</small>{hasReward && !compact && !isPolicy && <><i><u style={{ width: `${progress}%` }} /></i><small className="tvv-progress-text">{item.matchedContracts?.length || 1}/2 HĐ đủ điều kiện</small></>}</div>{(hasReward || isPolicy) && !compact && <strong>{formatVnd(item.estimatedReward)}</strong>}<ChevronRight size={24} /></article>;
 }
 
 function contestNextMilestones(item: any) {
