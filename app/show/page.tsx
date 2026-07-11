@@ -91,9 +91,10 @@ export default function TargetShowPage() {
       if (!response.ok) throw new Error(payload.error || "Không reset được dữ liệu.");
       setData((current) => current ? {
         ...current,
+        groupCount: 0,
         advisorCount: 0,
         revenueTarget: 0,
-        groups: current.groups.map((group) => ({ ...group, advisorCount: 0, revenueTarget: 0, advisors: [] }))
+        groups: []
       } : current);
       setResetPassword("");
       setResetOpen(false);
@@ -110,7 +111,7 @@ export default function TargetShowPage() {
       <aside><small><i className="target-show-live-dot" />{realtimeStatus}</small><button type="button" onClick={() => { setResetError(""); setResetOpen(true); }}><Trash2 size={15} />Reset dữ liệu</button></aside>
     </header>
     <section className="target-show-summary">
-      <article><span><Users /></span><div><small>Tổng số nhóm</small><strong>{data?.groupCount ?? 22}</strong></div></article>
+      <article><span><Users /></span><div><small>Tổng số nhóm</small><strong>{data?.groupCount ?? 0}</strong></div></article>
       <article><span><UserRound /></span><div><small>Tổng TVV đăng ký</small><strong>{data?.advisorCount ?? 0}</strong></div></article>
       <article><span><TrendingUp /></span><div><small>Tổng doanh thu</small><strong>{compactMoney(data?.revenueTarget ?? 0)}</strong></div></article>
     </section>

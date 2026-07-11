@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, FileText, HelpCircle, LogOut, Plus, Save, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; created_at: string };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
@@ -169,6 +169,33 @@ export default function AdminDataPage() {
     await loadData();
   }
 
+  async function exportAccessList() {
+    const activeUsers = users
+      .filter((user) => user.is_active)
+      .sort((a, b) => a.full_name.localeCompare(b.full_name, "vi"));
+    if (activeUsers.length === 0) return;
+
+    try {
+      const XLSX = await import("xlsx");
+      const rows = activeUsers.map((user) => ({
+        "Tên TVV": user.full_name,
+        "Mã TVV": user.advisor_code,
+        "Mật khẩu": user.password_plain || "Chưa tạo"
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(rows, { header: ["Tên TVV", "Mã TVV", "Mật khẩu"] });
+      worksheet["!cols"] = [{ wch: 32 }, { wch: 18 }, { wch: 22 }];
+      worksheet["!autofilter"] = { ref: `A1:C${rows.length + 1}` };
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Tài khoản TVV");
+      const exportDate = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `danh-sach-tai-khoan-tvv-${exportDate}.xlsx`);
+      setMessage(`Đã xuất thông tin đăng nhập của ${activeUsers.length} TVV.`);
+    } catch {
+      setMessage("Không xuất được danh sách Excel. Vui lòng thử lại.");
+    }
+  }
+
   async function createEvent(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -239,7 +266,10 @@ export default function AdminDataPage() {
             <label className="admin-file"><Upload /><span>Chọn file dữ liệu TVV theo định dạng APM01</span><input name="file" type="file" accept=".xlsx,.xls,.csv" required /></label>
             <button disabled={busy}>Upload danh sách</button>
           </form>
-          <button type="button" className="admin-secondary admin-access-password-button" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu random cho tất cả TVV</button>
+          <div className="admin-access-actions">
+            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu random cho tất cả TVV</button>
+            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
+          </div>
           <div className="admin-count">{users.filter((user) => user.is_active).length} người đang được cấp quyền</div>
           <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Trạng thái</th><th>Chức vụ</th></tr></thead><tbody>
             {users.filter((user) => user.is_active).map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td><code className="admin-password-code">{user.password_plain || "Chưa tạo"}</code></td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}

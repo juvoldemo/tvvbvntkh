@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
         revenueTarget: advisors.reduce((sum, advisor) => sum + advisor.revenueTarget, 0),
         advisors
       };
-    }).sort((a, b) => b.revenueTarget - a.revenueTarget
+    }).filter((group) => group.advisorCount > 0)
+      .sort((a, b) => b.revenueTarget - a.revenueTarget
       || b.advisorCount - a.advisorCount
       || Number(originalOrder.get(a.groupName) ?? 0) - Number(originalOrder.get(b.groupName) ?? 0));
 
