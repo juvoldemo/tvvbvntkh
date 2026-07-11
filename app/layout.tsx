@@ -4,7 +4,7 @@ import "./globals.css";
 import "./design-system.css";
 
 export const metadata: Metadata = {
-  title: "Dashboard Doanh thu Bao Viet Nhan tho Khanh Hoa",
+  title: "Bản đồ thu nhập",
   description: "Theo doi doanh thu AFYP/IP hang ngay",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
