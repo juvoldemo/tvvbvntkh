@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getVietnamToday } from "@/lib/format";
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
 import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
@@ -171,6 +172,7 @@ function aggregateCompetitionGroups(program: any, contracts: RevenueRecord[]) {
 }
 
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
   try {
     if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
 

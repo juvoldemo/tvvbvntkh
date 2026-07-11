@@ -1,11 +1,17 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
 
-type EventItem = { id: string; title: string; content: string; event_date: string | null; created_at: string };
+type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
+type EventAudience = "board_leader" | "team_leader" | "advisor";
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "data" | "targets" | "archive" | "access";
+type AdminTab = "events" | "analytics" | "data" | "targets" | "archive" | "access";
+type AnalyticsPeriod = "day" | "week" | "month";
+type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
+type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
+type AnalyticsUser = { advisorCode: string; fullName: string; groupName: string; position: string; lastAccess: string | null };
+type AnalyticsData = { rows: AnalyticsRow[]; summary: { uniqueAdvisors: number; sessions: number; actions: number; summaryExports: number; totalSeconds: number; averageSeconds: number; viewOnlySessions: number; shortSessions: number }; trends: Array<{ label: string; sessions: number; advisors: number; seconds: number }>; tabStats: Array<{ tabName: string; views: number; seconds: number; advisors: number }>; groups: Array<{ groupName: string; advisors: number; sessions: number; seconds: number; actions: number }>; neverAccessed: AnalyticsUser[]; inactive7Days: AnalyticsUser[]; inactive30Days: AnalyticsUser[] };
 type AdminRewardAudience = "tvv" | "leaders";
 type AdminRewardPeriod = "month" | "quarter";
 type RewardParticipant = { code: string; name: string; groupName?: string; contractCount: number; ip: number; fyp: number; fyc: number; reward: number; detail: string };
@@ -18,6 +24,7 @@ type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
 type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
+const PROTECTED_ADMIN_TABS: AdminTab[] = ["analytics", "data", "archive", "access"];
 
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
@@ -29,8 +36,13 @@ export default function AdminDataPage() {
   const [accessUnlocked, setAccessUnlocked] = useState(false);
   const [accessPassword, setAccessPassword] = useState("");
   const [accessError, setAccessError] = useState("");
+  const [accessSearch, setAccessSearch] = useState("");
+  const [accessLoading, setAccessLoading] = useState(false);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [activeTab, setActiveTab] = useState<AdminTab>("events");
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>("day");
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [rewardData, setRewardData] = useState<AdminRewardData | null>(null);
   const [rewardLoading, setRewardLoading] = useState(false);
   const [rewardAudience, setRewardAudience] = useState<AdminRewardAudience>("tvv");
@@ -42,6 +54,7 @@ export default function AdminDataPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [eventDate, setEventDate] = useState("");
+  const [eventAudiences, setEventAudiences] = useState<EventAudience[]>(["board_leader", "team_leader", "advisor"]);
   const [archiveForms, setArchiveForms] = useState<ArchiveForms>({ folders: [] });
   const [archiveGuides, setArchiveGuides] = useState<ArchiveGuide[]>([]);
   const [archiveFaq, setArchiveFaq] = useState<ArchiveFaq[]>([]);
@@ -66,11 +79,21 @@ export default function AdminDataPage() {
   }, []);
 
   const loadUsers = useCallback(async () => {
-    const response = await fetch("/api/admin/access-list", { cache: "no-store" });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || "Không tải được danh sách truy cập.");
-    setUsers(payload.users ?? []);
+    setAccessLoading(true);
+    try {
+      const response = await fetch("/api/admin/access-list", { cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Không tải được danh sách truy cập.");
+      setUsers(payload.users ?? []);
+    } finally {
+      setAccessLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!authenticated || !accessUnlocked || activeTab !== "access") return;
+    void loadUsers().catch((error) => setAccessError(error instanceof Error ? error.message : "Không tải được danh sách truy cập."));
+  }, [activeTab, authenticated, accessUnlocked, loadUsers]);
 
   async function unlockAccess(event: FormEvent) {
     event.preventDefault();
@@ -84,7 +107,7 @@ export default function AdminDataPage() {
       return;
     }
     try {
-      await loadUsers();
+      await Promise.all([loadUsers(), loadData()]);
       setAccessUnlocked(true);
       setAccessPassword("");
     } catch (error) {
@@ -95,11 +118,12 @@ export default function AdminDataPage() {
   }
 
   useEffect(() => {
-    fetch("/api/admin/auth", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((payload) => {
-        setAuthenticated(Boolean(payload.authenticated));
-        if (payload.authenticated) loadData();
+    Promise.all([fetch("/api/admin/auth", { cache: "no-store" }), fetch("/api/admin/access-auth", { cache: "no-store" })])
+      .then(async ([adminResponse, accessResponse]) => ({ admin: await adminResponse.json(), access: await accessResponse.json() }))
+      .then(({ admin, access }) => {
+        setAuthenticated(Boolean(admin.authenticated));
+        setAccessUnlocked(Boolean(access.authenticated));
+        if (admin.authenticated) loadData();
       })
       .finally(() => setReady(true));
   }, [loadData]);
@@ -120,8 +144,8 @@ export default function AdminDataPage() {
   }, [rewardMonth, rewardPeriod]);
 
   useEffect(() => {
-    if (authenticated && activeTab === "data") loadRewardData();
-  }, [activeTab, authenticated, loadRewardData]);
+    if (authenticated && accessUnlocked && activeTab === "data") loadRewardData();
+  }, [activeTab, authenticated, accessUnlocked, loadRewardData]);
 
   const loadTargetRegistrations = useCallback(async () => {
     setTargetLoading(true);
@@ -140,6 +164,19 @@ export default function AdminDataPage() {
   useEffect(() => {
     if (authenticated && activeTab === "targets") loadTargetRegistrations();
   }, [activeTab, authenticated, loadTargetRegistrations]);
+
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    const response = await fetch(`/api/analytics?period=${analyticsPeriod}`, { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    setAnalyticsLoading(false);
+    if (!response.ok) { setMessage(payload.error || "Không tải được analytics."); return; }
+    setAnalyticsData(payload);
+  }, [analyticsPeriod]);
+
+  useEffect(() => {
+    if (authenticated && accessUnlocked && activeTab === "analytics") void loadAnalytics();
+  }, [activeTab, authenticated, accessUnlocked, loadAnalytics]);
 
   async function removeTargetRegistration(id: string, groupName: string) {
     if (!window.confirm(`Xóa đăng ký mục tiêu của nhóm ${groupName}?`)) return;
@@ -232,11 +269,11 @@ export default function AdminDataPage() {
     const response = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, eventDate })
+      body: JSON.stringify({ title, content, eventDate: eventDate ? new Date(eventDate).toISOString() : "", audiences: eventAudiences })
     });
     const payload = await response.json();
     setBusy(false);
-    setMessage(response.ok ? "Đã tạo thông báo cho người dùng." : payload.error);
+    setMessage(response.ok ? (eventDate ? "Đã hẹn lịch gửi thông báo." : "Đã gửi thông báo.") : payload.error);
     if (response.ok) {
       setTitle("");
       setContent("");
@@ -272,6 +309,10 @@ export default function AdminDataPage() {
     );
   }
 
+  const normalizedAccessSearch = accessSearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const activeAccessUsers = users.filter((user) => user.is_active);
+  const filteredAccessUsers = activeAccessUsers.filter((user) => !normalizedAccessSearch || `${user.full_name} ${user.advisor_code}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedAccessSearch));
+
   return (
     <main className="admin-page">
       <header className="admin-header">
@@ -281,20 +322,21 @@ export default function AdminDataPage() {
       {message && <div className="admin-message">{message}</div>}
 
       <nav className="admin-main-tabs" aria-label="Quản trị dữ liệu">
-        <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Tạo sự kiện</button>
-        <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")}><BarChart3 size={17} />Dữ liệu</button>
+        <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
+        <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
+        <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => setActiveTab("targets")}><Target size={17} />Mục tiêu</button>
-        <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => setActiveTab("archive")}><BookOpen size={17} />Kho tài liệu</button>
+        <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
       </nav>
 
       <section className="admin-panel-area">
-        {activeTab === "access" && !accessUnlocked && <article className="admin-card admin-access-lock">
-          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực Danh sách truy cập</h2><p>Nhập mật khẩu riêng để mở nội dung của tab này.</p></div></div>
+        {PROTECTED_ADMIN_TABS.includes(activeTab) && !accessUnlocked && <article className="admin-card admin-access-lock">
+          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Analytics, Dữ liệu, Kho tài liệu và Danh sách truy cập.</p></div></div>
           <form onSubmit={unlockAccess}>
             <label>Mật khẩu<input type="password" value={accessPassword} onChange={(event) => { setAccessPassword(event.target.value); setAccessError(""); }} autoFocus autoComplete="current-password" required placeholder="Nhập mật khẩu" /></label>
             {accessError && <div className="admin-message error">{accessError}</div>}
-            <button disabled={busy || !accessPassword}>{busy ? "Đang kiểm tra…" : "Mở danh sách truy cập"}</button>
+            <button disabled={busy || !accessPassword}>{busy ? "Đang kiểm tra…" : "Mở nội dung"}</button>
           </form>
         </article>}
 
@@ -308,30 +350,38 @@ export default function AdminDataPage() {
             <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu random cho tất cả TVV</button>
             <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
           </div>
-          <div className="admin-count">{users.filter((user) => user.is_active).length} người đang được cấp quyền</div>
+          <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
+          {accessError && <div className="admin-message error">{accessError}</div>}
+          <div className="admin-count">{accessLoading ? "Đang tải danh sách..." : `${activeAccessUsers.length} người đang được cấp quyền${accessSearch ? ` · Tìm thấy ${filteredAccessUsers.length}` : ""}`}</div>
           <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Trạng thái</th><th>Chức vụ</th></tr></thead><tbody>
-            {users.filter((user) => user.is_active).map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td><code className="admin-password-code">{user.password_plain || "Chưa tạo"}</code></td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}
+            {filteredAccessUsers.map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td><code className="admin-password-code">{user.password_plain || "Chưa tạo"}</code></td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}
+            {!accessLoading && !filteredAccessUsers.length && <tr><td colSpan={5}>{accessSearch ? "Không tìm thấy TVV phù hợp." : "Chưa có người dùng được cấp quyền."}</td></tr>}
           </tbody></table></div>
         </article>}
 
         {activeTab === "events" && <article className="admin-card">
-          <div className="admin-card-title"><CalendarPlus /><div><h2>Tạo sự kiện</h2><p>Sự kiện sẽ xuất hiện tại chuông thông báo của mọi người.</p></div></div>
+          <div className="admin-card-title"><CalendarPlus /><div><h2>Tạo thông báo</h2><p>Bỏ trống thời gian để gửi ngay, hoặc chọn thời gian để hẹn lịch gửi.</p></div></div>
           <form className="admin-event-form" onSubmit={createEvent}>
             <label>Tiêu đề<input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={120} /></label>
-            <label>Thời gian sự kiện<input type="datetime-local" value={eventDate} onChange={(event) => setEventDate(event.target.value)} /></label>
+            <label>Thời gian gửi thông báo (không bắt buộc)<input type="datetime-local" value={eventDate} onChange={(event) => setEventDate(event.target.value)} /></label>
+            <fieldset className="admin-event-audiences"><legend>Đối tượng nhận</legend>
+              {([["board_leader", "Trưởng ban"], ["team_leader", "Trưởng nhóm"], ["advisor", "Tư vấn viên"]] as const).map(([id, label]) => <label key={id}><input type="checkbox" checked={eventAudiences.includes(id)} onChange={(event) => setEventAudiences((current) => event.target.checked ? [...current, id] : current.filter((item) => item !== id))} /><span>{label}</span></label>)}
+            </fieldset>
             <label>Nội dung<textarea value={content} onChange={(event) => setContent(event.target.value)} required rows={5} maxLength={1000} /></label>
-            <button disabled={busy}><Bell size={17} /> Đăng thông báo</button>
+            <button disabled={busy || eventAudiences.length === 0}><Bell size={17} /> {eventDate ? "Hẹn gửi thông báo" : "Gửi thông báo ngay"}</button>
           </form>
           <div className="admin-event-list">
-            {events.map((item) => <div key={item.id}><div><b>{item.title}</b><p>{item.content}</p><small>{item.event_date ? new Date(item.event_date).toLocaleString("vi-VN") : "Thông báo chung"}</small></div><button onClick={() => removeEvent(item.id)}>Xóa</button></div>)}
+            {events.map((item) => <div key={item.id}><div><b>{item.title}</b><p>{item.content}</p><small>{item.event_date ? `Gửi lúc ${new Date(item.event_date).toLocaleString("vi-VN")}` : "Gửi ngay"}</small></div><button onClick={() => removeEvent(item.id)}>Xóa</button></div>)}
           </div>
         </article>}
 
-        {activeTab === "data" && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
+        {activeTab === "analytics" && accessUnlocked && <AnalyticsPanel period={analyticsPeriod} setPeriod={setAnalyticsPeriod} data={analyticsData} loading={analyticsLoading} onReload={loadAnalytics} />}
+
+        {activeTab === "data" && accessUnlocked && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
 
         {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
 
-        {activeTab === "archive" && <ArchiveAdminPanel
+        {activeTab === "archive" && accessUnlocked && <ArchiveAdminPanel
           forms={archiveForms}
           guides={archiveGuides}
           faq={archiveFaq}
@@ -593,6 +643,56 @@ function extractYoutubeId(value: string) {
   if (!trimmed) return "";
   const match = trimmed.match(/(?:v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,})/);
   return match?.[1] ?? "";
+}
+
+function AnalyticsPanel({ period, setPeriod, data, loading, onReload }: { period: AnalyticsPeriod; setPeriod: (value: AnalyticsPeriod) => void; data: AnalyticsData | null; loading: boolean; onReload: () => void }) {
+  const [selectedSession, setSelectedSession] = useState<AnalyticsRow | null>(null);
+  const [alertView, setAlertView] = useState<"never" | "inactive7" | "inactive30">("never");
+  const [showSessionDetails, setShowSessionDetails] = useState(false);
+  const [showAccessRanking, setShowAccessRanking] = useState(false);
+  const rows = data?.rows ?? [];
+  const summary = data?.summary ?? { uniqueAdvisors: 0, sessions: 0, actions: 0, summaryExports: 0, totalSeconds: 0, averageSeconds: 0, viewOnlySessions: 0, shortSessions: 0 };
+  const tabLabels: Record<string, string> = { overview: "Tổng quan", contracts: "Hợp đồng", calculator: "Thu nhập", contests: "Thi đua", leaderboard: "Bảng xếp hạng", illustration: "Minh họa", profile: "Cá nhân", archive: "Kho tài liệu" };
+  const duration = (seconds: number) => seconds >= 3600 ? `${Math.floor(seconds / 3600)}g ${Math.round((seconds % 3600) / 60)}p` : seconds >= 60 ? `${Math.floor(seconds / 60)}p ${seconds % 60}s` : `${seconds}s`;
+  const maxTrend = Math.max(1, ...(data?.trends ?? []).map((item) => item.sessions));
+  const maxTabSeconds = Math.max(1, ...(data?.tabStats ?? []).map((item) => item.seconds));
+  const alertRows = alertView === "never" ? data?.neverAccessed ?? [] : alertView === "inactive7" ? data?.inactive7Days ?? [] : data?.inactive30Days ?? [];
+  const newestSessions = [...rows].sort((a, b) => new Date(b.lastAccess).getTime() - new Date(a.lastAccess).getTime());
+  const rankingMap = new Map<string, { advisorCode: string; fullName: string; groupName: string; position: string; sessions: number; totalSeconds: number; actions: number; summaryExports: number; lastAccess: string }>();
+  for (const row of rows) {
+    const current = rankingMap.get(row.advisorCode) || { advisorCode: row.advisorCode, fullName: row.fullName, groupName: row.groupName, position: row.position, sessions: 0, totalSeconds: 0, actions: 0, summaryExports: 0, lastAccess: row.lastAccess };
+    current.sessions += 1; current.totalSeconds += row.totalSeconds; current.actions += row.actions; current.summaryExports += row.summaryExports;
+    if (new Date(row.lastAccess).getTime() > new Date(current.lastAccess).getTime()) current.lastAccess = row.lastAccess;
+    rankingMap.set(row.advisorCode, current);
+  }
+  const accessRanking = [...rankingMap.values()].sort((a, b) => b.sessions - a.sessions || b.totalSeconds - a.totalSeconds || b.actions - a.actions);
+  return <article className="admin-card admin-analytics-card">
+    <div className="admin-card-title"><BarChart3 /><div><h2>Phân tích truy cập</h2><p>Theo dõi lượt đăng nhập, tương tác và thời gian sử dụng theo mã TVV.</p></div></div>
+    <div className="admin-analytics-toolbar">
+      <div>{([["day", "Theo ngày"], ["week", "Theo tuần"], ["month", "Theo tháng"]] as const).map(([id, label]) => <button type="button" className={period === id && !showSessionDetails && !showAccessRanking ? "active" : ""} key={id} onClick={() => { setPeriod(id); setShowSessionDetails(false); setShowAccessRanking(false); }}>{label}</button>)}<button type="button" className={showSessionDetails ? "active" : ""} onClick={() => { setShowSessionDetails(true); setShowAccessRanking(false); }}>Chi tiết từng phiên</button><button type="button" className={showAccessRanking ? "active" : ""} onClick={() => { setShowAccessRanking(true); setShowSessionDetails(false); }}>Bảng xếp hạng TVV truy cập</button></div>
+      <button type="button" onClick={onReload} disabled={loading}>{loading ? "Đang tải..." : "Làm mới"}</button>
+    </div>
+    {!showSessionDetails && !showAccessRanking && <><div className="admin-analytics-summary admin-analytics-summary-full">
+      <span><strong>{summary.uniqueAdvisors}</strong> TVV truy cập</span><span><strong>{summary.sessions}</strong> phiên truy cập</span><span><strong>{summary.actions}</strong> thao tác</span><span><strong>{duration(summary.averageSeconds)}</strong> trung bình/phiên</span><span><strong>{summary.summaryExports}</strong> lượt xuất tóm tắt</span><span><strong>{summary.viewOnlySessions}</strong> phiên chỉ xem</span>
+    </div>
+
+    <section className="admin-analytics-grid">
+      <div className="admin-analytics-box"><h3>Xu hướng truy cập</h3><p>Số phiên theo {period === "day" ? "khung giờ" : "ngày"}</p><div className="admin-trend-chart">{(data?.trends ?? []).map((item) => <div key={item.label} title={`${item.sessions} phiên, ${item.advisors} TVV`}><span><i style={{ height: `${Math.max(6, item.sessions / maxTrend * 100)}%` }} /></span><b>{item.sessions}</b><small>{item.label}</small></div>)}</div></div>
+      <div className="admin-analytics-box"><h3>Mức độ sử dụng tab</h3><p>Lượt xem và tổng thời gian</p><div className="admin-tab-usage">{(data?.tabStats ?? []).map((item) => <div key={item.tabName}><header><b>{tabLabels[item.tabName] || item.tabName}</b><small>{item.views} lượt · {duration(item.seconds)}</small></header><span><i style={{ width: `${Math.max(3, item.seconds / maxTabSeconds * 100)}%` }} /></span></div>)}</div></div>
+    </section>
+
+    <section className="admin-analytics-box"><h3>Phân tích theo nhóm</h3><div className="admin-group-analytics">{(data?.groups ?? []).map((group) => <div key={group.groupName}><b>{group.groupName}</b><span>{group.advisors} TVV</span><span>{group.sessions} phiên</span><span>{duration(group.seconds)}</span><span>{group.actions} thao tác</span></div>)}</div></section>
+
+    <section className="admin-analytics-box admin-alert-box"><h3>Cảnh báo cần chú ý</h3><div className="admin-alert-tabs"><button type="button" className={alertView === "never" ? "active" : ""} onClick={() => setAlertView("never")}>Chưa từng truy cập ({data?.neverAccessed?.length ?? 0})</button><button type="button" className={alertView === "inactive7" ? "active" : ""} onClick={() => setAlertView("inactive7")}>Không vào 7 ngày ({data?.inactive7Days?.length ?? 0})</button><button type="button" className={alertView === "inactive30" ? "active" : ""} onClick={() => setAlertView("inactive30")}>Không vào 30 ngày ({data?.inactive30Days?.length ?? 0})</button></div><div className="admin-alert-users">{alertRows.slice(0, 50).map((user) => <div key={user.advisorCode}><b>{user.advisorCode}</b><span>{user.fullName}</span><small>{user.groupName}{user.lastAccess ? ` · Lần cuối ${new Date(user.lastAccess).toLocaleDateString("vi-VN")}` : ""}</small></div>)}{!alertRows.length && <p>Không có TVV trong nhóm cảnh báo này.</p>}</div></section></>}
+
+    {showSessionDetails && <><h3 className="admin-session-title">Chi tiết từng phiên</h3>
+    <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Họ tên</th><th>Nhóm / chức vụ</th><th>Lượt truy cập</th><th>Hoạt động</th><th>Tổng thời gian</th><th>Tab lâu nhất</th><th>Lần cuối</th></tr></thead><tbody>
+      {newestSessions.map((row) => <tr className="admin-analytics-session-row" key={row.sessionId} onClick={() => setSelectedSession(row)}><td><b>{row.advisorCode}</b><small>{row.devices.join(", ")}</small></td><td>{row.fullName}</td><td>{row.groupName}<small>{row.position}</small></td><td>1</td><td>{row.actions ? <>{row.actions} thao tác{row.summaryExports > 0 && <small>Xuất tóm tắt: {row.summaryExports} lần</small>}</> : "Chỉ xem"}</td><td>{duration(row.totalSeconds)}</td><td>{tabLabels[row.longestTab] || row.longestTab}<small>{duration(row.longestTabSeconds)}</small></td><td>{new Date(row.lastAccess).toLocaleString("vi-VN")}</td></tr>)}
+      {!loading && !rows.length && <tr><td colSpan={8}>Chưa có dữ liệu trong khoảng thời gian này.</td></tr>}
+    </tbody></table></div></>}
+    {showAccessRanking && <><h3 className="admin-session-title">Bảng xếp hạng TVV truy cập</h3><div className="admin-table-wrap"><table><thead><tr><th>Hạng</th><th>Mã TVV</th><th>Họ tên</th><th>Nhóm / chức vụ</th><th>Số phiên</th><th>Tổng thời gian</th><th>Thao tác</th><th>Xuất tóm tắt</th><th>Lần cuối</th></tr></thead><tbody>{accessRanking.map((item, index) => <tr key={item.advisorCode}><td><b className={`admin-rank-number rank-${index + 1}`}>{index + 1}</b></td><td><b>{item.advisorCode}</b></td><td>{item.fullName}</td><td>{item.groupName}<small>{item.position}</small></td><td><b>{item.sessions}</b></td><td>{duration(item.totalSeconds)}</td><td>{item.actions}</td><td>{item.summaryExports}</td><td>{new Date(item.lastAccess).toLocaleString("vi-VN")}</td></tr>)}{!loading && !accessRanking.length && <tr><td colSpan={9}>Chưa có dữ liệu xếp hạng trong khoảng thời gian này.</td></tr>}</tbody></table></div></>}
+    {selectedSession && <div className="admin-analytics-modal-backdrop" onClick={() => setSelectedSession(null)}><section className="admin-analytics-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}><header><div><h3>{selectedSession.fullName}</h3><p>{selectedSession.advisorCode} · {selectedSession.groupName}</p></div><button type="button" onClick={() => setSelectedSession(null)}>×</button></header><div className="admin-session-metrics"><span><b>Bắt đầu</b>{new Date(selectedSession.firstAccess).toLocaleString("vi-VN")}</span><span><b>Gần nhất</b>{new Date(selectedSession.lastAccess).toLocaleString("vi-VN")}</span><span><b>Thời lượng</b>{duration(selectedSession.totalSeconds)}</span><span><b>Thiết bị</b>{selectedSession.devices.join(", ")}</span></div><h4>Thời gian theo tab</h4><div className="admin-session-tabs">{Object.entries(selectedSession.tabs).sort((a, b) => b[1] - a[1]).map(([tabName, seconds]) => <div key={tabName}><b>{tabLabels[tabName] || tabName}</b><span>{duration(seconds)}</span></div>)}</div><h4>Dòng thời gian hoạt động</h4><div className="admin-session-timeline">{selectedSession.timeline.map((item, index) => <div key={`${item.createdAt}-${index}`}><time>{new Date(item.createdAt).toLocaleTimeString("vi-VN")}</time><span>{item.eventName === "session_start" ? "Bắt đầu phiên" : item.eventName === "tab_view" ? `Mở tab ${tabLabels[item.tabName || ""] || item.tabName}` : item.eventName === "tab_duration" ? `Ở tab ${tabLabels[item.tabName || ""] || item.tabName}: ${duration(Number(item.durationSeconds) || 0)}` : item.actionName || "Thao tác"}</span></div>)}</div></section></div>}
+  </article>;
 }
 
 function ArchiveAdminPanel({ forms, guides, faq, setForms, setGuides, setFaq, onSaved, setMessage }: {

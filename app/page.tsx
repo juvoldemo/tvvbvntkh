@@ -333,6 +333,9 @@ export default function TvvMobilePage() {
   const notificationPanelRef = useRef<HTMLDivElement>(null);
   const latestMonthResolvedRef = useRef(false);
   const notificationSoundPlayedRef = useRef(false);
+  const analyticsSessionRef = useRef("");
+  const analyticsHiddenAtRef = useRef(0);
+  const [analyticsGeneration, setAnalyticsGeneration] = useState(0);
   const [notificationPosition, setNotificationPosition] = useState({ top: 0, right: 12 });
   const [readEventIds, setReadEventIds] = useState<string[]>([]);
   const [readEventsReady, setReadEventsReady] = useState(false);
@@ -345,6 +348,67 @@ export default function TvvMobilePage() {
   const [teamTarget, setTeamTarget] = useState<any>(null);
   const [tvvTarget, setTvvTarget] = useState<any>(null);
   const [targetModalOpen, setTargetModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!signedIn || !userProfile?.advisor_code) {
+      analyticsSessionRef.current = "";
+      return;
+    }
+    let sessionId = analyticsSessionRef.current;
+    const isNewSession = !sessionId;
+    if (isNewSession) sessionId = crypto.randomUUID();
+    analyticsSessionRef.current = sessionId;
+    const post = (eventName: string, extra: Record<string, unknown> = {}) => fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName, sessionId, ...extra }) }).catch(() => undefined);
+    if (isNewSession) void post("session_start", { tabName: tab });
+    const clickHandler = (event: MouseEvent) => {
+      const button = (event.target as Element | null)?.closest("button, a");
+      if (!button || !button.closest(".tvv-app")) return;
+      const actionName = button.getAttribute("aria-label") || button.textContent || "Tương tác";
+      void post("action", { tabName: tab, actionName });
+    };
+    document.addEventListener("click", clickHandler);
+    return () => document.removeEventListener("click", clickHandler);
+  }, [signedIn, userProfile?.advisor_code, tab, analyticsGeneration]);
+
+  useEffect(() => {
+    if (!signedIn || !userProfile?.advisor_code || !analyticsSessionRef.current) return;
+    const startedAt = Date.now();
+    const sessionId = analyticsSessionRef.current;
+    void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "tab_view", sessionId, tabName: tab }) }).catch(() => undefined);
+    return () => {
+      const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+      void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "tab_duration", sessionId, tabName: tab, durationSeconds }) }).catch(() => undefined);
+    };
+  }, [signedIn, userProfile?.advisor_code, tab, analyticsGeneration]);
+
+  useEffect(() => {
+    const trackVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        analyticsHiddenAtRef.current = Date.now();
+        return;
+      }
+      if (analyticsHiddenAtRef.current && Date.now() - analyticsHiddenAtRef.current >= 5 * 60 * 1000) {
+        analyticsSessionRef.current = "";
+        setAnalyticsGeneration((current) => current + 1);
+      }
+      analyticsHiddenAtRef.current = 0;
+    };
+    document.addEventListener("visibilitychange", trackVisibility);
+    return () => document.removeEventListener("visibilitychange", trackVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!signedIn || !userProfile?.advisor_code) return;
+    const receiveIllustrationEvent = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.data?.type !== "bvnt-analytics" || event.data?.eventName !== "summary_export") return;
+      const sessionId = analyticsSessionRef.current;
+      if (!sessionId) return;
+      const source = event.data.source === "riders" ? "sản phẩm bổ trợ" : "minh họa chính";
+      void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "action", sessionId, tabName: "illustration", actionName: `Xuất tóm tắt - ${source}` }) }).catch(() => undefined);
+    };
+    window.addEventListener("message", receiveIllustrationEvent);
+    return () => window.removeEventListener("message", receiveIllustrationEvent);
+  }, [signedIn, userProfile?.advisor_code, analyticsGeneration]);
 
   useEffect(() => {
     if (tab === "illustration") setIllustrationLoaded(true);
@@ -437,10 +501,22 @@ export default function TvvMobilePage() {
   }, [userProfile?.advisor_code]);
 
   useEffect(() => {
-    fetch("/api/events", { cache: "no-store" })
+    let active = true;
+    const loadEvents = () => fetch("/api/events", { cache: "no-store" })
       .then((response) => response.ok ? response.json() : { events: [] })
-      .then((payload) => setAdminEvents(payload.events ?? []))
-      .catch(() => setAdminEvents([]));
+      .then((payload) => { if (active) setAdminEvents(payload.events ?? []); })
+      .catch(() => { if (active) setAdminEvents([]); });
+    void loadEvents();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadEvents();
+    }, 10000);
+    const refreshVisible = () => { if (document.visibilityState === "visible") void loadEvents(); };
+    document.addEventListener("visibilitychange", refreshVisible);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshVisible);
+    };
   }, []);
 
   useEffect(() => {
@@ -807,7 +883,7 @@ export default function TvvMobilePage() {
                     <article key={item.id}>
                       <strong>{item.title}</strong>
                       <p>{item.content}</p>
-                      <small>{item.event_date ? `Sự kiện: ${new Date(item.event_date).toLocaleString("vi-VN")}` : new Date(item.created_at).toLocaleString("vi-VN")}</small>
+                      <small>{item.event_date ? new Date(item.event_date).toLocaleString("vi-VN") : new Date(item.created_at).toLocaleString("vi-VN")}</small>
                     </article>
                   ))}
                 </div>,
@@ -2489,6 +2565,7 @@ function ArchiveView() {
   const [view, setView] = useState<"forms" | "guides" | "faq">("forms");
   const [folderId, setFolderId] = useState("");
   const [selectedFile, setSelectedFile] = useState<ArchiveSelection | null>(null);
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -2512,7 +2589,7 @@ function ArchiveView() {
 
   return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-archive-page">
     <div className="tvv-archive-tabs">
-      {([["forms", "Mẫu biểu"], ["guides", "Hướng dẫn"], ["faq", "FAQ"]] as const).map(([id, label]) => <button type="button" key={id} className={view === id ? "active" : ""} onClick={() => { setView(id); setFolderId(""); setSelectedFile(null); }}>{label}</button>)}
+      {([["forms", "Mẫu biểu"], ["guides", "Hướng dẫn"], ["faq", "FAQ"]] as const).map(([id, label]) => <button type="button" key={id} className={view === id ? "active" : ""} onClick={() => { setView(id); setFolderId(""); setSelectedFile(null); setOpenFaqId(null); }}>{label}</button>)}
     </div>
 
     {view === "forms" && !activeFolder && <section className="tvv-archive-list">
@@ -2545,7 +2622,14 @@ function ArchiveView() {
     </section>}
 
     {view === "faq" && <section className="tvv-archive-list">
-      {visibleFaq.map((item, index) => <article className="tvv-archive-faq" key={item.id ?? index}><b>{item.question ?? item.title}</b><p>{item.answer}</p></article>)}
+      {visibleFaq.map((item, index) => {
+        const faqId = String(item.id ?? index);
+        const isOpen = openFaqId === faqId;
+        return <article className={`tvv-archive-faq${isOpen ? " open" : ""}`} key={faqId}>
+          <button type="button" aria-expanded={isOpen} onClick={() => setOpenFaqId(isOpen ? null : faqId)}><b>{item.question ?? item.title}</b><ChevronDown size={19} /></button>
+          {isOpen && <p>{item.answer}</p>}
+        </article>;
+      })}
       {!visibleFaq.length && <p className="tvv-empty">Không tìm thấy câu hỏi phù hợp.</p>}
     </section>}
 

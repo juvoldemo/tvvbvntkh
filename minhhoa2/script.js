@@ -5536,6 +5536,10 @@ function trackSummaryExportClick(snapshot, sourceId) {
   const source = sourceId === "riderExportSummaryButton" ? "riders" : "main";
   const valid = Boolean(snapshot?.valid);
 
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: "bvnt-analytics", eventName: "summary_export", source, valid }, window.location.origin);
+  }
+
   if (typeof window.va === "function") {
     window.va("event", {
       name: "Export Summary Click",
