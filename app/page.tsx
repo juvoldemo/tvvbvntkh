@@ -3,7 +3,7 @@
 import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, Download, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserRound, Users, XCircle } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, LoaderCircle, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserRound, Users, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
@@ -2562,21 +2562,31 @@ function ArchiveView() {
 function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<{ message: string; field?: "username" | "password" } | null>(null);
   const [busy, setBusy] = useState(false);
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
-    setError("");
+    setError(null);
     const response = await fetch("/api/user/auth", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password })
     });
-    const payload = await response.json().catch(() => ({ error: "May chu khong tra ve JSON." }));
+    const payload = await response.json().catch(() => ({ error: "Máy chủ không phản hồi đúng định dạng." }));
     setBusy(false);
-    if (!response.ok) return setError(payload.error || "Không đăng nhập được.");
+    if (!response.ok) return setError({ message: payload.error || "Không thể đăng nhập. Vui lòng thử lại.", field: payload.field });
     onSuccess();
   }
-  return <main className="tvv-user-login"><form onSubmit={submit}><ShieldCheck size={44} /><h1>Đăng nhập TVV</h1><p>Sử dụng mã TVV và mật khẩu của bạn.</p><label>Mã TVV<input value={username} onChange={(event) => setUsername(event.target.value)} autoCapitalize="characters" required /></label><label>Mật khẩu<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required /></label>{error && <div className="tvv-user-error">{error}</div>}<button disabled={busy}>{busy ? "Đang đăng nhập…" : "Đăng nhập"}</button><small>Mật khẩu mặc định: 123456</small></form></main>;
+  const canSubmit = Boolean(username.trim() && password && !busy);
+  return <main className="tvv-user-login">
+      <form className="tvv-login-form" onSubmit={submit}>
+        <header><h1>Đăng nhập</h1><p>Nhập thông tin của bạn để tiếp tục.</p></header>
+        <label>Mã TVV<div className={`tvv-login-input${error?.field === "username" ? " has-error" : ""}`}><UserRound size={19} /><input value={username} onChange={(event) => { setUsername(event.target.value); if (error?.field === "username") setError(null); }} placeholder="Ví dụ: D102123456" autoCapitalize="characters" autoComplete="username" required /></div>{error?.field === "username" && <span className="tvv-field-error" role="alert">{error.message}</span>}</label>
+        <label>Mật khẩu<div className={`tvv-login-input${error?.field === "password" ? " has-error" : ""}`}><ShieldCheck size={19} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); if (error?.field === "password") setError(null); }} placeholder="Nhập mật khẩu" autoComplete="current-password" required /><button className="tvv-password-toggle" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button></div>{error?.field === "password" && <span className="tvv-field-error" role="alert">{error.message}</span>}</label>
+        {error && !error.field && <div className="tvv-user-error" role="alert">{error.message}</div>}
+        <button className="tvv-login-submit" disabled={!canSubmit}>{busy && <LoaderCircle className="tvv-login-spinner" size={19} aria-hidden="true" />}{busy ? "Đang đăng nhập…" : "Đăng nhập"}</button>
+      </form>
+  </main>;
 }
 
 function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {

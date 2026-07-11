@@ -18,9 +18,12 @@ export async function POST(request: NextRequest) {
       .eq("advisor_code", code)
       .maybeSingle();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    if (!data?.is_active || !verifyPassword(password, data.password_hash || "")) {
-      return NextResponse.json({ error: "Ma TVV hoac mat khau khong dung." }, { status: 401 });
+    if (error) return NextResponse.json({ error: "Không thể kiểm tra thông tin đăng nhập. Vui lòng thử lại." }, { status: 500 });
+    if (!data?.is_active) {
+      return NextResponse.json({ error: "Mã TVV không đúng hoặc chưa được kích hoạt.", field: "username" }, { status: 401 });
+    }
+    if (!verifyPassword(password, data.password_hash || "")) {
+      return NextResponse.json({ error: "Mật khẩu không đúng.", field: "password" }, { status: 401 });
     }
 
     const response = NextResponse.json({ ok: true, advisorCode: code });
@@ -32,9 +35,8 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30
     });
     return response;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Cannot connect to login service.";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Không thể kết nối đến dịch vụ đăng nhập. Vui lòng thử lại." }, { status: 500 });
   }
 }
 

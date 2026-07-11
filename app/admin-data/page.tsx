@@ -26,6 +26,9 @@ export default function AdminDataPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
+  const [accessUnlocked, setAccessUnlocked] = useState(false);
+  const [accessPassword, setAccessPassword] = useState("");
+  const [accessError, setAccessError] = useState("");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [activeTab, setActiveTab] = useState<AdminTab>("events");
   const [rewardData, setRewardData] = useState<AdminRewardData | null>(null);
@@ -44,26 +47,52 @@ export default function AdminDataPage() {
   const [archiveFaq, setArchiveFaq] = useState<ArchiveFaq[]>([]);
 
   const loadData = useCallback(async () => {
-    const [userResponse, eventResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
-      fetch("/api/admin/access-list", { cache: "no-store" }),
+    const [eventResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
       fetch("/api/events", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=forms", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=guides", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=faq", { cache: "no-store" })
     ]);
-    const [userPayload, eventPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
-      userResponse.json(),
+    const [eventPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
       eventResponse.json(),
       formsResponse.json(),
       guidesResponse.json(),
       faqResponse.json()
     ]);
-    if (userResponse.ok) setUsers(userPayload.users ?? []);
     if (eventResponse.ok) setEvents(eventPayload.events ?? []);
     if (formsResponse.ok) setArchiveForms(formsPayload ?? { folders: [] });
     if (guidesResponse.ok) setArchiveGuides(guidesPayload ?? []);
     if (faqResponse.ok) setArchiveFaq(faqPayload ?? []);
   }, []);
+
+  const loadUsers = useCallback(async () => {
+    const response = await fetch("/api/admin/access-list", { cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "Không tải được danh sách truy cập.");
+    setUsers(payload.users ?? []);
+  }, []);
+
+  async function unlockAccess(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setAccessError("");
+    const response = await fetch("/api/admin/access-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: accessPassword }) });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setBusy(false);
+      setAccessError(payload.error || "Không thể xác thực mật khẩu.");
+      return;
+    }
+    try {
+      await loadUsers();
+      setAccessUnlocked(true);
+      setAccessPassword("");
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Không tải được danh sách truy cập.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     fetch("/api/admin/auth", { cache: "no-store" })
@@ -153,7 +182,7 @@ export default function AdminDataPage() {
     setMessage(response.ok ? `Đã cập nhật ${payload.count} người được phép truy cập.` : payload.error);
     if (response.ok) {
       form.reset();
-      await loadData();
+      await loadUsers();
     }
   }
 
@@ -166,7 +195,7 @@ export default function AdminDataPage() {
     setBusy(false);
     if (!response.ok) return setMessage(payload.error || "Không tạo được mật khẩu random.");
     setMessage(`Đã tạo mật khẩu random mới cho ${payload.count} TVV.`);
-    await loadData();
+    await loadUsers();
   }
 
   async function exportAccessList() {
@@ -256,11 +285,20 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")}><BarChart3 size={17} />Dữ liệu</button>
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => setActiveTab("targets")}><Target size={17} />Mục tiêu</button>
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => setActiveTab("archive")}><BookOpen size={17} />Kho tài liệu</button>
-        <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => setActiveTab("access")}><Users size={17} />Danh sách truy cập</button>
+        <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
       </nav>
 
       <section className="admin-panel-area">
-        {activeTab === "access" && <article className="admin-card">
+        {activeTab === "access" && !accessUnlocked && <article className="admin-card admin-access-lock">
+          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực Danh sách truy cập</h2><p>Nhập mật khẩu riêng để mở nội dung của tab này.</p></div></div>
+          <form onSubmit={unlockAccess}>
+            <label>Mật khẩu<input type="password" value={accessPassword} onChange={(event) => { setAccessPassword(event.target.value); setAccessError(""); }} autoFocus autoComplete="current-password" required placeholder="Nhập mật khẩu" /></label>
+            {accessError && <div className="admin-message error">{accessError}</div>}
+            <button disabled={busy || !accessPassword}>{busy ? "Đang kiểm tra…" : "Mở danh sách truy cập"}</button>
+          </form>
+        </article>}
+
+        {activeTab === "access" && accessUnlocked && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
             <label className="admin-file"><Upload /><span>Chọn file dữ liệu TVV theo định dạng APM01</span><input name="file" type="file" accept=".xlsx,.xls,.csv" required /></label>

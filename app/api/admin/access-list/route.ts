@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { parseAccessListDate } from "@/lib/access-list-dates";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
 
 const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,password_plain,is_active,created_at";
 const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,is_active,created_at";
+
+const canAccess = (request: NextRequest) => isAdminRequest(request) && isAccessRequest(request);
 
 function missingPasswordPlainColumn(error: unknown) {
   return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
@@ -48,7 +51,7 @@ function scoreUserRow(row: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
+  if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
   const supabase = getSupabaseAdmin();
   const users: Record<string, unknown>[] = [];
   const pageSize = 1000;
@@ -79,7 +82,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
+  if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) return NextResponse.json({ error: "Vui lòng chọn file Excel hoặc CSV." }, { status: 400 });
@@ -148,7 +151,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
+  if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
   try {
     const supabase = getSupabaseAdmin();
     const rows: Array<{ id: string; advisor_code: string }> = [];
