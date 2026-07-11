@@ -5,6 +5,23 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
 const eventNames = new Set(["session_start", "tab_view", "tab_duration", "action"]);
+const analyticsTimeZone = "Asia/Ho_Chi_Minh";
+const analyticsDateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: analyticsTimeZone,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  hourCycle: "h23"
+});
+
+function analyticsTimeParts(date: Date) {
+  return Object.fromEntries(
+    analyticsDateTimeFormatter.formatToParts(date)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value])
+  );
+}
 
 export async function POST(request: NextRequest) {
   const advisorCode = userCodeFromRequest(request);
@@ -67,8 +84,10 @@ export async function GET(request: NextRequest) {
   const tabMap = new Map<string, { tabName: string; views: number; seconds: number; advisors: Set<string> }>();
   for (const event of events ?? []) {
     const date = new Date(event.created_at);
-    const key = String(period === "day" ? Math.floor(date.getTime() / 3600000) : Math.floor(date.getTime() / 86400000));
-    const label = period === "day" ? `${String(date.getHours()).padStart(2, "0")}:00` : date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    const { year, month, day, hour } = analyticsTimeParts(date);
+    const dateKey = `${year}-${month}-${day}`;
+    const key = period === "day" ? `${dateKey}-${hour}` : dateKey;
+    const label = period === "day" ? `${hour}:00` : `${day}/${month}`;
     const trend = trendMap.get(key) || { label, sessions: new Set(), advisors: new Set(), seconds: 0 };
     trend.sessions.add(event.session_id); trend.advisors.add(event.advisor_code); trend.seconds += Number(event.duration_seconds) || 0; trendMap.set(key, trend);
     if (event.tab_name && (event.event_name === "tab_view" || event.event_name === "tab_duration")) {
@@ -77,7 +96,7 @@ export async function GET(request: NextRequest) {
       tab.seconds += Number(event.duration_seconds) || 0; tab.advisors.add(event.advisor_code); tabMap.set(event.tab_name, tab);
     }
   }
-  const trends = [...trendMap.entries()].sort((a, b) => Number(a[0]) - Number(b[0])).map(([, item]) => ({ label: item.label, sessions: item.sessions.size, advisors: item.advisors.size, seconds: item.seconds }));
+  const trends = [...trendMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, item]) => ({ label: item.label, sessions: item.sessions.size, advisors: item.advisors.size, seconds: item.seconds }));
   const tabStats = [...tabMap.values()].map((item) => ({ ...item, advisors: item.advisors.size })).sort((a, b) => b.seconds - a.seconds);
   const groupMap = new Map<string, { groupName: string; advisors: Set<string>; sessions: number; seconds: number; actions: number }>();
   for (const row of result) {
