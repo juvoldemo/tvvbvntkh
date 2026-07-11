@@ -19247,6 +19247,26 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-header > aside small { display: inline-flex; align-items: center; gap: 8px; }
 .target-show-header > aside button { display: inline-grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
 .target-show-header > aside button:hover { background: rgba(255,255,255,.22); }
+.target-show-tabs { display: flex; width: min(1800px, 100%); margin: 0 auto 18px; padding: 5px; gap: 5px; border: 1px solid #d4e4f4; border-radius: 13px; background: #fff; box-shadow: 0 6px 18px rgba(15,70,110,.06); }
+.target-show-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 145px; padding: 10px 16px; border: 1px solid #d3e4f2; border-radius: 9px; background: #fff; color: #006398; font-weight: 800; cursor: pointer; }
+.target-show-tabs button:hover { background: #edf7ff; color: #00689e; }
+.target-show-tabs button.active { border-color: #006398; background: linear-gradient(135deg, #006398, #087daf); color: #fff; box-shadow: 0 4px 10px rgba(0,99,152,.22); }
+.target-show-page nav.target-show-tabs > button:not(.active) {
+  border-color: #d3e4f2 !important;
+  background: #fff !important;
+  background-image: none !important;
+  color: #006398 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+.target-show-page nav.target-show-tabs > button.active {
+  border-color: #006398 !important;
+  background: #006398 !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+.target-show-page nav.target-show-tabs > button:not(.active) svg { color: #006398 !important; stroke: #006398 !important; }
+.target-show-page nav.target-show-tabs > button.active svg { color: #fff !important; stroke: #fff !important; }
 .target-show-live-dot { width: 9px; height: 9px; border-radius: 50%; background: #56f29a; box-shadow: 0 0 0 5px rgba(86, 242, 154, .15); animation: target-show-live 1.8s ease-in-out infinite; }
 @keyframes target-show-live { 50% { opacity: .45; transform: scale(.82); } }
 .target-show-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
@@ -19288,7 +19308,31 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-advisors strong { flex: 0 0 auto; color: #04954c; font-size: 12px; white-space: nowrap; }
 .target-show-advisors > p { margin: 0; padding: 18px 10px; color: #9aa9b6; font-size: 11px; font-style: italic; text-align: center; }
 .target-show-error { width: min(1800px, 100%); margin: 0 auto 16px; padding: 12px; border-radius: 10px; background: #fff0f1; color: #c6283d; font-weight: 700; }
-.target-reset-backdrop { position: fixed; inset: 0; z-index: 500; display: grid; place-items: center; padding: 18px; background: rgba(4, 22, 42, .55); backdrop-filter: blur(4px); }
+.target-comparison { overflow: hidden; width: min(1800px, 100%); margin-inline: auto; border: 1px solid #d4e4f4; border-radius: 16px; background: #fff; box-shadow: 0 8px 24px rgba(15,70,110,.08); }
+.target-comparison > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #dce9f4; background: linear-gradient(135deg, #f7fbff, #edf7ff); }
+.target-comparison h2 { margin: 0 0 4px; color: #004b7a; font-size: 19px; }
+.target-comparison header p { margin: 0; color: #71869a; font-size: 12px; font-weight: 700; }
+.target-comparison header > strong { padding: 7px 12px; border-radius: 18px; background: #dff4ec; color: #078750; font-size: 12px; white-space: nowrap; }
+.target-comparison-table { overflow-x: auto; }
+.target-comparison table { width: 100%; border-collapse: collapse; }
+.target-comparison th { padding: 12px 16px; background: #f8fafc; color: #61788d; font-size: 11px; text-align: left; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.target-comparison th:nth-last-child(-n+3), .target-comparison td:nth-last-child(-n+3) { text-align: right; }
+.target-comparison td { padding: 13px 16px; border-top: 1px solid #edf2f7; color: #35536a; font-size: 13px; }
+.target-comparison tbody tr:hover { background: #f8fcff; }
+.target-comparison td:first-child i { display: inline-grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: #e8f1f7; color: #49677d; font-style: normal; font-size: 11px; font-weight: 900; }
+.target-comparison td:first-child i.rank-1 { background: #fff0b8; color: #b47400; }
+.target-comparison td:first-child i.rank-2 { background: #e8eef3; color: #536879; }
+.target-comparison td:first-child i.rank-3 { background: #f6e4d7; color: #a85a27; }
+.target-comparison td:nth-child(2) b, .target-comparison td:nth-child(2) small { display: block; }
+.target-comparison td:nth-child(2) b { color: #004b7a; }
+.target-comparison td:nth-child(2) small { margin-top: 3px; color: #91a0ad; font-size: 9px; }
+.target-comparison td:nth-child(4) strong { color: #078750; }
+.target-comparison .not-set { color: #9aa9b6; font-size: 11px; font-style: italic; }
+.target-comparison em { font-style: normal; font-weight: 800; white-space: nowrap; }
+.target-comparison em.positive { color: #078750; }.target-comparison em.negative { color: #d13c52; }.target-comparison em.equal { color: #688096; }
+.target-comparison-empty { padding: 40px !important; color: #91a0ad !important; text-align: center !important; }
+.target-reset-backdrop { position: fixed; inset: 0; z-index: 2147483647; isolation: isolate; display: grid; place-items: center; padding: 18px; background: rgba(4, 22, 42, .55); backdrop-filter: blur(4px); }
+.target-reset-modal { position: relative; z-index: 1; }
 .target-reset-modal { width: min(420px, calc(100vw - 36px)); display: grid; gap: 17px; padding: 20px; border-radius: 18px; background: #fff; box-shadow: 0 25px 70px rgba(0, 25, 55, .3); }
 .target-reset-modal header { display: grid; grid-template-columns: 42px minmax(0, 1fr) 34px; gap: 10px; align-items: start; }
 .target-reset-modal header > span { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #fff0f1; color: #d92d42; }
@@ -19310,6 +19354,9 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
   .target-show-header > aside button { display: none; }
   .target-show-summary { grid-template-columns: 1fr; gap: 9px; }
   .target-show-summary article { padding: 12px 14px; }
+  .target-show-tabs { position: sticky; top: 6px; z-index: 5; }
+  .target-show-tabs button { flex: 1; min-width: 0; padding: 10px 7px; font-size: 11px; }
+  .target-show-tabs button svg { width: 15px; }
   .target-show-groups { grid-template-columns: 1fr; }
 }
 .commission-included-total strong { white-space: nowrap; }
