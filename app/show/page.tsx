@@ -44,11 +44,14 @@ export default function TargetShowPage() {
       })
       .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Không tải được dữ liệu"); });
     void load();
+    const pollingTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 3000);
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!url || !anonKey) {
       setRealtimeStatus("Chưa cấu hình Realtime");
-      return () => { active = false; };
+      return () => { active = false; window.clearInterval(pollingTimer); };
     }
     const supabase = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const refresh = () => {
@@ -70,6 +73,7 @@ export default function TargetShowPage() {
     return () => {
       active = false;
       if (refreshTimer) window.clearTimeout(refreshTimer);
+      window.clearInterval(pollingTimer);
       localChannel?.close();
       window.removeEventListener("focus", refreshOnFocus);
       document.removeEventListener("visibilitychange", refreshOnFocus);
