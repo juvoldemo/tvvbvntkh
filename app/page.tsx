@@ -1019,7 +1019,29 @@ function formatCompactFee(value: unknown) {
 }
 
 function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, onClose }: { month: string; teamData: any; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
-  const advisors = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
+  const advisors = useMemo(() => {
+    const roster = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
+    const leaderCode = String(teamData?.leader?.code || "").trim();
+    const normalizedLeaderCode = leaderCode.toUpperCase();
+    if (!leaderCode) return roster;
+
+    const leaderPerformance = (teamData?.agents ?? []).find((item: any) =>
+      String(item.agentCode || item.advisor_code || "").trim().toUpperCase() === normalizedLeaderCode
+    );
+    const leaderIndex = roster.findIndex((item: any) =>
+      String(item.agentCode || item.advisor_code || "").trim().toUpperCase() === normalizedLeaderCode
+    );
+    const leader = {
+      ...(leaderPerformance ?? {}),
+      ...(leaderIndex >= 0 ? roster[leaderIndex] : {}),
+      agentCode: leaderCode,
+      agentName: teamData?.leader?.name || leaderPerformance?.agentName || "Trưởng nhóm",
+      isTeamLeader: true
+    };
+
+    if (leaderIndex < 0) return [leader, ...roster];
+    return roster.map((item: any, index: number) => index === leaderIndex ? leader : item);
+  }, [teamData]);
   const registeredSelectedAdvisors = registration?.selected_advisors ?? [];
   const registeredSelectedCodes = registeredSelectedAdvisors.map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean);
   const [targetView, setTargetView] = useState<"register" | "tracking">("register");
@@ -1132,20 +1154,20 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
           <label>{targetView === "tracking" ? "Mục tiêu đăng ký" : "Tiền thưởng mục tiêu"}<input className="team-target-reward-input" value={moneyInput(String(targetView === "tracking" ? trackingTarget : targetReward)) || "0"} readOnly aria-readonly="true" /></label>
         </div>
         {targetView === "register" ? <section className="team-target-roster">
-          <div><strong>Danh sách TVV của nhóm</strong><span>{selectedCodes.size}/{advisors.length} TVV dự kiến có doanh thu</span></div>
+          <div><strong>Danh sách thành viên của nhóm</strong><span>{selectedCodes.size}/{advisors.length} người dự kiến có doanh thu</span></div>
           <p className="team-target-unit-note">Đơn vị: Triệu đồng</p>
           <div className="team-target-agent-list">
             {advisors.map((agent: any) => {
               const code = String(agent.agentCode || agent.advisor_code || "").trim();
               return <label key={code || agent.agentName || agent.full_name}>
                 <input type="checkbox" checked={selectedCodes.has(code)} onChange={() => toggleAdvisor(code)} />
-                <span><b>{agent.agentName || agent.full_name || "TVV"}{agent.isNewAdvisor && <em>new</em>}</b></span>
+                <span><b>{agent.agentName || agent.full_name || "TVV"}{agent.isTeamLeader && <em>trưởng nhóm</em>}{agent.isNewAdvisor && <em>new</em>}</b></span>
                 <div className="team-target-agent-revenue-wrap"><input className="team-target-agent-revenue" value={advisorTargets[code] || ""} onChange={(event) => updateAdvisorTarget(code, event.target.value)} onFocus={() => { if (!selectedCodes.has(code)) toggleAdvisor(code); }} inputMode="numeric" placeholder="0" aria-label={`Mục tiêu doanh thu ${agent.agentName || agent.full_name || "TVV"} theo triệu`} /></div>
               </label>;
             })}
           </div>
         </section> : <section className="team-target-roster team-target-tracking">
-          <div><strong>Tiến độ TVV đã đăng ký</strong><span>{trackingRows.length} TVV</span></div>
+          <div><strong>Tiến độ thành viên đã đăng ký</strong><span>{trackingRows.length} người</span></div>
           <p className="team-target-unit-note">Theo doanh thu hiện tại / mục tiêu đăng ký</p>
           <div className="team-target-tracking-list">
             {trackingRows.map((row: any) => (
@@ -1155,7 +1177,7 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
                 <div className="team-target-tracking-meta"><span>{formatVnd(row.actual)} / {formatVnd(row.target)}</span><small>Còn {formatVnd(row.remaining)}</small></div>
               </article>
             ))}
-            {!trackingRows.length && <p className="team-target-tracking-empty">Chưa có TVV nào trong đăng ký mục tiêu.</p>}
+            {!trackingRows.length && <p className="team-target-tracking-empty">Chưa có thành viên nào trong đăng ký mục tiêu.</p>}
           </div>
         </section>}
         {message && <p className="error-list">{message}</p>}
