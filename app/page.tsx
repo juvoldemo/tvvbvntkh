@@ -906,7 +906,7 @@ export default function TvvMobilePage() {
       )}
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
       {targetModalOpen && (userProfile?.dashboard_role === "team_leader"
-        ? <TeamTargetRegistrationModal month={month} teamData={teamData} registration={teamTarget} onSaved={setTeamTarget} onClose={() => setTargetModalOpen(false)} />
+        ? <TeamTargetRegistrationModal month={month} teamData={teamData} registration={teamTarget} onSaved={(value) => setTeamTarget({ ...value, personal_advisor_targets: teamTarget?.personal_advisor_targets ?? [] })} onClose={() => setTargetModalOpen(false)} />
         : <TvvTargetRegistrationModal month={month} registration={tvvTarget} onSaved={setTvvTarget} onClose={() => setTargetModalOpen(false)} />)}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader"} hideCustomerNames={userProfile?.dashboard_role === "team_leader"} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} />
@@ -1043,6 +1043,10 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
     return roster.map((item: any, index: number) => index === leaderIndex ? leader : item);
   }, [teamData]);
   const registeredSelectedAdvisors = registration?.selected_advisors ?? [];
+  const personalTargetsByCode = useMemo(() => new Map<string, number>((registration?.personal_advisor_targets ?? []).map((item: any) => [
+    String(item.advisor_code || item.agentCode || "").trim().toUpperCase(),
+    Number(item.revenue_target ?? item.revenueTarget ?? 0) || 0
+  ])), [registration?.personal_advisor_targets]);
   const registeredSelectedCodes = registeredSelectedAdvisors.map((item: any) => String(item.advisor_code || item.agentCode || "").trim()).filter(Boolean);
   const [targetView, setTargetView] = useState<"register" | "tracking">("register");
   const [activeAdvisorTarget, setActiveAdvisorTarget] = useState(() => String(Number(registration?.active_advisor_target ?? 0) || registeredSelectedCodes.length || ""));
@@ -1070,15 +1074,20 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
     const target = Number(item.revenue_target ?? item.revenueTarget ?? 0) || 0;
     const actual = Number(agent.ip ?? agent.afyp ?? 0) || 0;
     const percent = target > 0 ? Math.min(999, Math.round((actual / target) * 100)) : 0;
+    const personalTarget = personalTargetsByCode.get(code.toUpperCase()) || 0;
+    const personalPercent = personalTarget > 0 ? Math.min(999, Math.round((actual / personalTarget) * 100)) : 0;
     return {
       code,
       name: item.full_name || item.agentName || agent.agentName || agent.full_name || "TVV",
       target,
       actual,
       percent,
-      remaining: Math.max(0, target - actual)
+      remaining: Math.max(0, target - actual),
+      personalTarget,
+      personalPercent,
+      personalRemaining: Math.max(0, personalTarget - actual)
     };
-  }).sort((a: any, b: any) => b.percent - a.percent || b.actual - a.actual || String(a.name).localeCompare(String(b.name), "vi")), [advisorByCode, registeredSelectedAdvisors]);
+  }).sort((a: any, b: any) => b.percent - a.percent || b.actual - a.actual || String(a.name).localeCompare(String(b.name), "vi")), [advisorByCode, personalTargetsByCode, registeredSelectedAdvisors]);
   const trackingTarget = trackingRows.reduce((sum: number, row: any) => sum + row.target, 0);
   const trackingActual = trackingRows.reduce((sum: number, row: any) => sum + row.actual, 0);
   const trackingPercent = trackingTarget > 0 ? Math.min(999, Math.round((trackingActual / trackingTarget) * 100)) : 0;
@@ -1175,6 +1184,11 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
                 <div className="team-target-tracking-head"><b>{row.name}</b><strong>{row.percent}%</strong></div>
                 <div className="team-target-progress" aria-label={`Tiến độ ${row.name} ${row.percent}%`}><i style={{ width: `${Math.min(100, row.percent)}%` }} /></div>
                 <div className="team-target-tracking-meta"><span>{formatVnd(row.actual)} / {formatVnd(row.target)}</span><small>Còn {formatVnd(row.remaining)}</small></div>
+                {row.personalTarget > 0 && <div className="team-target-personal-progress">
+                  <div><span>TVV tự đăng ký</span><strong>{row.personalPercent}%</strong></div>
+                  <div className="team-target-progress" aria-label={`Tiến độ mục tiêu ${row.name} tự đăng ký ${row.personalPercent}%`}><i style={{ width: `${Math.min(100, row.personalPercent)}%` }} /></div>
+                  <div className="team-target-tracking-meta"><span>{formatVnd(row.actual)} / {formatVnd(row.personalTarget)}</span><small>Còn {formatVnd(row.personalRemaining)}</small></div>
+                </div>}
               </article>
             ))}
             {!trackingRows.length && <p className="team-target-tracking-empty">Chưa có thành viên nào trong đăng ký mục tiêu.</p>}

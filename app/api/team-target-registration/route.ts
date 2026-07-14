@@ -43,6 +43,14 @@ function errorText(error: unknown, fallback: string) {
   return fallback;
 }
 
+function missingTable(error: any) {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
+
+function fallbackGroup(advisorCode: string) {
+  return `__TVV_TARGET__${advisorCode}`;
+}
+
 async function teamContext(request: NextRequest) {
   const code = userCodeFromRequest(request);
   if (!code) return { error: NextResponse.json({ error: "Chua dang nhap." }, { status: 401 }) };
@@ -62,16 +70,59 @@ export async function GET(request: NextRequest) {
   try {
     const context = await teamContext(request);
     if (context.error) return context.error;
-    const { supabase, groupName } = context;
+    const { supabase, profile, groupName } = context;
     const targetMonth = monthStart(request.nextUrl.searchParams.get("month") || "");
-    const { data, error } = await supabase
-      .from("team_target_registrations")
-      .select("*")
-      .eq("target_month", targetMonth)
-      .eq("group_name", groupName)
-      .maybeSingle();
+    const [{ data, error }, { data: teamUsers, error: teamUsersError }] = await Promise.all([
+      supabase
+        .from("team_target_registrations")
+        .select("*")
+        .eq("target_month", targetMonth)
+        .eq("group_name", groupName)
+        .maybeSingle(),
+      supabase
+        .from("authorized_users")
+        .select("advisor_code")
+        .eq("is_active", true)
+        .eq("group_name", groupName)
+    ]);
     if (error) throw error;
-    return NextResponse.json({ registration: data ?? null });
+    if (teamUsersError) throw teamUsersError;
+
+    const advisorCodes = [...new Set([
+      profile.advisor_code,
+      ...(teamUsers ?? []).map((item: any) => String(item.advisor_code || "").trim())
+    ].filter(Boolean))];
+    let personalRegistrations: any[] = [];
+    if (advisorCodes.length) {
+      const { data: personalRows, error: personalError } = await supabase
+        .from("tvv_target_registrations")
+        .select("advisor_code,advisor_name,revenue_target,updated_at")
+        .eq("target_month", targetMonth)
+        .in("advisor_code", advisorCodes);
+      if (!personalError) {
+        personalRegistrations = personalRows ?? [];
+      } else if (missingTable(personalError)) {
+        const { data: fallbackRows, error: fallbackError } = await supabase
+          .from("team_target_registrations")
+          .select("leader_code,leader_name,revenue_target,updated_at")
+          .eq("target_month", targetMonth)
+          .in("leader_code", advisorCodes)
+          .in("group_name", advisorCodes.map(fallbackGroup));
+        if (fallbackError) throw fallbackError;
+        personalRegistrations = (fallbackRows ?? []).map((item: any) => ({
+          advisor_code: item.leader_code,
+          advisor_name: item.leader_name,
+          revenue_target: item.revenue_target,
+          updated_at: item.updated_at
+        }));
+      } else {
+        throw personalError;
+      }
+    }
+
+    return NextResponse.json({
+      registration: data ? { ...data, personal_advisor_targets: personalRegistrations } : null
+    });
   } catch (error) {
     return NextResponse.json({ error: errorText(error, "Khong tai duoc dang ky muc tieu.") }, { status: 500 });
   }

@@ -19192,9 +19192,11 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 
 .team-target-modal {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: none;
+  grid-auto-rows: max-content;
   gap: 12px;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
 }
 
 .commission-included-total {
@@ -19305,7 +19307,9 @@ body .tvv-app .team-leader-calc-form input.team-ip-input::placeholder {
 .target-show-advisors > div span { display: grid; min-width: 0; gap: 2px; }
 .target-show-advisors b { overflow: hidden; color: #004b7a; font-size: 12px; line-height: 1.25; text-overflow: ellipsis; }
 .target-show-advisors small { color: #8192a2; font-size: 9px; }
-.target-show-advisors strong { flex: 0 0 auto; color: #04954c; font-size: 12px; white-space: nowrap; }
+.target-show-advisors strong { display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: 3px; color: #04954c; font-size: 12px; white-space: nowrap; }
+.target-show-advisors strong em { color: #ed7a00; font-style: normal; }
+.target-show-advisors strong i { color: #8192a2; font-style: normal; font-weight: 700; }
 .target-show-advisors > p { margin: 0; padding: 18px 10px; color: #9aa9b6; font-size: 11px; font-style: italic; text-align: center; }
 .target-show-error { width: min(1800px, 100%); margin: 0 auto 16px; padding: 12px; border-radius: 10px; background: #fff0f1; color: #c6283d; font-weight: 700; }
 .target-comparison { overflow: hidden; width: min(1800px, 100%); margin-inline: auto; border: 1px solid #d4e4f4; border-radius: 16px; background: #fff; box-shadow: 0 8px 24px rgba(15,70,110,.08); }
@@ -19615,9 +19619,6 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   display: grid;
   gap: 6px;
   min-height: 0;
-  max-height: min(300px, 34vh);
-  overflow: auto;
-  overscroll-behavior: contain;
   padding-right: 1px;
 }
 .team-target-agent-list label {
@@ -19749,9 +19750,6 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   display: grid;
   gap: 8px;
   min-height: 0;
-  max-height: min(332px, 38vh);
-  overflow: auto;
-  overscroll-behavior: contain;
   padding-right: 1px;
 }
 .team-target-tracking-list article {
@@ -19798,6 +19796,32 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   border-radius: inherit;
   background: linear-gradient(90deg, #005b8f, #00a36c);
 }
+.team-target-personal-progress {
+  display: grid;
+  gap: 7px;
+  margin-top: 3px;
+  padding-top: 10px;
+  border-top: 1px dashed #f3c486;
+}
+.team-target-personal-progress > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #d66a00;
+  font-size: var(--typo-11);
+  font-weight: 800;
+}
+.team-target-personal-progress .team-target-progress {
+  background: #fde4c2;
+}
+.team-target-personal-progress .team-target-progress i {
+  background: linear-gradient(90deg, #f29a2e, #e56f00);
+}
+.team-target-personal-progress .team-target-tracking-meta span,
+.team-target-personal-progress .team-target-tracking-meta small {
+  color: #c8670a;
+}
 .team-target-tracking-meta span,
 .team-target-tracking-meta small {
   color: #6f7f96;
@@ -19826,12 +19850,6 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   .team-target-roster > div:first-child span {
     width: 100%;
     text-align: left;
-  }
-  .team-target-agent-list {
-    max-height: min(288px, 32svh);
-  }
-  .team-target-tracking-list {
-    max-height: min(320px, 36svh);
   }
   .team-target-agent-list label {
     grid-template-columns: minmax(0, 1fr) 76px;
