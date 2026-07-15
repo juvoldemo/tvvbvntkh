@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
-import { buildGroupStarVietSummary, buildStarVietReport, type StarVietKpi05GroupRow } from "@/lib/star-viet";
-import { readStarVietRecords } from "@/lib/star-viet-data";
+import { buildStarVietGroupReport, buildStarVietReport, normalizeText } from "@/lib/star-viet";
+import { readStarVietData } from "@/lib/star-viet-data";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import type { RevenueRecord } from "@/lib/types";
@@ -109,8 +109,7 @@ export async function GET(request: NextRequest) {
     const previousMonthKey = previousMonth(month);
     const previousMonthBounds = monthBounds(previousMonthKey);
     const year = month.slice(0, 4);
-    const currentStarVietYear = currentStarVietMonth.slice(0, 4);
-    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietRecords, teamRoster, kpi05Rows] = await Promise.all([
+    const [{ data: monthRows, error: monthError }, { data: previousRows, error: previousError }, { data: yearRows, error: yearError }, allTeamRows, starVietData, teamRoster] = await Promise.all([
       supabase.from("revenue_records").select("*")
         .eq("data_month", toMonthStart(month)).eq("group_name", groupName)
         .gte("paid_date", start).lte("paid_date", end),
@@ -123,16 +122,8 @@ export async function GET(request: NextRequest) {
         supabase.from("revenue_records").select("agent_code,agent_name,group_name,paid_date,issued_date")
           .neq("data_month", "2099-01-01").eq("group_name", groupName).range(from, to)
       ),
-      readStarVietRecords(supabase, currentStarVietMonth),
-      readTeamRoster(supabase, groupName),
-      readAll<StarVietKpi05GroupRow>((from, to) => supabase
-        .from("tvv_reward_policy_records")
-        .select("data_month,reward_source,group_name,ban_name,fyp,raw_data")
-        .eq("reward_source", "kpi05")
-        .gte("data_month", `${currentStarVietYear}-01-01`)
-        .lte("data_month", `${currentStarVietYear}-12-31`)
-        .range(from, to)
-      )
+      readStarVietData(supabase, currentStarVietMonth),
+      readTeamRoster(supabase, groupName)
     ]);
     if (monthError) throw monthError;
     if (previousError) throw previousError;
@@ -243,8 +234,12 @@ export async function GET(request: NextRequest) {
     const comparison = (current: number, previous: number) => previous > 0
       ? ((current - previous) / previous) * 100
       : current > 0 ? 100 : 0;
-    const starViet = buildGroupStarVietSummary(starVietRecords, groupName, kpi05Rows);
-    const starVietRows = buildStarVietReport(starVietRecords).rows.filter((row) => row.groupName === groupName);
+    const groupReport = buildStarVietGroupReport(starVietData.groupRecords);
+    const starViet = groupReport.rows.find((row) =>
+      String(row.leaderCode).trim().toUpperCase() === advisorCode || normalizeText(row.groupName) === normalizeText(groupName)
+    ) ?? null;
+    const starVietRows = buildStarVietReport(starVietData.personalRecords).rows
+      .filter((row) => normalizeText(row.groupName) === normalizeText(groupName));
 
     return NextResponse.json({
       role: "team_leader",
@@ -272,6 +267,7 @@ export async function GET(request: NextRequest) {
       allAgents,
       starViet,
       starVietRows,
+      starVietWarning: starVietData.warning,
       contracts,
       yearContracts,
       yearRevenue: yearContracts.filter((row: any) => isCountedRevenueRecord(row))

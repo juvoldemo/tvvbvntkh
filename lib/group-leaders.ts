@@ -1,5 +1,6 @@
 const GROUP_LEADER_BY_NORMALIZED_NAME: Record<string, string> = {
   "tam phat": "Lưu Thanh Sơn",
+  "tam duc": "Cao Thị Thanh Mai",
   "hoang phat": "Huỳnh Thị Vân Anh",
   "nha trang 5": "Lương Thị Thái",
   "quyet thang": "Phạm Thu",

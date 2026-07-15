@@ -95,7 +95,9 @@ create table if not exists monthly_targets (
 create table if not exists star_viet_records (
   id uuid primary key default gen_random_uuid(),
   data_year int not null,
-  source text not null check (source in ('kpi04', 'bc02')),
+  data_month date,
+  source text not null check (source in ('kpi04', 'bc02', 'kpi05_group', 'snapshot_agent', 'snapshot_group')),
+  agent_code text,
   agent_name text not null,
   group_name text,
   afyp numeric default 0,
@@ -104,9 +106,18 @@ create table if not exists star_viet_records (
   uploaded_at timestamptz default now()
 );
 
+alter table star_viet_records add column if not exists data_month date;
+alter table star_viet_records add column if not exists agent_code text;
+alter table star_viet_records drop constraint if exists star_viet_records_source_check;
+alter table star_viet_records add constraint star_viet_records_source_check
+  check (source in ('kpi04', 'bc02', 'kpi05_group', 'snapshot_agent', 'snapshot_group'));
+
 create index if not exists idx_star_viet_records_year on star_viet_records(data_year);
 create index if not exists idx_star_viet_records_source on star_viet_records(source);
+create index if not exists idx_star_viet_records_month on star_viet_records(data_month);
 create index if not exists idx_star_viet_records_agent on star_viet_records(agent_name);
+create index if not exists idx_star_viet_records_agent_code on star_viet_records(agent_code);
+create index if not exists idx_star_viet_records_snapshot on star_viet_records(source, data_year, data_month desc);
 
 create table if not exists tvv_reward_policy_records (
   id uuid primary key default gen_random_uuid(),

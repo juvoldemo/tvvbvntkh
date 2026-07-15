@@ -145,6 +145,17 @@ function formatDateVi(value: string | null | undefined) {
   return `${day}/${month}/${year}`;
 }
 
+function parseDateViInput(value: string) {
+  const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return "";
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return "";
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 function monthLabel(month: string) {
   const [year, monthNo] = month.slice(0, 7).split("-");
   if (!year || !monthNo) return month;
@@ -4202,11 +4213,14 @@ function UploadPanel({ month, uploader, onUploaded }: { month: string; uploader:
 }
 
 function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; uploader: CurrentUploader | null; onUploaded: () => void }) {
-  const [files, setFiles] = useState<{ kpi04: File | null; bc02: File | null }>({ kpi04: null, bc02: null });
+  type SnapshotSource = "snapshot_agent" | "snapshot_group";
+  const [files, setFiles] = useState<Record<SnapshotSource, File | null>>({ snapshot_agent: null, snapshot_group: null });
   const [results, setResults] = useState<Record<string, any>>({});
   const [busySource, setBusySource] = useState<string>("");
+  const [asOfDateText, setAsOfDateText] = useState(year === 2026 ? "12/07/2026" : `01/01/${year}`);
+  const asOfDate = parseDateViInput(asOfDateText);
 
-  async function send(source: "kpi04" | "bc02", mode: "preview" | "commit") {
+  async function send(source: SnapshotSource, mode: "preview" | "commit") {
     const file = files[source];
     if (!file) return;
     setBusySource(source);
@@ -4214,6 +4228,7 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
       const body = new FormData();
       body.set("year", String(year));
       body.set("source", source);
+      body.set("asOfDate", asOfDate);
       body.set("mode", mode);
       body.set("uploadedBy", uploader?.code ?? "");
       body.set("uploadedByName", uploader?.name ?? "");
@@ -4230,33 +4245,40 @@ function StarVietUploadPanel({ year, uploader, onUploaded }: { year: number; upl
     }
   }
 
-  function uploadBlock(source: "kpi04" | "bc02", title: string, description: string) {
+  function uploadBlock(source: SnapshotSource, title: string, description: string) {
     const result = results[source];
     const busy = busySource === source;
+    const label = source === "snapshot_agent" ? "TVV" : "trưởng nhóm";
     return (
       <div className="star-upload-block">
         <div>
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
-        <label><span className="label">File CSV/XLSX</span><input type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => setFiles((current) => ({ ...current, [source]: event.target.files?.[0] ?? null }))} /></label>
+        <label><span className="label">File Sao Việt {label}</span><input type="file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onChange={(event) => setFiles((current) => ({ ...current, [source]: event.target.files?.[0] ?? null }))} /></label>
         <div className="star-upload-actions">
-          <button disabled={!files[source] || busy} onClick={() => send(source, "preview")}>Kiểm tra</button>
-          <button disabled={!files[source] || busy || result?.errors?.length} onClick={() => send(source, "commit")}>Ghi đè {source.toUpperCase()}</button>
+          <button disabled={!files[source] || busy || !asOfDate} onClick={() => send(source, "preview")}>Kiểm tra</button>
+          <button disabled={!files[source] || busy || !asOfDate || result?.errors?.length} onClick={() => send(source, "commit")}>+ Thêm dữ liệu {label}</button>
         </div>
         {result?.error && <p className="error-list">{result.error}</p>}
         {result?.errors?.length > 0 && <ul className="error-list">{result.errors.slice(0, 8).map((err: any, index: number) => <li key={index}>Dòng {err.row ?? "-"}: {err.message}</li>)}</ul>}
-        {result?.ok && <p className="success">Hợp lệ: {result.rowCount} dòng, AFYP {formatCompactVnd(result.totalAfyp)}.</p>}
+        {result?.ok && <p className="success">Hợp lệ: {result.rowCount} dòng, FYPKTM {formatCompactVnd(result.totalAfyp)}. Ngày chốt {formatDateVi(asOfDate)}.</p>}
       </div>
     );
   }
 
   return (
     <div className="panel star-upload-panel admin-star-panel">
-      <div className="panel-header"><h2>Upload dữ liệu Sao Việt</h2><span>Năm {year}</span></div>
+      <div className="panel-header"><h2>Thêm dữ liệu gốc Sao Việt</h2><span>{uploader?.name || "-"}</span></div>
+      <label className="star-snapshot-date">
+        <span className="label">Dữ liệu đã chốt đến ngày</span>
+        <input type="text" inputMode="numeric" maxLength={10} placeholder="dd/mm/yyyy" value={asOfDateText} onChange={(event) => { setAsOfDateText(event.target.value); setResults({}); }} />
+        {!asOfDate && <small>Nhập ngày theo định dạng dd/mm/yyyy.</small>}
+      </label>
+      <p className="star-snapshot-note">Snapshot đã gồm cả bộ chưa phát hành. BC02 chỉ được cộng khi ngày hiệu lực lớn hơn ngày chốt.</p>
       <div className="star-upload-grid">
-        {uploadBlock("kpi04", "File KPI04 đã chốt", "Dữ liệu đã chốt từ T12/2025 đến tháng liền trước. Sao Việt tính theo cột FYP.")}
-        {uploadBlock("bc02", "File BC02 tháng hiện tại", "Dữ liệu tạm tháng hiện tại. Tự loại trừ hồ sơ hoàn/hủy theo trạng thái.")}
+        {uploadBlock("snapshot_agent", "Sao Việt TVV", "Lấy cột Tổng FYPKTM làm số gốc cho từng mã TVV.")}
+        {uploadBlock("snapshot_group", "Sao Việt trưởng nhóm", "Lấy cột Tổng FYPKTM làm số gốc của nhóm và áp dụng tỷ lệ thừa hưởng.")}
       </div>
     </div>
   );

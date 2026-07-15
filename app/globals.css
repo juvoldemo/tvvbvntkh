@@ -20147,3 +20147,28 @@ body .tvv-app {
   background: #fef3c7 !important;
   color: #b45309 !important;
 }
+.star-snapshot-date {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px);
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.star-snapshot-date input {
+  border: 1px solid #cbdcf8;
+  border-radius: 8px;
+  background: #fff;
+  padding: 9px 10px;
+}
+
+.star-snapshot-date small {
+  color: #c2410c;
+  font-size: 11px;
+}
+
+.star-snapshot-note {
+  margin: 0 0 14px;
+  color: #526b8e;
+  font-size: 12px;
+  line-height: 1.45;
+}

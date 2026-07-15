@@ -7,8 +7,9 @@ import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { RevenueRecord } from "@/lib/types";
 import { calculateCompetitionReward } from "@/src/lib/competition/competitionRuleEngine";
-import { buildGroupStarVietSummary, buildStarVietReport } from "@/lib/star-viet";
-import { readStarVietRecords } from "@/lib/star-viet-data";
+import { buildStarVietGroupReport, buildStarVietReport } from "@/lib/star-viet";
+import { readStarVietData } from "@/lib/star-viet-data";
+import { groupLeaderName } from "@/lib/group-leaders";
 
 type RewardParticipant = {
   code: string;
@@ -184,12 +185,12 @@ export async function GET(request: NextRequest) {
     const previousMonth = previousMonthKey(month);
     const dataStartMonth = previousMonth < yearStart ? previousMonth : yearStart;
     const supabase = getSupabaseAdmin();
-    const [revenueRows, policyRows, advisorProfiles, programs, starVietRecords] = await Promise.all([
+    const [revenueRows, policyRows, advisorProfiles, programs, starVietData] = await Promise.all([
       readAll((from, to) => supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", `${dataStartMonth}-01`).lte("paid_date", `${year}-12-31`).range(from, to)),
       readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*").gte("data_month", `${dataStartMonth}-01`).lte("data_month", `${year}-12-31`).range(from, to)),
       readAll((from, to) => supabase.from("authorized_users").select("advisor_code,full_name,start_date,advisor_position,position_effective_date,is_active").range(from, to)),
       readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)),
-      readStarVietRecords(supabase, month)
+      readStarVietData(supabase, month)
     ]);
 
     const contracts = deduplicateRevenue(revenueRows as RevenueRecord[]);
@@ -266,7 +267,8 @@ export async function GET(request: NextRequest) {
     });
     const tvvCompetitionPrograms = visiblePrograms.map((program: any) => aggregateCompetitionTvv(program, competitionContracts));
     const groupCompetitionPrograms = visiblePrograms.map((program: any) => aggregateCompetitionGroups(program, competitionContracts));
-    const starVietReport = buildStarVietReport(starVietRecords);
+    const starVietReport = buildStarVietReport(starVietData.personalRecords);
+    const starVietGroupReport = buildStarVietGroupReport(starVietData.groupRecords);
     const starVietTvvProgram = toProgram("star-viet-tvv", `Sao Việt TVV ${year}`, `Lũy kế đến ${period === "quarter" ? `quý ${selectedRange.quarter}` : `tháng ${month.slice(5, 7)}`}/${year}`, starVietReport.rows
       .filter((row: any) => row.currentRank !== "Chưa đạt" || Number(row.totalAfyp ?? 0) > 0)
       .map((row: any) => ({
@@ -280,12 +282,11 @@ export async function GET(request: NextRequest) {
         reward: 0,
         detail: `${row.currentRank} · ${row.currentTickets} vé · AFYP ${Math.round(Number(row.totalAfyp ?? 0)).toLocaleString("vi-VN")} đ`
       })));
-    const starVietGroupProgram = toProgram("star-viet-group", `Sao Việt Trưởng nhóm ${year}`, `Lũy kế đến ${period === "quarter" ? `quý ${selectedRange.quarter}` : `tháng ${month.slice(5, 7)}`}/${year}`, groups
-      .map((groupName) => buildGroupStarVietSummary(starVietRecords, groupName, policyRows))
+    const starVietGroupProgram = toProgram("star-viet-group", `Sao Việt Trưởng nhóm ${year}`, `Lũy kế đến ${period === "quarter" ? `quý ${selectedRange.quarter}` : `tháng ${month.slice(5, 7)}`}/${year}`, starVietGroupReport.rows
       .filter((row: any) => row.currentRank !== "Chưa đạt" || Number(row.totalAfyp ?? 0) > 0)
       .map((row: any) => ({
         code: "",
-        name: String(row.groupName || ""),
+        name: String(row.leaderName || groupLeaderName(row.groupName) || "-"),
         groupName: String(row.groupName || ""),
         contractCount: 0,
         ip: 0,

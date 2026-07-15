@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { parseStarVietFile, type StarVietSource } from "@/lib/star-viet";
+import { parseSaoVietKPI05Group, parseSaoVietSnapshot, parseStarVietFile, type StarVietSnapshotSource, type StarVietSource } from "@/lib/star-viet";
 import { getUploadUserName } from "@/lib/upload-users";
 
 function getErrorMessage(error: unknown) {
@@ -15,7 +15,11 @@ function getErrorMessage(error: unknown) {
 }
 
 function isSource(value: string): value is StarVietSource {
-  return value === "kpi04" || value === "bc02";
+  return value === "kpi04" || value === "bc02" || value === "kpi05_group" || value === "snapshot_agent" || value === "snapshot_group";
+}
+
+function isSnapshotSource(value: StarVietSource): value is StarVietSnapshotSource {
+  return value === "snapshot_agent" || value === "snapshot_group";
 }
 
 export async function POST(request: NextRequest) {
@@ -24,6 +28,8 @@ export async function POST(request: NextRequest) {
     const mode = String(formData.get("mode") || "preview");
     const sourceValue = String(formData.get("source") || "");
     const year = Number(formData.get("year") || new Date().getFullYear());
+    const month = String(formData.get("month") || "").slice(0, 7);
+    const asOfDate = String(formData.get("asOfDate") || "").slice(0, 10);
     const uploadPassword = String(formData.get("uploadPassword") || "").trim();
     const uploadedByCode = String(formData.get("uploadedBy") || uploadPassword || "").trim();
     const uploadedByName = getUploadUserName(uploadedByCode) || getUploadUserName(uploadPassword) || String(formData.get("uploadedByName") || "").trim();
@@ -35,6 +41,12 @@ export async function POST(request: NextRequest) {
     if (!Number.isFinite(year) || year < 2020 || year > 2100) {
       return NextResponse.json({ error: "Năm dữ liệu Sao Việt không hợp lệ." }, { status: 400 });
     }
+    if (sourceValue === "kpi05_group" && !/^\d{4}-\d{2}$/.test(month)) {
+      return NextResponse.json({ error: "Tháng dữ liệu KPI05 nhóm không hợp lệ." }, { status: 400 });
+    }
+    if (isSnapshotSource(sourceValue) && (!/^\d{4}-\d{2}-\d{2}$/.test(asOfDate) || Number(asOfDate.slice(0, 4)) !== year)) {
+      return NextResponse.json({ error: "Ngày chốt Sao Việt không hợp lệ hoặc không cùng năm dữ liệu." }, { status: 400 });
+    }
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "Chưa chọn file Sao Việt." }, { status: 400 });
     }
@@ -42,7 +54,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Không xác định được người upload. Vui lòng nhập lại mật khẩu upload." }, { status: 401 });
     }
 
-    const parsed = parseStarVietFile(await file.arrayBuffer(), file.name, sourceValue, year);
+    const fileBuffer = await file.arrayBuffer();
+    const parsed = sourceValue === "kpi05_group"
+      ? parseSaoVietKPI05Group(fileBuffer, file.name, month)
+      : isSnapshotSource(sourceValue)
+        ? parseSaoVietSnapshot(fileBuffer, file.name, sourceValue, asOfDate)
+        : parseStarVietFile(fileBuffer, file.name, sourceValue, year);
     const hasErrors = parsed.errors.length > 0;
 
     if (mode !== "commit" || hasErrors) {
@@ -57,11 +74,15 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const { error: deleteError } = await supabase
+    const deleteQuery = supabase
       .from("star_viet_records")
       .delete()
-      .eq("data_year", year)
       .eq("source", sourceValue);
+    const { error: deleteError } = sourceValue === "kpi05_group"
+      ? await deleteQuery.eq("data_month", `${month}-01`)
+      : isSnapshotSource(sourceValue)
+        ? await deleteQuery.eq("data_month", asOfDate)
+        : await deleteQuery.eq("data_year", year);
     if (deleteError) throw new Error(getErrorMessage(deleteError));
 
     const rows = parsed.records.map((record) => ({
@@ -81,6 +102,7 @@ export async function POST(request: NextRequest) {
       upload: {
         source: sourceValue,
         data_year: year,
+        as_of_date: isSnapshotSource(sourceValue) ? asOfDate : null,
         uploaded_by: uploadedByCode || null,
         uploaded_by_name: uploadedByName || null,
         file_name: file.name,

@@ -1288,7 +1288,7 @@ function TeamLeaderOverview({ data, contestEstimate, currentTeamAdvisorCount, le
     </section>
 
     <ContestPreview estimate={contestEstimate} onAll={onOpenContests} />
-    <TeamLeaderStarJourney row={data?.starViet} />
+    <TeamLeaderStarJourney row={data?.starViet} warning={data?.starVietWarning} />
 
     <LeaderboardPreview leaderboard={leaderboard} onOpen={onOpenLeaderboard} />
     {showTeamActivity && typeof document !== "undefined" && createPortal(
@@ -1499,7 +1499,8 @@ function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthl
   </div>;
 }
 
-function TeamLeaderStarJourney({ row }: { row?: any }) {
+function TeamLeaderStarJourney({ row, warning }: { row?: any; warning?: string | null }) {
+  if (warning) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>{warning}</p></section>;
   if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của nhóm trong tháng này.</p></section>;
   const totalFyp = Number(row.totalAfyp || 0);
   const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));

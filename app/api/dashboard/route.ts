@@ -4,8 +4,8 @@ import type { DashboardFilters, MonthlyTarget, RevenueRecord } from "@/lib/types
 import { buildAfypPlanSummary, buildAfypPlanTable } from "@/lib/afyp-plan";
 import { applyFilters, buildAdsDebugReport, buildAdsReport, buildAgentRanking, buildGroupRanking, buildOverview, buildStatusReport, buildTimeSeries, buildYearPlanSeries, countDistinct, countDistinctActiveAgents, dedupeRevenueRecordsByContract, filterOptions, isCountedRevenueRecord, sortContractDetails, sumAfyp, sumIp } from "@/lib/reports";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
-import { buildStarVietReport, normalizeText, type StarVietRecord } from "@/lib/star-viet";
-import { readStarVietRecords } from "@/lib/star-viet-data";
+import { buildStarVietGroupReport, buildStarVietReport, normalizeText } from "@/lib/star-viet";
+import { readStarVietData, type StarVietData } from "@/lib/star-viet-data";
 import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads-plan";
 import { buildAdoReport } from "@/lib/ado-report";
 import { userCodeFromRequest } from "@/lib/user-auth";
@@ -168,14 +168,16 @@ export async function GET(request: NextRequest) {
     const allPreviousRecords = withDisplayContractNo((previousRecords ?? []) as RevenueRecord[]);
     const allPreviousMonthRecords = withDisplayContractNo((previousMonthRecords ?? []) as RevenueRecord[]);
     const allYearRecords = dedupeRevenueRecordsByContract(withDisplayContractNo((yearRecords ?? []) as RevenueRecord[]));
-    let starVietRecords: StarVietRecord[] = [];
+    let starVietData: StarVietData | null = null;
     let starVietWarning: string | null = null;
     try {
-      starVietRecords = await readStarVietRecords(supabase, month.slice(0, 7), signedInAdvisorCode);
+      starVietData = await readStarVietData(supabase, month.slice(0, 7));
+      starVietWarning = starVietData.warning;
     } catch (error) {
       starVietWarning = error instanceof Error ? error.message : "Không tải được dữ liệu Sao Việt.";
     }
-    const starVietReport = buildStarVietReport(starVietRecords);
+    const starVietReport = buildStarVietReport(starVietData?.personalRecords ?? []);
+    const starVietGroupReport = buildStarVietGroupReport(starVietData?.groupRecords ?? []);
     let currentStarViet = signedInAdvisorCode
       ? starVietReport.rows.find((row) => String(row.agentCode).trim().toUpperCase() === signedInAdvisorCode) ?? null
       : null;
@@ -237,6 +239,7 @@ export async function GET(request: NextRequest) {
       ads: buildAdsReport(countedRecords),
       ado: buildAdoReport(allYearRecords, month, filters),
       starViet: starVietReport,
+      starVietGroup: starVietGroupReport,
       currentStarViet,
       starVietWarning,
       competitionContracts: allRecords,
