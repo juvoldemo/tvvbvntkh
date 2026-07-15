@@ -24,7 +24,7 @@ type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
 type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
-const PROTECTED_ADMIN_TABS: AdminTab[] = ["analytics", "data", "archive", "access"];
+const PROTECTED_ADMIN_TABS: AdminTab[] = ["analytics", "data", "targets", "archive", "access"];
 
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
@@ -162,8 +162,8 @@ export default function AdminDataPage() {
   }, [targetMonth]);
 
   useEffect(() => {
-    if (authenticated && activeTab === "targets") loadTargetRegistrations();
-  }, [activeTab, authenticated, loadTargetRegistrations]);
+    if (authenticated && accessUnlocked && activeTab === "targets") loadTargetRegistrations();
+  }, [activeTab, authenticated, accessUnlocked, loadTargetRegistrations]);
 
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true);
@@ -325,14 +325,14 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
         <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
-        <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => setActiveTab("targets")}><Target size={17} />Mục tiêu</button>
+        <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
       </nav>
 
       <section className="admin-panel-area">
         {PROTECTED_ADMIN_TABS.includes(activeTab) && !accessUnlocked && <article className="admin-card admin-access-lock">
-          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Analytics, Dữ liệu, Kho tài liệu và Danh sách truy cập.</p></div></div>
+          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Analytics, Dữ liệu, Mục tiêu, Kho tài liệu và Danh sách truy cập.</p></div></div>
           <form onSubmit={unlockAccess}>
             <label>Mật khẩu<input type="password" value={accessPassword} onChange={(event) => { setAccessPassword(event.target.value); setAccessError(""); }} autoFocus autoComplete="current-password" required placeholder="Nhập mật khẩu" /></label>
             {accessError && <div className="admin-message error">{accessError}</div>}
@@ -379,7 +379,7 @@ export default function AdminDataPage() {
 
         {activeTab === "data" && accessUnlocked && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
 
-        {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
+        {activeTab === "targets" && accessUnlocked && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
 
         {activeTab === "archive" && accessUnlocked && <ArchiveAdminPanel
           forms={archiveForms}

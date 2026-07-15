@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
+import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
+
+function canAccess(request: NextRequest) {
+  return isAdminRequest(request) && isAccessRequest(request);
+}
 
 export async function GET(request: NextRequest) {
   try {
-    if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
+    if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
     const month = String(request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7)).slice(0, 7);
     const { data, error } = await getSupabaseAdmin()
       .from("team_target_registrations")
@@ -20,7 +25,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    if (!isAdminRequest(request)) return NextResponse.json({ error: "Chua dang nhap admin." }, { status: 401 });
+    if (!canAccess(request)) return NextResponse.json({ error: "Chua xac thuc noi dung bao mat." }, { status: 401 });
     const id = String(request.nextUrl.searchParams.get("id") || "").trim();
     if (!id) return NextResponse.json({ error: "Thieu ID dang ky muc tieu." }, { status: 400 });
     const { error } = await getSupabaseAdmin()

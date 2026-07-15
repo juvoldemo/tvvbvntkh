@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "crypto";
 import { NextRequest } from "next/server";
 
 export const ADMIN_ACCESS_COOKIE = "bvnt_admin_access_session";
-const accessPassword = () => process.env.ADMIN_ACCESS_PASSWORD || "159357";
+const accessPassword = () => process.env.ADMIN_ACCESS_PASSWORD || "0000";
 const digest = (value: string) => createHash("sha256").update(value).digest();
 
 export function isValidAccessPassword(value: string) {
