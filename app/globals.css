@@ -20172,3 +20172,42 @@ body .tvv-app {
   font-size: 12px;
   line-height: 1.45;
 }
+
+/* Tablet shells should use the whole device viewport instead of the 430px phone frame. */
+@media (min-width: 768px) and (max-width: 1366px) {
+  .tvv-splash-screen,
+  body .tvv-app,
+  body .app,
+  body .dashboard-page {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    margin-inline: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .tvv-splash-screen {
+    position: fixed !important;
+    inset: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+
+  body .tvv-app .tvv-bottom-nav,
+  body .dashboard-page .dashboard-tabs {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  body .dashboard-page .content {
+    width: calc(100% - 32px) !important;
+    max-width: none !important;
+    margin-inline: 16px !important;
+  }
+
+  body .mobile-options-backdrop {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

@@ -400,11 +400,20 @@ export default function TvvMobilePage() {
   useEffect(() => {
     if (!signedIn || !userProfile?.advisor_code) return;
     const receiveIllustrationEvent = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin || event.data?.type !== "bvnt-analytics" || event.data?.eventName !== "summary_export") return;
+      if (event.origin !== window.location.origin || event.data?.type !== "bvnt-analytics") return;
       const sessionId = analyticsSessionRef.current;
       if (!sessionId) return;
-      const source = event.data.source === "riders" ? "sản phẩm bổ trợ" : "minh họa chính";
-      void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "action", sessionId, tabName: "illustration", actionName: `Xuất tóm tắt - ${source}` }) }).catch(() => undefined);
+      let actionName = "";
+      if (event.data.eventName === "summary_export") {
+        const source = event.data.source === "riders" ? "sản phẩm bổ trợ" : "minh họa chính";
+        actionName = `Xuất tóm tắt - ${source}`;
+      } else if (event.data.eventName === "illustration_premium") {
+        const annualPremium = Math.min(1_000_000_000_000, Math.max(0, Math.round(Number(event.data.annualPremium) || 0)));
+        if (!annualPremium) return;
+        actionName = `Minh họa mức phí ${formatVnd(annualPremium)}/năm`;
+      }
+      if (!actionName) return;
+      void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "action", sessionId, tabName: "illustration", actionName }) }).catch(() => undefined);
     };
     window.addEventListener("message", receiveIllustrationEvent);
     return () => window.removeEventListener("message", receiveIllustrationEvent);
@@ -2552,7 +2561,7 @@ function IllustrationView({ advisor, contracts, estimate, onOpenCalculator }: an
 }
 
 function IllustrationTab({ active, premiumText = "" }: { active: boolean; premiumText?: string }) {
-  const minhHoaVersion = "20260706-compact-relation-card";
+  const minhHoaVersion = "20260716-swap-rate-columns";
   const src = `/minhhoa2/index.html?embedded=1&v=${minhHoaVersion}${premiumText ? `&annualPremium=${encodeURIComponent(premiumText)}` : ""}`;
   return (
     <section className={`tvv-illustration-embed${active ? " active" : ""}`} aria-hidden={!active}>

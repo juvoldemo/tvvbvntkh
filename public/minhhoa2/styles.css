@@ -8575,3 +8575,82 @@ body.terms-open .tab-panel,
 body.terms-open .bottom-actions {
   visibility: hidden !important;
 }
+
+/* Use the complete iframe viewport on iPad/tablet instead of the 430px phone shell. */
+@media (min-width: 768px) and (max-width: 1366px) {
+  html,
+  body {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body:not(.riders-mode) .app-shell,
+  body.riders-mode .app-shell {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    margin: 0 !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.riders-mode) #illustrationForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    align-items: start;
+  }
+
+  body:not(.riders-mode) #illustrationForm > .policy-owner-relation-card,
+  body:not(.riders-mode) #illustrationForm > .actions {
+    grid-column: 1 / -1;
+  }
+
+  body:not(.riders-mode) .panel,
+  body:not(.riders-mode) .results {
+    padding: 14px 12px 12px;
+  }
+
+  body:not(.riders-mode) .results {
+    margin-top: 16px;
+  }
+
+  .summary-preview-screen {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 20px !important;
+  }
+
+  .summary-preview-shell {
+    width: 100% !important;
+    max-width: 960px !important;
+    margin-inline: auto !important;
+    gap: 16px;
+  }
+
+  .summary-preview-stage {
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .summary-preview-stage img,
+  .addon-benefit-preview-page img {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+
+  .summary-preview-actions {
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .summary-action-button {
+    min-height: 44px;
+  }
+}

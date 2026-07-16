@@ -3468,14 +3468,14 @@ function refreshIllustration() {
     updateLifeCarePremium();
     renderLifeCareBenefits();
     updateSummaryExportAvailability();
-    return;
+    return true;
   }
 
   if (!form.checkValidity()) {
     const invalidField = form.querySelector(":invalid");
     renderPendingResults(invalidField?.validationMessage || "Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin minh há»a.");
     updateSummaryExportAvailability();
-    return;
+    return false;
   }
 
   if (selectedMainProduct === "ATPN" && !getAtpnTables().loaded) {
@@ -3484,18 +3484,29 @@ function refreshIllustration() {
       : "Äang táº£i dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn...";
     renderPendingResults(message);
     updateSummaryExportAvailability();
-    return;
+    return false;
   }
 
   const input = readInput();
   const results = buildComparableIllustration(input);
   renderResults(results, input);
   updateSummaryExportAvailability();
+  return true;
+}
+
+function trackIllustrationPremium() {
+  const annualPremium = moneyValue("annualPremium");
+  if (!annualPremium || !window.parent || window.parent === window) return;
+  window.parent.postMessage({
+    type: "bvnt-analytics",
+    eventName: "illustration_premium",
+    annualPremium
+  }, window.location.origin);
 }
 
 document.getElementById("illustrationForm").addEventListener("submit", (event) => {
   event.preventDefault();
-  refreshIllustration();
+  if (refreshIllustration()) trackIllustrationPremium();
 });
 
 document.getElementById("illustrationForm").addEventListener("input", () => {
@@ -5017,18 +5028,31 @@ function renderDashboardSummaryCanvas(snapshot) {
   }
 
   function heading(title, y, glyph = "âœ“") {
+    const headingText = normalizeCanvasText(title).toUpperCase();
+    const fontSize = 28;
+    const fontWeight = 900;
+    ctx.font = `${fontWeight} ${fontSize}px ${SUMMARY_FONT_FAMILY}`;
+    const titleWidth = Math.min(ctx.measureText(headingText).width, 560);
+    const iconWidth = 60;
+    const iconGap = 18;
+    const groupWidth = iconWidth + iconGap + titleWidth;
+    const groupStart = (canvas.width - groupWidth) / 2;
+    const lineGap = 22;
+    const lineStart = margin + 20;
+    const lineEnd = canvas.width - margin - 20;
+
     ctx.strokeStyle = "#a9c4ed";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(margin + 230, y + 24);
-    ctx.lineTo(margin + 322, y + 24);
-    ctx.moveTo(canvas.width - margin - 322, y + 24);
-    ctx.lineTo(canvas.width - margin - 230, y + 24);
+    ctx.moveTo(lineStart, y + 24);
+    ctx.lineTo(Math.max(lineStart, groupStart - lineGap), y + 24);
+    ctx.moveTo(Math.min(lineEnd, groupStart + groupWidth + lineGap), y + 24);
+    ctx.lineTo(lineEnd, y + 24);
     ctx.stroke();
-    icon(canvas.width / 2 - 176, y + 24, colors.blue, glyph);
-    drawText(ctx, normalizeCanvasText(title).toUpperCase(), canvas.width / 2 - 132, y + 4, {
-      size: 28,
-      weight: 900,
+    icon(groupStart + iconWidth / 2, y + 24, colors.blue, glyph);
+    drawText(ctx, headingText, groupStart + iconWidth + iconGap, y + 4, {
+      size: fontSize,
+      weight: fontWeight,
       color: colors.blue,
       fitWidth: 560,
       minSize: 22
@@ -5058,14 +5082,20 @@ function renderDashboardSummaryCanvas(snapshot) {
   let y = 126;
   const headerCardH = snapshot.isPolicyOwnerSameAsInsured ? 112 : 148;
   card(margin, y, contentW, headerCardH, 16);
-  icon(margin + 54, y + headerCardH / 2, colors.blue, "●", true);
+  const headerColW = contentW / 3;
+  const headerColStarts = [margin, margin + headerColW, margin + headerColW * 2];
+  const headerIconOffset = 46;
+  const headerTextOffset = 88;
+  const headerTextWidth = headerColW - headerTextOffset - 18;
+  const headerCenterY = y + headerCardH / 2;
+  icon(headerColStarts[0] + headerIconOffset, headerCenterY, colors.blue, "●", true);
   const headerInsured = snapshot.insuredPerson || { name: snapshot.customerName };
   const headerOwner = snapshot.policyOwner || headerInsured;
-  const personX = margin + 106;
-  const personW = 330;
+  const personX = headerColStarts[0] + headerTextOffset;
+  const personW = headerTextWidth;
   if (snapshot.isPolicyOwnerSameAsInsured) {
-    drawText(ctx, "BMBH/N\u0110BH", personX, y + 30, { size: 19, weight: 900, color: colors.blue });
-    drawText(ctx, headerInsured.name || snapshot.customerName, personX, y + 60, { size: 30, weight: 900, color: colors.ink, fitWidth: personW, minSize: 23 });
+    drawText(ctx, "BMBH/N\u0110BH", personX, headerCenterY - 30, { size: 19, weight: 900, color: colors.blue });
+    drawText(ctx, headerInsured.name || snapshot.customerName, personX, headerCenterY, { size: 30, weight: 900, color: colors.ink, fitWidth: personW, minSize: 20 });
   } else {
     drawText(ctx, "N\u0110BH", personX, y + 22, { size: 18, weight: 900, color: colors.blue });
     drawText(ctx, headerInsured.name || snapshot.customerName, personX + 76, y + 18, { size: 26, weight: 900, color: colors.ink, fitWidth: personW - 76, minSize: 20 });
@@ -5078,20 +5108,20 @@ function renderDashboardSummaryCanvas(snapshot) {
   ctx.strokeStyle = colors.line;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(margin + 470, y + 26);
-  ctx.lineTo(margin + 470, y + headerCardH - 26);
-  ctx.moveTo(margin + 770, y + 26);
-  ctx.lineTo(margin + 770, y + headerCardH - 26);
+  ctx.moveTo(headerColStarts[1], y + 26);
+  ctx.lineTo(headerColStarts[1], y + headerCardH - 26);
+  ctx.moveTo(headerColStarts[2], y + 26);
+  ctx.lineTo(headerColStarts[2], y + headerCardH - 26);
   ctx.stroke();
-  icon(margin + 522, y + headerCardH / 2, colors.blue, "✓");
-  drawText(ctx, "PH\u00cd B\u1ea2O HI\u1ec2M", margin + 574, y + headerCardH / 2 - 28, { size: 18, weight: 800, color: colors.blue });
-  drawText(ctx, `${formatVND(totalAnnualPremium)} \u0111/n\u0103m`, margin + 574, y + headerCardH / 2, { size: 25, weight: 900, color: colors.blue, fitWidth: 180, minSize: 19 });
-  icon(margin + 820, y + headerCardH / 2, colors.gold, "≈");
-  drawText(ctx, `${formatVND(Math.ceil(totalAnnualPremium / 365))} \u0111/ng\u00e0y`, margin + 870, y + headerCardH / 2 - 10, {
+  icon(headerColStarts[1] + headerIconOffset, headerCenterY, colors.blue, "✓");
+  drawText(ctx, "PH\u00cd B\u1ea2O HI\u1ec2M", headerColStarts[1] + headerTextOffset, headerCenterY - 28, { size: 18, weight: 800, color: colors.blue });
+  drawText(ctx, `${formatVND(totalAnnualPremium)} \u0111/n\u0103m`, headerColStarts[1] + headerTextOffset, headerCenterY, { size: 25, weight: 900, color: colors.blue, fitWidth: headerTextWidth, minSize: 18 });
+  icon(headerColStarts[2] + headerIconOffset, headerCenterY, colors.gold, "≈");
+  drawText(ctx, `${formatVND(Math.ceil(totalAnnualPremium / 365))} \u0111/ng\u00e0y`, headerColStarts[2] + headerTextOffset, headerCenterY - 10, {
     size: 25,
     weight: 900,
     color: colors.gold,
-    fitWidth: 140,
+    fitWidth: headerTextWidth,
     minSize: 18
   });
 
@@ -5148,20 +5178,20 @@ function renderDashboardSummaryCanvas(snapshot) {
     card(x, y, protectW, protectH, 16, grad, "rgba(255,255,255,0.2)");
     icon(x + 70, y + 52, item[2], item[4], true);
     wrapText(ctx, item[0], x + 116, y + 34, protectW - 146, 22, { size: 20, weight: 900, color: "#fff" });
-    moneyStack(item[1], x + protectW / 2, y + 98, { size: 50, unitSize: 21, unitOffset: 54, fitWidth: protectW - 46 });
+    const valueCenterX = x + protectW / 2;
+    const valueBlockTop = y + 84;
+    moneyStack(item[1], valueCenterX, valueBlockTop, {
+      size: 50,
+      unitSize: 21,
+      unitOffset: 48,
+      fitWidth: protectW - 46,
+      align: "center"
+    });
   });
 
   y += protectH + 42;
   heading("GiÃ¡ trá»‹ hoÃ n láº¡i minh há»a", y, "â–¥");
-  drawText(ctx, "So sÃ¡nh 2 ká»‹ch báº£n lÃ£i suáº¥t: 4,76% vÃ  4,25%/nÄƒm", canvas.width / 2, y + 42, {
-    size: 18,
-    weight: 700,
-    color: colors.ink,
-    align: "center",
-    fitWidth: contentW - 80,
-    minSize: 16
-  });
-  y += 84;
+  y += 52;
   const years = [5, 10, 15, 20];
   const milestoneByYear = new Map(snapshot.totals.accountMilestones.map((item) => [item.year, item]));
   const milestoneGap = 18;
@@ -5202,11 +5232,11 @@ function renderDashboardSummaryCanvas(snapshot) {
     ctx.stroke();
 
     [
-      ["4,76%", item?.cashValue476 || 0],
-      ["4,25%", item?.cashValue425 || 0]
+      ["4,25%", item?.cashValue425 || 0],
+      ["4,76%", item?.cashValue476 || 0]
     ].forEach((rate, rateIndex) => {
       const cx = x + (rateIndex === 0 ? milestoneW * 0.25 : milestoneW * 0.75);
-      const rateColor = rateIndex === 0 ? colors.gold : colors.blue;
+      const rateColor = rate[0] === "4,76%" ? colors.gold : colors.blue;
       drawText(ctx, rate[0], cx, cardY + 122, {
         size: 18,
         weight: 900,
