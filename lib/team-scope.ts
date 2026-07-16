@@ -20,7 +20,8 @@
   D102104033: "Nha Trang 4",
   D251185646: "Nha Trang 5 Sao",
   D1021A3KRX: "Hồng Phát",
-  D102100541: "Hưng Thịnh"
+  D102100541: "Hưng Thịnh",
+  D248679542: "Tâm Đức"
 };
 
 const TEAM_BY_BOARD_LEADER_NAME: Record<string, string> = {
@@ -43,7 +44,7 @@ export function managedTeamName(advisorCode: unknown, position?: unknown, fullNa
   const normalizedPosition = normalizeText(position);
   const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
   const explicitGroup = String(groupName ?? "").trim();
-  if (normalizedPosition === "truong nhom") return codeGroup;
+  if (normalizedPosition === "truong nhom") return codeGroup || explicitGroup;
   if (normalizedPosition === "truong ban") {
     return TEAM_BY_BOARD_LEADER_NAME[normalizeText(fullName)] ?? (codeGroup || explicitGroup);
   }
