@@ -189,11 +189,13 @@ export async function POST(request: NextRequest) {
     if (yearContractsError) throw yearContractsError;
     if (advisorProfilesError) throw advisorProfilesError;
 
-    const calculablePrograms = (programs ?? []).filter((program: any) =>
-      program.confirmed_rule
-      && program.is_hidden !== true
+    const visiblePrograms = (programs ?? []).filter((program: any) =>
+      program.is_hidden !== true
+      && program.is_hidden !== "true"
+      && program.is_hidden !== 1
       && competitionIsVisibleTo(program, viewerAudience)
     );
+    const calculablePrograms = visiblePrograms.filter((program: any) => program.confirmed_rule);
     const ranges = calculablePrograms.map((program: any) => programDateRange(program, month));
     const start = ranges.map((range) => range.start).sort()[0] || monthBounds(month).start;
     const end = ranges.map((range) => range.end).sort().at(-1) || monthBounds(month).end;
@@ -295,7 +297,7 @@ export async function POST(request: NextRequest) {
         return [program.id, { actualContractCount: 0, actualReward: 0, isEligible: false }];
       }
     }));
-    const allProgramSummaries = (programs ?? [])
+    const allProgramSummaries = visiblePrograms
       .map((program: any) => ({
         id: program.id,
         programName: program.program_name || program.confirmed_rule?.program_name || program.ai_rule?.program_name || "Chương trình thi đua",
@@ -306,7 +308,6 @@ export async function POST(request: NextRequest) {
         isHidden: program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1,
         range: programDateRange(program, month)
       }))
-      .filter((program: any) => !program.isHidden)
       .sort((a: any, b: any) => a.range.end.localeCompare(b.range.end) || a.range.start.localeCompare(b.range.start))
       .map((program: any) => {
         const actual = actualRewardByProgram.get(program.id) as any;

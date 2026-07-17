@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(detail);
     }
     const includeHidden = request.nextUrl.searchParams.get("includeHidden") === "1";
-    const viewerAudience = await competitionViewerAudience(request);
+    const viewerAudience = isAdminRequest(request) ? "team_leader" : await competitionViewerAudience(request);
     const programs = await listCompetitionPrograms({ includeHidden, viewerAudience });
     return NextResponse.json({ programs });
   } catch (error) {

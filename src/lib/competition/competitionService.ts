@@ -358,7 +358,7 @@ export async function listCompetitionPrograms(options: { includeHidden?: boolean
   const latest = latestResultByProgram(results ?? []);
   return (programs ?? [])
     .filter((program) => options.includeHidden || !(program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1))
-    .filter((program) => options.includeHidden || competitionIsVisibleTo(program, options.viewerAudience ?? "all"))
+    .filter((program) => competitionIsVisibleTo(program, options.viewerAudience ?? "all"))
     .map((program) => normalizeProgram(program, latest.get(program.id)));
 }
 
