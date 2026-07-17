@@ -1,12 +1,14 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Upload, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
+type CompetitionAudience = "all" | "team_leader";
+type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "analytics" | "data" | "targets" | "archive" | "access";
+type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "access";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -24,7 +26,7 @@ type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
 type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
-const PROTECTED_ADMIN_TABS: AdminTab[] = ["analytics", "data", "targets", "archive", "access"];
+const PROTECTED_ADMIN_TABS: AdminTab[] = ["competitions", "analytics", "data", "targets", "archive", "access"];
 
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
@@ -39,6 +41,9 @@ export default function AdminDataPage() {
   const [accessSearch, setAccessSearch] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgram[]>([]);
+  const [competitionAudienceBusy, setCompetitionAudienceBusy] = useState("");
+  const [competitionStatusView, setCompetitionStatusView] = useState<"ongoing" | "ended">("ongoing");
   const [activeTab, setActiveTab] = useState<AdminTab>("events");
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>("day");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -60,19 +65,22 @@ export default function AdminDataPage() {
   const [archiveFaq, setArchiveFaq] = useState<ArchiveFaq[]>([]);
 
   const loadData = useCallback(async () => {
-    const [eventResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
+    const [eventResponse, competitionResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
       fetch("/api/events", { cache: "no-store" }),
+      fetch("/api/competition?includeHidden=1", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=forms", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=guides", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=faq", { cache: "no-store" })
     ]);
-    const [eventPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
+    const [eventPayload, competitionPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
       eventResponse.json(),
+      competitionResponse.json(),
       formsResponse.json(),
       guidesResponse.json(),
       faqResponse.json()
     ]);
     if (eventResponse.ok) setEvents(eventPayload.events ?? []);
+    if (competitionResponse.ok) setCompetitionPrograms(competitionPayload.programs ?? []);
     if (formsResponse.ok) setArchiveForms(formsPayload ?? { folders: [] });
     if (guidesResponse.ok) setArchiveGuides(guidesPayload ?? []);
     if (faqResponse.ok) setArchiveFaq(faqPayload ?? []);
@@ -288,6 +296,27 @@ export default function AdminDataPage() {
     if (response.ok) loadData();
   }
 
+  async function toggleCompetitionAudience(program: CompetitionProgram) {
+    const nextAudience: CompetitionAudience = program.displayAudience === "team_leader" ? "all" : "team_leader";
+    setCompetitionAudienceBusy(program.id);
+    setMessage("");
+    const response = await fetch("/api/competition", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ program_id: program.id, display_audience: nextAudience })
+    });
+    const payload = await response.json().catch(() => ({}));
+    setCompetitionAudienceBusy("");
+    if (!response.ok) {
+      setMessage(payload.error || "Không cập nhật được đối tượng hiển thị của chương trình.");
+      return;
+    }
+    setCompetitionPrograms((current) => current.map((item) => item.id === program.id ? { ...item, displayAudience: nextAudience } : item));
+    setMessage(nextAudience === "team_leader"
+      ? `“${program.programName}” hiện chỉ hiển thị cho trưởng nhóm.`
+      : `“${program.programName}” hiện hiển thị cho tất cả mọi người.`);
+  }
+
   async function logout() {
     await fetch("/api/admin/auth", { method: "DELETE" });
     setAuthenticated(false);
@@ -312,6 +341,10 @@ export default function AdminDataPage() {
   const normalizedAccessSearch = accessSearch.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   const activeAccessUsers = users.filter((user) => user.is_active);
   const filteredAccessUsers = activeAccessUsers.filter((user) => !normalizedAccessSearch || `${user.full_name} ${user.advisor_code}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(normalizedAccessSearch));
+  const today = todayText();
+  const ongoingCompetitionPrograms = competitionPrograms.filter((program) => !program.endDate || program.endDate >= today);
+  const endedCompetitionPrograms = competitionPrograms.filter((program) => Boolean(program.endDate && program.endDate < today));
+  const visibleCompetitionPrograms = competitionStatusView === "ongoing" ? ongoingCompetitionPrograms : endedCompetitionPrograms;
 
   return (
     <main className="admin-page">
@@ -323,6 +356,7 @@ export default function AdminDataPage() {
 
       <nav className="admin-main-tabs" aria-label="Quản trị dữ liệu">
         <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
+        <button type="button" className={activeTab === "competitions" ? "active" : ""} onClick={() => { setActiveTab("competitions"); setAccessError(""); }}><Trophy size={17} />Chương trình thi đua</button>
         <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
@@ -332,7 +366,7 @@ export default function AdminDataPage() {
 
       <section className="admin-panel-area">
         {PROTECTED_ADMIN_TABS.includes(activeTab) && !accessUnlocked && <article className="admin-card admin-access-lock">
-          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Analytics, Dữ liệu, Mục tiêu, Kho tài liệu và Danh sách truy cập.</p></div></div>
+          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Chương trình thi đua, Analytics, Dữ liệu, Mục tiêu, Kho tài liệu và Danh sách truy cập.</p></div></div>
           <form onSubmit={unlockAccess}>
             <label>Mật khẩu<input type="password" value={accessPassword} onChange={(event) => { setAccessPassword(event.target.value); setAccessError(""); }} autoFocus autoComplete="current-password" required placeholder="Nhập mật khẩu" /></label>
             {accessError && <div className="admin-message error">{accessError}</div>}
@@ -372,6 +406,31 @@ export default function AdminDataPage() {
           </form>
           <div className="admin-event-list">
             {events.map((item) => <div key={item.id}><div><b>{item.title}</b><p>{item.content}</p><small>{item.event_date ? `Gửi lúc ${new Date(item.event_date).toLocaleString("vi-VN")}` : "Gửi ngay"}</small></div><button onClick={() => removeEvent(item.id)}>Xóa</button></div>)}
+          </div>
+        </article>}
+
+        {activeTab === "competitions" && accessUnlocked && <article className="admin-card admin-competition-audience-card">
+          <div className="admin-card-title"><Trophy /><div><h2>Đối tượng xem chương trình thi đua</h2><p>Bật “Chỉ trưởng nhóm” cho chương trình đặc biệt. Khi tắt, chương trình được hiển thị cho tất cả mọi người.</p></div></div>
+          <div className="admin-competition-status-tabs" role="tablist" aria-label="Trạng thái chương trình thi đua">
+            <button type="button" role="tab" aria-selected={competitionStatusView === "ongoing"} className={competitionStatusView === "ongoing" ? "active" : ""} onClick={() => setCompetitionStatusView("ongoing")}><span>Đang diễn ra</span><strong>{ongoingCompetitionPrograms.length}</strong></button>
+            <button type="button" role="tab" aria-selected={competitionStatusView === "ended"} className={competitionStatusView === "ended" ? "active" : ""} onClick={() => setCompetitionStatusView("ended")}><span>Đã kết thúc</span><strong>{endedCompetitionPrograms.length}</strong></button>
+          </div>
+          <div className="admin-competition-audience-list">
+            {visibleCompetitionPrograms.map((program) => {
+              const leadersOnly = program.displayAudience === "team_leader";
+              return <section key={program.id} className={leadersOnly ? "leaders-only" : ""}>
+                <div><h3>{program.programName}</h3><p>{program.startDate || "—"} đến {program.endDate || "—"} · {program.isHidden ? "Đang ẩn" : program.status || "Chưa có trạng thái"}</p></div>
+                <div className="admin-competition-audience-control">
+                  <small>Đối tượng hiển thị</small>
+                  <button type="button" role="switch" aria-checked={leadersOnly} aria-label={`Đối tượng hiển thị của ${program.programName}: ${leadersOnly ? "chỉ trưởng nhóm" : "tất cả mọi người"}`} className={`admin-audience-switch${leadersOnly ? " active" : ""}`} disabled={competitionAudienceBusy === program.id} onClick={() => toggleCompetitionAudience(program)}>
+                    <i aria-hidden="true" />
+                    <span className="all-option">Mọi người</span>
+                    <span className="leader-option">Trưởng nhóm</span>
+                  </button>
+                </div>
+              </section>;
+            })}
+            {!visibleCompetitionPrograms.length && <p className="admin-data-empty">{competitionStatusView === "ongoing" ? "Không có chương trình thi đua đang diễn ra." : "Chưa có chương trình thi đua đã kết thúc."}</p>}
           </div>
         </article>}
 

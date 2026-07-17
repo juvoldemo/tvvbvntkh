@@ -184,6 +184,7 @@ create table if not exists competition_programs (
   confidence numeric default 0,
   needs_review boolean default true,
   is_hidden boolean default false,
+  display_audience text not null default 'all' check (display_audience in ('all', 'team_leader')),
   created_by text,
   created_at timestamptz default now(),
   updated_at timestamptz default now(),
@@ -191,6 +192,8 @@ create table if not exists competition_programs (
 );
 
 alter table competition_programs add column if not exists is_hidden boolean default false;
+alter table competition_programs add column if not exists display_audience text not null default 'all';
+update competition_programs set display_audience = 'all' where display_audience is null or display_audience not in ('all', 'team_leader');
 
 create table if not exists competition_results (
   id uuid primary key default gen_random_uuid(),

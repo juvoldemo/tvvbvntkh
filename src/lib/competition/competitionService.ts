@@ -1,5 +1,6 @@
 import { toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { competitionIsVisibleTo, normalizeCompetitionAudience, type CompetitionAudience } from "@/lib/competition-audience";
 import { calculateCompetitionReward, normalizeContract, type CompetitionRewardResult, type CompetitionRuleInput } from "./competitionRuleEngine";
 
 type SupabaseClient = ReturnType<typeof getSupabaseAdmin>;
@@ -54,6 +55,7 @@ function normalizeProgram(row: any, result?: any) {
     confidence: Number(row.confidence ?? rule.confidence ?? 0),
     needsReview: Boolean(row.needs_review ?? rule.needs_review ?? true),
     isHidden: row.is_hidden === true || row.is_hidden === "true" || row.is_hidden === 1,
+    displayAudience: normalizeCompetitionAudience(row.display_audience),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastCalculatedAt: row.last_calculated_at || result?.calculated_at || null,
@@ -337,7 +339,7 @@ async function enrichContractsWithCompetitionSnapshots(supabase: SupabaseClient,
   });
 }
 
-export async function listCompetitionPrograms(options: { includeHidden?: boolean } = {}) {
+export async function listCompetitionPrograms(options: { includeHidden?: boolean; viewerAudience?: CompetitionAudience } = {}) {
   const supabase = getSupabaseAdmin();
   const [{ data: programs, error: programError }, { data: results, error: resultError }] = await Promise.all([
     supabase
@@ -356,6 +358,7 @@ export async function listCompetitionPrograms(options: { includeHidden?: boolean
   const latest = latestResultByProgram(results ?? []);
   return (programs ?? [])
     .filter((program) => options.includeHidden || !(program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1))
+    .filter((program) => options.includeHidden || competitionIsVisibleTo(program, options.viewerAudience ?? "all"))
     .map((program) => normalizeProgram(program, latest.get(program.id)));
 }
 

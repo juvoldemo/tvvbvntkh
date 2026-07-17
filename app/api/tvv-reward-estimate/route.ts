@@ -7,6 +7,7 @@ import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 import { managedTeamName } from "@/lib/team-scope";
+import { competitionIsVisibleTo, competitionViewerAudience } from "@/lib/competition-audience";
 
 const ACQUISITION_COMMISSION_BREAKDOWN = [
   { label: "Năm 1", rate: 0.3 },
@@ -132,6 +133,7 @@ export async function POST(request: NextRequest) {
       ads: String(payload.advisor?.ads || "")
     };
     const supabase = getSupabaseAdmin();
+    const viewerAudience = await competitionViewerAudience(request);
     let advisor = {
       ...requestedAdvisor,
       code: signedInAdvisorCode || requestedAdvisor.code
@@ -187,7 +189,11 @@ export async function POST(request: NextRequest) {
     if (yearContractsError) throw yearContractsError;
     if (advisorProfilesError) throw advisorProfilesError;
 
-    const calculablePrograms = (programs ?? []).filter((program: any) => program.confirmed_rule);
+    const calculablePrograms = (programs ?? []).filter((program: any) =>
+      program.confirmed_rule
+      && program.is_hidden !== true
+      && competitionIsVisibleTo(program, viewerAudience)
+    );
     const ranges = calculablePrograms.map((program: any) => programDateRange(program, month));
     const start = ranges.map((range) => range.start).sort()[0] || monthBounds(month).start;
     const end = ranges.map((range) => range.end).sort().at(-1) || monthBounds(month).end;

@@ -14921,7 +14921,7 @@ body,
 .admin-header span { color: #004b7a; font-size: var(--typo-12); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .admin-secondary { background: #004b7a !important; color: #fff !important; }
 .admin-page button svg { color: currentColor; }
-.admin-main-tabs { max-width: 1240px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; border: 1px solid #dce7f8; border-radius: 14px; background: #eef5ff; padding: 6px; }
+.admin-main-tabs { max-width: 1240px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; border: 1px solid #dce7f8; border-radius: 14px; background: #eef5ff; padding: 6px; }
 .admin-main-tabs button { min-width: 0; background: #005987; color: #fff; padding: 11px 12px; box-shadow: none; white-space: normal; }
 .admin-main-tabs button.active { background: #004b7a; color: #fff; box-shadow: 0 8px 18px rgba(0, 75, 122, .2); }
 .admin-panel-area { max-width: 1240px; margin: auto; display: grid; gap: 22px; }
@@ -14964,6 +14964,34 @@ body,
 .admin-event-list p { margin: 5px 0; color: #515d70; font-size: var(--typo-12); white-space: pre-wrap; }
 .admin-event-list small { color: #7a8495; }
 .admin-event-list button { align-self: center; background: #fff0f0; color: #c1292e; padding: 7px 10px; }
+.admin-competition-status-tabs { display: inline-flex; width: fit-content; gap: 5px; border: 1px solid #d8e5ef; border-radius: 12px; background: #f1f6fa; padding: 4px; }
+.admin-competition-status-tabs button { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; border: 0; border-radius: 9px; background: transparent !important; padding: 7px 13px !important; color: #5c7180 !important; box-shadow: none !important; font-size: var(--typo-12); }
+.admin-competition-status-tabs button strong { display: grid; min-width: 23px; height: 23px; place-items: center; border-radius: 999px; background: #dde8f0; color: #466273; font-size: 11px; }
+.admin-competition-status-tabs button.active { background: #fff !important; color: #005987 !important; box-shadow: 0 3px 10px rgba(25, 68, 94, .12) !important; }
+.admin-competition-status-tabs button.active strong { background: #00689d; color: #fff; }
+.admin-competition-audience-list { display: grid; gap: 10px; }
+.admin-competition-audience-list > section { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #dfe7ef; border-radius: 13px; background: #f8fafc; padding: 15px 17px; }
+.admin-competition-audience-list > section.leaders-only { border-color: #a8c9e5; background: #eef7ff; }
+.admin-competition-audience-list h3 { margin: 0; color: #15344a; font-size: var(--typo-14); }
+.admin-competition-audience-list p { margin: 5px 0 0; color: #718096; font-size: var(--typo-12); }
+.admin-competition-audience-control { display: grid; justify-items: end; gap: 6px; min-width: 246px; color: #60788a; }
+.admin-competition-audience-control > small { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.admin-competition-audience-card .admin-audience-switch { position: relative; display: grid !important; width: 232px !important; min-width: 232px !important; max-width: 232px !important; height: 42px !important; min-height: 42px !important; grid-template-columns: 1fr 1fr; align-items: center; border: 1px solid #cbd9e3 !important; border-radius: 11px !important; background: #e8f0f5 !important; padding: 3px !important; color: #536d7f !important; box-shadow: none !important; overflow: hidden; }
+.admin-competition-audience-card .admin-audience-switch i { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 8px; background: #fff; box-shadow: 0 2px 7px rgba(26, 64, 88, .16); transition: transform .22s ease, background .22s ease; }
+.admin-competition-audience-card .admin-audience-switch span { position: relative; z-index: 1; display: grid; place-items: center; width: auto; height: auto; border-radius: 0; background: transparent; box-shadow: none; color: inherit; font-size: 12px; font-style: normal; font-weight: 800; transition: color .2s ease; transform: none; }
+.admin-competition-audience-card .admin-audience-switch .all-option { color: #005987; }
+.admin-competition-audience-card .admin-audience-switch.active i { background: #00689d; transform: translateX(100%); }
+.admin-competition-audience-card .admin-audience-switch.active .all-option { color: #6e8493; }
+.admin-competition-audience-card .admin-audience-switch.active .leader-option { color: #fff; }
+.admin-competition-audience-card .admin-audience-switch:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 700px) {
+  .admin-competition-audience-list > section { align-items: stretch; flex-direction: column; }
+  .admin-competition-status-tabs { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }
+  .admin-competition-status-tabs button { justify-content: center; }
+  .admin-competition-audience-control { justify-items: stretch; min-width: 0; }
+  .admin-competition-audience-control > small { text-align: left; }
+  .admin-competition-audience-card .admin-audience-switch { width: 100% !important; min-width: 0 !important; max-width: none !important; }
+}
 .admin-analytics-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .admin-analytics-toolbar > div { display: flex; flex-wrap: wrap; gap: 7px; }
 .admin-page .admin-analytics-toolbar > div button { border: 1px solid #c7dced !important; background: #fff !important; color: #005987 !important; padding: 9px 14px; box-shadow: none !important; }
