@@ -365,7 +365,7 @@ export function calculatePolicyRewards(params: {
     quarterEnd: selectedQuarterBounds.end
   });
   const newAdvisorMonthly = calculateNewAdvisorMonthly(rewardMonthContracts, selectedMonth, advisorStartDates);
-  const newAdvisorStage = calculateNewAdvisorStage(rewardYearContracts, selectedMonth, advisorStartDates);
+  const newAdvisorStage = calculateNewAdvisorStage(eligibleContracts, selectedMonth, advisorStartDates);
   const quarterResults = new Map<string, PolicyRewardRow[]>();
   for (let quarter = 1; quarter <= selectedQuarter; quarter++) {
     const rows = rewardYearContracts.filter((row) => quarterOf(row.paid_date || row.data_month) === quarter);

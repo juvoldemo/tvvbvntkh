@@ -70,12 +70,13 @@ MÔ PHỎNG THU NHẬP TVV
 - Tổng thu nhập mô phỏng phải tách riêng: commission_year_1, commission_future_years, policy_reward, competition_reward, total_estimated. Không cộng quà hiện vật vào tiền nếu rule không có giá trị tiền.
 
 CHÍNH SÁCH TRƯỞNG NHÓM
-- HĐC = số TVV có hợp đồng trạng thái "Có hiệu lực" và tổng IP trong kỳ > 12 triệu (điều kiện là >, không phải >=).
+- Với chính sách Trưởng nhóm, HĐC = số TVV có tổng IP hợp lệ theo ngày thu trong kỳ > 12 triệu (điều kiện là >, không phải >=); không bắt buộc hợp đồng đã phát hành. Doanh thu tháng/quý/năm của Trưởng nhóm cũng gom theo ngày thu để đồng bộ với tổng quan nhóm.
 - Thưởng phát triển tháng = total_fyc * rate; rate dùng đúng bảng mục tiêu nhóm ở trên theo IP tháng và HĐC.
+- Thưởng tuyển luyện tháng chỉ áp dụng khi Trưởng nhóm còn trong 12 tháng chức vụ đầu tiên. Đếm TVV mới HĐC còn trong 12 tháng đầu, đang hoạt động và thuộc trực tiếp nhóm tại cuối tháng; không so sánh ngày TVV bắt đầu với ngày hiệu lực chức vụ của Trưởng nhóm. 1/2/từ 3 TVV mới HĐC tương ứng tỷ lệ 100%/125%/150%. Tổng thưởng TVV mới tại tháng xét = thưởng tháng TVV mới phát sinh riêng trong tháng xét + thưởng chặng vừa đạt trong tháng xét. Thưởng tháng không cộng các tháng trước; thưởng chặng dùng IP lũy kế trong chặng nhưng chỉ ghi nhận tại tháng TVV lần đầu chạm mốc. Thưởng tuyển luyện = tổng thưởng TVV mới tại tháng xét * tỷ lệ.
 - Thưởng tuyển dụng quý: IP quý < 150 triệu hoặc không có TVV mới đủ điều kiện thì 0%; nếu không có TVV mới nhưng IP >=150 triệu thì 4%; nếu có TVV mới thì 150/270/450/600 triệu tương ứng 9%/14%/18%/22%. reward = FYC quý * rate.
 - TVV mới đủ điều kiện tuyển dụng: trong năm đầu kể từ start_date, có hợp đồng hiệu lực phát hành từ start_date và IP > 12 triệu.
 - Thưởng năm Trưởng nhóm: mỗi quý IP >= 150 triệu được tính đạt; đạt 1/2/3/4 quý thưởng 3/6/10/20 triệu; nếu chỉ đạt 1 quý thì FYP năm phải >= 300 triệu.
-- Trưởng nhóm mới trong 1 năm đầu: HĐC >=2 và IP tháng >=45 triệu. HĐC=2 thưởng 3 triệu; HĐC=3 thưởng 3 triệu ở 45-<55 triệu, 5 triệu từ 55 triệu; HĐC>=4 thưởng 5 triệu ở 45-<85 triệu, 8 triệu từ 85 triệu.
+- Trưởng nhóm mới trong 12 tháng chức vụ đầu tiên: HĐC >=2 và FYP/AFYP nhóm tháng lấy trực tiếp từ BC02 >=45 triệu, không dùng KPI04/KPI05. Riêng khoản thưởng này, mỗi TVV có tổng IP theo ngày thu trong tháng >12 triệu được tính 1 lượt HĐC, không bắt buộc hợp đồng đã phát hành. HĐC=2 thưởng 3 triệu; HĐC=3 thưởng 3 triệu ở 45-<55 triệu, 5 triệu từ 55 triệu; HĐC>=4 thưởng 5 triệu ở 45-<85 triệu, 8 triệu từ 85 triệu. Tháng hiệu lực chức vụ được tính là tháng 1; tháng trùng tháng kỷ niệm 12 tháng không còn thuộc kỳ thưởng.
 
 CHƯƠNG TRÌNH THI ĐUA
 - Chỉ lấy chương trình không bị ẩn và có kỳ hiệu lực giao với tháng được chọn.

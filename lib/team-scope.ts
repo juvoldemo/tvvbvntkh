@@ -21,7 +21,11 @@
   D251185646: "Nha Trang 5 Sao",
   D1021A3KRX: "Hồng Phát",
   D102100541: "Hưng Thịnh",
-  D248679542: "Tâm Đức"
+  D248679542: "Tâm Đức",
+  // Ba tài khoản kiêm nhiệm: vừa quản lý nhóm trực tiếp, vừa quản lý ban.
+  D102129306: "Nguyên Phát",
+  D102143032: "Tâm Phát",
+  D102104769: "Hoàng Phát"
 };
 
 function normalizeText(value: unknown) {
@@ -39,8 +43,9 @@ export function managedTeamName(advisorCode: unknown, position?: unknown, fullNa
   const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
   const explicitGroup = String(groupName ?? "").trim();
   if (normalizedPosition === "truong nhom") return codeGroup || explicitGroup;
-  // Trưởng ban có phạm vi nhiều nhóm và được xử lý bởi board-scope, không được
-  // rơi xuống quyền trưởng nhóm chỉ vì tài khoản có group_name.
+  // Chỉ các Trưởng ban được khai báo bằng mã ở trên mới đồng thời có giao diện
+  // Trưởng nhóm. Các Trưởng ban khác không được suy quyền từ group_name.
+  if (normalizedPosition === "truong ban" && codeGroup) return codeGroup;
   if (normalizedPosition === "truong ban") return "";
   return "";
 }

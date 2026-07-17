@@ -235,6 +235,7 @@ export async function GET(request: NextRequest) {
         groupName,
         positionEffectiveDate: leader?.position_effective_date,
         groupRecords: contracts.filter((row) => row.group_name === groupName && String(row.issued_date || row.paid_date || "").startsWith(year)),
+        allRevenueRecords: contracts,
         latestGroupByAdvisor,
         fycRows: policyRows,
         advisorProfiles,
@@ -245,7 +246,8 @@ export async function GET(request: NextRequest) {
         monthly: result.monthly,
         quarterly: result.quarterly,
         annual: result.annual,
-        newManager: result.newManager
+        newManager: result.newManager,
+        recruitmentTraining: result.recruitmentTraining
       };
     });
 
@@ -253,6 +255,12 @@ export async function GET(request: NextRequest) {
       ...(period === "month" ? [toProgram("leader-monthly", "Thưởng tháng Trưởng nhóm", `Tháng ${month.slice(5, 7)}/${year}`, leaderPolicyRows
         .filter((row) => Number(row.monthly.reward) > 0)
         .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.monthly.hdc ?? 0), ip: Number(row.monthly.ip ?? 0), fyp: 0, fyc: Number(row.monthly.fyc ?? 0), reward: Number(row.monthly.reward ?? 0), detail: `Tỷ lệ ${Math.round(Number(row.monthly.rate ?? 0) * 100)}%` })))] : []),
+      ...(period === "month" ? [toProgram("leader-recruitment-training", "Thưởng tuyển luyện Trưởng nhóm", `Tháng ${month.slice(5, 7)}/${year}`, leaderPolicyRows
+        .filter((row) => Number(row.recruitmentTraining.reward) > 0)
+        .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.recruitmentTraining.activeNewAdvisorCount ?? 0), ip: 0, fyp: 0, fyc: Number(row.recruitmentTraining.totalNewAdvisorReward ?? 0), reward: Number(row.recruitmentTraining.reward ?? 0), detail: `${Math.round(Number(row.recruitmentTraining.rate ?? 0) * 100)}% tổng thưởng TVV mới` })))] : []),
+      ...(period === "month" ? [toProgram("leader-new-manager", "Thưởng Quản lý mới", `Tháng ${month.slice(5, 7)}/${year}`, leaderPolicyRows
+        .filter((row) => Number(row.newManager?.reward) > 0)
+        .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.newManager?.hdc ?? 0), ip: 0, fyp: Number(row.newManager?.fyp ?? 0), fyc: 0, reward: Number(row.newManager?.reward ?? 0), detail: `${row.newManager?.hdc || 0} TVV HĐC` })))] : []),
       ...(period === "quarter" ? [toProgram("leader-quarterly", "Thưởng quý Trưởng nhóm", `Quý ${selectedRange.quarter}/${year}`, leaderPolicyRows
         .filter((row) => Number(row.quarterly.reward) > 0)
         .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.quarterly.contracts?.length ?? 0), ip: Number(row.quarterly.ip ?? 0), fyp: 0, fyc: Number(row.quarterly.fyc ?? 0), reward: Number(row.quarterly.reward ?? 0), detail: row.quarterly.hasNewAdvisor ? "Có TVV mới HĐC" : "Đạt bậc thưởng quý" })))] : [])

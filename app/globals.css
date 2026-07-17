@@ -11363,13 +11363,19 @@ body,
   display: grid;
   place-items: center;
   padding: 60px 20px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
   background: rgba(5, 16, 39, .92);
   cursor: zoom-out;
 }
 
 .tvv-poster-lightbox img {
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 80px);
+  max-height: calc(100dvh - 80px);
   object-fit: contain;
 }
 
@@ -15777,6 +15783,26 @@ body .tvv-app .tvv-contest-detail {
   font-weight: 700;
 }
 
+.tvv-policy-current-breakdown.is-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  padding-top: 8px;
+}
+
+.tvv-policy-current-breakdown.is-compact article {
+  gap: 2px;
+}
+
+.tvv-policy-current-breakdown.is-compact article span {
+  font-size: var(--typo-10);
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.tvv-policy-current-breakdown.is-compact article strong {
+  font-size: var(--typo-12);
+}
+
 /* One stable banner for every TVV sub-page. */
 .tvv-page-header {
   min-height: 38px !important;
@@ -20032,6 +20058,12 @@ body .team-target-modal .team-target-fields input.team-target-reward-input[reado
   pointer-events: none !important;
   letter-spacing: 0 !important;
   font-variant-numeric: tabular-nums !important;
+}
+.tvv-app .tvv-hero .tvv-target-button > .tvv-target-percent.is-compact {
+  min-width: 28px !important;
+  padding-inline: 2px !important;
+  font-size: var(--typo-10) !important;
+  line-height: 18px !important;
 }
 
 /* Template bottom navigation */

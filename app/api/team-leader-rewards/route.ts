@@ -221,7 +221,7 @@ async function calculate(request: NextRequest, body: any = {}) {
   const [allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount] = await Promise.all([
     readAll((from, to) => supabase.from("revenue_records").select("*").order("paid_date").range(from, to)),
     readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,reward_source,agent_code,agent_name,group_name,ip,fyp,fyc,raw_data").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
-    readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date").range(from, to)),
+    readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date,group_name,is_active").range(from, to)),
     readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)),
     readTeamRosterCount(supabase, groupName)
   ]);
@@ -233,7 +233,10 @@ async function calculate(request: NextRequest, body: any = {}) {
   }
   const currentTeamAdvisorCount = rosterCount || [...latestGroupByAdvisor.values()]
     .filter((advisorGroupName) => advisorGroupName === groupName).length;
-  const groupRecords = uniqueRevenue.filter((row) => row.group_name === groupName && row.issued_date?.startsWith(year));
+  const groupRecords = uniqueRevenue.filter((row) =>
+    row.group_name === groupName
+    && String(row.paid_date || row.issued_date || "").startsWith(year)
+  );
   const teamCompetitionContracts = uniqueRevenue.filter((row) => row.group_name === groupName);
   const today = getVietnamToday();
   const competitionSummaries = competitionPrograms
@@ -253,6 +256,7 @@ async function calculate(request: NextRequest, body: any = {}) {
     groupName,
     positionEffectiveDate: profile.position_effective_date,
     groupRecords,
+    allRevenueRecords: uniqueRevenue,
     latestGroupByAdvisor,
     fycRows,
     advisorProfiles,
