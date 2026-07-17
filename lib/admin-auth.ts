@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 export const ADMIN_COOKIE = "bvnt_admin_session";
 
 function adminPassword() {
-  return process.env.ADMIN_PASSWORD || "Bv123456@";
+  return "0000";
 }
 
 function digest(value: string) {

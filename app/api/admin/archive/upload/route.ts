@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { archiveFileSizeLabel, safeArchiveFileName, uploadArchiveFile } from "@/lib/archive-content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
 
   const formData = await request.formData();
   const file = formData.get("file");

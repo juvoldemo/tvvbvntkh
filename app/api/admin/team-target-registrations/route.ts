@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 function canAccess(request: NextRequest) {
-  return isAdminRequest(request) && isAccessRequest(request);
+  return isAdminRequest(request);
 }
 
 export async function GET(request: NextRequest) {

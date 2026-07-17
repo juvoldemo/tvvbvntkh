@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
@@ -44,7 +43,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const period = request.nextUrl.searchParams.get("period") || "day";
   const days = period === "month" ? 30 : period === "week" ? 7 : 1;
   const since = new Date(Date.now() - days * 86400000).toISOString();

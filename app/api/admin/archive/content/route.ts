@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { isArchiveContentKey, readArchiveContent, writeArchiveContent } from "@/lib/archive-content";
 
 export const runtime = "nodejs";
@@ -12,14 +11,14 @@ function getKey(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const key = getKey(request);
   if (!key) return NextResponse.json({ error: "Loại nội dung không hợp lệ." }, { status: 400 });
   return NextResponse.json(await readArchiveContent(key), { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request: NextRequest) {
-  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const key = getKey(request);
   if (!key) return NextResponse.json({ error: "Loại nội dung không hợp lệ." }, { status: 400 });
 

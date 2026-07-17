@@ -26,8 +26,6 @@ type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
 type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
-const PROTECTED_ADMIN_TABS: AdminTab[] = ["competitions", "analytics", "data", "targets", "archive", "access"];
-
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -35,8 +33,6 @@ export default function AdminDataPage() {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
-  const [accessUnlocked, setAccessUnlocked] = useState(false);
-  const [accessPassword, setAccessPassword] = useState("");
   const [accessError, setAccessError] = useState("");
   const [accessSearch, setAccessSearch] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
@@ -99,38 +95,15 @@ export default function AdminDataPage() {
   }, []);
 
   useEffect(() => {
-    if (!authenticated || !accessUnlocked || activeTab !== "access") return;
+    if (!authenticated || activeTab !== "access") return;
     void loadUsers().catch((error) => setAccessError(error instanceof Error ? error.message : "Không tải được danh sách truy cập."));
-  }, [activeTab, authenticated, accessUnlocked, loadUsers]);
-
-  async function unlockAccess(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setAccessError("");
-    const response = await fetch("/api/admin/access-auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: accessPassword }) });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setBusy(false);
-      setAccessError(payload.error || "Không thể xác thực mật khẩu.");
-      return;
-    }
-    try {
-      await Promise.all([loadUsers(), loadData()]);
-      setAccessUnlocked(true);
-      setAccessPassword("");
-    } catch (error) {
-      setAccessError(error instanceof Error ? error.message : "Không tải được danh sách truy cập.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  }, [activeTab, authenticated, loadUsers]);
 
   useEffect(() => {
-    Promise.all([fetch("/api/admin/auth", { cache: "no-store" }), fetch("/api/admin/access-auth", { cache: "no-store" })])
-      .then(async ([adminResponse, accessResponse]) => ({ admin: await adminResponse.json(), access: await accessResponse.json() }))
-      .then(({ admin, access }) => {
+    fetch("/api/admin/auth", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((admin) => {
         setAuthenticated(Boolean(admin.authenticated));
-        setAccessUnlocked(Boolean(access.authenticated));
         if (admin.authenticated) loadData();
       })
       .finally(() => setReady(true));
@@ -152,8 +125,8 @@ export default function AdminDataPage() {
   }, [rewardMonth, rewardPeriod]);
 
   useEffect(() => {
-    if (authenticated && accessUnlocked && activeTab === "data") loadRewardData();
-  }, [activeTab, authenticated, accessUnlocked, loadRewardData]);
+    if (authenticated && activeTab === "data") loadRewardData();
+  }, [activeTab, authenticated, loadRewardData]);
 
   const loadTargetRegistrations = useCallback(async () => {
     setTargetLoading(true);
@@ -170,8 +143,8 @@ export default function AdminDataPage() {
   }, [targetMonth]);
 
   useEffect(() => {
-    if (authenticated && accessUnlocked && activeTab === "targets") loadTargetRegistrations();
-  }, [activeTab, authenticated, accessUnlocked, loadTargetRegistrations]);
+    if (authenticated && activeTab === "targets") loadTargetRegistrations();
+  }, [activeTab, authenticated, loadTargetRegistrations]);
 
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true);
@@ -183,8 +156,8 @@ export default function AdminDataPage() {
   }, [analyticsPeriod]);
 
   useEffect(() => {
-    if (authenticated && accessUnlocked && activeTab === "analytics") void loadAnalytics();
-  }, [activeTab, authenticated, accessUnlocked, loadAnalytics]);
+    if (authenticated && activeTab === "analytics") void loadAnalytics();
+  }, [activeTab, authenticated, loadAnalytics]);
 
   async function removeTargetRegistration(id: string, groupName: string) {
     if (!window.confirm(`Xóa đăng ký mục tiêu của nhóm ${groupName}?`)) return;
@@ -365,16 +338,7 @@ export default function AdminDataPage() {
       </nav>
 
       <section className="admin-panel-area">
-        {PROTECTED_ADMIN_TABS.includes(activeTab) && !accessUnlocked && <article className="admin-card admin-access-lock">
-          <div className="admin-card-title"><ShieldCheck /><div><h2>Xác thực nội dung bảo mật</h2><p>Nhập mật khẩu chung để mở Chương trình thi đua, Analytics, Dữ liệu, Mục tiêu, Kho tài liệu và Danh sách truy cập.</p></div></div>
-          <form onSubmit={unlockAccess}>
-            <label>Mật khẩu<input type="password" value={accessPassword} onChange={(event) => { setAccessPassword(event.target.value); setAccessError(""); }} autoFocus autoComplete="current-password" required placeholder="Nhập mật khẩu" /></label>
-            {accessError && <div className="admin-message error">{accessError}</div>}
-            <button disabled={busy || !accessPassword}>{busy ? "Đang kiểm tra…" : "Mở nội dung"}</button>
-          </form>
-        </article>}
-
-        {activeTab === "access" && accessUnlocked && <article className="admin-card">
+        {activeTab === "access" && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
             <label className="admin-file"><Upload /><span>Chọn file dữ liệu TVV theo định dạng APM01</span><input name="file" type="file" accept=".xlsx,.xls,.csv" required /></label>
@@ -409,7 +373,7 @@ export default function AdminDataPage() {
           </div>
         </article>}
 
-        {activeTab === "competitions" && accessUnlocked && <article className="admin-card admin-competition-audience-card">
+        {activeTab === "competitions" && <article className="admin-card admin-competition-audience-card">
           <div className="admin-card-title"><Trophy /><div><h2>Đối tượng xem chương trình thi đua</h2><p>Bật “Chỉ trưởng nhóm” cho chương trình đặc biệt. Khi tắt, chương trình được hiển thị cho tất cả mọi người.</p></div></div>
           <div className="admin-competition-status-tabs" role="tablist" aria-label="Trạng thái chương trình thi đua">
             <button type="button" role="tab" aria-selected={competitionStatusView === "ongoing"} className={competitionStatusView === "ongoing" ? "active" : ""} onClick={() => setCompetitionStatusView("ongoing")}><span>Đang diễn ra</span><strong>{ongoingCompetitionPrograms.length}</strong></button>
@@ -434,13 +398,13 @@ export default function AdminDataPage() {
           </div>
         </article>}
 
-        {activeTab === "analytics" && accessUnlocked && <AnalyticsPanel period={analyticsPeriod} setPeriod={setAnalyticsPeriod} data={analyticsData} loading={analyticsLoading} onReload={loadAnalytics} />}
+        {activeTab === "analytics" && <AnalyticsPanel period={analyticsPeriod} setPeriod={setAnalyticsPeriod} data={analyticsData} loading={analyticsLoading} onReload={loadAnalytics} />}
 
-        {activeTab === "data" && accessUnlocked && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
+        {activeTab === "data" && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
 
-        {activeTab === "targets" && accessUnlocked && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
+        {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
 
-        {activeTab === "archive" && accessUnlocked && <ArchiveAdminPanel
+        {activeTab === "archive" && <ArchiveAdminPanel
           forms={archiveForms}
           guides={archiveGuides}
           faq={archiveFaq}

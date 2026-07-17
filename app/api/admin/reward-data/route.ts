@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getVietnamToday } from "@/lib/format";
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
 import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
@@ -173,10 +172,8 @@ function aggregateCompetitionGroups(program: any, contracts: RevenueRecord[]) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequest(request) || !isAccessRequest(request)) return NextResponse.json({ error: "Chưa xác thực nội dung bảo mật." }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   try {
-    if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
-
     const month = String(request.nextUrl.searchParams.get("month") || getVietnamToday().slice(0, 7)).slice(0, 7);
     const period = request.nextUrl.searchParams.get("period") === "quarter" ? "quarter" : "month";
     const selectedRange = period === "quarter" ? quarterRange(month) : { ...monthRange(month), quarter: Math.ceil(Number(month.slice(5, 7)) / 3) };

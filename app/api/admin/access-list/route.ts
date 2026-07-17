@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { parseAccessListDate } from "@/lib/access-list-dates";
 import { isAdminRequest } from "@/lib/admin-auth";
-import { isAccessRequest } from "@/lib/admin-access-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
 
 const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,password_plain,is_active,created_at";
 const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,is_active,created_at";
 
-const canAccess = (request: NextRequest) => isAdminRequest(request) && isAccessRequest(request);
+const canAccess = (request: NextRequest) => isAdminRequest(request);
 
 function missingPasswordPlainColumn(error: unknown) {
   return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
