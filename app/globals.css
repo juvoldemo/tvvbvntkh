@@ -16533,6 +16533,11 @@ body .tvv-app .tvv-contest-detail {
 .ct-advisor-avatar.all { background: #e8f2ff; color: #004b7a; }
 .ct-advisor-avatar svg { width: 13px; height: 13px; }
 .ct-advisor-menu::-webkit-scrollbar { width: 5px; }
+.ct-group-menu {
+  right: auto !important;
+  left: 0 !important;
+  width: min(238px, calc(100vw - 32px)) !important;
+}
 .ct-advisor-menu::-webkit-scrollbar-thumb { border-radius: 9px; background: #ced8e8; }
 @media (max-width: 380px) {
   .ct-advisor-menu { right: -4px; }
@@ -18314,6 +18319,20 @@ body .tvv-app .tvv-contest-detail {
     grid-area: status;
     align-self: end;
     justify-self: start;
+  }
+  .board-contract-modal .team-contract-modal-list article {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+    gap: 10px 9px;
+  }
+  .board-contract-modal .team-contract-modal-list em {
+    align-self: center;
+    justify-self: end;
+    max-width: 72px;
+    padding: 5px 7px;
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
   }
 }
 
@@ -20237,5 +20256,192 @@ body .tvv-app {
   body .mobile-options-backdrop {
     width: 100% !important;
     max-width: none !important;
+  }
+}
+.board-role-switch {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  width: max-content !important;
+  min-width: 0 !important;
+  min-height: 20px !important;
+  gap: 0;
+  margin: 0;
+  padding: 3px 6px !important;
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+  font-size: 9px !important;
+  line-height: 1 !important;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+.board-role-switch.active {
+  border-color: rgba(255, 255, 255, .75) !important;
+  background: rgba(255, 255, 255, .08) !important;
+  color: #fff !important;
+}
+.board-role-switch.active span { color: #fff !important; }
+.tvv-hero-role-target {
+  width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.tvv-hero-role-target .board-role-switch { align-self: center; white-space: nowrap; }
+.tvv-app > .tvv-hero.board-mode {
+  height: 122px !important;
+  min-height: 122px !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+.tvv-app .tvv-hero.board-mode .tvv-hero-main { align-items: center !important; }
+.tvv-app .tvv-hero.board-mode .tvv-hero-main > div:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+.tvv-app .tvv-hero.board-mode .tvv-hero-main h1,
+.tvv-app .tvv-hero.board-mode .tvv-hero-main p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tvv-app .tvv-hero.board-mode .tvv-current-rank {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 7px;
+}
+.tvv-app .tvv-hero.board-mode .tvv-hero-role-target { width: 66px; }
+.tvv-app .tvv-hero.board-mode .board-role-switch {
+  min-height: 24px !important;
+  padding: 4px 8px !important;
+  font-size: 9px !important;
+}
+.board-dashboard .team-dashboard-toolbar > span { color: #60738a; font-size: var(--typo-10); font-weight: 700; }
+.board-kpi-grid .team-kpi-card { flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; }
+.board-kpi-grid .team-kpi-card small { color: #60738a; font-size: var(--typo-10); font-weight: 700; }
+.board-group-list { display: grid; gap: 8px; }
+.board-group-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid #e4eaf2; border-radius: 12px; background: #fff; }
+.board-group-card { width: 100%; min-height: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.board-group-card:hover,
+.board-group-card:focus-visible { border-color: #8fc4e8; background: #f6fbff; transform: translateY(-1px); }
+.tvv-app .board-group-card {
+  border: 1px solid #dce6f0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #15324b !important;
+}
+.tvv-app .board-group-card:hover,
+.tvv-app .board-group-card:focus-visible {
+  border-color: #8fc4e8 !important;
+  background: #f2f9ff !important;
+}
+.tvv-app .board-group-card > div > b {
+  background: #e8f4ff !important;
+  color: #0065a5 !important;
+}
+.tvv-app .board-group-card strong { color: #15324b !important; }
+.tvv-app .board-group-card small { color: #657a91 !important; }
+.tvv-app .board-group-card small.attention { color: #d33b24 !important; }
+.board-group-card > div { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.board-group-card > div > b { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 auto; border-radius: 8px; background: #eaf4ff; color: #0065a5; }
+.board-group-card span { display: flex; flex-direction: column; min-width: 0; }
+.board-group-card > span { align-items: flex-end; text-align: right; }
+.board-group-card strong { color: #15324b; font-size: var(--typo-10); }
+.board-group-card small { color: #728399; font-size: var(--typo-10); }
+.board-group-card small.attention { color: #c4573d; font-weight: 700; }
+.board-top-agent-list { display: grid; gap: 8px; }
+.board-top-agent {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid #dfe7f1;
+  border-radius: 10px;
+  background: #fff;
+}
+.board-top-agent .team-agent-rank { position: static !important; width: 29px !important; height: 29px !important; }
+.board-top-agent-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.board-top-agent-copy strong { overflow: hidden; color: #004b7a; font-size: var(--typo-10); text-overflow: ellipsis; white-space: nowrap; }
+.board-top-agent-copy small { overflow: hidden; color: #728399; font-size: var(--typo-10); text-overflow: ellipsis; white-space: nowrap; }
+.board-top-agent-revenue { justify-self: end; color: #004b7a; font-size: var(--typo-10); white-space: nowrap; }
+.ct-group-filter { position: relative; display: inline-flex; align-items: center; }
+.ct-group-filter select { max-width: 142px; appearance: none; padding: 7px 27px 7px 10px; border: 1px solid #d5dfeb; border-radius: 9px; background: #fff; color: #004b7a; font: inherit; font-size: var(--typo-10); font-weight: 700; }
+.board-contract-template .ct-contract-list > header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 9px !important;
+  padding-block: 8px 10px;
+}
+.board-contract-template .ct-contract-list-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.board-contract-template .ct-group-filter,
+.board-contract-template .ct-group-filter select,
+.board-contract-template .ct-advisor-dropdown,
+.board-contract-template .ct-advisor-filter {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+.board-contract-template .ct-group-filter select {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 27px 0 30px !important;
+  border-radius: 8px !important;
+  font-size: var(--typo-10) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+.board-contract-template .ct-advisor-filter,
+.board-contract-template .ct-advisor-filter > span {
+  font-size: var(--typo-10) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+.board-contract-template .ct-contract-list-actions > span {
+  align-self: center;
+  white-space: nowrap;
+}
+body .tvv-app .tvv-bottom-nav.board-bottom-nav {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+@media (max-width: 699px) {
+  .board-contract-template .ct-contract-list > header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    padding-block: 8px 10px;
+  }
+  .board-contract-template .ct-contract-list-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    width: 100%;
+    min-width: 0;
+  }
+  .board-contract-template .ct-group-filter,
+  .board-contract-template .ct-group-filter select,
+  .board-contract-template .ct-advisor-dropdown,
+  .board-contract-template .ct-advisor-filter {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  .board-contract-template .ct-contract-list-actions > span {
+    align-self: center;
+    white-space: nowrap;
   }
 }

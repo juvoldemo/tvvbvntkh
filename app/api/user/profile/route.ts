@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
 import { managedTeamName } from "@/lib/team-scope";
+import { managedBoardScope } from "@/lib/board-scope";
 
 const fields = "advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url,group_name";
 
@@ -11,10 +12,14 @@ export async function GET(request: NextRequest) {
   const { data, error } = await getSupabaseAdmin().from("authorized_users").select(fields).eq("advisor_code", code).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   const managedGroupName = managedTeamName(data.advisor_code, data.advisor_position, data.full_name, data.group_name);
+  const boardScope = managedBoardScope(data.full_name);
   return NextResponse.json({
     profile: {
       ...data,
       managed_group_name: managedGroupName,
+      managed_board_name: boardScope?.boardName ?? null,
+      managed_board_groups: boardScope?.groups ?? [],
+      has_board_leader_role: Boolean(boardScope),
       dashboard_role: managedGroupName ? "team_leader" : "advisor"
     }
   });

@@ -24,12 +24,6 @@
   D248679542: "Tâm Đức"
 };
 
-const TEAM_BY_BOARD_LEADER_NAME: Record<string, string> = {
-  "luu thanh son": "Tâm Phát",
-  "nguyen thi minh trang": "Nguyên Phát",
-  "huynh thi van anh": "Hoàng Phát"
-};
-
 function normalizeText(value: unknown) {
   return String(value ?? "")
     .normalize("NFD")
@@ -45,8 +39,8 @@ export function managedTeamName(advisorCode: unknown, position?: unknown, fullNa
   const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";
   const explicitGroup = String(groupName ?? "").trim();
   if (normalizedPosition === "truong nhom") return codeGroup || explicitGroup;
-  if (normalizedPosition === "truong ban") {
-    return TEAM_BY_BOARD_LEADER_NAME[normalizeText(fullName)] ?? (codeGroup || explicitGroup);
-  }
+  // Trưởng ban có phạm vi nhiều nhóm và được xử lý bởi board-scope, không được
+  // rơi xuống quyền trưởng nhóm chỉ vì tài khoản có group_name.
+  if (normalizedPosition === "truong ban") return "";
   return "";
 }
