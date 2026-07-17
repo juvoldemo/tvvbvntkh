@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const IMAGE_WIDTH = 1240;
   const IMAGE_HEIGHT = 1754;
   const FONT_FAMILY = 'Inter, "SF Pro Display", "Segoe UI", sans-serif';
@@ -14,11 +14,11 @@
   };
 
   const PLAN_INDEX = {
-    "Báº¡c": 0,
-    "VÃ ng": 1,
-    "Báº¡ch Kim": 2,
-    "Kim CÆ°Æ¡ng": 3,
-    "Lá»¥c Báº£o": 4
+    "Bạc": 0,
+    "Vàng": 1,
+    "Bạch Kim": 2,
+    "Kim Cương": 3,
+    "Lục Bảo": 4
   };
 
   const R26_LIMITS = {
@@ -207,19 +207,19 @@
 
   function buildR21Rows(stbh) {
     return [
-      row("Ung thÆ° giai Ä‘oáº¡n Ä‘áº§u", calc(amountByRate(stbh, 0.25, 500000000), "25% STBH"), "Tá»‘i Ä‘a 500.000.000 Ä‘á»“ng; trá»« khoáº£n ná»£ náº¿u cÃ³"),
-      row("Ung thÆ° giai Ä‘oáº¡n cuá»‘i", calc(stbh, "100% STBH"), "Trá»« quyá»n lá»£i ung thÆ° giai Ä‘oáº¡n Ä‘áº§u Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-      row("Äá»™t quá»µ", calc(stbh, "100% STBH"), "Trá»« quyá»n lá»£i ung thÆ° giai Ä‘oáº¡n Ä‘áº§u Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-      row("Nhá»“i mÃ¡u cÆ¡ tim", calc(stbh, "100% STBH"), "Tá»•ng chi tráº£ tá»‘i Ä‘a toÃ n bá»™ R21 lÃ  100% STBH")
+      row("Ung thư giai đoạn đầu", calc(amountByRate(stbh, 0.25, 500000000), "25% STBH"), "Tối đa 500.000.000 đồng; trừ khoản nợ nếu có"),
+      row("Ung thư giai đoạn cuối", calc(stbh, "100% STBH"), "Trừ quyền lợi ung thư giai đoạn đầu đã chi trả nếu có"),
+      row("Đột quỵ", calc(stbh, "100% STBH"), "Trừ quyền lợi ung thư giai đoạn đầu đã chi trả nếu có"),
+      row("Nhồi máu cơ tim", calc(stbh, "100% STBH"), "Tổng chi trả tối đa toàn bộ R21 là 100% STBH")
     ];
   }
 
   function buildR22Rows(stbh) {
     return [
-      row("Máº¥t hoÃ n toÃ n chá»©c nÄƒng nhÃ¬n 01 máº¯t", calc(amountByRate(stbh, 0.55), "55% STBH"), "Theo báº£ng tá»· lá»‡ thÆ°Æ¡ng táº­t; tá»‘i Ä‘a 100% STBH/nÄƒm"),
-      row("Máº¥t hoÃ n toÃ n chá»©c nÄƒng nghe 02 tai", calc(amountByRate(stbh, 0.75), "75% STBH"), "Tai náº¡n phÃ¡t sinh trong 180 ngÃ y"),
-      row("ThÃ¡o khá»›p vai", calc(amountByRate(stbh, 0.70), "70% STBH"), "Náº¿u nhiá»u thÆ°Æ¡ng táº­t, tá»•ng chi tráº£ tá»‘i Ä‘a 100% STBH"),
-      row("Máº¥t toÃ n bá»™ ngÃ³n tay cÃ¡i", calc(amountByRate(stbh, 0.20), "20% STBH"), "SPBK cháº¥m dá»©t khi tá»•ng chi tráº£ Ä‘áº¡t 100% STBH")
+      row("Mất hoàn toàn chức năng nhìn 01 mắt", calc(amountByRate(stbh, 0.55), "55% STBH"), "Theo bảng tỷ lệ thương tật; tối đa 100% STBH/năm"),
+      row("Mất hoàn toàn chức năng nghe 02 tai", calc(amountByRate(stbh, 0.75), "75% STBH"), "Tai nạn phát sinh trong 180 ngày"),
+      row("Tháo khớp vai", calc(amountByRate(stbh, 0.70), "70% STBH"), "Nếu nhiều thương tật, tổng chi trả tối đa 100% STBH"),
+      row("Mất toàn bộ ngón tay cái", calc(amountByRate(stbh, 0.20), "20% STBH"), "SPBK chấm dứt khi tổng chi trả đạt 100% STBH")
     ];
   }
 
@@ -242,11 +242,11 @@
 
   function buildR23Rows(stbh, insuredAge) {
     const factor = ageFactor(insuredAge);
-    const factorText = factor === 1 ? "" : ` x ${Math.round(factor * 100)}% theo tuá»•i`;
+    const factorText = factor === 1 ? "" : ` x ${Math.round(factor * 100)}% theo tuổi`;
     return [
-      row("Tá»­ vong do tai náº¡n thÃ´ng thÆ°á»ng", calc(amountByRate(stbh, factor), `100% STBH${factorText}`), "Trá»« khoáº£n ná»£ náº¿u cÃ³"),
-      row("Tá»­ vong do tai náº¡n hÃ ng khÃ´ng thÆ°Æ¡ng máº¡i", calc(amountByRate(stbh, 2 * factor), `200% STBH${factorText}`), "Ãp dá»¥ng khi lÃ  hÃ nh khÃ¡ch cÃ³ vÃ© trÃªn chuyáº¿n bay Ä‘Æ°á»£c cáº¥p phÃ©p"),
-      row("ThÆ°Æ¡ng táº­t nghiÃªm trá»ng do tai náº¡n", calc(amountByRate(stbh, factor), `100% STBH${factorText}`), "Chá»‰ chi tráº£ má»™t thÆ°Æ¡ng táº­t nghiÃªm trá»ng thá»a Ä‘iá»u kiá»‡n")
+      row("Tử vong do tai nạn thông thường", calc(amountByRate(stbh, factor), `100% STBH${factorText}`), "Trừ khoản nợ nếu có"),
+      row("Tử vong do tai nạn hàng không thương mại", calc(amountByRate(stbh, 2 * factor), `200% STBH${factorText}`), "Áp dụng khi là hành khách có vé trên chuyến bay được cấp phép"),
+      row("Thương tật nghiêm trọng do tai nạn", calc(amountByRate(stbh, factor), `100% STBH${factorText}`), "Chỉ chi trả một thương tật nghiêm trọng thỏa điều kiện")
     ];
   }
 
@@ -254,17 +254,17 @@
     const annualPremium = Number(data.annualBasicPremium) || 0;
     const term = Number(addon.term) || 0;
     return [
-      row("Há»— trá»£ Ä‘Ã³ng phÃ­ má»—i nÄƒm", payout(annualPremium, "/nÄƒm"), "KhÃ´ng bao gá»“m phÃ­ báº£o hiá»ƒm Ä‘Ã³ng thÃªm"),
-      row("GiÃ¡ trá»‹ há»— trá»£ dá»± kiáº¿n", payout(annualPremium * term), `Minh há»a theo thá»i háº¡n há»— trá»£ ${term || "-"} nÄƒm`)
+      row("Hỗ trợ đóng phí mỗi năm", payout(annualPremium, "/năm"), "Không bao gồm phí bảo hiểm đóng thêm"),
+      row("Giá trị hỗ trợ dự kiến", payout(annualPremium * term), `Minh họa theo thời hạn hỗ trợ ${term || "-"} năm`)
     ];
   }
 
   function buildR25Rows(stbh) {
     return [
-      row("BLNT giai Ä‘oáº¡n Ä‘áº§u", calc(amountByRate(stbh, 0.25, 500000000), "25% STBH"), "Tá»‘i Ä‘a 500.000.000 Ä‘á»“ng/bá»‡nh; tá»‘i Ä‘a 2 bá»‡nh thuá»™c 2 nhÃ³m khÃ¡c nhau"),
-      row("BLNT giai Ä‘oáº¡n cuá»‘i", calc(stbh, "100% STBH"), "Chá»‰ chi tráº£ má»™t láº§n; trá»« quyá»n lá»£i Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-      row("BLNT theo giá»›i tÃ­nh giai Ä‘oáº¡n cuá»‘i", calc(amountByRate(stbh, 1.25), "125% STBH"), "Náº¿u cÃ¹ng lÃºc nhiá»u bá»‡nh, chi tráº£ bá»‡nh cÃ³ sá»‘ tiá»n cao nháº¥t"),
-      row("Náº±m viá»‡n Ä‘áº·c biá»‡t sau BLNT giai Ä‘oáº¡n Ä‘áº§u", calc(amountByRate(stbh, 0.10, 100000000), "10% STBH"), "Tá»‘i Ä‘a 100.000.000 Ä‘á»“ng; chá»‰ chi tráº£ má»™t láº§n")
+      row("BLNT giai đoạn đầu", calc(amountByRate(stbh, 0.25, 500000000), "25% STBH"), "Tối đa 500.000.000 đồng/bệnh; tối đa 2 bệnh thuộc 2 nhóm khác nhau"),
+      row("BLNT giai đoạn cuối", calc(stbh, "100% STBH"), "Chỉ chi trả một lần; trừ quyền lợi đã chi trả nếu có"),
+      row("BLNT theo giới tính giai đoạn cuối", calc(amountByRate(stbh, 1.25), "125% STBH"), "Nếu cùng lúc nhiều bệnh, chi trả bệnh có số tiền cao nhất"),
+      row("Nằm viện đặc biệt sau BLNT giai đoạn đầu", calc(amountByRate(stbh, 0.10, 100000000), "10% STBH"), "Tối đa 100.000.000 đồng; chỉ chi trả một lần")
     ];
   }
 
@@ -275,36 +275,36 @@
       : (config.getR26AllowedBenefits ? config.getR26AllowedBenefits(plan) : ["inpatient"]);
     const selectedSet = new Set(selected);
     const rows = [
-      row(`Ná»™i trÃº háº¡ng ${plan}`, payout(planValue(plan, "inpatientAnnual"), "/nÄƒm"), "Giá»›i háº¡n tá»‘i Ä‘a/nÄƒm; chi phÃ­ thá»±c táº¿ sau Ä‘á»“ng chi tráº£"),
-      row("Ná»™i trÃº cÃ³ pháº«u thuáº­t", payout(planValue(plan, "inpatientSurgery"), "/Ä‘á»£t"), "Theo giá»›i háº¡n tá»«ng Ä‘á»£t Ä‘iá»u trá»‹"),
-      row("Ná»™i trÃº khÃ´ng pháº«u thuáº­t", payout(planValue(plan, "inpatientNoSurgery"), "/Ä‘á»£t"), "Theo giá»›i háº¡n tá»«ng Ä‘á»£t Ä‘iá»u trá»‹"),
-      row("PhÃ²ng & giÆ°á»ng", payout(planValue(plan, "room"), "/ngÃ y"), "Tá»‘i Ä‘a 60 ngÃ y/nÄƒm"),
-      row("ICU", "Chi phÃ­ thá»±c táº¿", "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm"),
-      row("Pháº«u thuáº­t", "Chi phÃ­ thá»±c táº¿", "Trong giá»›i háº¡n ná»™i trÃº cá»§a háº¡ng chÆ°Æ¡ng trÃ¬nh")
+      row(`Nội trú hạng ${plan}`, payout(planValue(plan, "inpatientAnnual"), "/năm"), "Giới hạn tối đa/năm; chi phí thực tế sau đồng chi trả"),
+      row("Nội trú có phẫu thuật", payout(planValue(plan, "inpatientSurgery"), "/đợt"), "Theo giới hạn từng đợt điều trị"),
+      row("Nội trú không phẫu thuật", payout(planValue(plan, "inpatientNoSurgery"), "/đợt"), "Theo giới hạn từng đợt điều trị"),
+      row("Phòng & giường", payout(planValue(plan, "room"), "/ngày"), "Tối đa 60 ngày/năm"),
+      row("ICU", "Chi phí thực tế", "Tối đa 30 ngày/năm"),
+      row("Phẫu thuật", "Chi phí thực tế", "Trong giới hạn nội trú của hạng chương trình")
     ];
 
     if (selectedSet.has("outpatient")) {
       rows.push(
-        row("Ngoáº¡i trÃº tÃ¹y chá»n", payout(planValue(plan, "outpatientAnnual"), "/nÄƒm"), "Äá»“ng chi tráº£ 20%"),
-        row("Ngoáº¡i trÃº má»—i láº§n khÃ¡m/Ä‘iá»u trá»‹", payout(planValue(plan, "outpatientVisit"), "/láº§n"), "Tá»‘i Ä‘a 10 láº§n/nÄƒm"),
-        row("Váº­t lÃ½ trá»‹ liá»‡u", payout(planValue(plan, "physiotherapy"), "/nÄƒm"), "Tá»‘i Ä‘a 1 Ä‘á»£t/nÄƒm")
+        row("Ngoại trú tùy chọn", payout(planValue(plan, "outpatientAnnual"), "/năm"), "Đồng chi trả 20%"),
+        row("Ngoại trú mỗi lần khám/điều trị", payout(planValue(plan, "outpatientVisit"), "/lần"), "Tối đa 10 lần/năm"),
+        row("Vật lý trị liệu", payout(planValue(plan, "physiotherapy"), "/năm"), "Tối đa 1 đợt/năm")
       );
     }
 
     if (selectedSet.has("dental")) {
       rows.push(
-        row("Nha khoa tÃ¹y chá»n", payout(planValue(plan, "dentalAnnual"), "/nÄƒm"), "Äá»“ng chi tráº£ 20%"),
-        row("Äiá»u trá»‹ nha khoa", payout(planValue(plan, "dentalTreatment"), "/láº§n"), "Theo giá»›i háº¡n tá»«ng láº§n Ä‘iá»u trá»‹"),
-        row("Láº¥y cao rÄƒng", payout(planValue(plan, "dentalScaling"), "/láº§n"), "Tá»‘i Ä‘a 1 láº§n/nÄƒm")
+        row("Nha khoa tùy chọn", payout(planValue(plan, "dentalAnnual"), "/năm"), "Đồng chi trả 20%"),
+        row("Điều trị nha khoa", payout(planValue(plan, "dentalTreatment"), "/lần"), "Theo giới hạn từng lần điều trị"),
+        row("Lấy cao răng", payout(planValue(plan, "dentalScaling"), "/lần"), "Tối đa 1 lần/năm")
       );
     }
 
     if (selectedSet.has("maternity")) {
       rows.push(
-        row("Thai sáº£n tÃ¹y chá»n", payout(planValue(plan, "maternityAnnual"), "/nÄƒm"), "Thá»i gian chá» 270 ngÃ y"),
-        row("Sinh thÆ°á»ng", payout(planValue(plan, "normalDelivery"), "/nÄƒm"), "Trong giá»›i háº¡n thai sáº£n"),
-        row("Sinh má»• / biáº¿n chá»©ng thai sáº£n", payout(planValue(plan, "cSection"), "/nÄƒm"), "Trong giá»›i háº¡n thai sáº£n"),
-        row("PhÃ²ng & giÆ°á»ng thai sáº£n", payout(planValue(plan, "maternityRoom"), "/ngÃ y"), "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm")
+        row("Thai sản tùy chọn", payout(planValue(plan, "maternityAnnual"), "/năm"), "Thời gian chờ 270 ngày"),
+        row("Sinh thường", payout(planValue(plan, "normalDelivery"), "/năm"), "Trong giới hạn thai sản"),
+        row("Sinh mổ / biến chứng thai sản", payout(planValue(plan, "cSection"), "/năm"), "Trong giới hạn thai sản"),
+        row("Phòng & giường thai sản", payout(planValue(plan, "maternityRoom"), "/ngày"), "Tối đa 30 ngày/năm")
       );
     }
 
@@ -315,26 +315,26 @@
     const annualPremium = Number(data.annualBasicPremium) || 0;
     const term = Number(addon.term) || 0;
     return [
-      row("Há»— trá»£ tÃ i chÃ­nh khi BLNT giai Ä‘oáº¡n Ä‘áº§u", payout(annualPremium), "100% PBH nÄƒm; chá»‰ chi tráº£ 1 láº§n"),
-      row("Há»— trá»£ tÃ i chÃ­nh khi BLNT giai Ä‘oáº¡n cuá»‘i", payout(annualPremium), "100% PBH nÄƒm; trá»« khoáº£n ná»£ náº¿u cÃ³"),
-      row("Há»— trá»£ Ä‘Ã³ng phÃ­ dá»± kiáº¿n", payout(annualPremium * term), `Theo thá»i háº¡n há»— trá»£ ${term || "-"} nÄƒm cÃ²n láº¡i`)
+      row("Hỗ trợ tài chính khi BLNT giai đoạn đầu", payout(annualPremium), "100% PBH năm; chỉ chi trả 1 lần"),
+      row("Hỗ trợ tài chính khi BLNT giai đoạn cuối", payout(annualPremium), "100% PBH năm; trừ khoản nợ nếu có"),
+      row("Hỗ trợ đóng phí dự kiến", payout(annualPremium * term), `Theo thời hạn hỗ trợ ${term || "-"} năm còn lại`)
     ];
   }
 
   function buildR29Rows(stbh) {
     return [
-      row("Trá»£ cáº¥p viá»‡n phÃ­ cÆ¡ báº£n", payout(stbh, "/ngÃ y"), "Tá»‘i Ä‘a 50 ngÃ y/nÄƒm; tá»‘i Ä‘a 3 láº§n náº±m viá»‡n/nÄƒm"),
-      row("ICU", payout(amountByMultiple(stbh, 2), "/ngÃ y"), "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm; 300 ngÃ y toÃ n thá»i háº¡n"),
-      row("Pháº«u thuáº­t cÆ¡ báº£n", payout(amountByMultiple(stbh, 5), "/láº§n"), "Tá»‘i Ä‘a 2 láº§n/nÄƒm; 10 láº§n toÃ n thá»i háº¡n"),
-      row("Pháº«u thuáº­t Ä‘áº·c biá»‡t", payout(amountByMultiple(stbh, 10), "/láº§n"), "Má»—i ca chá»‰ chi tráº£ má»™t quyá»n lá»£i pháº«u thuáº­t"),
-      row("Váº­n chuyá»ƒn cáº¥p cá»©u", payout(amountByMultiple(stbh, 2, 1000000), "/láº§n"), "2 x STBH, tá»‘i Ä‘a 1.000.000 Ä‘á»“ng/láº§n; tá»‘i Ä‘a 2 láº§n/nÄƒm")
+      row("Trợ cấp viện phí cơ bản", payout(stbh, "/ngày"), "Tối đa 50 ngày/năm; tối đa 3 lần nằm viện/năm"),
+      row("ICU", payout(amountByMultiple(stbh, 2), "/ngày"), "Tối đa 30 ngày/năm; 300 ngày toàn thời hạn"),
+      row("Phẫu thuật cơ bản", payout(amountByMultiple(stbh, 5), "/lần"), "Tối đa 2 lần/năm; 10 lần toàn thời hạn"),
+      row("Phẫu thuật đặc biệt", payout(amountByMultiple(stbh, 10), "/lần"), "Mỗi ca chỉ chi trả một quyền lợi phẫu thuật"),
+      row("Vận chuyển cấp cứu", payout(amountByMultiple(stbh, 2, 1000000), "/lần"), "2 x STBH, tối đa 1.000.000 đồng/lần; tối đa 2 lần/năm")
     ];
   }
 
   function buildRows(addon, data, config) {
     const stbh = Number(addon.sumInsured) || 0;
     if (!hasReferenceSection(config.referenceMarkdown, addon.code)) {
-      return [row("ChÆ°a Ä‘á»c Ä‘Æ°á»£c pháº§n quyá»n lá»£i tÆ°Æ¡ng á»©ng", "-", `Thiáº¿u ná»™i dung ${addon.code} trong SPBK_QUYEN_LOI_CHI_TIET_CODEX.md`)];
+      return [row("Chưa đọc được phần quyền lợi tương ứng", "-", `Thiếu nội dung ${addon.code} trong SPBK_QUYEN_LOI_CHI_TIET_CODEX.md`)];
     }
 
     if (addon.code === "R21") return buildR21Rows(stbh);
@@ -346,17 +346,17 @@
     if (addon.code === "R27" || addon.code === "R28") return buildR27R28Rows(addon, data);
     if (addon.code === "R29") return buildR29Rows(stbh);
 
-    return [row("Quyá»n lá»£i báº£o vá»‡", "-", "ChÆ°a cáº¥u hÃ¬nh báº£ng tÃ³m táº¯t cho SPBK nÃ y")];
+    return [row("Quyền lợi bảo vệ", "-", "Chưa cấu hình bảng tóm tắt cho SPBK này")];
   }
 
   function buildAddonCards(data, config) {
     return (data.selectedAddons || []).map((addon) => {
       const headline = addon.code === "R26"
-        ? `Háº¡ng chÆ°Æ¡ng trÃ¬nh: ${addon.r26Plan || addon.displaySumInsured || "-"}`
+        ? `Hạng chương trình: ${addon.r26Plan || addon.displaySumInsured || "-"}`
         : ["R24", "R27", "R28"].includes(addon.code)
-          ? `Háº¡n má»©c theo phÃ­ chÃ­nh: ${money(data.annualBasicPremium)} / nÄƒm`
+          ? `Hạn mức theo phí chính: ${money(data.annualBasicPremium)} / năm`
           : addon.code === "R29"
-            ? `STBH: ${money(addon.sumInsured)} / ngÃ y`
+            ? `STBH: ${money(addon.sumInsured)} / ngày`
             : `STBH: ${money(addon.sumInsured)}`;
       return {
         code: addon.code,
@@ -395,8 +395,8 @@
     text(ctx, `Trang ${pageNumber}/${pageCount}`, IMAGE_WIDTH - 54, 42, { size: 22, weight: 800, color: "#fff6e8", align: "right" });
 
     const insured = data.insured || {};
-    text(ctx, insured.name || "KhÃ¡ch hÃ ng", 54, 94, { size: 26, weight: 800, color: "#fff6e8", maxWidth: 520 });
-    text(ctx, `${insured.gender || "-"}${insured.age === null || insured.age === undefined ? "" : `, ${insured.age} tuá»•i`}`, 54, 124, { size: 20, weight: 650, color: "#e8f4ff" });
+    text(ctx, insured.name || "Khách hàng", 54, 94, { size: 26, weight: 800, color: "#fff6e8", maxWidth: 520 });
+    text(ctx, `${insured.gender || "-"}${insured.age === null || insured.age === undefined ? "" : `, ${insured.age} tuổi`}`, 54, 124, { size: 20, weight: 650, color: "#e8f4ff" });
   }
 
   function drawInfoStrip(ctx, data, y) {
@@ -406,9 +406,9 @@
     ctx.strokeStyle = COLORS.line;
     ctx.lineWidth = 2;
     ctx.stroke();
-    text(ctx, "Sáº£n pháº©m chÃ­nh", 72, y + 16, { size: 19, weight: 700, color: COLORS.muted });
+    text(ctx, "Sản phẩm chính", 72, y + 16, { size: 19, weight: 700, color: COLORS.muted });
     text(ctx, data.mainProduct || "An T\u00e2m Ho\u1ea1ch \u0110\u1ecbnh", 72, y + 42, { size: 26, weight: 850, color: COLORS.blue, maxWidth: 470 });
-    text(ctx, "STBH tá»­ vong chÃ­nh", 660, y + 16, { size: 19, weight: 700, color: COLORS.muted });
+    text(ctx, "STBH tử vong chính", 660, y + 16, { size: 19, weight: 700, color: COLORS.muted });
     text(ctx, money(data.mainDeathBenefit), 660, y + 42, { size: 28, weight: 850, color: COLORS.orange, maxWidth: 430 });
     return y + 108;
   }
@@ -439,9 +439,9 @@
     ctx.fillStyle = "#f6f9fc";
     drawRoundedRect(ctx, tableX, tableY, tableW, layout.tableHeaderH, 8);
     ctx.fill();
-    text(ctx, "Quyá»n lá»£i", tableX + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
-    text(ctx, "Má»©c chi tráº£", tableX + benefitW + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
-    text(ctx, "Ghi chÃº giá»›i háº¡n", tableX + benefitW + payoutW + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
+    text(ctx, "Quyền lợi", tableX + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
+    text(ctx, "Mức chi trả", tableX + benefitW + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
+    text(ctx, "Ghi chú giới hạn", tableX + benefitW + payoutW + 12, tableY + 8, { size: layout.smallSize, weight: 800, color: COLORS.muted });
 
     card.rows.forEach((item, index) => {
       const rowY = tableY + layout.tableHeaderH + index * layout.rowH;
@@ -460,7 +460,7 @@
   }
 
   function isR21ExclusiveBenefit(item) {
-    return /cuÃ¡Â»â€˜i|cuá»‘i|quÃ¡Â»Âµ|quá»µ|mÃƒÂ¡u|mÃ¡u/.test(item.benefit);
+    return /cuối|cuối|quỵ|quỵ|máu|máu/.test(item.benefit);
   }
 
   function estimateInfographicRowHeight(item) {
@@ -493,7 +493,7 @@
     ctx.beginPath();
     ctx.arc(x + 18, y + 25, 13, 0, Math.PI * 2);
     ctx.fill();
-    text(ctx, "âœ“", x + 18, y + 14, { size: 19, weight: 900, color: COLORS.blue, align: "center" });
+    text(ctx, "✓", x + 18, y + 14, { size: 19, weight: 900, color: COLORS.blue, align: "center" });
     wrap(ctx, item.benefit, x + 42, y + 11, width * 0.48, 20, { size: 17, weight: 800, color: COLORS.blue });
     text(ctx, payoutParts.rate || "-", x + width * 0.66, y + 13, { size: 17, weight: 900, color: COLORS.red, align: "center", maxWidth: width * 0.22 });
     wrap(ctx, payoutParts.amount || "-", x + width * 0.75, y + 11, width * 0.23, 20, { size: 17, weight: 850, color: COLORS.text });
@@ -513,12 +513,12 @@
     const colW = width / 3;
     groupRows.forEach((item, index) => {
       const cx = x + colW * index + colW / 2;
-      if (index) text(ctx, "hoáº·c", x + colW * index, y + 54, { size: 18, weight: 850, color: COLORS.text, align: "center" });
+      if (index) text(ctx, "hoặc", x + colW * index, y + 54, { size: 18, weight: 850, color: COLORS.text, align: "center" });
       ctx.fillStyle = "#ffe1e1";
       ctx.beginPath();
       ctx.arc(cx, y + 34, 27, 0, Math.PI * 2);
       ctx.fill();
-      text(ctx, index === 0 ? "!" : index === 1 ? "â†¯" : "â™¥", cx, y + 18, { size: 24, weight: 900, color: COLORS.red, align: "center" });
+      text(ctx, index === 0 ? "!" : index === 1 ? "↯" : "♥", cx, y + 18, { size: 24, weight: 900, color: COLORS.red, align: "center" });
       wrap(ctx, item.benefit, cx - colW / 2 + 14, y + 68, colW - 28, 21, { size: 17, weight: 850, color: COLORS.blue, align: "center" });
       const payoutParts = parsePayoutText(item.payoutText);
       text(ctx, payoutParts.rate || "100% STBH", cx, y + 116, { size: 17, weight: 900, color: COLORS.red, align: "center" });
@@ -544,7 +544,7 @@
     drawRoundedRect(ctx, x + pad, y + pad, 78, 44, 10);
     ctx.fill();
     text(ctx, card.code, x + pad + 39, y + pad + 9, { size: 24, weight: 900, color: COLORS.blue, align: "center" });
-    wrap(ctx, `${card.name}${card.continued ? " (tiáº¿p)" : ""}`, x + pad + 98, y + pad + 2, width - 360, 28, { size: 25, weight: 900, color: COLORS.blue });
+    wrap(ctx, `${card.name}${card.continued ? " (tiếp)" : ""}`, x + pad + 98, y + pad + 2, width - 360, 28, { size: 25, weight: 900, color: COLORS.blue });
     text(ctx, card.headline, x + width - pad, y + pad + 12, { size: 22, weight: 900, color: COLORS.orange, align: "right", maxWidth: 300 });
 
     const gridX = x + pad;
@@ -571,7 +571,7 @@
       ctx.beginPath();
       ctx.arc(bx + 24, by + 28, 14, 0, Math.PI * 2);
       ctx.fill();
-      text(ctx, "âœ“", bx + 24, by + 17, { size: 19, weight: 900, color: COLORS.blue, align: "center" });
+      text(ctx, "✓", bx + 24, by + 17, { size: 19, weight: 900, color: COLORS.blue, align: "center" });
       wrap(ctx, item.benefit, bx + 48, by + 15, benefitW - 66, 21, { size: 18, weight: 850, color: COLORS.blue });
       text(ctx, payoutParts.rate || "-", bx + 18, by + 72, { size: 18, weight: 900, color: COLORS.red, maxWidth: benefitW * 0.42 });
       text(ctx, payoutParts.amount || "-", bx + benefitW - 18, by + 72, { size: 18, weight: 900, color: COLORS.text, align: "right", maxWidth: benefitW * 0.52 });
@@ -597,7 +597,7 @@
     ctx.beginPath();
     ctx.arc(x + 25, y + 31, 14, 0, Math.PI * 2);
     ctx.fill();
-    text(ctx, "âœ“", x + 25, y + 20, { size: 18, weight: 900, color: COLORS.blue, align: "center" });
+    text(ctx, "✓", x + 25, y + 20, { size: 18, weight: 900, color: COLORS.blue, align: "center" });
     wrap(ctx, item.benefit, x + 52, y + 17, width - 450, 21, { size: 18, weight: 800, color: COLORS.blue });
     const infoY = y + Math.max(56, rowH - 34);
     text(ctx, payoutParts.rate || "-", x + 52, infoY, { size: 17, weight: 900, color: COLORS.red, maxWidth: width * 0.38 });
@@ -619,7 +619,7 @@
     drawRoundedRect(ctx, x + pad, y + pad, 78, 44, 10);
     ctx.fill();
     text(ctx, card.code, x + pad + 39, y + pad + 9, { size: 24, weight: 900, color: COLORS.blue, align: "center" });
-    wrap(ctx, `${card.name}${card.continued ? " (tiÃ¡ÂºÂ¿p)" : ""}`, x + pad + 98, y + pad + 2, width - 410, 28, { size: 25, weight: 900, color: COLORS.blue });
+    wrap(ctx, `${card.name}${card.continued ? " (tiếp)" : ""}`, x + pad + 98, y + pad + 2, width - 410, 28, { size: 25, weight: 900, color: COLORS.blue });
     text(ctx, card.headline, x + width - pad, y + pad + 12, { size: 22, weight: 900, color: COLORS.orange, align: "right", maxWidth: 350 });
 
     const gridX = x + pad;
@@ -682,8 +682,8 @@
 
   function compactBenefitTitle(value) {
     return String(value || "")
-      .replace(/Máº¥t hoÃ n toÃ n vÃ  khÃ´ng thá»ƒ phá»¥c há»“i chá»©c nÄƒng /gi, "Máº¥t hoÃ n toÃ n ")
-      .replace(/bao gá»“m máº¥t hoÃ n toÃ n máº¯t hoáº·c mÃ¹ hoÃ n toÃ n/gi, "nhÃ¬n 01 máº¯t")
+      .replace(/Mất hoàn toàn và không thể phục hồi chức năng /gi, "Mất hoàn toàn ")
+      .replace(/bao gồm mất hoàn toàn mắt hoặc mù hoàn toàn/gi, "nhìn 01 mắt")
       .replace(/cá»§a /gi, "")
       .trim();
   }
@@ -720,8 +720,8 @@
   function iconTypeFor(card, item) {
     const benefit = String(item?.benefit || "").toLowerCase();
     if (card.code === "R21") return benefit.includes("tim") ? "heart" : "shield";
-    if (card.code === "R22") return benefit.includes("máº¯t") || benefit.includes("mÃ¡ÂºÂ¯t") ? "eye" : "shield";
-    if (card.code === "R23") return benefit.includes("hÃ ng khÃ´ng") || benefit.includes("hÃƒÂ ng khÃƒÂ´ng") ? "plane" : "shield";
+    if (card.code === "R22") return benefit.includes("mắt") || benefit.includes("mắt") ? "eye" : "shield";
+    if (card.code === "R23") return benefit.includes("hàng không") || benefit.includes("hàng không") ? "plane" : "shield";
     if (card.code === "R26" || card.code === "R29") return "hospital";
     return card.code === "R25" ? "hospital" : "shield";
   }
@@ -744,28 +744,28 @@
     const benefit = String(item?.benefit || "").toLowerCase();
     if (card.code === "R21") {
       if (benefit.includes("tim")) return "Heart";
-      if (benefit.includes("quÃ¡Â»Âµ") || benefit.includes("quá»µ")) return "Brain";
-      if (benefit.includes("cuÃ¡Â»â€˜i") || benefit.includes("cuá»‘i")) return "Ribbon";
+      if (benefit.includes("quỵ") || benefit.includes("quỵ")) return "Brain";
+      if (benefit.includes("cuối") || benefit.includes("cuối")) return "Ribbon";
       return "HeartPulse";
     }
     if (card.code === "R22") {
-      if (benefit.includes("mÃ¡ÂºÂ¯t") || benefit.includes("mÃƒÂ¡Ã‚ÂºÃ‚Â¯t")) return "Eye";
+      if (benefit.includes("mắt") || benefit.includes("mắt")) return "Eye";
       if (benefit.includes("tai")) return "Ear";
-      if (benefit.includes("chÃƒÂ¢n") || benefit.includes("chÃ¢n")) return "Footprints";
-      if (benefit.includes("ngÃƒÂ³n") || benefit.includes("ngÃ³n") || benefit.includes("tay")) return "Hand";
-      if (benefit.includes("khÃ¡Â»â€ºp") || benefit.includes("khá»›p") || benefit.includes("chi")) return "Accessibility";
+      if (benefit.includes("chân") || benefit.includes("chân")) return "Footprints";
+      if (benefit.includes("ngón") || benefit.includes("ngón") || benefit.includes("tay")) return "Hand";
+      if (benefit.includes("khá»›p") || benefit.includes("khớp") || benefit.includes("chi")) return "Accessibility";
       return "Shield";
     }
-    if (card.code === "R23") return benefit.includes("hÃƒÂ ng khÃƒÂ´ng") || benefit.includes("hÃ ng khÃ´ng") ? "Plane" : "Shield";
+    if (card.code === "R23") return benefit.includes("hàng không") || benefit.includes("hàng không") ? "Plane" : "Shield";
     if (card.code === "R26") {
-      if (benefit.includes("phÃƒÂ²ng") || benefit.includes("giÃ†Â°Ã¡Â»Âng")) return "Bed";
-      if (benefit.includes("khÃƒÂ¡m") || benefit.includes("vÃ¡ÂºÂ­t") || benefit.includes("váº­t")) return "Stethoscope";
+      if (benefit.includes("phòng") || benefit.includes("giường")) return "Bed";
+      if (benefit.includes("khám") || benefit.includes("vật") || benefit.includes("vật")) return "Stethoscope";
       return "Hospital";
     }
     if (card.code === "R29") {
-      if (benefit.includes("vÃ¡ÂºÂ­n chuyÃ¡Â»Æ’n") || benefit.includes("cáº¥p cá»©u")) return "Ambulance";
+      if (benefit.includes("vận chuyển") || benefit.includes("cấp cứu")) return "Ambulance";
       if (benefit.includes("icu")) return "Activity";
-      if (benefit.includes("viÃ¡Â»â€¡n") || benefit.includes("viá»‡n")) return "Bed";
+      if (benefit.includes("viện") || benefit.includes("viện")) return "Bed";
       return "Hospital";
     }
     return card.code === "R25" ? "Hospital" : "Shield";
@@ -878,7 +878,7 @@
     const gap = 18;
     const miniW = (width - gap * 2) / 3;
     rows.forEach((item, index) => {
-      if (index) text(ctx, "hoáº·c", x + index * (miniW + gap) - gap / 2, y + 86, { size: 17, weight: 800, color: COLORS.text, align: "center" });
+      if (index) text(ctx, "hoặc", x + index * (miniW + gap) - gap / 2, y + 86, { size: 17, weight: 800, color: COLORS.text, align: "center" });
       drawMiniCard(ctx, card, item, x + index * (miniW + gap), y + 48, miniW, 144);
     });
   }
@@ -898,7 +898,7 @@
     drawRoundedRect(ctx, x + pad, y + 20, 74, 42, 8);
     ctx.fill();
     text(ctx, card.code, x + pad + 37, y + 29, { size: 22, weight: 900, color: "#fff", align: "center" });
-    wrap(ctx, `${card.name}${card.continued ? " (tiáº¿p)" : ""}`, x + pad + 96, y + 18, width - 450, 28, { size: 26, weight: 900, color: COLORS.blue });
+    wrap(ctx, `${card.name}${card.continued ? " (tiếp)" : ""}`, x + pad + 96, y + 18, width - 450, 28, { size: 26, weight: 900, color: COLORS.blue });
     text(ctx, card.headline, x + width - pad, y + 27, { size: 20, weight: 900, color: COLORS.orange, align: "right", maxWidth: 360 });
 
     const contentX = x + pad;
@@ -944,7 +944,7 @@
     rows.forEach((item, index) => {
       const itemX = x + index * (miniW + gap + orW);
       if (index) {
-        text(ctx, "hoáº·c", itemX - orW / 2 - gap / 2, y + miniH / 2 - 10, { size: 17, weight: 800, color: COLORS.text, align: "center" });
+        text(ctx, "hoặc", itemX - orW / 2 - gap / 2, y + miniH / 2 - 10, { size: 17, weight: 800, color: COLORS.text, align: "center" });
       }
       drawMiniCard(ctx, card, item, itemX, y, miniW, miniH);
     });
@@ -965,7 +965,7 @@
     drawRoundedRect(ctx, x + pad, y + 20, 74, 42, 8);
     ctx.fill();
     text(ctx, card.code, x + pad + 37, y + 29, { size: 22, weight: 900, color: "#fff", align: "center" });
-    wrap(ctx, `${card.name}${card.continued ? " (tiáº¿p)" : ""}`, x + pad + 96, y + 18, width - 450, 28, { size: 26, weight: 900, color: COLORS.blue });
+    wrap(ctx, `${card.name}${card.continued ? " (tiếp)" : ""}`, x + pad + 96, y + 18, width - 450, 28, { size: 26, weight: 900, color: COLORS.blue });
     text(ctx, card.headline, x + width - pad, y + 27, { size: 20, weight: 900, color: COLORS.orange, align: "right", maxWidth: 360 });
     drawPersonBadge(ctx, card, x + pad + 96, y + 62, 430);
 

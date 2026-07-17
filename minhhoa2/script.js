@@ -1,15 +1,15 @@
-﻿const loyaltyBonusPolicyYears = [5, 10, 15, 20];
+const loyaltyBonusPolicyYears = [5, 10, 15, 20];
 const additionalPremiumAllocationFeeRate = 0;
 const alternateIllustrationInterestRate = 4.25;
 const fixedIllustrationInterestRate = 4.76;
 const MAIN_PRODUCTS = {
-  ATHD: "An TÃ¢m Hoáº¡ch Äá»‹nh",
-  ATPN: "An Thá»‹nh PhÃºc NiÃªn",
+  ATHD: "An Tâm Hoạch Định",
+  ATPN: "An Thịnh Phúc Niên",
   LIFE_CARE_20: "Life Care 2.0"
 };
 const MAIN_PRODUCT_TERMS_PDFS = {
-  ATHD: "Antamhoachdinh_QTÄK.pdf",
-  ATPN: "Anthinhphucnien_QTÄK.pdf",
+  ATHD: "Antamhoachdinh_QTĐK.pdf",
+  ATPN: "Anthinhphucnien_QTĐK.pdf",
   LIFE_CARE_20: "Life-Care-2.0_NH02_QTDK.pdf"
 };
 let selectedMainProduct = "ATPN";
@@ -907,10 +907,10 @@ const PAYMENT_MODE_FACTOR = {
 };
 
 const PAYMENT_MODE_LABEL = {
-  yearly: "NÄƒm",
-  halfYearly: "Ná»­a nÄƒm",
-  quarterly: "QuÃ½",
-  monthly: "ThÃ¡ng"
+  yearly: "Năm",
+  halfYearly: "Nửa năm",
+  quarterly: "Quý",
+  monthly: "Tháng"
 };
 
 const DEFAULT_JOB_GROUP = 1;
@@ -921,7 +921,7 @@ function normalizeText(value = "") {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/Ä‘/g, "d")
+    .replace(/Ä'/g, "d")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .replace(/\s+/g, " ");
@@ -1088,27 +1088,27 @@ const R29_AGE_LIMITS = [
 ];
 const R29_MAIN_SUM_RATIO = 0.002;
 
-const R26_PLANS = ["Báº¡c", "VÃ ng", "Báº¡ch Kim", "Kim CÆ°Æ¡ng", "Lá»¥c Báº£o"];
+const R26_PLANS = ["Bạc", "Vàng", "Bạch Kim", "Kim Cương", "Lục Bảo"];
 const R26_BENEFIT_LABELS = {
-  inpatient: "Ná»™i trÃº",
-  outpatient: "Ngoáº¡i trÃº",
+  inpatient: "Nội trú",
+  outpatient: "Ngoại trú",
   dental: "Nha khoa",
-  maternity: "Thai sáº£n"
+  maternity: "Thai sản"
 };
 
 const R26_BENEFIT_DESCRIPTIONS = {
-  inpatient: "Chi phÃ­ Ä‘iá»u trá»‹ ná»™i trÃº",
-  outpatient: "KhÃ¡m vÃ  Ä‘iá»u trá»‹ ngoáº¡i trÃº",
-  dental: "ChÄƒm sÃ³c rÄƒng miá»‡ng",
-  maternity: "Quyá»n lá»£i thai sáº£n"
+  inpatient: "Chi phí điều trị nội trú",
+  outpatient: "Khám và điều trị ngoại trú",
+  dental: "Chăm sóc răng miệng",
+  maternity: "Quyền lợi thai sản"
 };
 
 const R26_PLAN_BENEFITS = {
-  "Báº¡c": ["inpatient"],
-  "VÃ ng": ["inpatient", "outpatient", "dental", "maternity"],
-  "Báº¡ch Kim": ["inpatient", "outpatient", "dental", "maternity"],
-  "Kim CÆ°Æ¡ng": ["inpatient", "outpatient", "dental", "maternity"],
-  "Lá»¥c Báº£o": ["inpatient", "outpatient", "dental", "maternity"]
+  "Bạc": ["inpatient"],
+  "Vàng": ["inpatient", "outpatient", "dental", "maternity"],
+  "Bạch Kim": ["inpatient", "outpatient", "dental", "maternity"],
+  "Kim Cương": ["inpatient", "outpatient", "dental", "maternity"],
+  "Lục Bảo": ["inpatient", "outpatient", "dental", "maternity"]
 };
 
 const R26_RATE_TABLE = {
@@ -1190,19 +1190,19 @@ const R24_RATE_TABLE = {
 const SPBK_PRODUCTS = {
   R21: {
     code: "R21",
-    name: "Báº£o hiá»ƒm Bá»‡nh nan y",
-    shortDescription: "TÃ­nh phÃ­ theo tuá»•i, giá»›i tÃ­nh vÃ  STBH theo biá»ƒu phÃ­ 0-74.",
+    name: "Bảo hiểm Bệnh nan y",
+    shortDescription: "Tính phí theo tuổi, giới tính và STBH theo biểu phí 0-74.",
     minSumInsured: 100000000,
     maxSumInsured: 1000000000,
     step: 50000000,
     quickAmounts: [100000000, 200000000, 300000000, 400000000, 500000000, 1000000000],
     isConfigured: true,
-    notes: "R21 Ä‘ang dÃ¹ng biá»ƒu phÃ­ Ä‘áº§y Ä‘á»§ tá»« tuá»•i 0 Ä‘áº¿n 74 theo giá»›i tÃ­nh."
+    notes: "R21 đang dùng biểu phí đầy đủ từ tuổi 0 đến 74 theo giới tính."
   },
   R22: {
     code: "R22",
-    name: "ThÆ°Æ¡ng táº­t bá»™ pháº­n vÄ©nh viá»…n do tai náº¡n 2.0",
-    shortDescription: "Tá»· lá»‡ chuáº©n 0,51/1.000 STBH, Ä‘iá»u chá»‰nh theo nhÃ³m nghá» nghiá»‡p.",
+    name: "Thương tật bộ phận vĩnh viễn do tai nạn 2.0",
+    shortDescription: "Tỷ lệ chuẩn 0,51/1.000 STBH, điều chỉnh theo nhóm nghề nghiệp.",
     minSumInsured: 100000000,
     maxSumInsured: 1000000000,
     step: 50000000,
@@ -1211,8 +1211,8 @@ const SPBK_PRODUCTS = {
   },
   R23: {
     code: "R23",
-    name: "Tá»­ vong vÃ  ThÆ°Æ¡ng táº­t nghiÃªm trá»ng do tai náº¡n",
-    shortDescription: "TÃ­nh theo nhÃ³m tuá»•i, nhÃ³m nghá» nghiá»‡p vÃ  STBH.",
+    name: "Tử vong và Thương tật nghiêm trọng do tai nạn",
+    shortDescription: "Tính theo nhóm tuổi, nhóm nghề nghiệp và STBH.",
     minSumInsured: 100000000,
     maxSumInsured: 1000000000,
     step: 50000000,
@@ -1221,19 +1221,19 @@ const SPBK_PRODUCTS = {
   },
   R24: {
     code: "R24",
-    name: "Há»— trá»£ Ä‘Ã³ng phÃ­ báº£o hiá»ƒm do tá»­ vong",
-    shortDescription: "TÃ­nh theo phÃ­ Ä‘á»‹nh ká»³ nÄƒm sáº£n pháº©m chÃ­nh, tuá»•i, giá»›i tÃ­nh vÃ  thá»i háº¡n.",
+    name: "Hỗ trợ đóng phí bảo hiểm do tử vong",
+    shortDescription: "Tính theo phí định kỳ năm sản phẩm chính, tuổi, giới tính và thời hạn.",
     minSumInsured: 0,
     maxSumInsured: 0,
     step: 0,
     quickAmounts: [],
     isConfigured: true,
-    notes: "File R24 chá»‰ cÃ³ tá»· lá»‡ máº«u cho tuá»•i 30. Tuá»•i/thá»i háº¡n khÃ¡c sáº½ bÃ¡o chÆ°a cÃ³ biá»ƒu phÃ­."
+    notes: "File R24 chỉ có tỷ lệ mẫu cho tuổi 30. Tuổi/thời hạn khác sẽ báo chưa có biểu phí."
   },
   R25: {
     code: "R25",
-    name: "Bá»‡nh lÃ½ nghiÃªm trá»ng toÃ n diá»‡n",
-    shortDescription: "TÃ­nh phÃ­ theo tuá»•i, giá»›i tÃ­nh, STBH vÃ  Ä‘á»‹nh ká»³ Ä‘Ã³ng phÃ­.",
+    name: "Bệnh lý nghiêm trọng toàn diện",
+    shortDescription: "Tính phí theo tuổi, giới tính, STBH và định kỳ đóng phí.",
     minSumInsured: 100000000,
     maxSumInsured: 1000000000,
     step: 50000000,
@@ -1242,20 +1242,20 @@ const SPBK_PRODUCTS = {
   },
   R26: {
     code: "R26",
-    name: "ChÄƒm sÃ³c Sá»©c khá»e ToÃ n diá»‡n",
-    shortDescription: "Chá»n chÆ°Æ¡ng trÃ¬nh vÃ  quyá»n lá»£i sá»©c khá»e; biá»ƒu phÃ­ Ä‘Æ¡n vá»‹ nghÃ¬n Ä‘á»“ng.",
+    name: "Chăm sóc Sức khỏe Toàn diện",
+    shortDescription: "Chọn chương trình và quyền lợi sức khỏe; biểu phí đơn vị nghìn đồng.",
     minSumInsured: 0,
     maxSumInsured: 0,
     step: 0,
     quickAmounts: [],
     isConfigured: true
   },
-  R27: { code: "R27", name: "R27", shortDescription: "ChÆ°a cáº¥u hÃ¬nh sáº£n pháº©m", isConfigured: false },
-  R28: { code: "R28", name: "R28", shortDescription: "ChÆ°a cáº¥u hÃ¬nh sáº£n pháº©m", isConfigured: false },
+  R27: { code: "R27", name: "R27", shortDescription: "Chưa cấu hình sản phẩm", isConfigured: false },
+  R28: { code: "R28", name: "R28", shortDescription: "Chưa cấu hình sản phẩm", isConfigured: false },
   R29: {
     code: "R29",
-    name: "Trá»£ cáº¥p viá»‡n phÃ­ vÃ  pháº«u thuáº­t",
-    shortDescription: "Kiá»ƒm tra giá»›i háº¡n STBH theo tuá»•i vÃ  0,2% STBH chÃ­nh.",
+    name: "Trợ cấp viện phí và phẫu thuật",
+    shortDescription: "Kiểm tra giới hạn STBH theo tuổi và 0,2% STBH chính.",
     minSumInsured: 100000,
     maxSumInsured: 1000000,
     step: 100000,
@@ -1281,7 +1281,7 @@ const riderStatesByPerson = {
 };
 
 const RIDER_TERMS_PDF_DIR = "SPBK_PDF";
-const SPBK_BENEFIT_POPUP_EMPTY_MESSAGE = "Vui lÃ²ng chá»n sá»‘ tiá»n báº£o hiá»ƒm Ä‘á»ƒ xem chi tiáº¿t quyá»n lá»£i.";
+const SPBK_BENEFIT_POPUP_EMPTY_MESSAGE = "Vui lòng chọn số tiền bảo hiểm để xem chi tiết quyền lợi.";
 
 function getOccupationGroupNumber(occupationGroup) {
   return Number(occupationGroup) || 1;
@@ -1299,7 +1299,7 @@ function applyOccupationGroupRules(addonCode, occupationGroup, currentMaxStbh) {
       return {
         allowed: false,
         maxStbh: currentMaxStbh,
-        message: "NhÃ³m nghá» hiá»‡n táº¡i khÃ´ng Ä‘Æ°á»£c tham gia R22."
+        message: "Nhóm nghề hiện tại không được tham gia R22."
       };
     }
 
@@ -1307,7 +1307,7 @@ function applyOccupationGroupRules(addonCode, occupationGroup, currentMaxStbh) {
       return {
         allowed: true,
         maxStbh: Math.min(currentMaxStbh ?? Infinity, 300000000),
-        message: "NhÃ³m nghá» 5: STBH R23 tá»‘i Ä‘a 300.000.000 Ä‘á»“ng."
+        message: "Nhóm nghề 5: STBH R23 tối đa 300.000.000 đồng."
       };
     }
   }
@@ -1316,7 +1316,7 @@ function applyOccupationGroupRules(addonCode, occupationGroup, currentMaxStbh) {
     return {
       allowed: false,
       maxStbh: currentMaxStbh,
-      message: `NhÃ³m nghá» 6 khÃ´ng Ä‘Æ°á»£c tham gia ${addonCode}.`
+      message: `Nhóm nghề 6 không được tham gia ${addonCode}.`
     };
   }
 
@@ -1443,7 +1443,7 @@ function renderOccupationSuggestions(items) {
   if (!list || !input) return;
 
   if (!items.length) {
-    list.innerHTML = `<div class="occupation-empty">KhÃ´ng tÃ¬m tháº¥y nghá» phÃ¹ há»£p</div>`;
+    list.innerHTML = `<div class="occupation-empty">Không tìm thấy nghề phù hợp</div>`;
     list.hidden = false;
     input.setAttribute("aria-expanded", "true");
     updateOccupationSuggestionPosition();
@@ -1554,7 +1554,7 @@ function renderPolicyOwnerOccupationSuggestions(items) {
   if (!list || !input) return;
 
   if (!items.length) {
-    list.innerHTML = `<div class="occupation-empty">KhÃ´ng tÃ¬m tháº¥y nghá» phÃ¹ há»£p</div>`;
+    list.innerHTML = `<div class="occupation-empty">Không tìm thấy nghề phù hợp</div>`;
     list.hidden = false;
     input.setAttribute("aria-expanded", "true");
     updatePolicyOwnerOccupationSuggestionPosition();
@@ -1590,7 +1590,7 @@ function handlePolicyOwnerOccupationInput() {
   } else {
     setPolicyOwnerOccupationGroup(DEFAULT_JOB_GROUP);
     setPolicyOwnerOccupationNote(
-      text ? "Vui lÃ²ng chá»n nghá» trong danh sÃ¡ch gá»£i Ã½ Ä‘á»ƒ xÃ¡c Ä‘á»‹nh nhÃ³m nghá»." : "",
+      text ? "Vui lòng chọn nghề trong danh sách gợi ý để xác định nhóm nghề." : "",
       Boolean(text)
     );
   }
@@ -1623,7 +1623,7 @@ function handleOccupationInput() {
   } else {
     setOccupationGroup(DEFAULT_JOB_GROUP);
     setOccupationNote(
-      text ? "Vui lÃ²ng chá»n nghá» trong danh sÃ¡ch gá»£i Ã½ Ä‘á»ƒ xÃ¡c Ä‘á»‹nh nhÃ³m nghá»." : "",
+      text ? "Vui lòng chọn nghề trong danh sách gợi ý để xác định nhóm nghề." : "",
       Boolean(text)
     );
   }
@@ -1640,7 +1640,7 @@ function createDefaultRiderSelection(code) {
     enabled: false,
     sumInsured: product.minSumInsured || 0,
     term: 10,
-    r26Plan: "VÃ ng",
+    r26Plan: "Vàng",
     r26Benefits: ["inpatient"]
   };
 }
@@ -1790,7 +1790,7 @@ function calculateRatePremium(rate, sumInsured, paymentMode) {
 }
 
 function getR26Rate(age, gender, plan, benefitType) {
-  if (benefitType === "maternity" && (gender !== "Ná»¯" || age < 18 || age > 45)) return null;
+  if (benefitType === "maternity" && (gender !== "Nữ" || age < 18 || age > 45)) return null;
   const planIndex = R26_PLANS.indexOf(plan);
   const rows = R26_RATE_TABLE[benefitType] || [];
   const row = rows.find(([min, max]) => age >= min && age <= max);
@@ -1799,7 +1799,7 @@ function getR26Rate(age, gender, plan, benefitType) {
 }
 
 function getR26AllowedBenefits(plan) {
-  return R26_PLAN_BENEFITS[plan] || R26_PLAN_BENEFITS["VÃ ng"];
+  return R26_PLAN_BENEFITS[plan] || R26_PLAN_BENEFITS["Vàng"];
 }
 
 function normalizeR26Selection(selection) {
@@ -1809,7 +1809,7 @@ function normalizeR26Selection(selection) {
 }
 
 function calculateR26Premium(selection, context) {
-  if (context.age === null) return { premium: 0, annualPremium: 0, error: "ChÆ°a nháº­p ngÃ y sinh" };
+  if (context.age === null) return { premium: 0, annualPremium: 0, error: "Chưa nhập ngày sinh" };
   normalizeR26Selection(selection);
   const benefits = selection.r26Benefits || [];
   let annualPremium = 0;
@@ -1818,7 +1818,7 @@ function calculateR26Premium(selection, context) {
   benefits.forEach((benefit) => {
     const rate = getR26Rate(context.age, context.gender, selection.r26Plan, benefit);
     if (!rate) {
-      errors.push(`${R26_BENEFIT_LABELS[benefit]} khÃ´ng Ã¡p dá»¥ng`);
+      errors.push(`${R26_BENEFIT_LABELS[benefit]} không áp dụng`);
       return;
     }
     annualPremium += rate * 1000;
@@ -1835,7 +1835,7 @@ function getR29Rate(age, gender) {
 
 function getR29AllowedMax(context) {
   const ageLimit = R29_AGE_LIMITS.find((item) => context.age >= item.min && context.age <= item.max);
-  if (!ageLimit) return { allowed: false, min: 100000, allowedMax: 0, reason: "Tuá»•i khÃ´ng náº±m trong Ä‘á»™ tuá»•i tham gia R29." };
+  if (!ageLimit) return { allowed: false, min: 100000, allowedMax: 0, reason: "Tuổi không nằm trong độ tuổi tham gia R29." };
 
   const allowedMax = Math.min(
     ageLimit.maxPerPolicy,
@@ -1846,13 +1846,13 @@ function getR29AllowedMax(context) {
     allowed: allowedMax >= ageLimit.minAmount,
     min: ageLimit.minAmount,
     allowedMax: Math.floor(allowedMax / 100000) * 100000,
-    reason: allowedMax < ageLimit.minAmount ? "Má»©c tá»‘i Ä‘a tháº¥p hÆ¡n má»©c tá»‘i thiá»ƒu 100.000 Ä‘á»“ng." : ""
+    reason: allowedMax < ageLimit.minAmount ? "Mức tối đa thấp hơn mức tối thiểu 100.000 đồng." : ""
   };
 }
 
 function calculateRiderPremium(code, selection, context) {
   if (!selection.enabled) return { premium: 0, annualPremium: 0, error: "" };
-  if (context.age === null) return { premium: 0, annualPremium: 0, error: "ChÆ°a nháº­p ngÃ y sinh" };
+  if (context.age === null) return { premium: 0, annualPremium: 0, error: "Chưa nhập ngày sinh" };
   const product = SPBK_PRODUCTS[code];
   const stbhRange = product ? getRiderStbhRange(product, selection, context) : null;
   const occupationRule = applyOccupationGroupRules(code, context.occupationGroup, stbhRange?.max);
@@ -1872,7 +1872,7 @@ function calculateRiderPremium(code, selection, context) {
 
   if (code === "R23") {
     const rate = getR23RateByAge(context.age);
-    if (!rate) return { premium: 0, annualPremium: 0, error: "R23 chá»‰ Ã¡p dá»¥ng tá»« 0 Ä‘áº¿n 69 tuá»•i." };
+    if (!rate) return { premium: 0, annualPremium: 0, error: "R23 chỉ áp dụng từ 0 đến 69 tuổi." };
     const adjustedRate = rate * (OCCUPATION_FACTOR[context.occupationGroup] || 1);
     return { premium: calculateRatePremium(adjustedRate, selection.sumInsured, context.paymentMode), annualPremium: calculateRatePremium(adjustedRate, selection.sumInsured, "yearly"), error: "" };
   }
@@ -1881,14 +1881,14 @@ function calculateRiderPremium(code, selection, context) {
     normalizeR24Term(selection, context);
     const allowedTerms = getR24AvailableTerms(context);
     if (!allowedTerms.length) {
-      return { premium: 0, annualPremium: 0, error: "R24 chÃ†Â°a cÃƒÂ³ thÃ¡Â»Âi hÃ¡ÂºÂ¡n bÃ¡ÂºÂ£o hiÃ¡Â»Æ’m hÃ¡Â»Â£p lÃ¡Â»â€¡ theo tuÃ¡Â»â€¢i vÃƒÂ  thÃ¡Â»Âi hÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ³ng phÃƒÂ­ SPC." };
+      return { premium: 0, annualPremium: 0, error: "R24 chưa có thời hạn bảo hiểm hợp lệ theo tuổi và thời hạn đóng phí SPC." };
     }
     if (!allowedTerms.includes(Number(selection.term))) {
-      return { premium: 0, annualPremium: 0, error: "ThÃ¡Â»Âi hÃ¡ÂºÂ¡n R24 khÃƒÂ´ng hÃ¡Â»Â£p lÃ¡Â»â€¡ theo tuÃ¡Â»â€¢i vÃƒÂ  thÃ¡Â»Âi hÃ¡ÂºÂ¡n Ã„â€˜ÃƒÂ³ng phÃƒÂ­ SPC." };
+      return { premium: 0, annualPremium: 0, error: "Thời hạn R24 không hợp lệ theo tuổi và thời hạn đóng phí SPC." };
     }
     const rates = R24_RATE_TABLE[getGenderKey(context.gender)]?.[context.age];
     const rate = rates?.[selection.term];
-    if (!rate) return { premium: 0, annualPremium: 0, error: "ChÆ°a cÃ³ biá»ƒu phÃ­ R24 cho tuá»•i/thá»i háº¡n nÃ y." };
+    if (!rate) return { premium: 0, annualPremium: 0, error: "Chưa có biểu phí R24 cho tuổi/thời hạn này." };
     const annualPremium = Math.round(rate * (context.mainAnnualPremium / 1000000));
     return { premium: Math.round(annualPremium * PAYMENT_MODE_FACTOR[context.paymentMode]), annualPremium, error: "" };
   }
@@ -1897,8 +1897,8 @@ function calculateRiderPremium(code, selection, context) {
     const table = code === "R21" ? R21_RATE_TABLE[context.age] : R25_RATE_TABLE[context.age];
     if (!table) {
       const message = code === "R21"
-        ? "ChÆ°a cÃ³ tá»· lá»‡ R21 cho tuá»•i nÃ y trong file cáº¥u hÃ¬nh."
-        : "R25 chá»‰ há»— trá»£ Ä‘á»™ tuá»•i tá»« 0 Ä‘áº¿n 74.";
+        ? "Chưa có tỷ lệ R21 cho tuổi này trong file cấu hình."
+        : "R25 chỉ hỗ trợ độ tuổi từ 0 đến 74.";
       return { premium: 0, annualPremium: 0, error: message };
     }
     const rate = table[getGenderKey(context.gender)];
@@ -1909,12 +1909,12 @@ function calculateRiderPremium(code, selection, context) {
 
   if (code === "R29") {
     const rate = getR29Rate(context.age, context.gender);
-    if (!rate) return { premium: 0, annualPremium: 0, error: "R29 chá»‰ Ã¡p dá»¥ng tá»« 0 Ä‘áº¿n 69 tuá»•i." };
+    if (!rate) return { premium: 0, annualPremium: 0, error: "R29 chỉ áp dụng từ 0 đến 69 tuổi." };
     const annualPremium = calculateRatePremium(rate, selection.sumInsured, "yearly");
     return { premium: calculateRatePremium(rate, selection.sumInsured, context.paymentMode), annualPremium, error: "" };
   }
 
-  return { premium: 0, annualPremium: 0, error: "ChÆ°a cáº¥u hÃ¬nh sáº£n pháº©m" };
+  return { premium: 0, annualPremium: 0, error: "Chưa cấu hình sản phẩm" };
 }
 
 function getOccupationTotalStbhError(context) {
@@ -1932,7 +1932,7 @@ function getOccupationTotalStbhError(context) {
     }, 0);
 
   return totalStbh > 2000000000
-    ? "Tá»•ng STBH cá»§a má»—i NÄBH nhÃ³m nghá» 5-6 tá»‘i Ä‘a 2.000.000.000 Ä‘á»“ng."
+    ? "Tổng STBH của mỗi NĐBH nhóm nghề 5-6 tối đa 2.000.000.000 đồng."
     : "";
 }
 
@@ -1971,55 +1971,55 @@ function getR26Limit(plan, key) {
 
 function formatR26Limit(plan, key, suffix = "") {
   const value = getR26Limit(plan, key);
-  return value ? formatBenefitMoney(value, suffix) : "KhÃ´ng Ã¡p dá»¥ng";
+  return value ? formatBenefitMoney(value, suffix) : "Không áp dụng";
 }
 
 function getMainAnnualPremiumBenefitText(context) {
   return context.mainAnnualPremium
-    ? formatBenefitMoney(context.mainAnnualPremium, "/nÄƒm")
-    : "Theo phÃ­ báº£o hiá»ƒm Ä‘á»‹nh ká»³ cá»§a sáº£n pháº©m chÃ­nh";
+    ? formatBenefitMoney(context.mainAnnualPremium, "/năm")
+    : "Theo phí bảo hiểm định kỳ của sản phẩm chính";
 }
 
 function buildR21BenefitRows(stbh) {
   return [
-    spbkBenefitRow("Ung thÆ° giai Ä‘oáº¡n Ä‘áº§u", `25% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.25, 500000000))}`, "Tá»‘i Ä‘a 500.000.000 Ä‘á»“ng; trá»« khoáº£n ná»£ náº¿u cÃ³"),
-    spbkBenefitRow("Ung thÆ° giai Ä‘oáº¡n cuá»‘i", `100% STBH = ${formatBenefitMoney(stbh)}`, "Trá»« quyá»n lá»£i ung thÆ° giai Ä‘oáº¡n Ä‘áº§u Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-    spbkBenefitRow("Äá»™t quá»µ", `100% STBH = ${formatBenefitMoney(stbh)}`, "Trá»« quyá»n lá»£i ung thÆ° giai Ä‘oáº¡n Ä‘áº§u Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-    spbkBenefitRow("Nhá»“i mÃ¡u cÆ¡ tim", `100% STBH = ${formatBenefitMoney(stbh)}`, "Tá»•ng chi tráº£ tá»‘i Ä‘a toÃ n bá»™ R21 lÃ  100% STBH")
+    spbkBenefitRow("Ung thư giai đoạn đầu", `25% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.25, 500000000))}`, "Tối đa 500.000.000 đồng; trừ khoản nợ nếu có"),
+    spbkBenefitRow("Ung thư giai đoạn cuối", `100% STBH = ${formatBenefitMoney(stbh)}`, "Trừ quyền lợi ung thư giai đoạn đầu đã chi trả nếu có"),
+    spbkBenefitRow("Đột quỵ", `100% STBH = ${formatBenefitMoney(stbh)}`, "Trừ quyền lợi ung thư giai đoạn đầu đã chi trả nếu có"),
+    spbkBenefitRow("Nhồi máu cơ tim", `100% STBH = ${formatBenefitMoney(stbh)}`, "Tổng chi trả tối đa toàn bộ R21 là 100% STBH")
   ];
 }
 
 function buildR22BenefitRows(stbh) {
   const rows = [
-    ["Máº¯t", "Máº¥t hoÃ n toÃ n vÃ  khÃ´ng thá»ƒ phá»¥c há»“i chá»©c nÄƒng nhÃ¬n cá»§a 01 máº¯t, bao gá»“m máº¥t hoÃ n toÃ n máº¯t hoáº·c mÃ¹ hoÃ n toÃ n", 0.55],
-    ["Tai", "Máº¥t hoÃ n toÃ n vÃ  khÃ´ng thá»ƒ phá»¥c há»“i chá»©c nÄƒng nghe cá»§a 02 tai", 0.75],
-    ["Tai", "Máº¥t hoÃ n toÃ n vÃ  khÃ´ng thá»ƒ phá»¥c há»“i chá»©c nÄƒng nghe cá»§a 01 tai", 0.20],
-    ["Tai", "Máº¥t toÃ n bá»™ 02 loa tai", 0.15],
-    ["Tai", "Máº¥t toÃ n bá»™ 01 loa tai", 0.05],
-    ["Chi trÃªn", "ThÃ¡o khá»›p cá»• tay", 0.50],
-    ["Chi trÃªn", "Cáº¯t cá»¥t cáº³ng tay", 0.55],
-    ["Chi trÃªn", "ThÃ¡o khá»›p khuá»·u tay", 0.60],
-    ["Chi trÃªn", "Cáº¯t cá»¥t cÃ¡nh tay", 0.65],
-    ["Chi trÃªn", "ThÃ¡o khá»›p vai", 0.70],
-    ["NgÃ³n tay cÃ¡i", "Máº¥t 01 Ä‘á»‘t ngÃ³n tay cÃ¡i", 0.08],
-    ["NgÃ³n tay cÃ¡i", "Máº¥t toÃ n bá»™ 02 Ä‘á»‘t ngÃ³n tay cÃ¡i", 0.20],
-    ["NgÃ³n tay", "Máº¥t toÃ n bá»™ 03 Ä‘á»‘t ngÃ³n tay trá»", 0.09],
-    ["NgÃ³n tay", "Máº¥t toÃ n bá»™ 03 Ä‘á»‘t ngÃ³n tay giá»¯a", 0.07],
-    ["NgÃ³n tay", "Máº¥t toÃ n bá»™ 03 Ä‘á»‘t ngÃ³n tay Ã¡p Ãºt", 0.06],
-    ["NgÃ³n tay", "Máº¥t toÃ n bá»™ 03 Ä‘á»‘t ngÃ³n tay Ãºt", 0.05],
-    ["NgÃ³n tay", "Máº¥t 01 Ä‘á»‘t cá»§a má»—i ngÃ³n tay II, III, IV, V", 0.02],
-    ["NgÃ³n tay", "Máº¥t 02 Ä‘á»‘t cá»§a má»—i ngÃ³n tay II, III, IV, V", 0.04],
-    ["Chi dÆ°á»›i", "Máº¥t ná»­a bÃ n chÃ¢n", 0.35],
-    ["Chi dÆ°á»›i", "ThÃ¡o khá»›p cá»• chÃ¢n", 0.45],
-    ["Chi dÆ°á»›i", "Cáº¯t cá»¥t cáº³ng chÃ¢n", 0.55],
-    ["Chi dÆ°á»›i", "ThÃ¡o khá»›p gá»‘i", 0.60],
-    ["Chi dÆ°á»›i", "Cáº¯t cá»¥t Ä‘Ã¹i", 0.65],
-    ["Chi dÆ°á»›i", "ThÃ¡o khá»›p hÃ¡ng", 0.70],
-    ["NgÃ³n chÃ¢n", "Máº¥t toÃ n bá»™ ngÃ³n chÃ¢n cÃ¡i", 0.07],
-    ["NgÃ³n chÃ¢n", "Máº¥t toÃ n bá»™ má»™t ngÃ³n chÃ¢n khÃ¡c, trá»« ngÃ³n chÃ¢n cÃ¡i", 0.03],
-    ["KhÃ¡c", "Máº¥t hoÃ n toÃ n vÃ  vÄ©nh viá»…n tiáº¿ng nÃ³i", 0.50],
-    ["KhÃ¡c", "Máº¥t hoÃ n toÃ n xÆ°Æ¡ng hÃ m dÆ°á»›i", 0.70],
-    ["KhÃ¡c", "Máº¥t hoÃ n toÃ n xÆ°Æ¡ng hÃ m trÃªn", 0.80]
+    ["Mắt", "Mất hoàn toàn và không thể phục hồi chức năng nhìn của 01 mắt, bao gồm mất hoàn toàn mắt hoặc mù hoàn toàn", 0.55],
+    ["Tai", "Mất hoàn toàn và không thể phục hồi chức năng nghe của 02 tai", 0.75],
+    ["Tai", "Mất hoàn toàn và không thể phục hồi chức năng nghe của 01 tai", 0.20],
+    ["Tai", "Mất toàn bộ 02 loa tai", 0.15],
+    ["Tai", "Mất toàn bộ 01 loa tai", 0.05],
+    ["Chi trên", "Tháo khớp cổ tay", 0.50],
+    ["Chi trên", "Cắt cụt cẳng tay", 0.55],
+    ["Chi trên", "Tháo khớp khuỷu tay", 0.60],
+    ["Chi trên", "Cắt cụt cánh tay", 0.65],
+    ["Chi trên", "Tháo khớp vai", 0.70],
+    ["Ngón tay cái", "Mất 01 đốt ngón tay cái", 0.08],
+    ["Ngón tay cái", "Mất toàn bộ 02 đốt ngón tay cái", 0.20],
+    ["Ngón tay", "Mất toàn bộ 03 đốt ngón tay trỏ", 0.09],
+    ["Ngón tay", "Mất toàn bộ 03 đốt ngón tay giữa", 0.07],
+    ["Ngón tay", "Mất toàn bộ 03 đốt ngón tay áp út", 0.06],
+    ["Ngón tay", "Mất toàn bộ 03 đốt ngón tay út", 0.05],
+    ["Ngón tay", "Mất 01 đốt của mỗi ngón tay II, III, IV, V", 0.02],
+    ["Ngón tay", "Mất 02 đốt của mỗi ngón tay II, III, IV, V", 0.04],
+    ["Chi dưới", "Mất nửa bàn chân", 0.35],
+    ["Chi dưới", "Tháo khớp cổ chân", 0.45],
+    ["Chi dưới", "Cắt cụt cẳng chân", 0.55],
+    ["Chi dưới", "Tháo khớp gối", 0.60],
+    ["Chi dưới", "Cắt cụt đùi", 0.65],
+    ["Chi dưới", "Tháo khớp háng", 0.70],
+    ["Ngón chân", "Mất toàn bộ ngón chân cái", 0.07],
+    ["Ngón chân", "Mất toàn bộ một ngón chân khác, trừ ngón chân cái", 0.03],
+    ["Khác", "Mất hoàn toàn và vĩnh viễn tiếng nói", 0.50],
+    ["Khác", "Mất hoàn toàn xương hàm dưới", 0.70],
+    ["Khác", "Mất hoàn toàn xương hàm trên", 0.80]
   ];
 
   return rows.map(([group, benefit, rate]) => {
@@ -2027,18 +2027,18 @@ function buildR22BenefitRows(stbh) {
     return spbkBenefitRow(
       benefit,
       `${percent} STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, rate))}`,
-      `${group}; tá»•ng chi tráº£ tá»‘i Ä‘a 100% STBH/nÄƒm`
+      `${group}; tổng chi trả tối đa 100% STBH/năm`
     );
   });
 }
 
 function buildR23BenefitRows(stbh, context) {
   const factor = getSpbkAgeFactor(context.age);
-  const ageText = factor === 1 ? "" : ` x ${Math.round(factor * 100)}% theo tuá»•i`;
+  const ageText = factor === 1 ? "" : ` x ${Math.round(factor * 100)}% theo tuổi`;
   return [
-    spbkBenefitRow("Tá»­ vong do tai náº¡n thÃ´ng thÆ°á»ng", `100% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, factor))}`, "Trá»« khoáº£n ná»£ náº¿u cÃ³"),
-    spbkBenefitRow("Tá»­ vong do tai náº¡n hÃ ng khÃ´ng thÆ°Æ¡ng máº¡i", `200% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, 2 * factor))}`, "Ãp dá»¥ng khi lÃ  hÃ nh khÃ¡ch cÃ³ vÃ© trÃªn chuyáº¿n bay Ä‘Æ°á»£c cáº¥p phÃ©p"),
-    spbkBenefitRow("ThÆ°Æ¡ng táº­t nghiÃªm trá»ng do tai náº¡n", `100% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, factor))}`, "Chá»‰ chi tráº£ má»™t thÆ°Æ¡ng táº­t nghiÃªm trá»ng thá»a Ä‘iá»u kiá»‡n")
+    spbkBenefitRow("Tử vong do tai nạn thông thường", `100% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, factor))}`, "Trừ khoản nợ nếu có"),
+    spbkBenefitRow("Tử vong do tai nạn hàng không thương mại", `200% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, 2 * factor))}`, "Áp dụng khi là hành khách có vé trên chuyến bay được cấp phép"),
+    spbkBenefitRow("Thương tật nghiêm trọng do tai nạn", `100% STBH${ageText} = ${formatBenefitMoney(calculateBenefitRate(stbh, factor))}`, "Chỉ chi trả một thương tật nghiêm trọng thỏa điều kiện")
   ];
 }
 
@@ -2046,75 +2046,75 @@ function buildR24BenefitRows(selection, context) {
   const annualPremiumText = getMainAnnualPremiumBenefitText(context);
   const term = Number(selection.term) || 0;
   const paymentTerm = getR24PremiumPaymentTerm(term);
-  const projectedSupport = context.mainAnnualPremium && term ? formatBenefitMoney(context.mainAnnualPremium * term) : "Theo thá»i háº¡n há»— trá»£ Ä‘Ã£ chá»n";
+  const projectedSupport = context.mainAnnualPremium && term ? formatBenefitMoney(context.mainAnnualPremium * term) : "Theo thời hạn hỗ trợ đã chọn";
   return [
-    spbkBenefitRow("Há»— trá»£ Ä‘Ã³ng phÃ­ má»—i nÄƒm", annualPremiumText, "KhÃ´ng bao gá»“m phÃ­ báº£o hiá»ƒm Ä‘Ã³ng thÃªm"),
-    spbkBenefitRow("GiÃ¡ trá»‹ há»— trá»£ dá»± kiáº¿n", projectedSupport, `Minh há»a theo thá»i háº¡n há»— trá»£ ${term || "-"} nÄƒm`),
-    spbkBenefitRow("Thá»i Ä‘iá»ƒm báº¯t Ä‘áº§u há»— trá»£", "Tá»« ká»³ phÃ­ tiáº¿p theo sau ngÃ y tá»­ vong", "Duy trÃ¬ quyá»n lá»£i sáº£n pháº©m chÃ­nh trong thá»i gian há»— trá»£")
+    spbkBenefitRow("Hỗ trợ đóng phí mỗi năm", annualPremiumText, "Không bao gồm phí bảo hiểm đóng thêm"),
+    spbkBenefitRow("Giá trị hỗ trợ dự kiến", projectedSupport, `Minh họa theo thời hạn hỗ trợ ${term || "-"} năm`),
+    spbkBenefitRow("Thời điểm bắt đầu hỗ trợ", "Từ kỳ phí tiếp theo sau ngày tử vong", "Duy trì quyền lợi sản phẩm chính trong thời gian hỗ trợ")
   ];
 }
 
 function buildR27R28BenefitRows(selection, context) {
   const annualPremiumText = getMainAnnualPremiumBenefitText(context);
   const term = Number(selection.term) || 0;
-  const projectedSupport = context.mainAnnualPremium && term ? formatBenefitMoney(context.mainAnnualPremium * term) : "Theo thá»i háº¡n há»— trá»£ Ä‘Ã£ chá»n";
+  const projectedSupport = context.mainAnnualPremium && term ? formatBenefitMoney(context.mainAnnualPremium * term) : "Theo thời hạn hỗ trợ đã chọn";
   return [
-    spbkBenefitRow("Há»— trá»£ tÃ i chÃ­nh khi BLNT giai Ä‘oáº¡n Ä‘áº§u", annualPremiumText, "100% PBH nÄƒm; chá»‰ chi tráº£ 1 láº§n"),
-    spbkBenefitRow("Há»— trá»£ tÃ i chÃ­nh khi BLNT giai Ä‘oáº¡n cuá»‘i", annualPremiumText, "100% PBH nÄƒm; trá»« khoáº£n ná»£ náº¿u cÃ³"),
-    spbkBenefitRow("Há»— trá»£ Ä‘Ã³ng phÃ­ dá»± kiáº¿n", projectedSupport, `Theo thá»i háº¡n há»— trá»£ ${term || "-"} nÄƒm cÃ²n láº¡i`)
+    spbkBenefitRow("Hỗ trợ tài chính khi BLNT giai đoạn đầu", annualPremiumText, "100% PBH năm; chỉ chi trả 1 lần"),
+    spbkBenefitRow("Hỗ trợ tài chính khi BLNT giai đoạn cuối", annualPremiumText, "100% PBH năm; trừ khoản nợ nếu có"),
+    spbkBenefitRow("Hỗ trợ đóng phí dự kiến", projectedSupport, `Theo thời hạn hỗ trợ ${term || "-"} năm còn lại`)
   ];
 }
 
 function buildR25BenefitRows(stbh) {
   return [
-    spbkBenefitRow("BLNT giai Ä‘oáº¡n Ä‘áº§u", `25% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.25, 500000000))}`, "Tá»‘i Ä‘a 500.000.000 Ä‘á»“ng/bá»‡nh; tá»‘i Ä‘a 2 bá»‡nh thuá»™c 2 nhÃ³m khÃ¡c nhau"),
-    spbkBenefitRow("BLNT giai Ä‘oáº¡n cuá»‘i", `100% STBH = ${formatBenefitMoney(stbh)}`, "Chá»‰ chi tráº£ má»™t láº§n; trá»« quyá»n lá»£i Ä‘Ã£ chi tráº£ náº¿u cÃ³"),
-    spbkBenefitRow("BLNT tráº» em giai Ä‘oáº¡n cuá»‘i", `100% STBH = ${formatBenefitMoney(stbh)}`, "Ãp dá»¥ng cho NÄBH tá»« 0 Ä‘áº¿n 17 tuá»•i táº¡i thá»i Ä‘iá»ƒm cháº©n Ä‘oÃ¡n"),
-    spbkBenefitRow("BLNT theo giá»›i tÃ­nh giai Ä‘oáº¡n cuá»‘i", `125% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 1.25))}`, "Náº¿u cÃ¹ng lÃºc nhiá»u bá»‡nh, chi tráº£ bá»‡nh cÃ³ sá»‘ tiá»n cao nháº¥t"),
-    spbkBenefitRow("Náº±m viá»‡n Ä‘áº·c biá»‡t", `10% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.10, 100000000))}`, "Tá»‘i Ä‘a 100.000.000 Ä‘á»“ng; chá»‰ chi tráº£ má»™t láº§n")
+    spbkBenefitRow("BLNT giai đoạn đầu", `25% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.25, 500000000))}`, "Tối đa 500.000.000 đồng/bệnh; tối đa 2 bệnh thuộc 2 nhóm khác nhau"),
+    spbkBenefitRow("BLNT giai đoạn cuối", `100% STBH = ${formatBenefitMoney(stbh)}`, "Chỉ chi trả một lần; trừ quyền lợi đã chi trả nếu có"),
+    spbkBenefitRow("BLNT trẻ em giai đoạn cuối", `100% STBH = ${formatBenefitMoney(stbh)}`, "Áp dụng cho NĐBH từ 0 đến 17 tuổi tại thời điểm chẩn đoán"),
+    spbkBenefitRow("BLNT theo giới tính giai đoạn cuối", `125% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 1.25))}`, "Nếu cùng lúc nhiều bệnh, chi trả bệnh có số tiền cao nhất"),
+    spbkBenefitRow("Nằm viện đặc biệt", `10% STBH = ${formatBenefitMoney(calculateBenefitRate(stbh, 0.10, 100000000))}`, "Tối đa 100.000.000 đồng; chỉ chi trả một lần")
   ];
 }
 
 function buildR26BenefitRows(selection) {
   normalizeR26Selection(selection);
-  const plan = R26_PLANS.includes(selection.r26Plan) ? selection.r26Plan : "VÃ ng";
+  const plan = R26_PLANS.includes(selection.r26Plan) ? selection.r26Plan : "Vàng";
   const selectedBenefits = new Set(selection.r26Benefits || []);
   const rows = [
-    spbkBenefitRow("Ná»™i trÃº tá»‘i Ä‘a", formatR26Limit(plan, "inpatientAnnual", "/nÄƒm"), `Háº¡ng chÆ°Æ¡ng trÃ¬nh ${plan}`, "inpatient"),
-    spbkBenefitRow("Ná»™i trÃº cÃ³ pháº«u thuáº­t", formatR26Limit(plan, "inpatientSurgery", "/Ä‘á»£t"), "Theo giá»›i háº¡n tá»«ng Ä‘á»£t Ä‘iá»u trá»‹", "inpatient"),
-    spbkBenefitRow("Ná»™i trÃº khÃ´ng pháº«u thuáº­t", formatR26Limit(plan, "inpatientNoSurgery", "/Ä‘á»£t"), "Theo giá»›i háº¡n tá»«ng Ä‘á»£t Ä‘iá»u trá»‹", "inpatient"),
-    spbkBenefitRow("PhÃ²ng & giÆ°á»ng", formatR26Limit(plan, "room", "/ngÃ y"), "Tá»‘i Ä‘a 60 ngÃ y/nÄƒm", "inpatient"),
-    spbkBenefitRow("ICU", "Chi phÃ­ thá»±c táº¿", "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm", "inpatient"),
-    spbkBenefitRow("Pháº«u thuáº­t", "Chi phÃ­ thá»±c táº¿", "Trong giá»›i háº¡n ná»™i trÃº cá»§a háº¡ng chÆ°Æ¡ng trÃ¬nh", "inpatient"),
-    spbkBenefitRow("Cháº¡y tháº­n Ä‘á»‹nh ká»³", formatR26Limit(plan, "dialysis", "/nÄƒm"), "Theo háº¡ng chÆ°Æ¡ng trÃ¬nh", "inpatient"),
-    spbkBenefitRow("Váº­n chuyá»ƒn cáº¥p cá»©u", formatR26Limit(plan, "ambulance", "/nÄƒm"), "Theo háº¡ng chÆ°Æ¡ng trÃ¬nh", "inpatient"),
-    spbkBenefitRow("Äiá»u trá»‹ trong ngÃ y Ä‘áº·c biá»‡t", formatR26Limit(plan, "specialDayTreatment", "/nÄƒm"), "Theo háº¡ng chÆ°Æ¡ng trÃ¬nh", "inpatient"),
-    spbkBenefitRow("Pháº«u thuáº­t trong ngÃ y", formatR26Limit(plan, "daySurgery", "/ngÃ y"), "Theo háº¡ng chÆ°Æ¡ng trÃ¬nh", "inpatient")
+    spbkBenefitRow("Nội trú tối đa", formatR26Limit(plan, "inpatientAnnual", "/năm"), `Hạng chương trình ${plan}`, "inpatient"),
+    spbkBenefitRow("Nội trú có phẫu thuật", formatR26Limit(plan, "inpatientSurgery", "/đợt"), "Theo giới hạn từng đợt điều trị", "inpatient"),
+    spbkBenefitRow("Nội trú không phẫu thuật", formatR26Limit(plan, "inpatientNoSurgery", "/đợt"), "Theo giới hạn từng đợt điều trị", "inpatient"),
+    spbkBenefitRow("Phòng & giường", formatR26Limit(plan, "room", "/ngày"), "Tối đa 60 ngày/năm", "inpatient"),
+    spbkBenefitRow("ICU", "Chi phí thực tế", "Tối đa 30 ngày/năm", "inpatient"),
+    spbkBenefitRow("Phẫu thuật", "Chi phí thực tế", "Trong giới hạn nội trú của hạng chương trình", "inpatient"),
+    spbkBenefitRow("Chạy thận định kỳ", formatR26Limit(plan, "dialysis", "/năm"), "Theo hạng chương trình", "inpatient"),
+    spbkBenefitRow("Vận chuyển cấp cứu", formatR26Limit(plan, "ambulance", "/năm"), "Theo hạng chương trình", "inpatient"),
+    spbkBenefitRow("Điều trị trong ngày đặc biệt", formatR26Limit(plan, "specialDayTreatment", "/năm"), "Theo hạng chương trình", "inpatient"),
+    spbkBenefitRow("Phẫu thuật trong ngày", formatR26Limit(plan, "daySurgery", "/ngày"), "Theo hạng chương trình", "inpatient")
   ];
 
   if (selectedBenefits.has("outpatient")) {
     rows.push(
-      spbkBenefitRow("Ngoáº¡i trÃº", formatR26Limit(plan, "outpatientAnnual", "/nÄƒm"), "Hiá»ƒn thá»‹ vÃ¬ Ä‘Ã£ chá»n quyá»n lá»£i Ngoáº¡i trÃº", "outpatient"),
-      spbkBenefitRow("Ngoáº¡i trÃº má»—i láº§n khÃ¡m/Ä‘iá»u trá»‹", formatR26Limit(plan, "outpatientVisit", "/láº§n"), "Tá»‘i Ä‘a 10 láº§n/nÄƒm", "outpatient"),
-      spbkBenefitRow("Váº­t lÃ½ trá»‹ liá»‡u", formatR26Limit(plan, "physiotherapy", "/nÄƒm"), "Tá»‘i Ä‘a 1 Ä‘á»£t/nÄƒm", "outpatient")
+      spbkBenefitRow("Ngoại trú", formatR26Limit(plan, "outpatientAnnual", "/năm"), "Hiển thị vì đã chọn quyền lợi Ngoại trú", "outpatient"),
+      spbkBenefitRow("Ngoại trú mỗi lần khám/điều trị", formatR26Limit(plan, "outpatientVisit", "/lần"), "Tối đa 10 lần/năm", "outpatient"),
+      spbkBenefitRow("Vật lý trị liệu", formatR26Limit(plan, "physiotherapy", "/năm"), "Tối đa 1 đợt/năm", "outpatient")
     );
   }
 
   if (selectedBenefits.has("dental")) {
     rows.push(
-      spbkBenefitRow("Nha khoa", formatR26Limit(plan, "dentalAnnual", "/nÄƒm"), "Hiá»ƒn thá»‹ vÃ¬ Ä‘Ã£ chá»n quyá»n lá»£i Nha khoa", "dental"),
-      spbkBenefitRow("Äiá»u trá»‹ nha khoa", formatR26Limit(plan, "dentalTreatment", "/láº§n"), "Theo giá»›i háº¡n tá»«ng láº§n Ä‘iá»u trá»‹", "dental"),
-      spbkBenefitRow("Láº¥y cao rÄƒng", formatR26Limit(plan, "dentalScaling", "/láº§n"), "Tá»‘i Ä‘a 1 láº§n/nÄƒm", "dental")
+      spbkBenefitRow("Nha khoa", formatR26Limit(plan, "dentalAnnual", "/năm"), "Hiển thị vì đã chọn quyền lợi Nha khoa", "dental"),
+      spbkBenefitRow("Điều trị nha khoa", formatR26Limit(plan, "dentalTreatment", "/lần"), "Theo giới hạn từng lần điều trị", "dental"),
+      spbkBenefitRow("Lấy cao răng", formatR26Limit(plan, "dentalScaling", "/lần"), "Tối đa 1 lần/năm", "dental")
     );
   }
 
   if (selectedBenefits.has("maternity")) {
     rows.push(
-      spbkBenefitRow("Thai sáº£n", formatR26Limit(plan, "maternityAnnual", "/nÄƒm"), "Hiá»ƒn thá»‹ vÃ¬ Ä‘Ã£ chá»n quyá»n lá»£i Thai sáº£n", "maternity"),
-      spbkBenefitRow("Sinh thÆ°á»ng", formatR26Limit(plan, "normalDelivery", "/nÄƒm"), "Trong giá»›i háº¡n thai sáº£n", "maternity"),
-      spbkBenefitRow("Sinh má»• / biáº¿n chá»©ng thai sáº£n", formatR26Limit(plan, "cSection", "/nÄƒm"), "Trong giá»›i háº¡n thai sáº£n", "maternity"),
-      spbkBenefitRow("PhÃ²ng & giÆ°á»ng thai sáº£n", formatR26Limit(plan, "maternityRoom", "/ngÃ y"), "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm", "maternity"),
-      spbkBenefitRow("ICU thai sáº£n", "Chi phÃ­ thá»±c táº¿", "Tá»‘i Ä‘a 15 ngÃ y/nÄƒm", "maternity")
+      spbkBenefitRow("Thai sản", formatR26Limit(plan, "maternityAnnual", "/năm"), "Hiển thị vì đã chọn quyền lợi Thai sản", "maternity"),
+      spbkBenefitRow("Sinh thường", formatR26Limit(plan, "normalDelivery", "/năm"), "Trong giới hạn thai sản", "maternity"),
+      spbkBenefitRow("Sinh mổ / biến chứng thai sản", formatR26Limit(plan, "cSection", "/năm"), "Trong giới hạn thai sản", "maternity"),
+      spbkBenefitRow("Phòng & giường thai sản", formatR26Limit(plan, "maternityRoom", "/ngày"), "Tối đa 30 ngày/năm", "maternity"),
+      spbkBenefitRow("ICU thai sản", "Chi phí thực tế", "Tối đa 15 ngày/năm", "maternity")
     );
   }
 
@@ -2124,18 +2124,18 @@ function buildR26BenefitRows(selection) {
 function buildR29BenefitRows(stbh) {
   const ambulance = calculateBenefitMultiple(stbh, 2, 1000000);
   return [
-    spbkBenefitRow("Viá»‡n phÃ­ cÆ¡ báº£n", `1 x STBH = ${formatBenefitMoney(stbh, "/ngÃ y")}`, "Tá»‘i Ä‘a 50 ngÃ y/nÄƒm; tá»‘i Ä‘a 3 láº§n náº±m viá»‡n/nÄƒm"),
-    spbkBenefitRow("ICU", `2 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 2), "/ngÃ y")}`, "Tá»‘i Ä‘a 30 ngÃ y/nÄƒm; 300 ngÃ y toÃ n thá»i háº¡n"),
-    spbkBenefitRow("Pháº«u thuáº­t cÆ¡ báº£n", `5 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 5), "/láº§n")}`, "Tá»‘i Ä‘a 2 láº§n/nÄƒm; 10 láº§n toÃ n thá»i háº¡n"),
-    spbkBenefitRow("Pháº«u thuáº­t Ä‘áº·c biá»‡t", `10 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 10), "/láº§n")}`, "Má»—i ca chá»‰ chi tráº£ má»™t quyá»n lá»£i pháº«u thuáº­t"),
-    spbkBenefitRow("Váº­n chuyá»ƒn cáº¥p cá»©u", `2 x STBH = ${formatBenefitMoney(ambulance, "/láº§n")}`, "Tá»‘i Ä‘a 1.000.000 Ä‘á»“ng/láº§n; tá»‘i Ä‘a 2 láº§n/nÄƒm")
+    spbkBenefitRow("Viện phí cơ bản", `1 x STBH = ${formatBenefitMoney(stbh, "/ngày")}`, "Tối đa 50 ngày/năm; tối đa 3 lần nằm viện/năm"),
+    spbkBenefitRow("ICU", `2 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 2), "/ngày")}`, "Tối đa 30 ngày/năm; 300 ngày toàn thời hạn"),
+    spbkBenefitRow("Phẫu thuật cơ bản", `5 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 5), "/lần")}`, "Tối đa 2 lần/năm; 10 lần toàn thời hạn"),
+    spbkBenefitRow("Phẫu thuật đặc biệt", `10 x STBH = ${formatBenefitMoney(calculateBenefitMultiple(stbh, 10), "/lần")}`, "Mỗi ca chỉ chi trả một quyền lợi phẫu thuật"),
+    spbkBenefitRow("Vận chuyển cấp cứu", `2 x STBH = ${formatBenefitMoney(ambulance, "/lần")}`, "Tối đa 1.000.000 đồng/lần; tối đa 2 lần/năm")
   ];
 }
 
 function calculateSpbkBenefits(code, currentValue) {
   const product = SPBK_PRODUCTS[code];
   if (!product) {
-    return { code, title: "SPBK", subtitle: "", rows: [], message: "KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u sáº£n pháº©m bÃ¡n kÃ¨m." };
+    return { code, title: "SPBK", subtitle: "", rows: [], message: "Không tìm thấy dữ liệu sản phẩm bán kèm." };
   }
 
   const context = getCurrentInputContext();
@@ -2146,7 +2146,7 @@ function calculateSpbkBenefits(code, currentValue) {
   const r26Benefits = currentValue?.r26Benefits || selection.r26Benefits;
 
   if (needsStbh && !stbh) {
-    return { code, title: product.name, subtitle: `${product.name} - chÆ°a chá»n STBH`, rows: [], message: SPBK_BENEFIT_POPUP_EMPTY_MESSAGE };
+    return { code, title: product.name, subtitle: `${product.name} - chưa chọn STBH`, rows: [], message: SPBK_BENEFIT_POPUP_EMPTY_MESSAGE };
   }
 
   if (code === "R26") {
@@ -2154,7 +2154,7 @@ function calculateSpbkBenefits(code, currentValue) {
     return {
       code,
       title: product.name,
-      subtitle: `${product.name} - háº¡ng ${r26Selection.r26Plan}`,
+      subtitle: `${product.name} - hạng ${r26Selection.r26Plan}`,
       rows: buildR26BenefitRows(r26Selection),
       message: ""
     };
@@ -2192,10 +2192,10 @@ function calculateSpbkBenefits(code, currentValue) {
     code,
     title: product.name,
     subtitle: code === "R29"
-      ? `${product.name} - STBH ${formatBenefitMoney(stbh, "/ngÃ y")}`
+      ? `${product.name} - STBH ${formatBenefitMoney(stbh, "/ngày")}`
       : `${product.name} - STBH ${formatBenefitMoney(stbh)}`,
     rows: builders[code] ? builders[code]() : [],
-    message: builders[code] ? "" : "ChÆ°a cÃ³ báº£ng quyá»n lá»£i chi tiáº¿t cho sáº£n pháº©m nÃ y."
+    message: builders[code] ? "" : "Chưa có bảng quyền lợi chi tiết cho sản phẩm này."
   };
 }
 
@@ -2213,11 +2213,11 @@ function renderSpbkBenefitPopupContent(code) {
   }
 
   body.innerHTML = `
-    <div class="spbk-benefit-table" role="table" aria-label="Chi tiáº¿t quyá»n lá»£i ${detail.code}">
+    <div class="spbk-benefit-table" role="table" aria-label="Chi tiết quyền lợi ${detail.code}">
       <div class="spbk-benefit-row spbk-benefit-table-head" role="row">
-        <div role="columnheader">Quyá»n lá»£i</div>
-        <div role="columnheader">Má»©c chi tráº£</div>
-        <div role="columnheader">Ghi chÃº</div>
+        <div role="columnheader">Quyền lợi</div>
+        <div role="columnheader">Mức chi trả</div>
+        <div role="columnheader">Ghi chú</div>
       </div>
       ${detail.rows.map((row) => `
         <div class="spbk-benefit-row ${row.group ? `spbk-benefit-group-${row.group}` : ""}" role="row">
@@ -2346,7 +2346,7 @@ function updatePolicyOwnerAgePreview() {
 }
 
 function syncPolicyOwnerGenderButtons() {
-  const genderValue = document.getElementById("policyOwnerGender")?.value || "Ná»¯";
+  const genderValue = document.getElementById("policyOwnerGender")?.value || "Nữ";
   document.querySelectorAll("[data-policy-owner-gender-value]").forEach((button) => {
     const isActive = button.dataset.policyOwnerGenderValue === genderValue;
     button.classList.toggle("active", isActive);
@@ -2357,9 +2357,9 @@ function syncPolicyOwnerGenderButtons() {
 function setDefaultPolicyOwnerGender() {
   const genderSelect = document.getElementById("policyOwnerGender");
   if (!genderSelect) return;
-  genderSelect.value = "Ná»¯";
+  genderSelect.value = "Nữ";
   document.querySelectorAll("[data-policy-owner-gender-value]").forEach((button) => {
-    const isFemale = button.dataset.policyOwnerGenderValue === "Ná»¯";
+    const isFemale = button.dataset.policyOwnerGenderValue === "Nữ";
     button.classList.toggle("active", isFemale);
     button.setAttribute("aria-pressed", String(isFemale));
   });
@@ -2481,7 +2481,7 @@ function renderResults(results, input) {
     .map(
       (row) => `
         <tr class="${row.loyaltyBonus > 0 ? "milestone-row" : ""}">
-          <td><strong>NÄƒm ${row.policyYear}</strong><span>/ Tuá»•i ${row.age}</span></td>
+          <td><strong>Năm ${row.policyYear}</strong><span>/ Tuổi ${row.age}</span></td>
           <td>${formatThousandVND(row.cumulativePremium)}</td>
           <td class="cash-value">${formatThousandVND(row.cashValue425)}</td>
           <td class="cash-value">${formatThousandVND(row.cashValue476)}</td>
@@ -2497,7 +2497,7 @@ function renderResults(results, input) {
   normalizeVisibleText(resultsSection);
 }
 
-function renderPendingResults(message = "Nháº­p ngÃ y sinh Ä‘á»ƒ xem giÃ¡ trá»‹ tÃ i khoáº£n hoÃ n láº¡i.") {
+function renderPendingResults(message = "Nhập ngày sinh để xem giá trị tài khoản hoàn lại.") {
   const resultsSection = document.getElementById("resultsSection");
   const resultsBody = document.getElementById("resultsBody");
   const resultMeta = document.getElementById("resultMeta");
@@ -2544,14 +2544,14 @@ function setActiveTab(tabName) {
 
 function formatShortMoney(value) {
   if (value >= 1000000000) return `${value / 1000000000} tá»·`;
-  if (value >= 1000000) return `${value / 1000000} triá»‡u`;
+  if (value >= 1000000) return `${value / 1000000} triệu`;
   return formatVND(value);
 }
 
 function formatCompactCurrency(value) {
   const amount = Number(value) || 0;
-  if (amount >= 1000000000 && amount % 1000000000 === 0) return `${amount / 1000000000} tá»· Ä‘á»“ng`;
-  if (amount >= 1000000 && amount % 1000000 === 0) return `${amount / 1000000} triá»‡u Ä‘á»“ng`;
+  if (amount >= 1000000000 && amount % 1000000000 === 0) return `${amount / 1000000000} tỷ đồng`;
+  if (amount >= 1000000 && amount % 1000000 === 0) return `${amount / 1000000} triệu đồng`;
   return formatCurrency(amount);
 }
 
@@ -2559,7 +2559,7 @@ function renderRiderCustomerCard() {
   const context = getCurrentInputContext();
   document.getElementById("riderCustomerName").textContent = context.fullName || "-";
   document.getElementById("riderCustomerMeta").textContent =
-    context.age === null ? `${context.gender}, - tuá»•i` : `${context.gender}, ${context.age} tuá»•i`;
+    context.age === null ? `${context.gender}, - tuổi` : `${context.gender}, ${context.age} tuổi`;
   document.getElementById("riderMainSum").textContent = formatCompactCurrency(context.mainSumAssured);
   document.getElementById("riderMainPremium").textContent = formatCompactCurrency(context.mainAnnualPremium);
 }
@@ -2580,12 +2580,12 @@ function renderRiderProductButtons() {
       const result = selection ? calculateRiderPremium(code, selection, context) : { error: "" };
       const disabledByPersonTab = code === "R24" && isR24DisabledByPersonTab();
       const statusText = !product.isConfigured
-        ? "ChÆ°a cáº¥u hÃ¬nh"
+        ? "Chưa cấu hình"
         : !occupationRule.allowed
           ? ""
           : result.error
-              ? "Cáº§n kiá»ƒm tra"
-              : "Sáºµn sÃ ng";
+              ? "Cần kiểm tra"
+              : "Sẵn sàng";
       return `
         <button
           class="rider-pill ${riderState.activeCode === code ? "active" : ""} ${selection?.selected ? "selected" : ""} ${disabledByPersonTab ? "is-person-disabled" : ""}"
@@ -2593,7 +2593,7 @@ function renderRiderProductButtons() {
           data-rider-code="${code}"
           ${product.isConfigured && occupationRule.allowed && !disabledByPersonTab ? "" : "disabled"}
         >
-          <span>${selection?.selected ? "âœ“ " : ""}${code}</span>
+          <span>${selection?.selected ? "✓ " : ""}${code}</span>
           <small>${statusText}</small>
         </button>
         ${code === "R24" ? `
@@ -2603,7 +2603,7 @@ function renderRiderProductButtons() {
           data-toggle-spbk-stbh
           aria-pressed="${riderState.hideStbhControls}"
         >
-          <span>${riderState.hideStbhControls ? "HIá»†N" : "áº¨N"}</span>
+          <span>${riderState.hideStbhControls ? "HIỆN" : "ẨN"}</span>
           <small>STBH</small>
         </button>
         ` : ""}
@@ -2636,18 +2636,18 @@ function renderRiderAmountControls(product, selection, range) {
   const rangeStep = getRiderAmountStep(product);
   const sliderMin = range?.min ?? product.minSumInsured;
   const sliderMax = range?.max ?? product.maxSumInsured;
-  const rangeText = range ? `STBH pháº£i náº±m trong khoáº£ng ${formatAddonRange(range)}` : "";
+  const rangeText = range ? `STBH phải nằm trong khoảng ${formatAddonRange(range)}` : "";
   const isInvalid = range && !range.valid;
   const quickAmounts = product.quickAmounts.filter((amount) => amount >= sliderMin && amount <= sliderMax);
 
   return `
     <div class="amount-controls">
       <div class="stepper">
-        <button id="decreaseRiderAmount" type="button" aria-label="Giáº£m STBH SPBK">
+        <button id="decreaseRiderAmount" type="button" aria-label="Giảm STBH SPBK">
           <img src="icons/minus.svg" alt="" aria-hidden="true" />
         </button>
         <input id="riderAmountInput" class="money-input" type="text" inputmode="numeric" value="${formatCommaNumber(selection.sumInsured)}" />
-        <button id="increaseRiderAmount" type="button" aria-label="TÄƒng STBH SPBK">
+        <button id="increaseRiderAmount" type="button" aria-label="Tăng STBH SPBK">
           <img src="icons/plus.svg" alt="" aria-hidden="true" />
         </button>
       </div>
@@ -2684,17 +2684,17 @@ function ensureRiderTermsModal() {
           <h2 id="termsModalTitle"></h2>
           <p id="termsModalSubtitle"></p>
         </div>
-        <button class="terms-close" type="button" data-close-terms aria-label="ÄÃ³ng Ä‘iá»u khoáº£n">Ã—</button>
+        <button class="terms-close" type="button" data-close-terms aria-label="Đóng điều khoản">×</button>
       </header>
       <div class="terms-toolbar">
-        <a id="termsOpenLink" class="terms-link" target="_blank" rel="noopener">Má»Ÿ PDF</a>
-        <a id="termsDownloadLink" class="terms-link secondary" download>Táº£i PDF</a>
+        <a id="termsOpenLink" class="terms-link" target="_blank" rel="noopener">Mở PDF</a>
+        <a id="termsDownloadLink" class="terms-link secondary" download>Tải PDF</a>
       </div>
       <div class="terms-reader">
-        <iframe id="termsPdfFrame" title="Äiá»u khoáº£n sáº£n pháº©m"></iframe>
+        <iframe id="termsPdfFrame" title="Điều khoản sản phẩm"></iframe>
         <div class="terms-fallback">
-          <strong>KhÃ´ng hiá»ƒn thá»‹ Ä‘Æ°á»£c PDF?</strong>
-          <span>HÃ£y dÃ¹ng nÃºt Má»Ÿ PDF á»Ÿ trÃªn Ä‘á»ƒ xem báº±ng trÃ¬nh Ä‘á»c cá»§a trÃ¬nh duyá»‡t.</span>
+          <strong>Không hiển thị được PDF?</strong>
+          <span>Hãy dùng nút Mở PDF ở trên để xem bằng trình đọc của trình duyệt.</span>
         </div>
       </div>
     </section>
@@ -2725,8 +2725,8 @@ function openRiderTerms(code) {
   const downloadLink = modal.querySelector("#termsDownloadLink");
 
   if (codeLabel) codeLabel.textContent = code;
-  if (title) title.textContent = product.name || "Äiá»u khoáº£n sáº£n pháº©m";
-  if (subtitle) subtitle.textContent = "Quy táº¯c, Ä‘iá»u khoáº£n vÃ  tÃ³m táº¯t Ä‘iá»u khoáº£n";
+  if (title) title.textContent = product.name || "Điều khoản sản phẩm";
+  if (subtitle) subtitle.textContent = "Quy tắc, điều khoản và tóm tắt điều khoản";
   if (openLink) openLink.href = pdfUrl;
   if (downloadLink) {
     downloadLink.href = pdfUrl;
@@ -2750,8 +2750,8 @@ function openTermsModal({ code, title, subtitle, pdfUrl, downloadName }) {
   const downloadLink = modal.querySelector("#termsDownloadLink");
 
   if (codeLabel) codeLabel.textContent = code || "";
-  if (titleElement) titleElement.textContent = title || "Äiá»u khoáº£n sáº£n pháº©m";
-  if (subtitleElement) subtitleElement.textContent = subtitle || "Quy táº¯c, Ä‘iá»u khoáº£n vÃ  tÃ³m táº¯t Ä‘iá»u khoáº£n";
+  if (titleElement) titleElement.textContent = title || "Điều khoản sản phẩm";
+  if (subtitleElement) subtitleElement.textContent = subtitle || "Quy tắc, điều khoản và tóm tắt điều khoản";
   if (openLink) openLink.href = pdfUrl;
   if (downloadLink) {
     downloadLink.href = pdfUrl;
@@ -2779,16 +2779,16 @@ function renderR24Controls(selection) {
   const allowedTerms = getR24AvailableTerms(context);
   const paymentTerm = getR24PremiumPaymentTerm(selection.term);
   const options = allowedTerms.map((term) => `
-        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} nÄƒm</option>
+        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} năm</option>
       `).join("");
 
   return `
     <label class="compact-field">
-      <span>Thá»i háº¡n báº£o hiá»ƒm R24</span>
+      <span>Thời hạn bảo hiểm R24</span>
       <select id="riderTerm">
-        <option value="10" ${selection.term === 10 ? "selected" : ""}>10 nÄƒm</option>
-        <option value="15" ${selection.term === 15 ? "selected" : ""}>15 nÄƒm</option>
-        <option value="20" ${selection.term === 20 ? "selected" : ""}>20 nÄƒm</option>
+        <option value="10" ${selection.term === 10 ? "selected" : ""}>10 năm</option>
+        <option value="15" ${selection.term === 15 ? "selected" : ""}>15 năm</option>
+        <option value="20" ${selection.term === 20 ? "selected" : ""}>20 năm</option>
       </select>
     </label>
   `;
@@ -2800,16 +2800,16 @@ function renderR24Controls(selection) {
   const allowedTerms = getR24AvailableTerms(context);
   const paymentTerm = getR24PremiumPaymentTerm(selection.term);
   const options = allowedTerms.map((term) => `
-        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} nÄƒm</option>
+        <option value="${term}" ${selection.term === term ? "selected" : ""}>${term} năm</option>
       `).join("");
 
   return `
     <label class="compact-field">
-      <span>Thá»i háº¡n báº£o hiá»ƒm R24</span>
+      <span>Thời hạn bảo hiểm R24</span>
       <select id="riderTerm" ${allowedTerms.length ? "" : "disabled"}>
-        ${options || `<option value="">KhÃ´ng cÃ³ thá»i háº¡n há»£p lá»‡</option>`}
+        ${options || `<option value="">Không có thời hạn hợp lệ</option>`}
       </select>
-      <small class="field-note">${paymentTerm ? `Thá»i háº¡n Ä‘Ã³ng phÃ­ R24: ${paymentTerm} nÄƒm` : "Theo tuá»•i vÃ  thá»i háº¡n Ä‘Ã³ng phÃ­ SPC."}</small>
+      <small class="field-note">${paymentTerm ? `Thời hạn đóng phí R24: ${paymentTerm} năm` : "Theo tuổi và thời hạn đóng phí SPC."}</small>
     </label>
   `;
 }
@@ -2856,14 +2856,14 @@ function renderR26Controls(selection) {
     <div class="r26-config">
       <section class="r26-plan-panel">
         <div class="r26-control-title">
-          <strong>ChÆ°Æ¡ng trÃ¬nh báº£o hiá»ƒm</strong>
+          <strong>Chương trình bảo hiểm</strong>
           <span>${selection.r26Plan}</span>
         </div>
         <div class="r26-plan-options">${planControls}</div>
       </section>
       <section class="r26-benefit-panel">
         <div class="r26-control-title">
-          <strong>Quyá»n lá»£i tham gia</strong>
+          <strong>Quyền lợi tham gia</strong>
           <span>${selection.r26Benefits.length}/${allowedBenefits.length}</span>
         </div>
         <div class="r26-benefit-grid">${benefitControls}</div>
@@ -2891,8 +2891,8 @@ function renderRiderDetail() {
   const rangeText = stbhRange.usesManualStbh
     ? ""
     : stbhRange.readonlyValue !== null
-      ? `Quyá»n lá»£i tá»± Ä‘á»™ng: ${formatCurrency(stbhRange.readonlyValue)}`
-      : "Sáº£n pháº©m nÃ y khÃ´ng dÃ¹ng STBH riÃªng.";
+      ? `Quyền lợi tự động: ${formatCurrency(stbhRange.readonlyValue)}`
+      : "Sản phẩm này không dùng STBH riêng.";
 
   detailCard.innerHTML = `
     <div class="rider-detail-head">
@@ -2901,21 +2901,21 @@ function renderRiderDetail() {
         <h3>${product.name}</h3>
       </div>
       <div class="rider-detail-actions">
-        <button class="info-button benefit-button" type="button" data-open-spbk-benefits="${product.code}" title="Xem chi tiáº¿t quyá»n lá»£i báº£o vá»‡ ${product.code}" aria-label="Xem chi tiáº¿t quyá»n lá»£i báº£o vá»‡ ${product.code}">
+        <button class="info-button benefit-button" type="button" data-open-spbk-benefits="${product.code}" title="Xem chi tiết quyền lợi bảo vệ ${product.code}" aria-label="Xem chi tiết quyền lợi bảo vệ ${product.code}">
           <span class="benefit-button-icon" aria-hidden="true"></span>
         </button>
-        <button class="info-button terms-button" type="button" data-open-rider-terms="${product.code}" title="Xem Ä‘iá»u khoáº£n sáº£n pháº©m ${product.code}" aria-label="Xem Ä‘iá»u khoáº£n sáº£n pháº©m ${product.code}">
+        <button class="info-button terms-button" type="button" data-open-rider-terms="${product.code}" title="Xem điều khoản sản phẩm ${product.code}" aria-label="Xem điều khoản sản phẩm ${product.code}">
           <span class="terms-info-icon" aria-hidden="true"></span>
         </button>
       </div>
     </div>
     <div class="rider-value-grid">
       <div>
-        <span>${product.code === "R24" || product.code === "R26" ? "CÆ¡ sá»Ÿ tÃ­nh phÃ­" : "Sá»‘ tiá»n báº£o hiá»ƒm"}</span>
+        <span>${product.code === "R24" || product.code === "R26" ? "Cơ sở tính phí" : "Số tiền bảo hiểm"}</span>
         <strong id="riderDetailAmountValue">${product.maxSumInsured ? formatCurrency(selection.sumInsured) : product.code === "R24" ? formatCurrency(context.mainAnnualPremium) : selection.r26Plan}</strong>
       </div>
       <div>
-        <span>PhÃ­ tÆ°Æ¡ng á»©ng nÄƒm</span>
+        <span>Phí tương ứng năm</span>
         <strong id="riderDetailPremiumValue">${formatCurrency(result.annualPremium)}</strong>
       </div>
     </div>
@@ -2924,7 +2924,7 @@ function renderRiderDetail() {
     ${product.code === "R26" ? renderR26Controls(selection) : ""}
     ${rangeText ? `<p class="rider-range-note">${rangeText}</p>` : ""}
     ${riderState.occupationNotice ? `<p class="rider-warning">${riderState.occupationNotice}</p>` : ""}
-    ${result.error ? `<p class="rider-warning">${result.error}</p>` : `<p class="rider-ok">PhÃ­ Ä‘Ã£ Ä‘Æ°á»£c tÃ­nh theo ${PAYMENT_MODE_LABEL[context.paymentMode]}.</p>`}
+    ${result.error ? `<p class="rider-warning">${result.error}</p>` : `<p class="rider-ok">Phí đã được tính theo ${PAYMENT_MODE_LABEL[context.paymentMode]}.</p>`}
   `;
 
   bindRiderDetailEvents(product, selection);
@@ -2960,7 +2960,7 @@ function bindRiderDetailEvents(product, selection) {
     if (input) input.value = formatCommaNumber(selection.sumInsured);
     if (range && Number(range.value) !== selection.sumInsured) range.value = selection.sumInsured;
     if (rangeNote) {
-      rangeNote.textContent = `STBH pháº£i náº±m trong khoáº£ng ${formatAddonRange(stbhRange)}`;
+      rangeNote.textContent = `STBH phải nằm trong khoảng ${formatAddonRange(stbhRange)}`;
       rangeNote.classList.toggle("is-error", !stbhRange.valid);
     }
 
@@ -3029,11 +3029,11 @@ function renderSelectedRiderList() {
   const selected = VISIBLE_SPBK_PRODUCT_CODES
     .map((code) => riderState.selections[code])
     .filter((item) => item?.selected);
-  document.getElementById("riderSelectedCount").textContent = `ÄÃ£ chá»n ${selected.length}/${VISIBLE_SPBK_PRODUCT_CODES.length}`;
+  document.getElementById("riderSelectedCount").textContent = `Đã chọn ${selected.length}/${VISIBLE_SPBK_PRODUCT_CODES.length}`;
   document.getElementById("toggleAllRiders").checked = selected.length > 0 && selected.every((item) => item.enabled);
 
   if (!selected.length) {
-    document.getElementById("selectedRiderList").innerHTML = `<div class="empty-state">ChÆ°a chá»n sáº£n pháº©m bÃ¡n kÃ¨m</div>`;
+    document.getElementById("selectedRiderList").innerHTML = `<div class="empty-state">Chưa chọn sản phẩm bán kèm</div>`;
     return;
   }
 
@@ -3045,7 +3045,7 @@ function renderSelectedRiderList() {
         <div class="rider-icon small">${selection.code}</div>
         <div>
           <strong>${product.name}</strong>
-          <span>STBH: ${product.maxSumInsured ? formatCurrency(selection.sumInsured) : product.code === "R24" ? "Theo phÃ­ chÃ­nh" : selection.r26Plan}</span>
+          <span>STBH: ${product.maxSumInsured ? formatCurrency(selection.sumInsured) : product.code === "R24" ? "Theo phí chính" : selection.r26Plan}</span>
           ${result.error ? `<em>${result.error}</em>` : ""}
         </div>
         <label class="toggle">
@@ -3092,8 +3092,8 @@ function updateRiderTotals() {
   document.getElementById("totalRiderPremium").textContent = formatCurrency(totalRiderAnnualPremium);
   document.getElementById("totalPlanPremium").textContent = formatCurrency(totalPlanAnnualPremium);
   document.getElementById("dailySavingsAmount").innerHTML = `
-    <span class="daily-saving-label">Cáº§n tiáº¿t kiá»‡m</span>
-    <strong>${formatCurrency(Math.ceil(totalPlanAnnualPremium / 365))} / ngÃ y</strong>
+    <span class="daily-saving-label">Cần tiết kiệm</span>
+    <strong>${formatCurrency(Math.ceil(totalPlanAnnualPremium / 365))} / ngày</strong>
   `;
 }
 
@@ -3145,7 +3145,7 @@ function saveRiderPlan() {
     totalRiderAnnualPremium,
     totalPlanAnnualPremium: context.mainAnnualPremium + totalRiderAnnualPremium
   }));
-  document.getElementById("riderSaveMessage").textContent = "ÄÃ£ lÆ°u phÆ°Æ¡ng Ã¡n sáº£n pháº©m bÃ¡n kÃ¨m";
+  document.getElementById("riderSaveMessage").textContent = "Đã lưu phương án sản phẩm bán kèm";
 }
 
 function loadRiderPlan() {
@@ -3185,9 +3185,9 @@ function updateAthdTermAndAgeValidity(age = "-") {
 
   dateOfBirthInput.setCustomValidity(
     isLifeCare && hasValidAge && (age < 18 || age > 60)
-      ? "Life Care 2.0 chá»‰ Ã¡p dá»¥ng cho tuá»•i báº£o hiá»ƒm tá»« 18 Ä‘áº¿n 60"
+      ? "Life Care 2.0 chỉ áp dụng cho tuổi bảo hiểm từ 18 đến 60"
       : isAthd && hasValidAge && (age < 0 || age > 65)
-        ? "NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm An TÃ¢m Hoáº¡ch Äá»‹nh pháº£i trong Ä‘á»™ tuá»•i tá»« 0 Ä‘áº¿n 65."
+        ? "Người được bảo hiểm An Tâm Hoạch Định phải trong độ tuổi từ 0 đến 65."
         : ""
   );
 
@@ -3203,7 +3203,7 @@ function updateDisabilitySumAssured() {
   if (isLifeCare20()) return;
 
   if (selectedMainProduct === "ATPN") {
-    if (label) label.textContent = "Chu toÃ n háº­u sá»±";
+    if (label) label.textContent = "Chu toàn hậu sự";
     const deathSumAssured = moneyValue("deathSumAssured");
     output.value = formatCommaNumber(Math.min(deathSumAssured * 0.1, 30000000));
     normalizeMainIllustrationText();
@@ -3269,7 +3269,7 @@ function handleMainProductChange(value) {
   closeMainProductDropdown();
 
   if (selectedMainProduct === "ATPN" && !getAtpnTables().loaded && window.ATPN_DATA_READY) {
-    renderPendingResults("Äang táº£i dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn...");
+    renderPendingResults("Đang tải dữ liệu An Thịnh Phúc Niên...");
     window.ATPN_DATA_READY.then(() => {
       updateDeathSumAssuredRange();
       updateDisabilitySumAssured();
@@ -3295,15 +3295,15 @@ async function openMainProductTerms() {
   if (await mainProductTermsPdfExists(pdfUrl)) {
     openTermsModal({
       code: getSelectedMainProduct(),
-      title: MAIN_PRODUCTS[getSelectedMainProduct()] || "Äiá»u khoáº£n sáº£n pháº©m chÃ­nh",
-      subtitle: "Quy táº¯c, Ä‘iá»u khoáº£n sáº£n pháº©m chÃ­nh",
+      title: MAIN_PRODUCTS[getSelectedMainProduct()] || "Điều khoản sản phẩm chính",
+      subtitle: "Quy tắc, điều khoản sản phẩm chính",
       pdfUrl,
       downloadName: pdfUrl.split("/").pop() || "dieu-khoan-san-pham-chinh.pdf"
     });
     return;
   }
 
-  alert("ChÆ°a tÃ¬m tháº¥y file quy táº¯c Ä‘iá»u khoáº£n cho sáº£n pháº©m nÃ y.");
+  alert("Chưa tìm thấy file quy tắc điều khoản cho sản phẩm này.");
 }
 
 function updateMainProductState(value) {
@@ -3347,19 +3347,19 @@ function updateLifeCareUI() {
   document.querySelectorAll(".life-care-only").forEach((field) => {
     field.hidden = !active;
   });
-  document.getElementById("mainSumAssuredLabel").textContent = active ? "Sá»‘ tiá»n báº£o hiá»ƒm" : "STBH tá»­ vong";
+  document.getElementById("mainSumAssuredLabel").textContent = active ? "Số tiền bảo hiểm" : "STBH tử vong";
   const annualPremium = document.getElementById("annualPremium");
   annualPremium.readOnly = active;
   annualPremium.required = !active;
   if (!active && annualPremium.value === "-") annualPremium.value = "20.000.000";
-  document.getElementById("lifeCarePaymentTerm").textContent = `${lifeCareTerm} nÄƒm`;
+  document.getElementById("lifeCarePaymentTerm").textContent = `${lifeCareTerm} năm`;
   document.querySelectorAll("[data-life-care-term]").forEach((button) => {
     const selected = Number(button.dataset.lifeCareTerm) === lifeCareTerm;
     button.classList.toggle("active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
   document.getElementById("resultTitle").querySelector("span:nth-child(2)").textContent =
-    active ? "3. Quyá»n lá»£i sáº£n pháº©m" : "3. GiÃ¡ trá»‹ hoÃ n láº¡i minh há»a";
+    active ? "3. Quyền lợi sản phẩm" : "3. Giá trị hoàn lại minh họa";
   document.querySelector(".result-unit").hidden = active;
   document.querySelector(".result-toggle").hidden = active;
   document.querySelector(".table-wrap").hidden = active;
@@ -3379,7 +3379,7 @@ function renderLifeCareBenefits() {
   const sumAssured = moneyValue("deathSumAssured");
   let warning = "";
   if (age !== null && (age < 18 || age > 60)) {
-    warning = "Life Care 2.0 chá»‰ Ã¡p dá»¥ng cho tuá»•i báº£o hiá»ƒm tá»« 18 Ä‘áº¿n 60";
+    warning = "Life Care 2.0 chỉ áp dụng cho tuổi bảo hiểm từ 18 đến 60";
   }
   const money = (value) => sumAssured ? formatVND(value) : "-";
   const basic = sumAssured;
@@ -3388,18 +3388,18 @@ function renderLifeCareBenefits() {
   container.innerHTML = `
     ${warning ? `<p class="life-care-warning">${warning}</p>` : ""}
     <article class="life-care-card benefit-basic">
-      <h3>Bá»‡nh lÃ½ nghiÃªm trá»ng cÆ¡ báº£n</h3>
+      <h3>Bệnh lý nghiêm trọng cơ bản</h3>
       <strong>100% STBH = ${money(basic)}</strong>
-      <p>Chi tráº£ khi NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm máº¯c má»™t trong cÃ¡c bá»‡nh lÃ½ nghiÃªm trá»ng cÆ¡ báº£n thuá»™c pháº¡m vi báº£o hiá»ƒm.</p>
-      <ul><li>Ung thÆ° giai Ä‘oáº¡n Ä‘áº§u sau thá»i gian chá»</li><li>Äá»™t quá»µ thá»a Ä‘iá»u kiá»‡n tá»•n thÆ°Æ¡ng kÃ©o dÃ i hoáº·c pháº«u thuáº­t thÃ´ng thÆ°á»ng</li><li>Nhá»“i mÃ¡u cÆ¡ tim</li></ul>
-      <small>Há»£p Ä‘á»“ng cháº¥m dá»©t hiá»‡u lá»±c sau khi phÃ¡t sinh trÃ¡ch nhiá»‡m chi tráº£ quyá»n lá»£i nÃ y.</small>
+      <p>Chi trả khi Người được bảo hiểm mắc một trong các bệnh lý nghiêm trọng cơ bản thuộc phạm vi bảo hiểm.</p>
+      <ul><li>Ung thư giai đoạn đầu sau thời gian chờ</li><li>Đột quỵ thỏa điều kiện tổn thương kéo dài hoặc phẫu thuật thông thường</li><li>Nhồi máu cơ tim</li></ul>
+      <small>Hợp đồng chấm dứt hiệu lực sau khi phát sinh trách nhiệm chi trả quyền lợi này.</small>
     </article>
     <article class="life-care-card benefit-advanced">
-      <h3>Bá»‡nh lÃ½ nghiÃªm trá»ng nÃ¢ng cao</h3>
+      <h3>Bệnh lý nghiêm trọng nâng cao</h3>
       <strong>130% STBH = ${money(advanced)}</strong>
-      <p>Chi tráº£ khi NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm máº¯c bá»‡nh lÃ½ nghiÃªm trá»ng nÃ¢ng cao thuá»™c pháº¡m vi báº£o hiá»ƒm.</p>
-      <div class="life-care-payment-grid"><span>Tráº£ ngay<b>100% STBH = ${money(basic)}</b></span><span>Tráº£ thÃªm má»—i thÃ¡ng<b>5% STBH = ${money(monthly)}/thÃ¡ng</b></span><span>Thá»i gian tráº£ thÃªm<b>06 thÃ¡ng liÃªn tiáº¿p</b></span><span>Tá»•ng tá»‘i Ä‘a<b>130% STBH = ${money(advanced)}</b></span></div>
-      <ul><li>Ung thÆ° giai Ä‘oáº¡n cuá»‘i sau thá»i gian chá»</li><li>Äá»™t quá»µ cÃ³ pháº«u thuáº­t má»Ÿ sá»</li><li>Äá»™t quá»µ cÃ³ pháº«u thuáº­t thÃ´ng thÆ°á»ng vÃ  pháº«u thuáº­t má»Ÿ sá» theo Ä‘iá»u kiá»‡n</li><li>Nhá»“i mÃ¡u cÆ¡ tim cÃ³ pháº«u thuáº­t tim há»Ÿ</li><li>CÆ¡n Ä‘au tháº¯t ngá»±c khÃ´ng á»•n Ä‘á»‹nh cÃ³ pháº«u thuáº­t tim há»Ÿ</li></ul>
+      <p>Chi trả khi Người được bảo hiểm mắc bệnh lý nghiêm trọng nâng cao thuộc phạm vi bảo hiểm.</p>
+      <div class="life-care-payment-grid"><span>Trả ngay<b>100% STBH = ${money(basic)}</b></span><span>Trả thêm mỗi tháng<b>5% STBH = ${money(monthly)}/tháng</b></span><span>Thời gian trả thêm<b>06 tháng liên tiếp</b></span><span>Tổng tối đa<b>130% STBH = ${money(advanced)}</b></span></div>
+      <ul><li>Ung thư giai đoạn cuối sau thời gian chờ</li><li>Đột quỵ có phẫu thuật mở sọ</li><li>Đột quỵ có phẫu thuật thông thường và phẫu thuật mở sọ theo điều kiện</li><li>Nhồi máu cơ tim có phẫu thuật tim hở</li><li>Cơn đau thắt ngực không ổn định có phẫu thuật tim hở</li></ul>
     </article>
     `;
   document.getElementById("resultsSection").hidden = false;
@@ -3427,7 +3427,7 @@ function updateDeathSumAssuredRange() {
 
   if (!range) {
     deathSumAssuredInput.setCustomValidity("");
-    rangeNote.textContent = "Nháº­p ngÃ y sinh vÃ  phÃ­ nÄƒm Ä‘á»ƒ xem khoáº£ng STBH há»£p lá»‡.";
+    rangeNote.textContent = "Nhập ngày sinh và phí năm để xem khoảng STBH hợp lệ.";
     rangeNote.classList.remove("is-error");
     normalizeMainIllustrationText();
     return;
@@ -3435,11 +3435,11 @@ function updateDeathSumAssuredRange() {
 
   const deathSumAssured = moneyValue("deathSumAssured");
   const rangeText = `${formatVND(range.min)} - ${formatVND(range.max)}`;
-  rangeNote.textContent = `Há»£p lá»‡: ${rangeText}`;
+  rangeNote.textContent = `Hợp lệ: ${rangeText}`;
 
   if (deathSumAssured && (deathSumAssured < range.min || deathSumAssured > range.max)) {
-    deathSumAssuredInput.setCustomValidity(`STBH tá»­ vong pháº£i trong khoáº£ng ${rangeText} Ä‘á»“ng.`);
-    rangeNote.textContent = `NgoÃ i khoáº£ng: ${rangeText}`;
+    deathSumAssuredInput.setCustomValidity(`STBH tử vong phải trong khoảng ${rangeText} đồng.`);
+    rangeNote.textContent = `Ngoài khoảng: ${rangeText}`;
     rangeNote.classList.add("is-error");
   } else {
     deathSumAssuredInput.setCustomValidity("");
@@ -3473,15 +3473,15 @@ function refreshIllustration() {
 
   if (!form.checkValidity()) {
     const invalidField = form.querySelector(":invalid");
-    renderPendingResults(invalidField?.validationMessage || "Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin minh há»a.");
+    renderPendingResults(invalidField?.validationMessage || "Vui lòng kiểm tra lại thông tin minh họa.");
     updateSummaryExportAvailability();
     return;
   }
 
   if (selectedMainProduct === "ATPN" && !getAtpnTables().loaded) {
     const message = getAtpnTables().error
-      ? "KhÃ´ng táº£i Ä‘Æ°á»£c dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn."
-      : "Äang táº£i dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn...";
+      ? "Không tải được dữ liệu An Thịnh Phúc Niên."
+      : "Đang tải dữ liệu An Thịnh Phúc Niên...";
     renderPendingResults(message);
     updateSummaryExportAvailability();
     return;
@@ -3580,7 +3580,7 @@ applyEmbeddedAnnualPremium();
 
 document.getElementById("fullName")?.addEventListener("focus", (event) => {
   const input = event.currentTarget;
-  if (input.value.trim() !== "Nguyá»…n HoÃ ng VÅ©") return;
+  if (input.value.trim() !== "Nguyễn Hoàng Vũ") return;
   input.value = "";
   input.dispatchEvent(new Event("input", { bubbles: true }));
 });
@@ -3808,7 +3808,7 @@ function getSelectedValidRidersForPerson(personKey) {
         : selection.code === "R24"
           ? formatCurrency(context.mainAnnualPremium)
           : selection.code === "R26"
-            ? `${selection.r26Plan} (${(selection.r26Benefits || []).length} quyá»n lá»£i)`
+            ? `${selection.r26Plan} (${(selection.r26Benefits || []).length} quyền lợi)`
             : "-";
 
       return {
@@ -3849,7 +3849,7 @@ function buildSummarySnapshot() {
     const invalidField = form.querySelector(":invalid");
     return {
       valid: false,
-      message: invalidField?.validationMessage || "PhÆ°Æ¡ng Ã¡n minh há»a chÆ°a há»£p lá»‡."
+      message: invalidField?.validationMessage || "Phương án minh họa chưa hợp lệ."
     };
   }
 
@@ -3869,10 +3869,10 @@ function buildSummarySnapshot() {
       return {
         valid: false,
         message: age === null
-          ? "Nháº­p ngÃ y sinh Ä‘á»ƒ xuáº¥t tÃ³m táº¯t Life Care 2.0."
+          ? "Nhập ngày sinh để xuất tóm tắt Life Care 2.0."
           : age < 18 || age > 60
-            ? "Life Care 2.0 chá»‰ Ã¡p dá»¥ng cho tuá»•i báº£o hiá»ƒm tá»« 18 Ä‘áº¿n 60."
-            : "Nháº­p Sá»‘ tiá»n báº£o hiá»ƒm Ä‘á»ƒ xuáº¥t tÃ³m táº¯t Life Care 2.0."
+            ? "Life Care 2.0 chỉ áp dụng cho tuổi bảo hiểm từ 18 đến 60."
+            : "Nhập Số tiền bảo hiểm để xuất tóm tắt Life Care 2.0."
       };
     }
 
@@ -3889,7 +3889,7 @@ function buildSummarySnapshot() {
     return {
       valid: true,
       isLifeCare20: true,
-      customerName: input.fullName || "KhÃ¡ch hÃ ng",
+      customerName: input.fullName || "Khách hàng",
       dateOfBirth: input.dateOfBirth,
       age,
       gender: input.gender,
@@ -3903,7 +3903,7 @@ function buildSummarySnapshot() {
       additionalPremium: 0,
       premiumPaymentYears: lifeCareTerm,
       policyTermYears: lifeCareTerm,
-      paymentMode: "NÄƒm",
+      paymentMode: "Năm",
       basicBenefit: input.deathSumAssured,
       advancedBenefit: Math.round(input.deathSumAssured * 1.3),
       advancedImmediate: input.deathSumAssured,
@@ -3926,8 +3926,8 @@ function buildSummarySnapshot() {
     return {
       valid: false,
       message: getAtpnTables().error
-        ? "KhÃ´ng táº£i Ä‘Æ°á»£c dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn."
-        : "Äang táº£i dá»¯ liá»‡u An Thá»‹nh PhÃºc NiÃªn..."
+        ? "Không tải được dữ liệu An Thịnh Phúc Niên."
+        : "Đang tải dữ liệu An Thịnh Phúc Niên..."
     };
   }
 
@@ -3972,7 +3972,7 @@ function buildSummarySnapshot() {
 
   return {
     valid: true,
-    customerName: input.fullName || "KhÃ¡ch hÃ ng",
+    customerName: input.fullName || "Khách hàng",
     dateOfBirth: input.dateOfBirth,
     age: context.age,
     gender: input.gender,
@@ -3990,7 +3990,7 @@ function buildSummarySnapshot() {
     additionalPremium: input.additionalPremium,
     premiumPaymentYears: input.premiumPaymentYears,
     policyTermYears: input.illustrationYears,
-    paymentMode: PAYMENT_MODE_LABEL[context.paymentMode] || "NÄƒm",
+    paymentMode: PAYMENT_MODE_LABEL[context.paymentMode] || "Năm",
     riders,
     totals: {
       firstYearPremium: totalFirstYearPremium,
@@ -4025,7 +4025,7 @@ function updateSummaryExportAvailability() {
   exportTargets.forEach(({ source, bar, button, status }) => {
     bar.hidden = source === "main" ? !snapshot.valid : false;
     button.disabled = !snapshot.valid;
-    status.textContent = snapshot.valid ? "" : snapshot.message || "PhÆ°Æ¡ng Ã¡n minh há»a chÆ°a há»£p lá»‡.";
+    status.textContent = snapshot.valid ? "" : snapshot.message || "Phương án minh họa chưa hợp lệ.";
   });
 }
 
@@ -4258,25 +4258,25 @@ function drawOfficialInfoTable(ctx, snapshot, x, y, width) {
   const owner = snapshot.policyOwner || insured;
 
   drawOfficialCell(ctx, "", x, y, 110, rowH, { fill: blueFill });
-  drawOfficialCell(ctx, "Há» tÃªn", x + 110, y, 230, rowH, { fill: blueFill, size: 20 });
-  drawOfficialCell(ctx, "Tuá»•i", x + 340, y, 94, rowH, { fill: blueFill, size: 20, align: "center" });
-  drawOfficialCell(ctx, "Giá»›i tÃ­nh", x + 434, y, leftWidth - 434, rowH, { fill: blueFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, "Họ tên", x + 110, y, 230, rowH, { fill: blueFill, size: 20 });
+  drawOfficialCell(ctx, "Tuổi", x + 340, y, 94, rowH, { fill: blueFill, size: 20, align: "center" });
+  drawOfficialCell(ctx, "Giới tính", x + 434, y, leftWidth - 434, rowH, { fill: blueFill, size: 20, align: "center" });
 
   drawOfficialCell(ctx, "BMBH", x, y + rowH, 110, rowH, { fill: blueFill, size: 20 });
   drawOfficialCell(ctx, owner.name || "-", x + 110, y + rowH, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
   drawOfficialCell(ctx, owner.age === null || owner.age === undefined ? "-" : String(owner.age), x + 340, y + rowH, 94, rowH, { fill: paleFill, size: 20, align: "center" });
   drawOfficialCell(ctx, owner.gender || "-", x + 434, y + rowH, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
 
-  drawOfficialCell(ctx, "NÄBH", x, y + rowH * 2, 110, rowH, { fill: blueFill, size: 20 });
+  drawOfficialCell(ctx, "NĐBH", x, y + rowH * 2, 110, rowH, { fill: blueFill, size: 20 });
   drawOfficialCell(ctx, insured.name || snapshot.customerName || "-", x + 110, y + rowH * 2, 230, rowH, { fill: paleFill, size: 20, weight: 750 });
   drawOfficialCell(ctx, insured.age === null || insured.age === undefined ? "-" : String(insured.age), x + 340, y + rowH * 2, 94, rowH, { fill: paleFill, size: 20, align: "center" });
   drawOfficialCell(ctx, insured.gender || "-", x + 434, y + rowH * 2, leftWidth - 434, rowH, { fill: paleFill, size: 20, align: "center" });
 
   const contractRows = [
-    ["Thá»i háº¡n Há»£p Ä‘á»“ng:", `${snapshot.policyTermYears} nÄƒm`],
-    ["Thá»i háº¡n Ä‘Ã³ng phÃ­ dá»± kiáº¿n:", `${snapshot.premiumPaymentYears} nÄƒm`],
-    ["Äá»‹nh ká»³ Ä‘Ã³ng phÃ­:", snapshot.paymentMode],
-    ["Tá»•ng PhÃ­ báº£o hiá»ƒm dá»± kiáº¿n Ä‘Ã³ng:", formatCurrency(snapshot.totals.firstYearPremium)]
+    ["Thời hạn Hợp đồng:", `${snapshot.policyTermYears} năm`],
+    ["Thời hạn đóng phí dự kiến:", `${snapshot.premiumPaymentYears} năm`],
+    ["Định kỳ đóng phí:", snapshot.paymentMode],
+    ["Tổng Phí bảo hiểm dự kiến đóng:", formatCurrency(snapshot.totals.firstYearPremium)]
   ];
   contractRows.forEach((row, index) => {
     const rowY = y + index * rowH;
@@ -4290,15 +4290,15 @@ function drawOfficialInfoTable(ctx, snapshot, x, y, width) {
 function drawOfficialRiskTable(ctx, snapshot, x, y, width) {
   const rowH = 42;
   if (snapshot.mainProduct === "ATPN") {
-    drawOfficialCell(ctx, "Sá» TIá»€N Báº¢O HIá»‚M Tá»¬ VONG", x, y, width * 0.48, rowH, { fill: "#f8fbff", size: 19 });
+    drawOfficialCell(ctx, "SỐ TIỀN BẢO HIỂM TỬ VONG", x, y, width * 0.48, rowH, { fill: "#f8fbff", size: 19 });
     drawOfficialCell(ctx, formatCurrency(snapshot.mainSumInsured), x + width * 0.48, y, width * 0.17, rowH, { fill: "#fffdf4", size: 19, color: "#805900", weight: 800, align: "right" });
-    drawOfficialCell(ctx, "CHU TOÃ€N Háº¬U Sá»°", x + width * 0.68, y, width * 0.22, rowH, { fill: "#f8fbff", size: 18 });
+    drawOfficialCell(ctx, "CHU TOÀN HẬU SỰ", x + width * 0.68, y, width * 0.22, rowH, { fill: "#f8fbff", size: 18 });
     drawOfficialCell(ctx, formatCurrency(snapshot.funeralBenefit), x + width * 0.9, y, width * 0.1, rowH, { fill: "#fffdf4", size: 18, color: "#805900", weight: 800, align: "right" });
     return y + rowH + 26;
   }
-  drawOfficialCell(ctx, "Sá» TIá»€N Báº¢O HIá»‚M Tá»¬ VONG", x, y, width * 0.48, rowH, { fill: "#f8fbff", size: 19 });
+  drawOfficialCell(ctx, "SỐ TIỀN BẢO HIỂM TỬ VONG", x, y, width * 0.48, rowH, { fill: "#f8fbff", size: 19 });
   drawOfficialCell(ctx, formatCurrency(snapshot.mainSumInsured), x + width * 0.48, y, width * 0.17, rowH, { fill: "#fffdf4", size: 19, color: "#805900", weight: 800, align: "right" });
-  drawOfficialCell(ctx, "STBH THÆ¯Æ NG Táº¬T TOÃ€N Bá»˜ VÄ¨NH VIá»„N", x + width * 0.68, y, width * 0.22, rowH, { fill: "#f8fbff", size: 18 });
+  drawOfficialCell(ctx, "STBH THƯƠNG TẬT TOÀN BỘ VĨNH VIỄN", x + width * 0.68, y, width * 0.22, rowH, { fill: "#f8fbff", size: 18 });
   drawOfficialCell(ctx, formatCurrency(snapshot.disabilitySumInsured), x + width * 0.9, y, width * 0.1, rowH, { fill: "#fffdf4", size: 18, color: "#805900", weight: 800, align: "right" });
   return y + rowH + 26;
 }
@@ -4311,11 +4311,11 @@ function drawOfficialTimeline(ctx, snapshot, x, y, width) {
   const colWidth = (width - labelWidth - colGap * (rows.length - 1)) / rows.length;
   const centers = rows.map((_, index) => x + labelWidth + index * (colWidth + colGap) + colWidth / 2);
 
-  drawText(ctx, "Tuá»•i NÄBH:", x, y, { size: 19, weight: 600, color: "#0b448f" });
+  drawText(ctx, "Tuổi NĐBH:", x, y, { size: 19, weight: 600, color: "#0b448f" });
   rows.forEach((row, index) => drawText(ctx, row.age, centers[index], y, { size: 20, weight: 750, color: "#0b448f", align: "center" }));
 
   const lineY = y + 58;
-  drawText(ctx, "NÄƒm há»£p Ä‘á»“ng:", x, lineY - 10, { size: 19, weight: 600, color: "#0b448f" });
+  drawText(ctx, "Năm hợp đồng:", x, lineY - 10, { size: 19, weight: 600, color: "#0b448f" });
   ctx.strokeStyle = "#3d86d1";
   ctx.lineWidth = 5;
   ctx.beginPath();
@@ -4333,9 +4333,9 @@ function drawOfficialTimeline(ctx, snapshot, x, y, width) {
   });
 
   const metricRows = [
-    ["Tá»•ng phÃ­ báº£o hiá»ƒm lÅ©y káº¿", "cumulativePremium"],
-    ["GiÃ¡ trá»‹ hoÃ n láº¡i (lÃ£i suáº¥t minh há»a 4,76%/nÄƒm)", "cashValue476"],
-    ["GiÃ¡ trá»‹ hoÃ n láº¡i (lÃ£i suáº¥t minh há»a 4,25%/nÄƒm)", "cashValue425"]
+    ["Tổng phí bảo hiểm lũy kế", "cumulativePremium"],
+    ["Giá trị hoàn lại (lãi suất minh họa 4,76%/năm)", "cashValue476"],
+    ["Giá trị hoàn lại (lãi suất minh họa 4,25%/năm)", "cashValue425"]
   ];
 
   metricRows.forEach((metric, metricIndex) => {
@@ -4364,12 +4364,12 @@ function drawOfficialTimeline(ctx, snapshot, x, y, width) {
 function drawOfficialRiderTable(ctx, snapshot, x, y, width) {
   const tableRows = snapshot.riders.length
     ? snapshot.riders.map((rider) => [rider.name, rider.displaySumInsured])
-    : [["ChÆ°a chá»n sáº£n pháº©m bá»• trá»£", "-"]];
+    : [["Chưa chọn sản phẩm bổ trợ", "-"]];
   const rowH = 46;
   const nameWidth = width * 0.72;
 
-  drawOfficialCell(ctx, "Sáº¢N PHáº¨M", x, y, nameWidth, rowH, { fill: "#f8fbff", size: 19, weight: 800, align: "center" });
-  drawOfficialCell(ctx, "STBH / Quyá»n lá»£i", x + nameWidth, y, width - nameWidth, rowH, { fill: "#f8fbff", size: 19, weight: 800, align: "center" });
+  drawOfficialCell(ctx, "SẢN PHẨM", x, y, nameWidth, rowH, { fill: "#f8fbff", size: 19, weight: 800, align: "center" });
+  drawOfficialCell(ctx, "STBH / Quyền lợi", x + nameWidth, y, width - nameWidth, rowH, { fill: "#f8fbff", size: 19, weight: 800, align: "center" });
   tableRows.slice(0, 8).forEach((row, index) => {
     const rowY = y + rowH * (index + 1);
     drawOfficialCell(ctx, row[0], x, rowY, nameWidth, rowH, { fill: "#ffffff", size: 18, color: "#0b448f", weight: 600 });
@@ -4401,26 +4401,26 @@ function renderSummaryCanvas(snapshot) {
   ctx.arc(105, 95, 46, 0, Math.PI * 2);
   ctx.fill();
   drawText(ctx, "BV", 76, 72, { size: 37, weight: 800, color: blue });
-  drawText(ctx, "Báº£o Viá»‡t NhÃ¢n thá» KhÃ¡nh HÃ²a", 170, 54, { size: 35, weight: 750, color: "#ffffff" });
-  drawText(ctx, `NgÃ y xuáº¥t: ${snapshot.exportedAtText}`, 170, 104, { size: 23, weight: 600, color: "#d9ecff" });
+  drawText(ctx, "Bảo Việt Nhân thọ Khánh Hòa", 170, 54, { size: 35, weight: 750, color: "#ffffff" });
+  drawText(ctx, `Ngày xuất: ${snapshot.exportedAtText}`, 170, 104, { size: 23, weight: 600, color: "#d9ecff" });
 
-  wrapText(ctx, "TÃ³m táº¯t phÆ°Æ¡ng Ã¡n minh há»a", 70, 172, 660, 54, { size: 50, weight: 800, color: "#ffffff" });
+  wrapText(ctx, "Tóm tắt phương án minh họa", 70, 172, 660, 54, { size: 50, weight: 800, color: "#ffffff" });
   drawText(ctx, snapshot.customerName, 70, 295, { size: 31, weight: 750, color: "#ffffff" });
-  drawText(ctx, `${snapshot.gender}${snapshot.age === null ? "" : `, ${snapshot.age} tuá»•i`}`, 70, 336, { size: 26, weight: 600, color: "#d9ecff" });
+  drawText(ctx, `${snapshot.gender}${snapshot.age === null ? "" : `, ${snapshot.age} tuổi`}`, 70, 336, { size: 26, weight: 600, color: "#d9ecff" });
 
   ctx.fillStyle = "rgba(244, 197, 66, 0.18)";
   drawRoundedRect(ctx, 750, 180, 270, 142, 30);
   ctx.fill();
-  drawText(ctx, "Tá»•ng báº£o vá»‡", 780, 208, { size: 25, weight: 700, color: "#ffffff" });
+  drawText(ctx, "Tổng bảo vệ", 780, 208, { size: 25, weight: 700, color: "#ffffff" });
   drawText(ctx, formatCompactCurrency(snapshot.totals.protectionBenefit), 780, 254, { size: 38, weight: 800, color: gold, fitWidth: 210, minSize: 30 });
 
   let y = 430;
-  y = drawSummaryCard(ctx, "Sáº£n pháº©m chÃ­nh", [
-    { label: "TÃªn sáº£n pháº©m", value: snapshot.productName },
-    { label: "Sá»‘ tiá»n báº£o hiá»ƒm", value: formatCurrency(snapshot.mainSumInsured) },
-    { label: "PhÃ­ Ä‘á»‹nh ká»³", value: `${formatCurrency(snapshot.mainPremium)} / ${snapshot.paymentMode.toLowerCase()}` },
-    { label: "Thá»i háº¡n Ä‘Ã³ng phÃ­", value: `${snapshot.premiumPaymentYears} nÄƒm` },
-    { label: "Thá»i háº¡n há»£p Ä‘á»“ng", value: `${snapshot.policyTermYears} nÄƒm` }
+  y = drawSummaryCard(ctx, "Sản phẩm chính", [
+    { label: "Tên sản phẩm", value: snapshot.productName },
+    { label: "Số tiền bảo hiểm", value: formatCurrency(snapshot.mainSumInsured) },
+    { label: "Phí định kỳ", value: `${formatCurrency(snapshot.mainPremium)} / ${snapshot.paymentMode.toLowerCase()}` },
+    { label: "Thời hạn đóng phí", value: `${snapshot.premiumPaymentYears} năm` },
+    { label: "Thời hạn hợp đồng", value: `${snapshot.policyTermYears} năm` }
   ], 58, y, 964, { rowHeight: 54, labelSize: 23, valueSize: 25, labelMaxWidth: 470, valueMaxWidth: 390 }) + 22;
 
   const riderRows = snapshot.riders.length
@@ -4432,20 +4432,20 @@ function renderSummaryCanvas(snapshot) {
       labelMaxWidth: 590,
       valueMaxWidth: 300
     }))
-    : [{ label: "Sáº£n pháº©m bá»• trá»£", value: "ChÆ°a chá»n" }];
-  y = drawSummaryCard(ctx, "Sáº£n pháº©m bá»• trá»£", riderRows.slice(0, 7), 58, y, 964, { rowHeight: 50, labelSize: 22, valueSize: 24, labelMaxWidth: 590, valueMaxWidth: 300 }) + 22;
+    : [{ label: "Sản phẩm bổ trợ", value: "Chưa chọn" }];
+  y = drawSummaryCard(ctx, "Sản phẩm bổ trợ", riderRows.slice(0, 7), 58, y, 964, { rowHeight: 50, labelSize: 22, valueSize: 24, labelMaxWidth: 590, valueMaxWidth: 300 }) + 22;
 
   const overviewRows = [
-    { label: "Tá»•ng phÃ­ nÄƒm Ä‘áº§u", value: formatCurrency(snapshot.totals.firstYearPremium) },
-    { label: "Tá»•ng STBH chÃ­nh", value: formatCurrency(snapshot.totals.mainSumInsured) },
-    { label: "Tá»•ng STBH bá»• trá»£", value: formatCurrency(snapshot.totals.riderSumInsured) },
-    { label: "Tá»•ng quyá»n lá»£i báº£o vá»‡", value: formatCurrency(snapshot.totals.protectionBenefit) },
+    { label: "Tổng phí năm đầu", value: formatCurrency(snapshot.totals.firstYearPremium) },
+    { label: "Tổng STBH chính", value: formatCurrency(snapshot.totals.mainSumInsured) },
+    { label: "Tổng STBH bổ trợ", value: formatCurrency(snapshot.totals.riderSumInsured) },
+    { label: "Tổng quyền lợi bảo vệ", value: formatCurrency(snapshot.totals.protectionBenefit) },
     ...snapshot.totals.accountMilestones.map((item) => ({
-      label: `GiÃ¡ trá»‹ hoÃ n láº¡i nÄƒm ${item.year}`,
+      label: `Giá trị hoàn lại năm ${item.year}`,
       value: formatCurrency(item.cashValue476)
     }))
   ];
-  y = drawSummaryCard(ctx, "Tá»•ng quan phÆ°Æ¡ng Ã¡n", overviewRows, 58, y, 964, { rowHeight: 47, labelSize: 22, valueSize: 24, labelMaxWidth: 520, valueMaxWidth: 360 }) + 22;
+  y = drawSummaryCard(ctx, "Tổng quan phương án", overviewRows, 58, y, 964, { rowHeight: 47, labelSize: 22, valueSize: 24, labelMaxWidth: 520, valueMaxWidth: 360 }) + 22;
 
   ctx.fillStyle = "#fff8dc";
   drawRoundedRect(ctx, 58, y, 964, 142, 28);
@@ -4453,10 +4453,10 @@ function renderSummaryCanvas(snapshot) {
   ctx.strokeStyle = "#f2d56c";
   ctx.lineWidth = 2;
   ctx.stroke();
-  drawText(ctx, "LÆ°u Ã½", 90, y + 22, { size: 30, weight: 800, color: "#7a5600" });
-  wrapText(ctx, "ÄÃ¢y chá»‰ lÃ  minh há»a. Quyá»n lá»£i thá»±c táº¿ cÄƒn cá»© theo quy táº¯c Ä‘iá»u khoáº£n sáº£n pháº©m.", 90, y + 68, 900, 32, { size: 25, weight: 600, color: "#5b4a16" });
+  drawText(ctx, "Lưu ý", 90, y + 22, { size: 30, weight: 800, color: "#7a5600" });
+  wrapText(ctx, "Đây chỉ là minh họa. Quyền lợi thực tế căn cứ theo quy tắc điều khoản sản phẩm.", 90, y + 68, 900, 32, { size: 25, weight: 600, color: "#5b4a16" });
 
-  drawText(ctx, "Dá»¯ liá»‡u Ä‘Æ°á»£c láº¥y trá»±c tiáº¿p tá»« phÆ°Æ¡ng Ã¡n minh há»a hiá»‡n táº¡i.", 540, 1848, { size: 23, weight: 600, color: "#64748b", align: "center" });
+  drawText(ctx, "Dữ liệu được lấy trực tiếp từ phương án minh họa hiện tại.", 540, 1848, { size: 23, weight: 600, color: "#64748b", align: "center" });
   return canvas;
 }
 
@@ -4541,14 +4541,14 @@ function renderOfficialSummaryCanvas(snapshot) {
   headerGradient.addColorStop(1, "#00326c");
   ctx.fillStyle = headerGradient;
   ctx.fillRect(0, 0, SUMMARY_IMAGE_WIDTH, headerH);
-  drawText(ctx, `MINH Há»ŒA ${snapshot.productName || MAIN_PRODUCTS.ATHD}`.toUpperCase(), SUMMARY_IMAGE_WIDTH / 2, 32, {
+  drawText(ctx, `MINH HỌA ${snapshot.productName || MAIN_PRODUCTS.ATHD}`.toUpperCase(), SUMMARY_IMAGE_WIDTH / 2, 32, {
     size: 40,
     weight: 850,
     color: "#ffffff",
     align: "center",
     maxWidth: pageW
   });
-  drawText(ctx, `Chá»‰ cáº§n tiáº¿t kiá»‡m ${formatCurrency(Math.ceil(snapshot.totals.firstYearPremium / 365))} / ngÃ y`, SUMMARY_IMAGE_WIDTH / 2, 88, {
+  drawText(ctx, `Chỉ cần tiết kiệm ${formatCurrency(Math.ceil(snapshot.totals.firstYearPremium / 365))} / ngày`, SUMMARY_IMAGE_WIDTH / 2, 88, {
     size: Math.round(contentFontSize * 1.3),
     weight: 800,
     color: gold,
@@ -4567,16 +4567,16 @@ function renderOfficialSummaryCanvas(snapshot) {
   const owner = snapshot.policyOwner || insured;
   const infoRows = snapshot.isPolicyOwnerSameAsInsured
     ? [
-        ["BMBH/NÄBH", insured.name || snapshot.customerName || "-"],
-        ["NgÃ y thÃ¡ng nÄƒm sinh", insured.dateOfBirth || snapshot.dateOfBirth || "-"],
-        ["Tuá»•i báº£o hiá»ƒm", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
-        ["Giá»›i tÃ­nh", insured.gender || "-"]
+        ["BMBH/NĐBH", insured.name || snapshot.customerName || "-"],
+        ["Ngày tháng năm sinh", insured.dateOfBirth || snapshot.dateOfBirth || "-"],
+        ["Tuổi bảo hiểm", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
+        ["Giới tính", insured.gender || "-"]
       ]
     : [
-        ["NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm", insured.name || snapshot.customerName || "-"],
-        ["BÃªn mua báº£o hiá»ƒm", owner.name || "-"],
-        ["Tuá»•i NÄBH", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
-        ["Giá»›i tÃ­nh NÄBH", insured.gender || "-"]
+        ["Người được bảo hiểm", insured.name || snapshot.customerName || "-"],
+        ["Bên mua bảo hiểm", owner.name || "-"],
+        ["Tuổi NĐBH", insured.age === null || insured.age === undefined ? "-" : String(insured.age)],
+        ["Giới tính NĐBH", insured.gender || "-"]
       ];
   infoRows.forEach((row, index) => {
     const rowY = y + index * rowH;
@@ -4591,10 +4591,10 @@ function renderOfficialSummaryCanvas(snapshot) {
   });
 
   const contractRows = [
-    ["Thá»i háº¡n Há»£p Ä‘á»“ng:", `${snapshot.policyTermYears} nÄƒm`],
-    ["Thá»i háº¡n Ä‘Ã³ng phÃ­ dá»± kiáº¿n", `${snapshot.premiumPaymentYears} nÄƒm`],
-    ["Äá»‹nh ká»³ Ä‘Ã³ng phÃ­:", snapshot.paymentMode],
-    ["Tá»•ng PhÃ­ báº£o hiá»ƒm dá»± kiáº¿n Ä‘Ã³ng:", formatVND(snapshot.totals.firstYearPremium)]
+    ["Thời hạn Hợp đồng:", `${snapshot.policyTermYears} năm`],
+    ["Thời hạn đóng phí dự kiến", `${snapshot.premiumPaymentYears} năm`],
+    ["Định kỳ đóng phí:", snapshot.paymentMode],
+    ["Tổng Phí bảo hiểm dự kiến đóng:", formatVND(snapshot.totals.firstYearPremium)]
   ];
   const contractLabelW = rightW * 0.62;
   contractRows.forEach((row, index) => {
@@ -4616,29 +4616,29 @@ function renderOfficialSummaryCanvas(snapshot) {
   });
 
   y += infoH + 24;
-  drawText(ctx, "ÄÆ¡n vá»‹: Ä‘á»“ng", pageX + pageW - 24, y, { size: contentFontSize, weight: 750, color: orange, align: "right" });
+  drawText(ctx, "Đơn vị: đồng", pageX + pageW - 24, y, { size: contentFontSize, weight: 750, color: orange, align: "right" });
   y += 40;
 
   const officialProductTitle = snapshot.mainProduct === "ATPN"
-    ? "A. Sáº¢N PHáº¨M Báº¢O HIá»‚M LIÃŠN Káº¾T CHUNG AN THá»ŠNH PHÃšC NIÃŠN"
-    : "A. Sáº¢N PHáº¨M Báº¢O HIá»‚M LIÃŠN Káº¾T CHUNG AN TÃ‚M HOáº CH Äá»ŠNH";
+    ? "A. SẢN PHẨM BẢO HIỂM LIÊN KẾT CHUNG AN THỊNH PHÚC NIÊN"
+    : "A. SẢN PHẨM BẢO HIỂM LIÊN KẾT CHUNG AN TÂM HOẠCH ĐỊNH";
   const officialRiskItems = snapshot.mainProduct === "ATPN"
-    ? [["Sá» TIá»€N Báº¢O HIá»‚M Tá»¬ VONG", snapshot.mainSumInsured], ["CHU TOÃ€N Háº¬U Sá»°", snapshot.funeralBenefit]]
-    : [["Sá» TIá»€N Báº¢O HIá»‚M Tá»¬ VONG", snapshot.mainSumInsured], ["Sá» TIá»€N Báº¢O HIá»‚M THÆ¯Æ NG Táº¬T TOÃ€N Bá»˜ VÄ¨NH VIá»„N", snapshot.disabilitySumInsured]];
+    ? [["SỐ TIỀN BẢO HIỂM TỬ VONG", snapshot.mainSumInsured], ["CHU TOÀN HẬU SỰ", snapshot.funeralBenefit]]
+    : [["SỐ TIỀN BẢO HIỂM TỬ VONG", snapshot.mainSumInsured], ["SỐ TIỀN BẢO HIỂM THƯƠNG TẬT TOÀN BỘ VĨNH VIỄN", snapshot.disabilitySumInsured]];
 
   sectionTitle(officialProductTitle, pageX + 14, y);
   y += 48;
   const riskH = 138;
   const riskGap = 14;
   const riskW = (pageW - riskGap) / 2;
-  drawText(ctx, "1. QUYá»€N Lá»¢I Rá»¦I RO", pageX + 18, y + 24, { size: 24, weight: 850, color: "#0029b8" });
+  drawText(ctx, "1. QUYỀN LỢI RỦI RO", pageX + 18, y + 24, { size: 24, weight: 850, color: "#0029b8" });
   officialRiskItems.forEach((item, index) => {
     const x = pageX + index * (riskW + riskGap);
     const nameW = riskW * 0.68;
     fillCell(x, y, nameW, riskH);
     fillCell(x + nameW, y, riskW - nameW, riskH);
     if (index === 0) {
-      drawText(ctx, "1. QUYá»€N Lá»¢I Rá»¦I RO", x + 18, y + 24, { size: 24, weight: 850, color: "#0029b8" });
+      drawText(ctx, "1. QUYỀN LỢI RỦI RO", x + 18, y + 24, { size: 24, weight: 850, color: "#0029b8" });
       drawText(ctx, item[0], x + 18, y + 80, { size: contentFontSize, weight: 750, color: brightBlue, maxWidth: nameW - 32 });
     } else {
       wrapText(ctx, item[0], x + 18, y + 62, nameW - 32, contentLineHeight, { size: contentFontSize, weight: 750, color: brightBlue });
@@ -4653,14 +4653,14 @@ function renderOfficialSummaryCanvas(snapshot) {
   });
 
   y += riskH + 34;
-  drawText(ctx, "2. QUYá»€N Lá»¢I Äáº¦U TÆ¯", pageX + 18, y, { size: 24, weight: 850, color: "#0029b8" });
+  drawText(ctx, "2. QUYỀN LỢI ĐẦU TƯ", pageX + 18, y, { size: 24, weight: 850, color: "#0029b8" });
   y += 36;
   const investmentRows = [
-    ["NÄƒm há»£p Ä‘á»“ng", "year"],
-    ["Tuá»•i NÄBH:", "age"],
-    ["Tá»•ng phÃ­ báº£o hiá»ƒm lÅ©y káº¿", "cumulativePremium", "blue"],
-    ["GiÃ¡ trá»‹ hoÃ n láº¡i\n(LÃ£i suáº¥t minh há»a: 4,76%/nÄƒm)", "cashValue476"],
-    ["GiÃ¡ trá»‹ hoÃ n láº¡i\n(LÃ£i suáº¥t minh há»a: 4,25%/nÄƒm)", "cashValue425"]
+    ["Năm hợp đồng", "year"],
+    ["Tuổi NĐBH:", "age"],
+    ["Tổng phí bảo hiểm lũy kế", "cumulativePremium", "blue"],
+    ["Giá trị hoàn lại\n(Lãi suất minh họa: 4,76%/năm)", "cashValue476"],
+    ["Giá trị hoàn lại\n(Lãi suất minh họa: 4,25%/năm)", "cashValue425"]
   ];
   const years = [5, 10, 15, 20];
   const milestoneByYear = new Map(snapshot.totals.accountMilestones.map((item) => [item.year, item]));
@@ -4692,7 +4692,7 @@ function renderOfficialSummaryCanvas(snapshot) {
   });
 
   y += investmentRows.length * investRowH + 38;
-  sectionTitle("B. CÃC Sáº¢N PHáº¨M KHÃC TRONG Há»¢P Äá»’NG Báº¢O HIá»‚M", pageX + 14, y);
+  sectionTitle("B. CÁC SẢN PHẨM KHÁC TRONG HỢP ĐỒNG BẢO HIỂM", pageX + 14, y);
   y += 42;
   const noteY = 1572;
   const riderHeaderH = 42;
@@ -4703,8 +4703,8 @@ function renderOfficialSummaryCanvas(snapshot) {
     : 42;
   fillCell(pageX, y, riderNameW, riderHeaderH);
   fillCell(pageX + riderNameW, y, pageW - riderNameW, riderHeaderH);
-  cellText("Sáº¢N PHáº¨M", pageX, y, riderNameW, riderHeaderH, { align: "center", weight: 850, color: "#0029b8" });
-  cellText("Sá» TIá»€N Báº¢O HIá»‚M", pageX + riderNameW, y, pageW - riderNameW, riderHeaderH, { align: "center", weight: 850, color: "#0029b8" });
+  cellText("SẢN PHẨM", pageX, y, riderNameW, riderHeaderH, { align: "center", weight: 850, color: "#0029b8" });
+  cellText("SỐ TIỀN BẢO HIỂM", pageX + riderNameW, y, pageW - riderNameW, riderHeaderH, { align: "center", weight: 850, color: "#0029b8" });
   y += riderHeaderH;
   riderRows.forEach((rider) => {
     fillCell(pageX, y, riderNameW, riderRowH);
@@ -4725,10 +4725,10 @@ function renderOfficialSummaryCanvas(snapshot) {
   ctx.beginPath();
   ctx.arc(pageX + 46, noteY + 41, 19, 0, Math.PI * 2);
   ctx.stroke();
-  drawText(ctx, "âœ“", pageX + 46, noteY + 28, { size: contentFontSize, weight: 850, color: orange, align: "center" });
+  drawText(ctx, "✓", pageX + 46, noteY + 28, { size: contentFontSize, weight: 850, color: orange, align: "center" });
   wrapText(
     ctx,
-    "TÃ i liá»‡u mang tÃ­nh cháº¥t tham kháº£o nhanh",
+    "Tài liệu mang tính chất tham khảo nhanh",
     pageX + 88,
     noteY + 29,
     pageW - 118,
@@ -4789,13 +4789,13 @@ function renderLifeCareSummaryCanvas(snapshot) {
   headerGradient.addColorStop(1, "#00336f");
   ctx.fillStyle = headerGradient;
   ctx.fillRect(0, 0, canvas.width, 170);
-  drawText(ctx, "TÃ“M Táº®T MINH Há»ŒA", canvas.width / 2, 36, {
+  drawText(ctx, "TÓM TẮT MINH HỌA", canvas.width / 2, 36, {
     size: 28, weight: 800, color: "#d8ebff", align: "center"
   });
   drawText(ctx, "LIFE CARE 2.0", canvas.width / 2, 78, {
     size: 48, weight: 900, color: "#ffffff", align: "center"
   });
-  drawText(ctx, `NgÃ y xuáº¥t: ${snapshot.exportedAtText}`, canvas.width / 2, 137, {
+  drawText(ctx, `Ngày xuất: ${snapshot.exportedAtText}`, canvas.width / 2, 137, {
     size: 19, weight: 650, color: "#d8ebff", align: "center"
   });
 
@@ -4807,16 +4807,16 @@ function renderLifeCareSummaryCanvas(snapshot) {
   const summaryInfoHeight = 236;
 
   card(customerCardX, y, summaryColumnWidth, summaryInfoHeight);
-  drawText(ctx, "THÃ”NG TIN KHÃCH HÃ€NG", customerCardX + 24, y + 22, {
+  drawText(ctx, "THÔNG TIN KHÁCH HÀNG", customerCardX + 24, y + 22, {
     size: 21, weight: 900, color: blue
   });
   const insuredInfo = snapshot.insuredPerson || { name: snapshot.customerName, dateOfBirth: snapshot.dateOfBirth, age: snapshot.age, gender: snapshot.gender };
   const ownerInfo = snapshot.policyOwner || insuredInfo;
   const customerRows = [
-    [snapshot.isPolicyOwnerSameAsInsured ? "BMBH/NÄBH" : "NÄBH", insuredInfo.name || snapshot.customerName],
-    [snapshot.isPolicyOwnerSameAsInsured ? "NgÃ y sinh" : "BMBH", snapshot.isPolicyOwnerSameAsInsured ? (insuredInfo.dateOfBirth || "-") : (ownerInfo.name || "-")],
-    ["Tuá»•i NÄBH", insuredInfo.age === null || insuredInfo.age === undefined ? "-" : `${insuredInfo.age} tuá»•i`],
-    ["Giá»›i tÃ­nh NÄBH", insuredInfo.gender || "-"]
+    [snapshot.isPolicyOwnerSameAsInsured ? "BMBH/NĐBH" : "NĐBH", insuredInfo.name || snapshot.customerName],
+    [snapshot.isPolicyOwnerSameAsInsured ? "Ngày sinh" : "BMBH", snapshot.isPolicyOwnerSameAsInsured ? (insuredInfo.dateOfBirth || "-") : (ownerInfo.name || "-")],
+    ["Tuổi NĐBH", insuredInfo.age === null || insuredInfo.age === undefined ? "-" : `${insuredInfo.age} tuổi`],
+    ["Giới tính NĐBH", insuredInfo.gender || "-"]
   ];
   customerRows.forEach((row, index) => {
     labelValue(
@@ -4829,15 +4829,15 @@ function renderLifeCareSummaryCanvas(snapshot) {
   });
 
   card(contractCardX, y, summaryColumnWidth, summaryInfoHeight);
-  drawText(ctx, "THÃ”NG TIN Há»¢P Äá»’NG", contractCardX + 24, y + 22, {
+  drawText(ctx, "THÔNG TIN HỢP ĐỒNG", contractCardX + 24, y + 22, {
     size: 21, weight: 900, color: blue
   });
   const contractRows = [
-    ["Sáº£n pháº©m", "Life Care 2.0"],
-    ["Sá»‘ tiá»n báº£o hiá»ƒm", formatCurrency(snapshot.mainSumInsured)],
-    ["PhÃ­ báº£o hiá»ƒm Ä‘á»‹nh ká»³ nÄƒm", formatCurrency(snapshot.mainPremium)],
-    ["Thá»i háº¡n há»£p Ä‘á»“ng", `${snapshot.policyTermYears} nÄƒm`],
-    ["Thá»i háº¡n Ä‘Ã³ng phÃ­", `${snapshot.premiumPaymentYears} nÄƒm`]
+    ["Sản phẩm", "Life Care 2.0"],
+    ["Số tiền bảo hiểm", formatCurrency(snapshot.mainSumInsured)],
+    ["Phí bảo hiểm định kỳ năm", formatCurrency(snapshot.mainPremium)],
+    ["Thời hạn hợp đồng", `${snapshot.policyTermYears} năm`],
+    ["Thời hạn đóng phí", `${snapshot.premiumPaymentYears} năm`]
   ];
   contractRows.forEach((row, index) => {
     labelValue(
@@ -4850,44 +4850,44 @@ function renderLifeCareSummaryCanvas(snapshot) {
   });
 
   y += summaryInfoHeight + 28;
-  drawText(ctx, "QUYá»€N Lá»¢I Sáº¢N PHáº¨M", canvas.width / 2, y, {
+  drawText(ctx, "QUYỀN LỢI SẢN PHẨM", canvas.width / 2, y, {
     size: 29, weight: 900, color: blue, align: "center"
   });
   y += 48;
 
   card(margin, y, contentW, 310, "#ffffff", "#b9d8ef");
-  drawText(ctx, "Bá»†NH LÃ NGHIÃŠM TRá»ŒNG CÆ  Báº¢N", margin + 28, y + 24, { size: 19, weight: 900, color: ink });
+  drawText(ctx, "BỆNH LÝ NGHIÊM TRỌNG CƠ BẢN", margin + 28, y + 24, { size: 19, weight: 900, color: ink });
   drawText(ctx, `100% STBH = ${formatCurrency(snapshot.basicBenefit)}`, margin + 28, y + 64, {
     size: 19, weight: 900, color: blue, fitWidth: contentW - 56, minSize: 19
   });
   let textY = wrapText(
     ctx,
-    "Chi tráº£ khi NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm máº¯c má»™t trong cÃ¡c bá»‡nh lÃ½ nghiÃªm trá»ng cÆ¡ báº£n thuá»™c pháº¡m vi báº£o hiá»ƒm.",
+    "Chi trả khi Người được bảo hiểm mắc một trong các bệnh lý nghiêm trọng cơ bản thuộc phạm vi bảo hiểm.",
     margin + 28, y + 114, contentW - 56, 28,
     { size: 19, weight: 600, color: muted }
   ) + 8;
-  textY = bullet("Ung thÆ° giai Ä‘oáº¡n Ä‘áº§u sau thá»i gian chá»", margin + 34, textY, contentW - 68);
-  textY = bullet("Äá»™t quá»µ thá»a Ä‘iá»u kiá»‡n tá»•n thÆ°Æ¡ng kÃ©o dÃ i hoáº·c pháº«u thuáº­t thÃ´ng thÆ°á»ng", margin + 34, textY, contentW - 68);
-  bullet("Nhá»“i mÃ¡u cÆ¡ tim", margin + 34, textY, contentW - 68);
+  textY = bullet("Ung thư giai đoạn đầu sau thời gian chờ", margin + 34, textY, contentW - 68);
+  textY = bullet("Đột quỵ thỏa điều kiện tổn thương kéo dài hoặc phẫu thuật thông thường", margin + 34, textY, contentW - 68);
+  bullet("Nhồi máu cơ tim", margin + 34, textY, contentW - 68);
 
   y += 336;
   card(margin, y, contentW, 480, "#ffffff", "#8fc5eb");
-  drawText(ctx, "Bá»†NH LÃ NGHIÃŠM TRá»ŒNG NÃ‚NG CAO", margin + 28, y + 24, { size: 19, weight: 900, color: ink });
+  drawText(ctx, "BỆNH LÝ NGHIÊM TRỌNG NÂNG CAO", margin + 28, y + 24, { size: 19, weight: 900, color: ink });
   drawText(ctx, `130% STBH = ${formatCurrency(snapshot.advancedBenefit)}`, margin + 28, y + 64, {
     size: 19, weight: 900, color: "#0071bc", fitWidth: contentW - 56, minSize: 19
   });
   wrapText(
     ctx,
-    "Chi tráº£ khi NgÆ°á»i Ä‘Æ°á»£c báº£o hiá»ƒm máº¯c bá»‡nh lÃ½ nghiÃªm trá»ng nÃ¢ng cao thuá»™c pháº¡m vi báº£o hiá»ƒm.",
+    "Chi trả khi Người được bảo hiểm mắc bệnh lý nghiêm trọng nâng cao thuộc phạm vi bảo hiểm.",
     margin + 28, y + 114, contentW - 56, 28,
     { size: 19, weight: 600, color: muted }
   );
 
   const benefitItems = [
-    ["TRáº¢ NGAY", `100% STBH = ${formatCurrency(snapshot.advancedImmediate)}`],
-    ["TRáº¢ THÃŠM Má»–I THÃNG", `5% STBH = ${formatCurrency(snapshot.advancedMonthly)}/thÃ¡ng`],
-    ["THá»œI GIAN TRáº¢ THÃŠM", `${String(snapshot.advancedMonths).padStart(2, "0")} thÃ¡ng liÃªn tiáº¿p`],
-    ["Tá»”NG Tá»I ÄA", `130% STBH = ${formatCurrency(snapshot.advancedBenefit)}`]
+    ["TRẢ NGAY", `100% STBH = ${formatCurrency(snapshot.advancedImmediate)}`],
+    ["TRẢ THÊM MỖI THÁNG", `5% STBH = ${formatCurrency(snapshot.advancedMonthly)}/tháng`],
+    ["THỜI GIAN TRẢ THÊM", `${String(snapshot.advancedMonths).padStart(2, "0")} tháng liên tiếp`],
+    ["TỔNG TỐI ĐA", `130% STBH = ${formatCurrency(snapshot.advancedBenefit)}`]
   ];
   const boxGap = 14;
   const boxW = (contentW - 56 - boxGap) / 2;
@@ -4903,14 +4903,14 @@ function renderLifeCareSummaryCanvas(snapshot) {
     drawText(ctx, item[1], x + 14, boxY + 42, { size: 19, weight: 900, color: blue, fitWidth: boxW - 28, minSize: 16 });
   });
   let advancedY = y + 366;
-  advancedY = bullet("Ung thÆ° giai Ä‘oáº¡n cuá»‘i sau thá»i gian chá»", margin + 34, advancedY, contentW - 68);
-  advancedY = bullet("Äá»™t quá»µ cÃ³ pháº«u thuáº­t má»Ÿ sá» hoáº·c pháº«u thuáº­t theo Ä‘iá»u kiá»‡n", margin + 34, advancedY, contentW - 68);
-  bullet("Nhá»“i mÃ¡u cÆ¡ tim hoáº·c cÆ¡n Ä‘au tháº¯t ngá»±c cÃ³ pháº«u thuáº­t tim há»Ÿ", margin + 34, advancedY, contentW - 68);
+  advancedY = bullet("Ung thư giai đoạn cuối sau thời gian chờ", margin + 34, advancedY, contentW - 68);
+  advancedY = bullet("Đột quỵ có phẫu thuật mở sọ hoặc phẫu thuật theo điều kiện", margin + 34, advancedY, contentW - 68);
+  bullet("Nhồi máu cơ tim hoặc cơn đau thắt ngực có phẫu thuật tim hở", margin + 34, advancedY, contentW - 68);
 
   y += 506;
   if (snapshot.riders.length) {
     card(margin, y, contentW, 92 + snapshot.riders.length * 40);
-    drawText(ctx, "Sáº¢N PHáº¨M BÃN KÃˆM", margin + 28, y + 22, { size: 22, weight: 900, color: blue });
+    drawText(ctx, "SẢN PHẨM BÁN KÈM", margin + 28, y + 22, { size: 22, weight: 900, color: blue });
     snapshot.riders.forEach((rider, index) => {
       labelValue(rider.name, formatCurrency(rider.annualPremium), margin + 28, y + 62 + index * 38, contentW - 56);
     });
@@ -4920,7 +4920,7 @@ function renderLifeCareSummaryCanvas(snapshot) {
   card(margin, y, contentW, 88, "#fffaf0", "#edd29b");
   wrapText(
     ctx,
-    "TÃ i liá»‡u mang tÃ­nh cháº¥t tÃ³m táº¯t minh há»a. Quyá»n lá»£i thá»±c táº¿ cÄƒn cá»© Quy táº¯c, Äiá»u khoáº£n Life Care 2.0 vÃ  há»“ sÆ¡ Ä‘Æ°á»£c cháº¥p thuáº­n.",
+    "Tài liệu mang tính chất tóm tắt minh họa. Quyền lợi thực tế căn cứ Quy tắc, Điều khoản Life Care 2.0 và hồ sơ được chấp thuận.",
     margin + 28, y + 20, contentW - 56, 26,
     { size: 18, weight: 650, color: "#73551d", align: "center" }
   );
@@ -5016,7 +5016,7 @@ function renderDashboardSummaryCanvas(snapshot) {
     });
   }
 
-  function heading(title, y, glyph = "âœ“") {
+  function heading(title, y, glyph = "✓") {
     ctx.strokeStyle = "#a9c4ed";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -5046,7 +5046,7 @@ function renderDashboardSummaryCanvas(snapshot) {
   ctx.fillStyle = headerGradient;
   drawRoundedRect(ctx, 0, 0, canvas.width, headerH + 18, 18);
   ctx.fill();
-  drawText(ctx, normalizeCanvasText(`MINH Há»ŒA ${snapshot.productName || MAIN_PRODUCTS.ATHD}`).toUpperCase(), canvas.width / 2, 54, {
+  drawText(ctx, normalizeCanvasText(`MINH HỌA ${snapshot.productName || MAIN_PRODUCTS.ATHD}`).toUpperCase(), canvas.width / 2, 54, {
     size: 42,
     weight: 900,
     color: "#fff",
@@ -5098,12 +5098,12 @@ function renderDashboardSummaryCanvas(snapshot) {
   y += headerCardH + 12;
   card(margin, y, contentW, 160, 16);
   const contractItems = [
-    ["NGÃ€Y SINH", snapshot.dateOfBirth || "-", "â–£"],
-    ["TUá»”I Báº¢O HIá»‚M", snapshot.age === null || snapshot.age === undefined ? "-" : `${snapshot.age} tuá»•i`, "ðŸ‘¤"],
-    ["GIá»šI TÃNH", snapshot.gender || "-", "âš¥"],
-    ["THá»œI Háº N Há»¢P Äá»’NG", `${snapshot.policyTermYears} nÄƒm`, "â–¦"],
-    ["THá»œI Háº N ÄÃ“NG PHÃ", `${snapshot.premiumPaymentYears} nÄƒm`, "âœ“"],
-    ["Äá»ŠNH Ká»² ÄÃ“NG PHÃ", snapshot.paymentMode, "â†»"]
+    ["NGÀY SINH", snapshot.dateOfBirth || "-", "▣"],
+    ["TUỔI BẢO HIỂM", snapshot.age === null || snapshot.age === undefined ? "-" : `${snapshot.age} tuổi`, "👤"],
+    ["GIỚI TÍNH", snapshot.gender || "-", "⚥"],
+    ["THỜI HẠN HỢP ĐỒNG", `${snapshot.policyTermYears} năm`, "▦"],
+    ["THỜI HẠN ĐÓNG PHÍ", `${snapshot.premiumPaymentYears} năm`, "✓"],
+    ["ĐỊNH KỲ ĐÓNG PHÍ", snapshot.paymentMode, "↻"]
   ];
   const itemW = contentW / 3;
   contractItems.forEach((item, index) => {
@@ -5131,11 +5131,11 @@ function renderDashboardSummaryCanvas(snapshot) {
   });
 
   y += 188;
-  heading("Quyá»n lá»£i báº£o vá»‡", y, "âœ“");
+  heading("Quyền lợi bảo vệ", y, "✓");
   y += 48;
   const protectionCards = [
-    ["QUYá»€N Lá»¢I Tá»¬ VONG", snapshot.mainSumInsured, colors.blue, "#0046a5", "â™š"],
-    [snapshot.mainProduct === "ATPN" ? "CHU TOÃ€N Háº¬U Sá»°" : "QUYá»€N Lá»¢I THÆ¯Æ NG Táº¬T\nTOÃ€N Bá»˜ VÄ¨NH VIá»„N", snapshot.disabilitySumInsured, colors.cyan, "#0ba89f", "+"]
+    ["QUYỀN LỢI TỬ VONG", snapshot.mainSumInsured, colors.blue, "#0046a5", "♚"],
+    [snapshot.mainProduct === "ATPN" ? "CHU TOÀN HẬU SỰ" : "QUYỀN LỢI THƯƠNG TẬT\nTOÀN BỘ VĨNH VIỄN", snapshot.disabilitySumInsured, colors.cyan, "#0ba89f", "+"]
   ];
   const cardGap = 20;
   const protectW = (contentW - cardGap) / 2;
@@ -5152,8 +5152,8 @@ function renderDashboardSummaryCanvas(snapshot) {
   });
 
   y += protectH + 42;
-  heading("GiÃ¡ trá»‹ hoÃ n láº¡i minh há»a", y, "â–¥");
-  drawText(ctx, "So sÃ¡nh 2 ká»‹ch báº£n lÃ£i suáº¥t: 4,76% vÃ  4,25%/nÄƒm", canvas.width / 2, y + 42, {
+  heading("Giá trị hoàn lại minh họa", y, "▥");
+  drawText(ctx, "So sánh 2 kịch bản lãi suất: 4,76% và 4,25%/năm", canvas.width / 2, y + 42, {
     size: 18,
     weight: 700,
     color: colors.ink,
@@ -5176,8 +5176,8 @@ function renderDashboardSummaryCanvas(snapshot) {
     ctx.fillStyle = colors.blue;
     drawRoundedRect(ctx, x + 48, cardY - 15, milestoneW - 96, 34, 8);
     ctx.fill();
-    drawText(ctx, `NÄ‚M ${String(year).padStart(2, "0")}`, x + milestoneW / 2, cardY - 8, { size: 18, weight: 900, color: "#fff", align: "center" });
-    drawText(ctx, "ÄÃƒ ÄÃ“NG", x + milestoneW / 2, cardY + 34, {
+    drawText(ctx, `NĂM ${String(year).padStart(2, "0")}`, x + milestoneW / 2, cardY - 8, { size: 18, weight: 900, color: "#fff", align: "center" });
+    drawText(ctx, "ĐÃ ĐÓNG", x + milestoneW / 2, cardY + 34, {
       size: 14,
       weight: 900,
       color: colors.blue,
@@ -5305,7 +5305,7 @@ function renderDashboardSummaryCanvas(snapshot) {
 
   card(margin, y, contentW, 58, 14);
   icon(margin + 42, y + 29, colors.blue, "i");
-  drawText(ctx, "TÃ i liá»‡u tham kháº£o nhanh", margin + 82, y + 18, { size: 21, weight: 900, color: colors.blue });
+  drawText(ctx, "Tài liệu tham khảo nhanh", margin + 82, y + 18, { size: 21, weight: 900, color: colors.blue });
 
   const finalHeight = Math.min(canvas.height, Math.max(y + 82, 1120));
   if (finalHeight !== canvas.height) {
@@ -5335,7 +5335,7 @@ function sanitizeFilenamePart(value) {
 
 function getSummaryPdfFilename(snapshot) {
   const customerName = sanitizeFilenamePart(snapshot.customerName || "Khach hang");
-  const totalPremium = sanitizeFilenamePart(`${formatVND(snapshot.totals.firstYearPremium)}Ä‘`);
+  const totalPremium = sanitizeFilenamePart(`${formatVND(snapshot.totals.firstYearPremium)}Ä'`);
   return `${customerName} - ${totalPremium}.pdf`;
 }
 
@@ -5527,7 +5527,7 @@ async function uploadSummaryPdf(blob, filename) {
     method: "POST",
     body: formData
   });
-  if (!response.ok) throw new Error("KhÃ´ng upload Ä‘Æ°á»£c áº£nh tÃ³m táº¯t.");
+  if (!response.ok) throw new Error("Không upload được ảnh tóm tắt.");
   const data = await response.json();
   return data.url || data.publicUrl || data.imageUrl || null;
 }
@@ -5619,10 +5619,10 @@ async function openSummaryPreview(event) {
   try {
     latestSummaryImage.publicUrl = await uploadSummaryPdf(blob, filename);
     if (latestSummaryImage.publicUrl) {
-      shareStatus.textContent = "PDF Ä‘Ã£ sáºµn sÃ ng Ä‘á»ƒ chia sáº» qua Zalo.";
+      shareStatus.textContent = "PDF đã sẵn sàng để chia sẻ qua Zalo.";
     }
   } catch (error) {
-    shareStatus.textContent = "ÄÃ£ táº¡o PDF. ChÆ°a upload Ä‘Æ°á»£c file public, váº«n cÃ³ thá»ƒ táº£i PDF vá» mÃ¡y.";
+    shareStatus.textContent = "Đã tạo PDF. Chưa upload được file public, vẫn có thể tải PDF về máy.";
   }
 }
 
@@ -5651,7 +5651,7 @@ document.getElementById("downloadSummaryJpg")?.addEventListener("click", downloa
 document.getElementById("shareSummaryZalo")?.addEventListener("click", () => {
   shareSummaryViaZalo().catch((error) => {
     if (error?.name === "AbortError") return;
-    document.getElementById("summaryShareStatus").textContent = "KhÃ´ng má»Ÿ Ä‘Æ°á»£c chia sáº» Zalo. HÃ£y táº£i PDF rá»“i gá»­i qua Zalo.";
+    document.getElementById("summaryShareStatus").textContent = "Không mở được chia sẻ Zalo. Hãy tải PDF rồi gửi qua Zalo.";
   });
 });
 document.getElementById("editSummaryPlan")?.addEventListener("click", closeSummaryPreview);
