@@ -22,11 +22,12 @@ export async function GET(request: NextRequest) {
   try {
     const buffer = await downloadArchiveFile(objectPath);
     const fileName = path.basename(objectPath);
-    const isPdf = fileName.toLowerCase().endsWith(".pdf");
+    const extension = path.extname(fileName).toLowerCase();
+    const contentTypes: Record<string, string> = { ".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif" };
 
     return new NextResponse(buffer, {
       headers: {
-        "Content-Type": isPdf ? "application/pdf" : "application/octet-stream",
+        "Content-Type": contentTypes[extension] || "application/octet-stream",
         "Content-Disposition": `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`,
         "Content-Length": String(buffer.byteLength),
         "Cache-Control": "public, max-age=0, must-revalidate"

@@ -7,7 +7,7 @@ import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, Che
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
-type Tab = "overview" | "contracts" | "calculator" | "contests" | "leaderboard" | "illustration" | "profile" | "archive";
+type Tab = "overview" | "contracts" | "calculator" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -942,17 +942,18 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : tab === "about" ? "Bảo Việt Nhân thọ là ai?" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && (isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
             ? <TeamLeaderOverview data={teamData} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} />
-            : <Overview stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
+            : <Overview advisorCode={userProfile?.advisor_code} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode} showGroupFilter={isBoardMode} />}
           {tab === "contests" && (userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
+          {tab === "about" && String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPage />}
           {tab === "profile" && <Profile advisor={advisor} contracts={myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
         </>
       )}
@@ -1963,7 +1964,7 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
   </div>;
 }
 
-function Overview({ stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
+function Overview({ advisorCode, stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
   const statItems = [
     ["Tổng HĐ", stats.total, "blue", "contracts"],
     ["Đã phát hành", stats.issued, "green", "contracts"],
@@ -1974,6 +1975,7 @@ function Overview({ stats, leaderboard, estimate, starViet, starVietWarning, onT
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
+    {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}
     <PersonalStarJourney row={starViet} warning={starVietWarning} />
     <ArchivePreview onOpen={() => onTab("archive")} />
   </section>;
@@ -2965,6 +2967,58 @@ function BottomNav({ tab, setTab, boardMode = false }: { tab: Tab; setTab: (tab:
     ? [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["contests", "Thi đua", Trophy]]
     : [["overview", "Tổng quan", Home], ["contracts", "Hợp đồng", ClipboardList], ["calculator", "Thu nhập", Calculator], ["contests", "Thi đua", Trophy], ["illustration", "Minh hoạ", FileText]];
   return <nav className={`tvv-bottom-nav${boardMode ? " board-bottom-nav" : ""}`} aria-label="Điều hướng chính">{items.map(([id, label, Icon]) => <button type="button" key={id} className={`${tab === id ? "active" : ""}${id === "calculator" ? " income-nav" : ""}`} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>{id === "calculator" ? <img src="/Icon/Icon baoviet.png" alt="" /> : <Icon size={25} />}<span>{label}</span></button>)}</nav>;
+}
+
+type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
+type AboutSection = { id: string; title: string; description: string; items: AboutItem[] };
+
+function customAboutDescription(section: AboutSection) {
+  const description = section.description.trim();
+  const defaults = new Set([
+    "Những thông tin nổi bật về Bảo Việt Nhân thọ.",
+    "Các giải thưởng, danh hiệu và dấu ấn nổi bật.",
+    "Thông tin lãi suất công bố trong 3 năm gần nhất.",
+    "Thông tin tổng hợp về hoạt động chi trả quyền lợi."
+  ]);
+  return defaults.has(description) ? "" : description;
+}
+
+function AboutBaoVietPreview({ onOpen }: { onOpen: () => void }) {
+  return <button className="tvv-card tvv-about-compact-preview" type="button" onClick={onOpen}>
+    <span className="tvv-about-compact-icon" aria-hidden="true"><img src={encodeURI("/BVNT là ai/BVNT là ai.png")} alt="" /></span>
+    <span className="tvv-leaderboard-preview-copy"><strong>Bảo Việt Nhân thọ là ai?</strong><small>Danh hiệu, lãi suất và thông tin chi trả quyền lợi</small></span>
+    <ChevronRight size={22} />
+  </button>;
+}
+
+function AboutBaoVietPage() {
+  const [sections, setSections] = useState<AboutSection[]>([]);
+  const [selected, setSelected] = useState<AboutSection | null>(null);
+  useEffect(() => {
+    fetch(`/api/archive/content?updated=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
+      .then((response) => response.json())
+      .then((payload) => setSections((payload.about?.sections ?? []).filter((section: AboutSection) => section.id !== "large-benefits" && !section.title.toLowerCase().includes("quyền lợi lớn"))))
+      .catch(() => setSections([]));
+  }, []);
+  const icons = [
+    "Thông tin BVNT-transparent.png",
+    "Danh hiệu đạt được-transparent.png",
+    "lãi suất-transparent.png",
+    "quyền lợi chi trả-transparent.png"
+  ];
+  if (selected) return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page tvv-about-detail-page">
+    <button className="tvv-about-page-back" type="button" onClick={() => setSelected(null)}><ChevronLeft size={20} />Tất cả nội dung</button>
+    {customAboutDescription(selected) && <article className="tvv-about-description">{customAboutDescription(selected)}</article>}
+    <div className="tvv-about-page-content">{selected.items.some((item) => Boolean(item.imageUrl)) ? selected.items.filter((item) => Boolean(item.imageUrl)).map((item, index) => <figure key={item.id}>
+      <img src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl!)}`} alt={`Hình ảnh ${index + 1}: ${selected.title}`} />
+    </figure>) : !customAboutDescription(selected) && <p className="tvv-empty">Nội dung đang được cập nhật.</p>}</div>
+  </section>;
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page">
+    <section className="tvv-card tvv-about-preview">
+      <div className="tvv-section-head"><div><h2>Bảo Việt Nhân thọ là ai?</h2></div></div>
+      <div className="tvv-about-grid">{sections.map((section, index) => <button type="button" key={section.id} onClick={() => setSelected(section)}><span><img src={encodeURI(`/BVNT là ai/${icons[index % icons.length]}`)} alt="" /></span><b>{section.title}</b><i aria-hidden="true" /><em><ChevronRight size={22} /></em></button>)}</div>
+    </section>
+  </section>;
 }
 
 

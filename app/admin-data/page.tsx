@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
@@ -8,7 +8,7 @@ type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "access";
+type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "about" | "access";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -26,6 +26,9 @@ type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
 type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
+type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
+type AboutSection = { id: "awards" | "interest" | "benefits" | "payment-images" | "large-benefits"; title: string; description: string; items: AboutItem[] };
+type AboutContent = { sections: AboutSection[] };
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -59,27 +62,31 @@ export default function AdminDataPage() {
   const [archiveForms, setArchiveForms] = useState<ArchiveForms>({ folders: [] });
   const [archiveGuides, setArchiveGuides] = useState<ArchiveGuide[]>([]);
   const [archiveFaq, setArchiveFaq] = useState<ArchiveFaq[]>([]);
+  const [aboutContent, setAboutContent] = useState<AboutContent>({ sections: [] });
 
   const loadData = useCallback(async () => {
-    const [eventResponse, competitionResponse, formsResponse, guidesResponse, faqResponse] = await Promise.all([
+    const [eventResponse, competitionResponse, formsResponse, guidesResponse, faqResponse, aboutResponse] = await Promise.all([
       fetch("/api/events", { cache: "no-store" }),
       fetch("/api/competition?includeHidden=1", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=forms", { cache: "no-store" }),
       fetch("/api/admin/archive/content?key=guides", { cache: "no-store" }),
-      fetch("/api/admin/archive/content?key=faq", { cache: "no-store" })
+      fetch("/api/admin/archive/content?key=faq", { cache: "no-store" }),
+      fetch("/api/admin/archive/content?key=about", { cache: "no-store" })
     ]);
-    const [eventPayload, competitionPayload, formsPayload, guidesPayload, faqPayload] = await Promise.all([
+    const [eventPayload, competitionPayload, formsPayload, guidesPayload, faqPayload, aboutPayload] = await Promise.all([
       eventResponse.json(),
       competitionResponse.json(),
       formsResponse.json(),
       guidesResponse.json(),
-      faqResponse.json()
+      faqResponse.json(),
+      aboutResponse.json()
     ]);
     if (eventResponse.ok) setEvents(eventPayload.events ?? []);
     if (competitionResponse.ok) setCompetitionPrograms(competitionPayload.programs ?? []);
     if (formsResponse.ok) setArchiveForms(formsPayload ?? { folders: [] });
     if (guidesResponse.ok) setArchiveGuides(guidesPayload ?? []);
     if (faqResponse.ok) setArchiveFaq(faqPayload ?? []);
+    if (aboutResponse.ok) setAboutContent(aboutPayload ?? { sections: [] });
   }, []);
 
   const loadUsers = useCallback(async () => {
@@ -334,6 +341,7 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
+        <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />BVNT là ai?</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
       </nav>
 
@@ -414,6 +422,7 @@ export default function AdminDataPage() {
           onSaved={loadData}
           setMessage={setMessage}
         />}
+        {activeTab === "about" && <AboutAdminPanel content={aboutContent} setContent={setAboutContent} onSaved={loadData} setMessage={setMessage} />}
       </section>
     </main>
   );
@@ -762,6 +771,106 @@ function ArchiveAdminPanel({ forms, guides, faq, setForms, setGuides, setFaq, on
       <button type="button" disabled={saving} onClick={() => saveArchive(tab)}><Save size={17} />{saving ? "Đang lưu..." : "Lưu thay đổi"}</button>
     </article>
   );
+}
+
+function AboutAdminPanel({ content, setContent, onSaved, setMessage }: {
+  content: AboutContent;
+  setContent: Dispatch<SetStateAction<AboutContent>>;
+  onSaved: () => Promise<void>;
+  setMessage: (value: string) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [uploadingId, setUploadingId] = useState("");
+  const [selectedSectionId, setSelectedSectionId] = useState<AboutSection["id"]>("payment-images");
+  const contentRef = useRef(content);
+  useEffect(() => { contentRef.current = content; }, [content]);
+
+  const replaceSection = (sectionId: AboutSection["id"], replacement: AboutSection | ((section: AboutSection) => AboutSection)) => {
+    setContent((current) => {
+      const next = {
+        sections: current.sections.map((section) => section.id === sectionId
+          ? typeof replacement === "function" ? replacement(section) : replacement
+          : section)
+      };
+      contentRef.current = next;
+      return next;
+    });
+  };
+  const updateSection = (_index: number, section: AboutSection) => replaceSection(section.id, section);
+
+  async function uploadImages(sectionIndex: number, files?: FileList | null) {
+    const selectedFiles = Array.from(files ?? []);
+    if (!selectedFiles.length) return;
+    const section = contentRef.current.sections[sectionIndex];
+    if (!section) return;
+    setUploadingId(section.id);
+    try {
+      const uploadedItems: AboutItem[] = [];
+      for (const [fileIndex, file] of selectedFiles.entries()) {
+        const formData = new FormData();
+        formData.append("kind", "about");
+        formData.append("file", file);
+        const response = await fetch("/api/admin/archive/upload", { method: "POST", body: formData });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || `Không thể tải ảnh ${file.name}.`);
+        uploadedItems.push({ id: `${section.id}-${Date.now()}-${fileIndex}`, title: "", content: "", imageUrl: result.imageUrl });
+      }
+      const latestSection = contentRef.current.sections.find((item) => item.id === section.id) ?? section;
+      const nextContent = {
+        sections: contentRef.current.sections.map((item) => item.id === section.id
+          ? { ...latestSection, items: [...latestSection.items, ...uploadedItems] }
+          : item)
+      };
+      contentRef.current = nextContent;
+      setContent(nextContent);
+
+      const saveResponse = await fetch("/api/admin/archive/content?key=about", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextContent)
+      });
+      const saveResult = await saveResponse.json().catch(() => ({}));
+      if (!saveResponse.ok) throw new Error(saveResult.error || "Ảnh đã tải lên nhưng chưa thể lưu vào nội dung.");
+      setMessage(`Đã tải và lưu ${uploadedItems.length} ảnh.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể tải ảnh lên.");
+    } finally {
+      setUploadingId("");
+    }
+  }
+
+  async function save() {
+    setSaving(true);
+    setMessage("");
+    const response = await fetch("/api/admin/archive/content?key=about", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
+    const payload = await response.json().catch(() => ({}));
+    setSaving(false);
+    setMessage(response.ok ? "Đã lưu nội dung Bảo Việt Nhân thọ là ai?" : payload.error || "Không thể lưu nội dung.");
+    if (response.ok) await onSaved();
+  }
+
+  const selectedSectionIndex = Math.max(0, content.sections.findIndex((section) => section.id === selectedSectionId));
+  const selectedSection = content.sections[selectedSectionIndex];
+
+  return <article className="admin-card admin-archive-card admin-about-card">
+    <div className="admin-card-title"><ShieldCheck /><div><h2>Bảo Việt Nhân thọ là ai?</h2><p>Chủ động cập nhật nội dung chỉ hiển thị trên giao diện TVV có mã ADMIN.</p></div></div>
+    <nav className="admin-about-section-tabs" aria-label="Chọn nội dung Bảo Việt Nhân thọ">
+      {content.sections.map((section) => <button type="button" key={section.id} className={selectedSectionId === section.id ? "active" : ""} onClick={() => setSelectedSectionId(section.id)}><span>{section.title}</span><small>{section.items.filter((item) => item.imageUrl).length} ảnh</small></button>)}
+    </nav>
+    {selectedSection && <div className="admin-archive-editor">
+      <section className="admin-archive-group" key={selectedSection.id}>
+        <label>Tên nhóm nội dung<input value={selectedSection.title} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, title: event.target.value })} /></label>
+        <label>Mô tả ngắn<textarea rows={2} value={selectedSection.description} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, description: event.target.value })} /></label>
+        <label className="admin-about-multi-upload"><Upload size={18} /><span>{uploadingId === selectedSection.id ? "Đang tải ảnh..." : "Chọn và tải nhiều ảnh"}</span><small>Mỗi ảnh sẽ được tạo thành một dòng riêng.</small><input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" disabled={uploadingId === selectedSection.id} onChange={(event) => { void uploadImages(selectedSectionIndex, event.target.files); event.target.value = ""; }} /></label>
+        {selectedSection.items.map((item, itemIndex) => <div className="admin-about-item" key={item.id}>
+          {item.imageUrl ? <img className="admin-about-image-preview" src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl)}`} alt={`Ảnh ${itemIndex + 1}`} /> : <span className="admin-about-image-empty">Chưa có ảnh</span>}
+          <input value={item.imageUrl ?? ""} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, items: selectedSection.items.map((entry, i) => i === itemIndex ? { ...entry, imageUrl: event.target.value } : entry) })} placeholder="Đường dẫn ảnh" />
+          <button type="button" className="admin-danger" onClick={() => updateSection(selectedSectionIndex, { ...selectedSection, items: selectedSection.items.filter((_, i) => i !== itemIndex) })}><Trash2 size={15} />Xóa</button>
+        </div>)}
+      </section>
+    </div>}
+    <button type="button" disabled={saving} onClick={save}><Save size={17} />{saving ? "Đang lưu..." : "Lưu thay đổi"}</button>
+  </article>;
 }
 
 function ArchiveFormsEditor({ forms, setForms }: { forms: ArchiveForms; setForms: (value: ArchiveForms) => void }) {

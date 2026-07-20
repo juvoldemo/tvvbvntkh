@@ -1295,3 +1295,429 @@ caption,
   padding: 0 9px !important;
 }
 
+/* About BVNT category cards: loaded last so generic button/card tokens cannot override them. */
+body .tvv-app .tvv-about-grid > button {
+  color: #003f66 !important;
+  box-shadow: 0 6px 16px rgba(0, 75, 122, .06) !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(1) {
+  border-color: #c8e3f8 !important;
+  background: #e8f4fd !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(2) {
+  border-color: #c8ead7 !important;
+  background: #e8f8ef !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(3) {
+  border-color: #f0ddb0 !important;
+  background: #fff5df !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(4) {
+  border-color: #f1ced7 !important;
+  background: #ffedf1 !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) {
+  border-color: #d8ccf7 !important;
+  background: #f1edff !important;
+}
+
+body .tvv-app .tvv-about-grid > button b {
+  color: #003f66 !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+}
+
+body .tvv-app .tvv-about-grid > button small {
+  color: #48667c !important;
+  font-weight: 600 !important;
+  opacity: 1 !important;
+}
+
+/* Editorial layout matching the BVNT "Là ai?" visual direction. */
+body .tvv-app .tvv-about-page > .tvv-about-preview {
+  border-radius: 24px !important;
+  padding: 24px 18px 26px !important;
+  box-shadow: 0 12px 32px rgba(0, 52, 94, .1) !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-section-head {
+  position: relative;
+  display: block !important;
+  min-height: 58px !important;
+  margin-bottom: 24px !important;
+  padding: 0 4px 28px !important;
+  border-bottom: 0 !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-section-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e3b340 18%, #e3b340 42%, transparent 42%, transparent 58%, #e3b340 58%, #e3b340 82%, transparent);
+}
+
+body .tvv-app .tvv-about-preview .tvv-section-head::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: -10px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #e3b340;
+  border-radius: 50%;
+  background: #fff url("/Icon/Icon%20baoviet.png") center / 19px 19px no-repeat;
+  transform: translateX(-50%);
+}
+
+body .tvv-app .tvv-about-preview .tvv-section-head h2 {
+  color: #082f70 !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-section-head p {
+  margin-top: 7px !important;
+  color: #667085 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+body .tvv-app .tvv-about-grid {
+  gap: 14px !important;
+  margin-top: 0 !important;
+}
+
+body .tvv-app .tvv-about-grid > button {
+  min-height: 310px !important;
+  display: grid !important;
+  grid-template-rows: 150px auto 3px 1fr !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  grid-template-areas:
+    "visual visual"
+    "title title"
+    "accent accent"
+    "description arrow" !important;
+  align-items: start !important;
+  gap: 12px 8px !important;
+  overflow: hidden;
+  border-radius: 20px !important;
+  padding: 15px 15px 16px !important;
+  text-align: left !important;
+}
+
+body .tvv-app .tvv-about-grid > button > span {
+  grid-area: visual;
+  width: 100% !important;
+  height: 150px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden;
+  border-radius: 15px !important;
+  background: rgba(255, 255, 255, .32) !important;
+}
+
+body .tvv-app .tvv-about-grid > button > span img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  mix-blend-mode: multiply;
+}
+
+body .tvv-app .tvv-about-grid > button > b {
+  grid-area: title;
+  padding: 0 !important;
+  color: #082f70 !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+}
+
+body .tvv-app .tvv-about-grid > button > i {
+  grid-area: accent;
+  width: 34px;
+  height: 3px;
+  display: block;
+  border-radius: 99px;
+  background: #2785df;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(2) > i { background: #22a95a; }
+body .tvv-app .tvv-about-grid > button:nth-child(3) > i { background: #e79a00; }
+body .tvv-app .tvv-about-grid > button:nth-child(4) > i { background: #eb6284; }
+body .tvv-app .tvv-about-grid > button:nth-child(5) > i { background: #7954e8; }
+
+body .tvv-app .tvv-about-grid > button > small {
+  grid-area: description;
+  align-self: start !important;
+  color: #5c6370 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+body .tvv-app .tvv-about-grid > button > em {
+  grid-area: arrow;
+  align-self: end;
+  justify-self: end;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .9);
+  color: #1778d0;
+  box-shadow: 0 5px 14px rgba(0, 52, 94, .15);
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(2) > em { color: #18a552; }
+body .tvv-app .tvv-about-grid > button:nth-child(3) > em { color: #d68b00; }
+body .tvv-app .tvv-about-grid > button:nth-child(4) > em { color: #e55478; }
+body .tvv-app .tvv-about-grid > button:nth-child(5) > em { color: #7047df; }
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) {
+  min-height: 190px !important;
+  grid-template-rows: auto 3px 1fr !important;
+  grid-template-columns: minmax(130px, .9fr) minmax(0, 1.1fr) 42px !important;
+  grid-template-areas:
+    "visual title title"
+    "visual accent accent"
+    "visual description arrow" !important;
+  align-items: center !important;
+  padding: 16px !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) > span {
+  width: 100% !important;
+  height: 150px !important;
+}
+
+@media (max-width: 380px) {
+  body .tvv-app .tvv-about-grid > button {
+    min-height: 280px !important;
+    grid-template-rows: 125px auto 3px 1fr !important;
+    padding: 12px !important;
+  }
+
+  body .tvv-app .tvv-about-grid > button > span { height: 125px !important; }
+  body .tvv-app .tvv-about-grid > button > b { font-size: 15px !important; }
+  body .tvv-app .tvv-about-grid > button > small { font-size: 12px !important; }
+}
+
+/* Compact, softly blended artwork treatment. */
+body .tvv-app .tvv-about-grid > button {
+  min-height: 198px !important;
+  grid-template-rows: 96px auto 3px 1fr !important;
+  padding: 14px !important;
+}
+
+body .tvv-app .tvv-about-grid > button > span {
+  width: 100% !important;
+  height: 96px !important;
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+body .tvv-app .tvv-about-grid > button > span img {
+  width: 92px !important;
+  height: 92px !important;
+  object-fit: contain !important;
+  opacity: .98;
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(circle at center, #000 54%, rgba(0, 0, 0, .88) 64%, transparent 78%);
+  mask-image: radial-gradient(circle at center, #000 54%, rgba(0, 0, 0, .88) 64%, transparent 78%);
+  filter: saturate(1.04) contrast(1.03);
+}
+
+body .tvv-app .tvv-about-grid > button > b {
+  font-size: 15px !important;
+  line-height: 1.28 !important;
+}
+
+body .tvv-app .tvv-about-grid > button > small {
+  font-size: 12px !important;
+  line-height: 1.42 !important;
+}
+
+body .tvv-app .tvv-about-grid > button > em {
+  width: 36px;
+  height: 36px;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) {
+  min-height: 154px !important;
+  grid-template-columns: 104px minmax(0, 1fr) 38px !important;
+  padding: 14px !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) > span {
+  width: 100px !important;
+  height: 116px !important;
+}
+
+body .tvv-app .tvv-about-grid > button:nth-child(5) > span img {
+  width: 100px !important;
+  height: 100px !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  border-radius: 16px;
+  object-fit: contain !important;
+}
+
+body .tvv-app .tvv-about-compact-preview > .tvv-about-compact-icon {
+  overflow: visible !important;
+  background: transparent !important;
+}
+
+body .tvv-app .tvv-about-compact-preview > .tvv-about-compact-icon svg {
+  width: 58px !important;
+  height: 58px !important;
+  display: block;
+  overflow: visible;
+}
+
+body .tvv-app .tvv-about-compact-preview > .tvv-about-compact-icon {
+  width: 64px !important;
+  height: 64px !important;
+  overflow: hidden !important;
+  border: 2px solid rgba(225, 176, 45, .28);
+  border-radius: 50% !important;
+  background: #fff7dc !important;
+  box-shadow: 0 4px 12px rgba(0, 52, 94, .1);
+}
+
+body .tvv-app .tvv-about-compact-preview > .tvv-about-compact-icon img {
+  width: 64px !important;
+  height: 64px !important;
+  display: block !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  image-rendering: auto;
+}
+
+/* About detail page must not inherit the global blue button/banner treatments. */
+body .tvv-app .tvv-about-detail-page {
+  display: grid !important;
+  align-content: start !important;
+  grid-auto-rows: max-content !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+  padding-top: 4px !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-back {
+  width: fit-content !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #005987 !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-content {
+  display: grid !important;
+  align-content: start !important;
+  grid-auto-rows: max-content !important;
+  gap: 10px !important;
+  margin-top: 0 !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-content > figure {
+  align-self: start !important;
+  height: auto !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-description {
+  width: 100%;
+  margin: 0 !important;
+  border: 1px solid #dce7f3;
+  border-radius: 16px;
+  background: #fff;
+  color: #344f65;
+  padding: 18px;
+  box-shadow: 0 7px 22px rgba(0, 75, 122, .06);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-heading {
+  min-height: 0 !important;
+  border: 1px solid #dce7f3 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  color: #082f70 !important;
+  padding: 20px !important;
+  box-shadow: 0 7px 22px rgba(0, 75, 122, .07) !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-heading small {
+  color: #b37b00 !important;
+  opacity: 1 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-heading h2 {
+  margin: 7px 0 !important;
+  color: #082f70 !important;
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  line-height: 1.3 !important;
+}
+
+body .tvv-app .tvv-about-detail-page > .tvv-about-page-heading p {
+  margin: 0 !important;
+  color: #5e6877 !important;
+  opacity: 1 !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+body .tvv-app .tvv-about-grid > button > span img {
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  image-rendering: auto;
+}
+
+@media (max-width: 380px) {
+  body .tvv-app .tvv-about-grid > button {
+    min-height: 184px !important;
+    grid-template-rows: 82px auto 3px 1fr !important;
+    padding: 11px !important;
+  }
+
+  body .tvv-app .tvv-about-grid > button > span { height: 82px !important; }
+  body .tvv-app .tvv-about-grid > button > span img { width: 78px !important; height: 78px !important; }
+}
+
