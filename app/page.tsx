@@ -4,7 +4,7 @@ import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, use
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, LoaderCircle, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, XCircle } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, LoaderCircle, Medal, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
@@ -2669,8 +2669,16 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
   const [activeSimulationMonth, setActiveSimulationMonth] = useState(0);
   const [exportingSimulation, setExportingSimulation] = useState(false);
   const [simulationExportError, setSimulationExportError] = useState("");
+  const [mobileShareAvailable, setMobileShareAvailable] = useState(false);
   const monthCarouselRef = useRef<HTMLDivElement>(null);
   const simulationExportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    const updateShareMode = () => setMobileShareAvailable(media.matches && typeof navigator.share === "function");
+    updateShareMode();
+    media.addEventListener("change", updateShareMode);
+    return () => media.removeEventListener("change", updateShareMode);
+  }, []);
   const simulationMonths = useMemo(() => {
     const today = new Date();
     return Array.from({ length: 6 }, (_, index) => {
@@ -2816,11 +2824,25 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
         }
       });
       const safeName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "tvv-moi";
+      const fileName = `mo-phong-thu-nhap-${safeName}.png`;
+      if (mobileShareAvailable && typeof navigator.share === "function") {
+        const imageBlob = await fetch(dataUrl).then((response) => response.blob());
+        const imageFile = new File([imageBlob], fileName, { type: "image/png" });
+        if (typeof navigator.canShare !== "function" || navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            title: `Mô phỏng thu nhập 6 tháng - ${name}`,
+            text: `Mô phỏng thu nhập 6 tháng dành cho TVV ${name}`,
+            files: [imageFile]
+          });
+          return;
+        }
+      }
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `mo-phong-thu-nhap-${safeName}.png`;
+      link.download = fileName;
       link.click();
     } catch (reason) {
+      if (reason instanceof DOMException && reason.name === "AbortError") return;
       setSimulationExportError(reason instanceof Error ? reason.message : "Không thể xuất ảnh mô phỏng.");
     } finally {
       setExportingSimulation(false);
@@ -2898,10 +2920,10 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
     </section>}
 
     {estimates.length === 6 && !error && <section className="tvv-calc-card recruitment-export-card">
-      <div><span><Download size={21} /></span><div><h2>Xuất mô phỏng</h2><p>Tạo ảnh tổng hợp doanh thu, hoa hồng và các khoản thưởng dự kiến trong 6 tháng.</p></div></div>
+      <div><span>{mobileShareAvailable ? <Share2 size={21} /> : <Download size={21} />}</span><div><h2>Xuất mô phỏng</h2><p>{mobileShareAvailable ? "Tạo ảnh và mở bảng chia sẻ để gửi qua Zalo." : "Tạo ảnh tổng hợp doanh thu, hoa hồng và các khoản thưởng dự kiến trong 6 tháng."}</p></div></div>
       <button type="button" onClick={exportSimulationImage} disabled={exportingSimulation}>
-        {exportingSimulation ? <LoaderCircle className="spin" size={19} /> : <Download size={19} />}
-        {exportingSimulation ? "Đang tạo ảnh..." : "Xuất ảnh mô phỏng"}
+        {exportingSimulation ? <LoaderCircle className="spin" size={19} /> : mobileShareAvailable ? <Share2 size={19} /> : <Download size={19} />}
+        {exportingSimulation ? "Đang tạo ảnh..." : mobileShareAvailable ? "Chia sẻ ảnh qua Zalo" : "Xuất ảnh mô phỏng"}
       </button>
       {simulationExportError && <p className="tvv-user-error" role="alert">{simulationExportError}</p>}
 
