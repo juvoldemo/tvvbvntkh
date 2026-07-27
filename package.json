@@ -12,7 +12,8 @@
     "test:tvv-policy": "tsx scripts/test-tvv-policy-rewards.ts",
     "test:team-leader-policy": "tsx scripts/test-team-leader-policy.ts",
     "test:star-viet": "tsx scripts/test-star-viet.ts && tsx scripts/test-star-viet-snapshot.ts",
-    "create:recruitment-user": "tsx scripts/create-recruitment-user.ts"
+    "create:recruitment-user": "tsx scripts/create-recruitment-user.ts",
+    "import:recruitment": "tsx scripts/import-recruitment-candidates.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
