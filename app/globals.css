@@ -137,21 +137,6 @@ body .tvv-app .recruitment-calculator .recruitment-program-row > svg {
   box-shadow: 0 8px 18px rgba(10, 143, 97, .18);
 }
 
-.tvv-recruitment-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 8px;
-}
-
-.tvv-recruitment-tags b {
-  padding: 4px 7px;
-  border-radius: 999px;
-  color: #177253;
-  background: #e8f7f1;
-  font-size: 10px;
-}
-
 .recruitment-calculator {
   padding-bottom: 110px;
 }

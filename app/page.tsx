@@ -1991,7 +1991,6 @@ function RecruitmentPreview({ onOpen }: { onOpen: () => void }) {
     <span className="tvv-leaderboard-preview-copy">
       <strong>Tuyển dụng</strong>
       <small>Tính toàn bộ thu nhập và phúc lợi cho TVV mới</small>
-      <span className="tvv-recruitment-tags"><b>Hoa hồng</b><b>Thưởng TVV mới</b><b>Thi đua</b></span>
     </span>
     <ChevronRight size={22} />
   </button>;
