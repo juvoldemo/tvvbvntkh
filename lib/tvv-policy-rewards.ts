@@ -255,24 +255,32 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
   }).sort((a, b) => b.reward - a.reward || (basis === "ip" ? b.ip - a.ip : b.fyp - a.fyp));
 }
 
-function calculateNewAdvisorMonthly(rows: Row[], selectedMonth: string, advisorStartDates: Map<string, string>) {
+function calculateNewAdvisorMonthly(
+  rows: Row[],
+  selectedMonth: string,
+  advisorStartDates: Map<string, string>,
+  trainingCompleted: boolean
+) {
   return [...groupRows(rows).values()].map((agentRows) => {
     const totals = aggregate(agentRows);
     const startDate = advisorStartDates.get(totals.agentCode);
     const startMonth = monthKey(startDate);
     const tenureMonth = startMonth ? monthDiff(startMonth, selectedMonth) + 1 : 0;
     const achieved = Boolean(startDate && tenureMonth >= 1 && tenureMonth <= 12 && totals.ip >= NEW_ADVISOR_MONTHLY_IP);
+    const monthlyReward = trainingCompleted || tenureMonth <= 3
+      ? NEW_ADVISOR_MONTHLY_REWARD
+      : NEW_ADVISOR_MONTHLY_REWARD / 2;
     return {
       ...totals,
       rate: 0,
-      reward: achieved ? NEW_ADVISOR_MONTHLY_REWARD : 0,
+      reward: achieved ? monthlyReward : 0,
       achieved,
       nextTierMinimum: achieved ? null : NEW_ADVISOR_MONTHLY_IP,
       missingToNextTier: achieved ? 0 : Math.max(0, NEW_ADVISOR_MONTHLY_IP - totals.ip),
       fypFallback: false,
       newAdvisorStartDate: startDate ?? null,
       tenureMonth,
-      trainingCompleted: true
+      trainingCompleted
     };
   }).filter((row) => row.newAdvisorStartDate && row.tenureMonth >= 1 && row.tenureMonth <= 12)
     .sort((a, b) => b.reward - a.reward || b.ip - a.ip);
@@ -331,6 +339,7 @@ export function calculatePolicyRewards(params: {
   bc02: Row[];
   advisorProfiles?: Row[];
   filters?: PolicyFilters;
+  newAdvisorTrainingCompleted?: boolean;
 }) {
   const selectedMonth = params.selectedMonth.slice(0, 7);
   const selectedMonthNo = Number(selectedMonth.slice(5, 7));
@@ -364,7 +373,12 @@ export function calculatePolicyRewards(params: {
     quarterStart: selectedQuarterBounds.start,
     quarterEnd: selectedQuarterBounds.end
   });
-  const newAdvisorMonthly = calculateNewAdvisorMonthly(rewardMonthContracts, selectedMonth, advisorStartDates);
+  const newAdvisorMonthly = calculateNewAdvisorMonthly(
+    rewardMonthContracts,
+    selectedMonth,
+    advisorStartDates,
+    params.newAdvisorTrainingCompleted !== false
+  );
   const newAdvisorStage = calculateNewAdvisorStage(eligibleContracts, selectedMonth, advisorStartDates);
   const quarterResults = new Map<string, PolicyRewardRow[]>();
   for (let quarter = 1; quarter <= selectedQuarter; quarter++) {
@@ -426,8 +440,8 @@ export function policyProgramSummaries(result: ReturnType<typeof calculatePolicy
     "policy-monthly": "/Thưởng năng suất tháng.png",
     "policy-quarterly": "/Thưởng Quý.png",
     "policy-month-13": "/Thưởng tháng 13.png",
-    "policy-new-advisor-monthly": "/Thưởng năng suất tháng.png",
-    "policy-new-advisor-stage": "/Thưởng Quý.png"
+    "policy-new-advisor-monthly": "/Thưởng tháng TVV mới.jpg",
+    "policy-new-advisor-stage": "/Thưởng chặng TVV mới.png"
   };
   const build = (id: string, name: string, period: string, conditionText: string, rows: PolicyRewardRow[]) => ({
     programId: id,
@@ -446,7 +460,13 @@ export function policyProgramSummaries(result: ReturnType<typeof calculatePolicy
   return [
     build("policy-monthly", "Thưởng Năng suất tháng TVV", `Tháng ${month}/${year}`, "IP tháng từ 12 triệu; thưởng 10%–18% tổng FYC.", result.monthly),
     build("policy-quarterly", "Thưởng Quý TVV", `Quý ${result.selectedQuarter}/${year}`, "FYP quý từ 24 triệu; PR15 mặc định đạt 100%.", result.quarterly),
-    build("policy-new-advisor-monthly", "Thưởng Tháng TVV mới", `Tháng ${month}/${year}`, "TVV mới trong 12 tháng đầu; mặc định hoàn thành đào tạo; IP tháng từ 12 triệu thưởng 1 triệu.", result.newAdvisorMonthly),
+    build(
+      "policy-new-advisor-monthly",
+      "Thưởng tháng TVV mới (TVVm)",
+      `Tháng ${month}/${year}`,
+      "IP tháng từ 12 triệu: tháng thâm niên 1–3 thưởng 1 triệu; tháng 4–12 thưởng 1 triệu nếu hoàn thành đào tạo, 0,5 triệu nếu chưa hoàn thành.",
+      result.newAdvisorMonthly
+    ),
     build("policy-new-advisor-stage", "Thưởng Chặng TVV mới", `Lũy kế chặng đến tháng ${month}/${year}`, "Mỗi chặng 3 tháng; IP chặng từ 50 triệu thưởng 3 triệu; riêng chặng 1 đạt 100 triệu cộng thêm 3 triệu.", result.newAdvisorStage),
     build("policy-month-13", "Thưởng Tháng 13", `Lũy kế đến tháng ${month}/${year}`, "Đạt 1–4 quý; trường hợp chỉ đạt 1 quý cần FYP năm từ 50 triệu.", result.month13)
   ].filter((program) => !program.programId.startsWith("policy-new-advisor-") || program.rows.length > 0);

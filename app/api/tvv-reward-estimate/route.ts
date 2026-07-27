@@ -124,7 +124,12 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
     const signedInAdvisorCode = userCodeFromRequest(request);
+    const recruitmentMode = payload.recruitmentMode === true;
+    if (recruitmentMode && signedInAdvisorCode !== "ADMINTN") {
+      return NextResponse.json({ error: "Tính năng này chỉ dành cho tài khoản tuyển dụng." }, { status: 403 });
+    }
     const month = String(payload.month || new Date().toISOString().slice(0, 7)).slice(0, 7);
+    const recruitmentTrainingCompleted = payload.trainingCompleted !== false;
     const requestedAdvisor = {
       code: String(payload.advisor?.code || "").trim().toUpperCase(),
       name: String(payload.advisor?.name || ""),
@@ -134,7 +139,13 @@ export async function POST(request: NextRequest) {
     };
     const supabase = getSupabaseAdmin();
     const viewerAudience = await competitionViewerAudience(request);
-    let advisor = {
+    let advisor = recruitmentMode ? {
+      code: "ADMINTN",
+      name: "TVV mới",
+      ban: "",
+      group: "",
+      ads: ""
+    } : {
       ...requestedAdvisor,
       code: signedInAdvisorCode || requestedAdvisor.code
     };
@@ -188,6 +199,12 @@ export async function POST(request: NextRequest) {
     if (programError) throw programError;
     if (yearContractsError) throw yearContractsError;
     if (advisorProfilesError) throw advisorProfilesError;
+    const effectiveAdvisorProfiles = recruitmentMode
+      ? [{
+          advisor_code: advisor.code,
+          start_date: String(payload.recruitmentStartDate || draftContracts[0]?.expectedPaidDate || `${month}-01`).slice(0, 10)
+        }]
+      : (advisorProfiles ?? []);
 
     const visiblePrograms = (programs ?? []).filter((program: any) =>
       program.is_hidden !== true
@@ -336,7 +353,10 @@ export async function POST(request: NextRequest) {
           participatingContracts: actual?.participatingContracts ?? []
         };
       });
-    const ongoingPrograms = allProgramSummaries.filter((program: any) => program.startDate <= today && program.endDate >= today);
+    const simulatedMonthBounds = monthBounds(month);
+    const ongoingPrograms = allProgramSummaries.filter((program: any) => recruitmentMode
+      ? program.startDate <= simulatedMonthBounds.end && program.endDate >= simulatedMonthBounds.start
+      : program.startDate <= today && program.endDate >= today);
     const endedPrograms = allProgramSummaries.filter((program: any) => program.endDate < today);
     const configuredPolicyPrograms = allProgramSummaries.filter((program: any) => isPolicyRewardProgram(program.programName));
     const missingPolicyTable = policyError?.code === "42P01" || policyError?.code === "PGRST205";
@@ -345,7 +365,8 @@ export async function POST(request: NextRequest) {
       selectedMonth: month,
       kpi04: policyRecords ?? [],
       bc02: dedupedYearContracts,
-      advisorProfiles: advisorProfiles ?? [],
+      advisorProfiles: effectiveAdvisorProfiles,
+      newAdvisorTrainingCompleted: recruitmentMode ? recruitmentTrainingCompleted : undefined,
       filters: {
         agentCode: advisor.code || undefined,
         agent: advisor.code ? undefined : advisor.name || undefined,
@@ -378,7 +399,8 @@ export async function POST(request: NextRequest) {
       selectedMonth: month,
       kpi04: policyRecords ?? [],
       bc02: [...dedupedYearContracts, ...draftPolicyContracts],
-      advisorProfiles: advisorProfiles ?? [],
+      advisorProfiles: effectiveAdvisorProfiles,
+      newAdvisorTrainingCompleted: recruitmentMode ? recruitmentTrainingCompleted : undefined,
       filters: {
         agentCode: advisor.code || undefined,
         agent: advisor.code ? undefined : advisor.name || undefined,

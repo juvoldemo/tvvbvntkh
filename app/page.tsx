@@ -3,11 +3,12 @@
 import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ClipboardList, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, LoaderCircle, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, XCircle } from "lucide-react";
+import { toPng } from "html-to-image";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, LoaderCircle, Medal, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
-type Tab = "overview" | "contracts" | "calculator" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about";
+type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -888,7 +889,9 @@ export default function TvvMobilePage() {
 
   return (
     <main className="tvv-app">
-      {tab === "calculator" ? (
+      {tab === "recruitment" ? (
+        <RecruitmentIncomeCalculator onBack={() => setTab("overview")} />
+      ) : tab === "calculator" ? (
         userProfile?.dashboard_role === "team_leader"
           ? <TeamLeaderCalculator month={month} teamData={teamData} baseline={teamRewards} onBack={() => setTab("overview")} />
           : <CalculatorView advisor={advisor} month={month} productName={productName} setProductName={setProductName} productOptions={productOptions} premiumText={premiumText} setPremiumText={(value: string) => setPremiumText(moneyInput(value))} paidDate={paidDate} setPaidDate={setPaidDate} drafts={drafts} draftRewards={draftRewards} estimate={estimate} onBack={() => setTab("overview")} onAdd={addDraft} onOpenIllustration={openIllustrationWithPremium} onRemove={(id: string) => setDrafts((current) => current.filter((draft) => draft.id !== id))} onClear={() => setDrafts([])} />
@@ -1973,12 +1976,25 @@ function Overview({ advisorCode, stats, leaderboard, estimate, starViet, starVie
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
+    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}
     <PersonalStarJourney row={starViet} warning={starVietWarning} />
     <ArchivePreview onOpen={() => onTab("archive")} />
   </section>;
+}
+
+function RecruitmentPreview({ onOpen }: { onOpen: () => void }) {
+  return <button className="tvv-card tvv-recruitment-preview" type="button" onClick={onOpen}>
+    <span className="tvv-recruitment-preview-icon"><UserPlus size={29} /></span>
+    <span className="tvv-leaderboard-preview-copy">
+      <strong>Tuyển dụng</strong>
+      <small>Tính toàn bộ thu nhập và phúc lợi cho TVV mới</small>
+      <span className="tvv-recruitment-tags"><b>Hoa hồng</b><b>Thưởng TVV mới</b><b>Thi đua</b></span>
+    </span>
+    <ChevronRight size={22} />
+  </button>;
 }
 
 function initials(value: unknown) {
@@ -2643,6 +2659,291 @@ function ContractDetailModal({ row, onClose, showAdvisorName = false, hideCustom
     ["AFYP", formatVnd(Number(row.afyp || 0))]
   ].filter((_, index) => !hideCustomerNames || index > 1);
   return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contract-detail" role="dialog" aria-modal="true" aria-label="Chi tiết hợp đồng" onClick={(event) => event.stopPropagation()}><header><div><p>{display.applicationNo}</p><h2>{showAdvisorName ? row.agent_name || "TVV" : display.policyOwner}</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header><div className="tvv-contract-detail-grid">{detailRows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section></div>;
+}
+
+function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
+  const [advisorName, setAdvisorName] = useState("");
+  const [monthlyRevenue, setMonthlyRevenue] = useState<string[]>(() => Array(6).fill("20"));
+  const [estimates, setEstimates] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const [activeSimulationMonth, setActiveSimulationMonth] = useState(0);
+  const [exportingSimulation, setExportingSimulation] = useState(false);
+  const [simulationExportError, setSimulationExportError] = useState("");
+  const monthCarouselRef = useRef<HTMLDivElement>(null);
+  const simulationExportRef = useRef<HTMLDivElement>(null);
+  const simulationMonths = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: 6 }, (_, index) => {
+      const date = new Date(today.getFullYear(), today.getMonth() + index, 1);
+      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+      const paidDay = Math.min(today.getDate(), lastDay);
+      const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return {
+        month,
+        label: `Tháng ${date.getMonth() + 1}/${date.getFullYear()}`,
+        paidDate: `${month}-${String(paidDay).padStart(2, "0")}`
+      };
+    });
+  }, []);
+  const revenueValues = useMemo(
+    () => monthlyRevenue.map((value) => Math.max(0, Number(value.replace(",", ".")) || 0) * 1_000_000),
+    [monthlyRevenue]
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setError("");
+      const cumulativeDrafts: DraftContract[] = [];
+      const requests = simulationMonths.map((item, index) => {
+        cumulativeDrafts.push({
+          id: `recruitment-${item.month}`,
+          productName: "Doanh thu tuyển dụng dự kiến",
+          premium: revenueValues[index],
+          expectedPaidDate: item.paidDate,
+          expectedIssueDate: item.paidDate,
+          status: "Có hiệu lực"
+        });
+        return fetch("/api/tvv-reward-estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+          signal: controller.signal,
+          body: JSON.stringify({
+            recruitmentMode: true,
+            recruitmentStartDate: simulationMonths[0].paidDate,
+            trainingCompleted: true,
+            month: item.month,
+            advisor: { code: "ADMINTN", name: advisorName.trim() || "TVV mới" },
+            draftContracts: [...cumulativeDrafts]
+          })
+        }).then(async (response) => {
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || "Không tính được thu nhập.");
+          return payload;
+        });
+      });
+      Promise.all(requests)
+        .then(setEstimates)
+        .catch((reason) => {
+          if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : "Không tính được thu nhập.");
+        });
+    }, 600);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [advisorName, revenueValues, simulationMonths]);
+
+  const monthlyResults = estimates.map((estimate, monthIndex) => {
+    const activeContestIds = new Set((estimate?.ongoingPrograms ?? []).map((item: any) => item.programId));
+    const programs = (estimate?.calculatorPrograms ?? [])
+      .filter((item: any) => item.programId !== "policy-month-13" && !item.isCommission)
+      .filter((item: any) => item.isPolicyProjection || activeContestIds.has(item.programId))
+      .sort((a: any, b: any) => calculatorProgramOrder(a) - calculatorProgramOrder(b));
+    const previousPrograms = new Map((estimates[monthIndex - 1]?.calculatorPrograms ?? []).map((item: any) => [item.programId, item]));
+    const previousQuarter = monthIndex > 0 ? Math.ceil(Number(simulationMonths[monthIndex - 1].month.slice(5, 7)) / 3) : 0;
+    const currentQuarter = Math.ceil(Number(simulationMonths[monthIndex].month.slice(5, 7)) / 3);
+    const rows = programs.map((item: any) => {
+      const currentReward = Number(item.incrementalReward ?? item.estimatedReward ?? 0);
+      const previous = previousPrograms.get(item.programId) as any;
+      const previousReward = Number(previous?.incrementalReward ?? previous?.estimatedReward ?? 0);
+      const isMonthly = item.programId === "policy-monthly" || item.programId === "policy-new-advisor-monthly";
+      const isStage = item.programId === "policy-new-advisor-stage";
+      const reward = isMonthly || isStage
+        ? currentReward
+        : currentQuarter !== previousQuarter
+          ? currentReward
+          : Math.max(0, currentReward - previousReward);
+      const currentGifts = item.projectedGiftLabels?.length ? item.projectedGiftLabels : item.giftLabels ?? [];
+      const previousGifts = previous?.projectedGiftLabels?.length ? previous.projectedGiftLabels : previous?.giftLabels ?? [];
+      const gifts = currentGifts.filter((gift: string) => !previousGifts.includes(gift));
+      return { ...item, monthlyReward: reward, monthlyGifts: gifts };
+    });
+    const commission = revenueValues[monthIndex] * ACQUISITION_COMMISSION_BREAKDOWN[0].rate;
+    return {
+      commission,
+      rows,
+      total: commission + rows.reduce((sum: number, item: any) => sum + Number(item.monthlyReward ?? 0), 0)
+    };
+  });
+  const totalRevenue = revenueValues.reduce((sum, value) => sum + value, 0);
+  const totalCommission = monthlyResults.reduce((sum, item) => sum + item.commission, 0);
+  const totalIncome = monthlyResults.reduce((sum, item) => sum + item.total, 0);
+  const simulationExportRows = simulationMonths.map((item, monthIndex) => ({
+    ...item,
+    revenue: revenueValues[monthIndex],
+    commission: monthlyResults[monthIndex]?.commission ?? 0,
+    total: monthlyResults[monthIndex]?.total ?? 0,
+    rewards: (monthlyResults[monthIndex]?.rows ?? [])
+      .filter((program: any) => Number(program.monthlyReward ?? 0) > 0 || (program.monthlyGifts ?? []).length > 0)
+      .map((program: any) => ({
+        name: program.programName,
+        value: (program.monthlyGifts ?? []).length
+          ? program.monthlyGifts.join(" · ")
+          : formatVnd(Number(program.monthlyReward ?? 0))
+      }))
+  }));
+  function openSimulationMonth(index: number) {
+    const nextIndex = Math.max(0, Math.min(simulationMonths.length - 1, index));
+    setActiveSimulationMonth(nextIndex);
+    const container = monthCarouselRef.current;
+    if (container) container.scrollTo({ left: container.clientWidth * nextIndex, behavior: "smooth" });
+  }
+  async function exportSimulationImage() {
+    const name = advisorName.trim();
+    if (!name) {
+      setSimulationExportError("Vui lòng nhập họ và tên TVV trước khi xuất ảnh.");
+      return;
+    }
+    if (!simulationExportRef.current || estimates.length !== 6) return;
+    setExportingSimulation(true);
+    setSimulationExportError("");
+    try {
+      await document.fonts?.ready;
+      const element = simulationExportRef.current;
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        style: {
+          position: "static",
+          top: "auto",
+          left: "auto",
+          zIndex: "0"
+        }
+      });
+      const safeName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "tvv-moi";
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `mo-phong-thu-nhap-${safeName}.png`;
+      link.click();
+    } catch (reason) {
+      setSimulationExportError(reason instanceof Error ? reason.message : "Không thể xuất ảnh mô phỏng.");
+    } finally {
+      setExportingSimulation(false);
+    }
+  }
+
+  return <section className="tvv-calculator recruitment-calculator">
+    <TvvSubHeader title="Mô phỏng thu nhập 6 tháng" onBack={onBack} />
+    <section className="tvv-calc-card recruitment-input-card">
+      <label className="recruitment-advisor-name">
+        <span>Họ và tên TVV</span>
+        <input
+          type="text"
+          value={advisorName}
+          onChange={(event) => setAdvisorName(event.target.value)}
+          placeholder="Nhập họ và tên"
+          autoComplete="name"
+        />
+      </label>
+      <div className="recruitment-three-month-grid">
+        {simulationMonths.map((item, index) => <label className={`month-tone-${index + 1}`} key={item.month}>
+          <i>T{Number(item.month.slice(5, 7))}</i>
+          <div><input inputMode="decimal" value={monthlyRevenue[index]} onChange={(event) => setMonthlyRevenue((current) => current.map((value, valueIndex) => valueIndex === index ? event.target.value.replace(/[^\d.,]/g, "") : value))} aria-label={`Doanh thu dự kiến ${item.label}, đơn vị triệu đồng`} /></div>
+        </label>)}
+      </div>
+      {error && <div className="tvv-user-error" role="alert">{error}</div>}
+    </section>
+
+    {estimates.length === 6 && !error && <section className="tvv-calc-card recruitment-summary-card">
+      <div className="recruitment-total"><span>Tổng thu nhập dự kiến trong 6 tháng</span><strong>{formatVnd(totalIncome)}</strong></div>
+      <div className="recruitment-metrics">
+        <div><span>Tổng doanh thu</span><b>{formatVnd(totalRevenue)}</b></div>
+        <div><span>Hoa hồng khai thác</span><b>{formatVnd(totalCommission)}</b></div>
+        <div><span>Thưởng & thi đua</span><b>{formatVnd(Math.max(0, totalIncome - totalCommission))}</b></div>
+      </div>
+    </section>}
+
+    {estimates.length === 6 && !error && <section className="tvv-calc-card recruitment-reward-carousel-card">
+      <div className="recruitment-carousel-heading">
+        <div><h2>Thưởng từng tháng</h2><p>Vuốt ngang để xem tháng tiếp theo</p></div>
+        <div><button type="button" aria-label="Tháng trước" disabled={activeSimulationMonth === 0} onClick={() => openSimulationMonth(activeSimulationMonth - 1)}><ChevronLeft size={19} /></button><strong>{activeSimulationMonth + 1}/6</strong><button type="button" aria-label="Tháng tiếp theo" disabled={activeSimulationMonth === 5} onClick={() => openSimulationMonth(activeSimulationMonth + 1)}><ChevronRight size={19} /></button></div>
+      </div>
+      <div className="recruitment-reward-carousel" ref={monthCarouselRef} onScroll={(event) => {
+        const element = event.currentTarget;
+        if (element.clientWidth) setActiveSimulationMonth(Math.round(element.scrollLeft / element.clientWidth));
+      }}>
+        {simulationMonths.map((item, monthIndex) => <article className={`recruitment-reward-slide month-tone-${monthIndex + 1}`} key={item.month}>
+          <header><i>{monthIndex + 1}</i><div><span>{item.label}</span><strong>{formatVnd(monthlyResults[monthIndex]?.total ?? 0)}</strong><small>Doanh thu dự kiến {monthlyRevenue[monthIndex] || 0} triệu</small></div></header>
+          <div className="recruitment-reward-slide-rows">
+            <div className="recruitment-commission-row">
+              <span><Calculator size={17} />Hoa hồng khai thác năm 1</span>
+              <strong>{formatVnd(monthlyResults[monthIndex]?.commission ?? 0)}</strong>
+              <div className="recruitment-future-commission">
+                <small>Các năm tiếp theo · không tính vào tổng thu nhập</small>
+                {ACQUISITION_COMMISSION_BREAKDOWN.slice(1).map((commissionYear) => <p key={commissionYear.label}>
+                  <span>{commissionYear.label} ({formatRate(commissionYear.rate)})</span>
+                  <b>{formatVnd(revenueValues[monthIndex] * commissionYear.rate)}</b>
+                </p>)}
+              </div>
+            </div>
+            {(monthlyResults[monthIndex]?.rows ?? []).map((program: any, programIndex: number) => {
+              const gifts = program.monthlyGifts ?? [];
+              const reward = Number(program.monthlyReward ?? 0);
+              const achieved = reward > 0 || gifts.length > 0;
+              return <button type="button" key={program.programId || programIndex} onClick={() => setSelectedProgram(program)}>
+                <span>{program.isPolicyProjection ? <ShieldCheck size={17} /> : gifts.length ? <Gift size={17} /> : <Trophy size={17} />}{program.programName}</span>
+                <strong className={achieved ? gifts.length ? "achieved" : "achieved reward-amount" : ""}>{gifts.length ? gifts.join(" · ") : achieved ? `+${formatVnd(reward)}` : "Chưa đạt"}</strong>
+              </button>;
+            })}
+          </div>
+        </article>)}
+      </div>
+      <div className="recruitment-carousel-dots">{simulationMonths.map((item, index) => <button type="button" key={item.month} className={activeSimulationMonth === index ? "active" : ""} aria-label={`Xem ${item.label}`} onClick={() => openSimulationMonth(index)} />)}</div>
+      <p className="tvv-disclaimer"><Info size={17} /><span><b>Lưu ý</b>Thưởng quý, thưởng chặng và thi đua được mô phỏng lũy kế từ các tháng trước. Kết quả giả định hợp đồng phát hành thành công và TVV hoàn thành điều kiện đào tạo.</span></p>
+    </section>}
+
+    {estimates.length === 6 && !error && <section className="tvv-calc-card recruitment-export-card">
+      <div><span><Download size={21} /></span><div><h2>Xuất mô phỏng</h2><p>Tạo ảnh tổng hợp doanh thu, hoa hồng và các khoản thưởng dự kiến trong 6 tháng.</p></div></div>
+      <button type="button" onClick={exportSimulationImage} disabled={exportingSimulation}>
+        {exportingSimulation ? <LoaderCircle className="spin" size={19} /> : <Download size={19} />}
+        {exportingSimulation ? "Đang tạo ảnh..." : "Xuất ảnh mô phỏng"}
+      </button>
+      {simulationExportError && <p className="tvv-user-error" role="alert">{simulationExportError}</p>}
+
+      <div className="recruitment-export-canvas recruitment-export-v2" ref={simulationExportRef}>
+        <header>
+          <div><span>BẢO VIỆT NHÂN THỌ <i>✦</i></span><h1>MÔ PHỎNG THU NHẬP 6 THÁNG</h1></div>
+          <strong><UserRound size={19} />Dành cho TVV mới</strong>
+        </header>
+        <section className="recruitment-export-advisor">
+          <span><UserRound size={34} /></span><div><small>TƯ VẤN VIÊN</small><h2>{advisorName.trim() || "Chưa nhập họ và tên"}</h2></div>
+        </section>
+        <section className="recruitment-export-summary">
+          <div><i><Target size={28} /></i><span>Tổng doanh thu</span><strong>{formatVnd(totalRevenue)}</strong></div>
+          <div><i><WalletCards size={28} /></i><span>Tổng thu nhập<br />dự kiến</span><strong>{formatVnd(totalIncome)}</strong></div>
+          <div><i><Trophy size={28} /></i><span>Tổng thưởng &<br />thi đua</span><strong>{formatVnd(Math.max(0, totalIncome - totalCommission))}</strong></div>
+        </section>
+        <section className="recruitment-export-months">{simulationExportRows.map((row, monthIndex) => <article key={row.month}>
+          <div className="recruitment-export-month-badge"><strong>{monthIndex + 1}</strong><CalendarDays size={18} /></div>
+          <div className="recruitment-export-month-contract">
+            <h3>{row.label}</h3>
+            <p><span>Doanh thu</span><b>{formatVnd(row.revenue)}</b></p>
+            <p><span>Hoa hồng năm 1</span><b>{formatVnd(row.commission)}</b></p>
+          </div>
+          <div className="recruitment-export-month-rewards">
+            <h4>Các khoản thưởng sẽ nhận</h4>
+            {row.rewards.length ? row.rewards.map((reward: any) => <p key={`${row.month}-${reward.name}`}><span>•&nbsp;&nbsp;{reward.name}</span><b>{reward.value}</b></p>) : <em>Chưa phát sinh thưởng</em>}
+          </div>
+          <div className="recruitment-export-month-total"><span>Tổng thu nhập</span><strong>{formatVnd(row.total)}</strong><i><CircleDollarSign size={29} /></i></div>
+        </article>)}</section>
+        <h3 className="recruitment-export-renewal-title"><Coins size={25} />Hoa hồng các năm tiếp theo</h3>
+        <section className="recruitment-export-renewal">
+          <div><i><Coins size={24} /></i><span>Hoa hồng năm 2 · 15%<b>{formatVnd(totalRevenue * ACQUISITION_COMMISSION_BREAKDOWN[1].rate)}</b></span></div>
+          <div><i><Coins size={24} /></i><span>Hoa hồng năm 3 · 7,5%<b>{formatVnd(totalRevenue * ACQUISITION_COMMISSION_BREAKDOWN[2].rate)}</b></span></div>
+          <div><i><Coins size={24} /></i><span>Hoa hồng năm 4 · 4%<b>{formatVnd(totalRevenue * ACQUISITION_COMMISSION_BREAKDOWN[3].rate)}</b></span></div>
+        </section>
+        <p className="recruitment-export-renewal-note"><Info size={20} />Các khoản hoa hồng năm tiếp theo chỉ để tham khảo, không tính vào tổng thu nhập 6 tháng.</p>
+        <footer><ShieldCheck size={25} /><span>Kết quả mang tính mô phỏng theo chính sách và chương trình thi đua đang áp dụng trong từng tháng.<br />Thu nhập thực tế phụ thuộc điều kiện phát hành hợp đồng và điều kiện chương trình.</span></footer>
+      </div>
+    </section>}
+    {selectedProgram && <ContestDetailModal item={selectedProgram} onClose={() => setSelectedProgram(null)} />}
+  </section>;
 }
 
 function CalculatorView(props: any) {

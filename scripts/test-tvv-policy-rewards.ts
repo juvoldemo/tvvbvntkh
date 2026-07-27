@@ -92,6 +92,24 @@ const newAdvisorMonthly = calculatePolicyRewards({
 });
 assert.equal(newAdvisorMonthly.newAdvisorMonthly[0].reward, 1_000_000, "TVV mới mặc định hoàn thành đào tạo và nhận 1 triệu khi IP tháng từ 12 triệu");
 
+const newAdvisorIncompleteTrainingMonth1 = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [],
+  bc02: [bc02("2026-06-20", "NEW-INCOMPLETE-M1", { ip: 12_000_000 })],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-06-11" }],
+  newAdvisorTrainingCompleted: false
+});
+assert.equal(newAdvisorIncompleteTrainingMonth1.newAdvisorMonthly[0].reward, 1_000_000, "TVV chưa hoàn thành đào tạo vẫn nhận 1 triệu trong tháng thâm niên 1-3");
+
+const newAdvisorIncompleteTrainingMonth4 = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [],
+  bc02: [bc02("2026-06-20", "NEW-INCOMPLETE-M4", { ip: 12_000_000 })],
+  advisorProfiles: [{ advisor_code: "A01", start_date: "2026-03-11" }],
+  newAdvisorTrainingCompleted: false
+});
+assert.equal(newAdvisorIncompleteTrainingMonth4.newAdvisorMonthly[0].reward, 500_000, "TVV chưa hoàn thành đào tạo nhận 0,5 triệu trong tháng thâm niên 4-12");
+
 const oldAdvisorMonthly = calculatePolicyRewards({
   selectedMonth: "2026-07",
   kpi04: [kpi("2026-07")],
