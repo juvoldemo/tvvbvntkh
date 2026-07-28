@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds } from "@/lib/format";
 import { isCountedRevenueRecord } from "@/lib/reports";
 import { managedTeamName } from "@/lib/team-scope";
+import { readTargetRegistrationCycle } from "@/lib/target-registration-cycle";
 import type { RevenueRecord } from "@/lib/types";
 
 const PAGE_SIZE = 1000;
@@ -18,8 +19,8 @@ async function readAll<T>(queryFactory: (from: number, to: number) => any) {
   return rows;
 }
 
-function monthStart(value: string | null) {
-  const month = String(value || new Date().toISOString().slice(0, 7)).slice(0, 7);
+function monthStart(value: string | null | undefined, fallbackMonth = new Date().toISOString().slice(0, 7)) {
+  const month = String(value || fallbackMonth).slice(0, 7);
   return `${month}-01`;
 }
 
@@ -30,7 +31,9 @@ function normalized(value: unknown) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = getSupabaseAdmin();
-    const targetMonth = monthStart(request.nextUrl.searchParams.get("month"));
+    const requestedMonth = request.nextUrl.searchParams.get("month");
+    const cycle = requestedMonth ? null : await readTargetRegistrationCycle(supabase);
+    const targetMonth = monthStart(requestedMonth, cycle?.activeMonth);
     const bounds = monthBounds(targetMonth.slice(0, 7));
     const [{ data: users, error: userError }, tvvResult, teamResult, revenueRows] = await Promise.all([
       supabase.from("authorized_users").select("advisor_code,full_name,advisor_position,group_name,is_active"),
