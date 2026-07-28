@@ -25,7 +25,8 @@ values
   ('NGUYENTHANHNHAN', 'Nguyễn Thành Nhân', 'PTKD 2', 'ADO', 'plain:MDAwMA', '0000', true, now()),
   ('DINHQUOCTIEN', 'Đinh Quốc Tiến', 'PTKD 1', 'ADO', 'plain:MDAwMA', '0000', true, now()),
   ('TRANXUANTHU', 'Trần Xuân Thu', 'PTKD 2', 'ADO', 'plain:MDAwMA', '0000', true, now()),
-  ('NGUYENTHOC', 'Nguyễn Thóc', 'PTKD 2', 'ADO', 'plain:MDAwMA', '0000', true, now())
+  ('NGUYENTHOC', 'Nguyễn Thóc', 'PTKD 2', 'ADO', 'plain:MDAwMA', '0000', true, now()),
+  ('BOSS', 'Boss', 'Toàn công ty', 'BOSS', 'plain:MDAwMA', '0000', true, now())
 on conflict (advisor_code) do update set
   full_name = excluded.full_name,
   group_name = excluded.group_name,

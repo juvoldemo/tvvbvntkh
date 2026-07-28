@@ -63,6 +63,10 @@ export function managedAdoScope(advisorCode: unknown, fullName?: unknown) {
   ) ?? null;
 }
 
+export function isBossAccount(advisorCode: unknown) {
+  return normalizeAdoText(advisorCode) === "boss";
+}
+
 export const ADO_ACCOUNT_SEEDS = ADO_SCOPES.map(({ username, fullName, department }) => ({
   advisor_code: username,
   full_name: fullName,

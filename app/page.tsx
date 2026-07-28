@@ -357,7 +357,8 @@ export default function TvvMobilePage() {
   const [adoData, setAdoData] = useState<any>(null);
   const [adoContractData, setAdoContractData] = useState<any>(null);
   const isBoardMode = activeRole === "board_leader" && Boolean(userProfile?.has_board_leader_role);
-  const isAdoMode = userProfile?.dashboard_role === "ado";
+  const isAdoMode = userProfile?.dashboard_role === "ado" || userProfile?.dashboard_role === "boss";
+  const isBossMode = userProfile?.dashboard_role === "boss";
 
   useEffect(() => {
     if (!signedIn || !userProfile?.advisor_code) {
@@ -939,7 +940,15 @@ export default function TvvMobilePage() {
   }
 
   if (!authReady) return <main className="tvv-user-login"><p>Đang kiểm tra đăng nhập…</p></main>;
-  if (!signedIn) return <UserLoginScreen onSuccess={() => setSignedIn(true)} />;
+  if (!signedIn) return <UserLoginScreen onSuccess={(advisorCode) => {
+    setTab("overview");
+    setActiveRole("advisor");
+    setUserProfile(null);
+    setProfileReady(false);
+    setAuthenticatedAdvisorCode(String(advisorCode || "").trim().toUpperCase());
+    setSignedIn(true);
+  }} />;
+  if (!profileReady || !userProfile) return <main className="tvv-user-login"><p>Đang tải đúng giao diện tài khoản…</p></main>;
 
   return (
     <main className={`tvv-app${isAdoMode ? " ado-app" : ""}`}>
@@ -957,7 +966,7 @@ export default function TvvMobilePage() {
               <button className="tvv-avatar tvv-avatar-button" type="button" onClick={() => setTab("profile")} aria-label="Mở trang cá nhân">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</button>
               <div>
                 <h1>Xin chào, {userProfile?.full_name || advisor?.name || "TVV"}</h1>
-                <p>{isAdoMode ? "ADO" : isBoardMode ? `Trưởng ban ${boardData?.boardName || userProfile?.managed_board_name || ""}` : userProfile?.dashboard_role === "team_leader" ? `Trưởng nhóm ${teamData?.groupName || userProfile?.managed_group_name || ""}` : `TVV - ${advisor?.code || "Chưa có mã"}`}</p>
+                <p>{isBossMode ? "BOSS · Toàn công ty" : isAdoMode ? "ADO" : isBoardMode ? `Trưởng ban ${boardData?.boardName || userProfile?.managed_board_name || ""}` : userProfile?.dashboard_role === "team_leader" ? `Trưởng nhóm ${teamData?.groupName || userProfile?.managed_group_name || ""}` : `TVV - ${advisor?.code || "Chưa có mã"}`}</p>
                 {isAdoMode
                   ? <strong className="tvv-current-rank"><Layers3 size={13} />{adoData ? `${adoData.groups.length} nhóm · ${adoData.summary.activeAdvisors} TVV hoạt động` : "Đang tổng hợp khu vực quản lý"}</strong>
                   : isBoardMode
@@ -1017,7 +1026,13 @@ export default function TvvMobilePage() {
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
           {tab === "about" && String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPage />}
-          {tab === "profile" && <Profile advisor={advisor} contracts={isAdoMode ? (adoData?.contracts ?? []) : myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => setSignedIn(false)} />}
+          {tab === "profile" && <Profile advisor={advisor} contracts={isAdoMode ? (adoData?.contracts ?? []) : myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => {
+            setTab("overview");
+            setActiveRole("advisor");
+            setUserProfile(null);
+            setProfileReady(false);
+            setSignedIn(false);
+          }} />}
         </>
       )}
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
@@ -1408,6 +1423,7 @@ function AdoOverview({ data, month }: any) {
         })}
       </div>
     </section>
+    <AdoRecruitmentOverview recruitment={data.recruitment} />
     {selectedAdoGroup && typeof document !== "undefined" && createPortal(
       <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedAdoGroup(null); }}>
         <section className="team-contract-modal board-contract-modal ado-group-contract-modal" role="dialog" aria-modal="true" aria-label={`Hợp đồng nhóm ${selectedAdoGroup}`}>
@@ -1426,6 +1442,60 @@ function AdoOverview({ data, month }: any) {
               <em className={contractStatusGroup(row)}>{row.policy_status || "Chờ xử lý"}</em>
             </article>)}
             {!selectedGroupContracts.length && <p className="team-contract-modal-empty">Nhóm chưa có hợp đồng trong tháng này.</p>}
+          </div>
+        </section>
+      </div>,
+      document.body
+    )}
+  </section>;
+}
+
+function AdoRecruitmentOverview({ recruitment }: any) {
+  const selections = (recruitment?.selections ?? []).filter((item: any) => item.candidates?.length);
+  const [expandedLeader, setExpandedLeader] = useState<string | null>(null);
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
+  return <section className="team-overview-panel ado-recruitment-panel">
+    <div className="team-panel-header">
+      <div><UserPlus size={19} /><div><h2>Tuyển dụng</h2><p>Ứng viên được các trưởng nhóm lựa chọn tại /tuyendung</p></div></div>
+      <span>{recruitment?.totalCandidates || 0}<small>ứng viên</small></span>
+    </div>
+    <div className="ado-recruitment-summary">
+      <div><strong>{recruitment?.totalLeaders || 0}</strong><span>Trưởng nhóm đã chọn</span></div>
+      <div><strong>{recruitment?.totalCandidates || 0}</strong><span>Tổng ứng viên</span></div>
+    </div>
+    <div className="ado-recruitment-leaders">
+      {selections.map((selection: any) => {
+        const expanded = expandedLeader === selection.advisorCode;
+        return <article key={selection.advisorCode} className={expanded ? "expanded" : ""}>
+          <button type="button" onClick={() => setExpandedLeader(expanded ? null : selection.advisorCode)} aria-expanded={expanded}>
+            <span>{String(selection.fullName || "TN").split(/\s+/).slice(-2).map((part: string) => part[0]).join("").toUpperCase()}</span>
+            <div><strong>{selection.fullName}</strong><small>{selection.groupName} · {selection.isConfirmed ? "Đã xác nhận" : "Đang lựa chọn"}</small></div>
+            <b>{selection.candidates.length}<small>ứng viên</small></b>
+            <ChevronDown size={18} />
+          </button>
+          {expanded && <div className="ado-recruitment-candidates">
+            {selection.candidates.map((candidate: any) => <button type="button" key={candidate.advisorCode} onClick={() => setSelectedCandidate({ ...candidate, leaderName: selection.fullName, groupName: selection.groupName })}>
+              <span><UserRound size={17} /></span>
+              <div><strong>{candidate.advisorName}</strong><small>{candidate.advisorCode} · Người tuyển: {candidate.recruiterName || "—"}</small></div>
+              <ChevronRight size={18} />
+            </button>)}
+          </div>}
+        </article>;
+      })}
+      {!selections.length && <p className="tvv-empty">Chưa có trưởng nhóm lựa chọn ứng viên tuyển dụng.</p>}
+    </div>
+    {selectedCandidate && typeof document !== "undefined" && createPortal(
+      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedCandidate(null); }}>
+        <section className="team-contract-modal ado-recruitment-detail-modal" role="dialog" aria-modal="true" aria-label={`Thông tin ứng viên ${selectedCandidate.advisorName}`}>
+          <header><div><h2>{selectedCandidate.advisorName}</h2><p>{selectedCandidate.advisorCode} · Nhóm {selectedCandidate.groupName}</p></div><button type="button" onClick={() => setSelectedCandidate(null)} aria-label="Đóng"><X size={22} /></button></header>
+          <div className="ado-recruitment-detail-body">
+            <div><span>Trưởng nhóm lựa chọn</span><strong>{selectedCandidate.leaderName}</strong></div>
+            <div><span>TVV tuyển dụng</span><strong>{selectedCandidate.recruiterName || "—"}</strong></div>
+            <div><span>Ngày bắt đầu làm việc</span><strong>{formatDateVi(selectedCandidate.startDate)}</strong></div>
+            <div><span>Số tháng không hoạt động</span><strong>{selectedCandidate.inactiveMonths || 0} tháng</strong></div>
+            <div><span>Ký quỹ</span><strong>{formatVnd(Number(selectedCandidate.deposit) || 0)}</strong></div>
+            <div><span>Số điện thoại</span><strong>{selectedCandidate.phone || "—"}</strong></div>
+            <div className="wide"><span>Địa chỉ</span><strong>{selectedCandidate.address || "—"}</strong></div>
           </div>
         </section>
       </div>,
@@ -3676,7 +3746,7 @@ function ArchiveView() {
   </section>;
 }
 
-function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
+function UserLoginScreen({ onSuccess }: { onSuccess: (advisorCode: string) => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -3692,7 +3762,7 @@ function UserLoginScreen({ onSuccess }: { onSuccess: () => void }) {
     const payload = await response.json().catch(() => ({ error: "Máy chủ không phản hồi đúng định dạng." }));
     setBusy(false);
     if (!response.ok) return setError({ message: payload.error || "Không thể đăng nhập. Vui lòng thử lại.", field: payload.field });
-    onSuccess();
+    onSuccess(payload.advisorCode || username);
   }
   const canSubmit = Boolean(username.trim() && password && !busy);
   return <main className="tvv-user-login">

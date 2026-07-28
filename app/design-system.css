@@ -2845,3 +2845,239 @@ body .tvv-app.ado-app .ado-competition-list header em.ended {
   background: #eef1f4 !important;
   color: #607181 !important;
 }
+
+body .tvv-app.ado-app .ado-recruitment-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header {
+  align-items: flex-start !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header > span {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  color: #08798a !important;
+  font-size: 18px !important;
+  font-weight: 750 !important;
+  line-height: 21px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header > span small {
+  color: var(--ado-muted) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  line-height: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-summary {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-summary > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  padding: 12px !important;
+  border-radius: 12px !important;
+  background: #eef7f8 !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-summary strong {
+  color: #08798a !important;
+  font-size: 18px !important;
+  line-height: 22px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-summary span {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 15px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article {
+  overflow: hidden !important;
+  border: 1px solid #d9e5eb !important;
+  border-radius: 14px !important;
+  background: #fbfdfe !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button {
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) auto 18px !important;
+  width: 100% !important;
+  min-height: 68px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ado-ink) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button > span {
+  display: grid !important;
+  width: 38px !important;
+  height: 38px !important;
+  place-items: center !important;
+  border-radius: 11px !important;
+  background: #e4f3f6 !important;
+  color: #08798a !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button strong {
+  overflow: hidden !important;
+  color: var(--ado-ink) !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button small {
+  color: var(--ado-muted) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article > button > b {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  color: #08798a !important;
+  font-size: 15px !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-leaders > article.expanded > button > svg {
+  transform: rotate(180deg) !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates {
+  padding: 0 12px 10px !important;
+  border-top: 1px solid #e3ebef !important;
+  background: #fff !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates > button {
+  display: grid !important;
+  grid-template-columns: 32px minmax(0, 1fr) 18px !important;
+  width: 100% !important;
+  min-height: 58px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin: 0 !important;
+  padding: 9px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e8eef2 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ado-ink) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates > button:last-child {
+  border-bottom: 0 !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates > button > span {
+  display: grid !important;
+  width: 32px !important;
+  height: 32px !important;
+  place-items: center !important;
+  border-radius: 9px !important;
+  background: #fff1dc !important;
+  color: #b86a12 !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates > button > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates strong {
+  color: var(--ado-ink) !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-recruitment-candidates small {
+  overflow: hidden !important;
+  color: var(--ado-muted) !important;
+  font-size: 10px !important;
+  line-height: 14px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body .ado-recruitment-detail-modal {
+  max-height: min(720px, calc(100dvh - 52px)) !important;
+}
+
+body .ado-recruitment-detail-body {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  overflow-y: auto !important;
+  padding: 14px !important;
+}
+
+body .ado-recruitment-detail-body > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  padding: 12px !important;
+  border-radius: 11px !important;
+  background: #f3f7f9 !important;
+}
+
+body .ado-recruitment-detail-body > div.wide {
+  grid-column: 1 / -1 !important;
+}
+
+body .ado-recruitment-detail-body span {
+  color: #698091 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+  line-height: 14px !important;
+}
+
+body .ado-recruitment-detail-body strong {
+  color: #12364d !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+  overflow-wrap: anywhere !important;
+}

@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
 import { managedTeamName } from "@/lib/team-scope";
 import { managedBoardScope } from "@/lib/board-scope";
-import { managedAdoScope } from "@/lib/ado-scope";
+import { isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 
 const fields = "advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url,group_name";
 
@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const managedGroupName = managedTeamName(data.advisor_code, data.advisor_position, data.full_name, data.group_name);
   const boardScope = managedBoardScope(data.full_name);
   const adoScope = managedAdoScope(data.advisor_code, data.full_name);
+  const bossAccount = isBossAccount(data.advisor_code);
   return NextResponse.json({
     profile: {
       ...data,
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
       has_board_leader_role: Boolean(boardScope),
       managed_ado_groups: adoScope?.groups ?? [],
       managed_ado_department: adoScope?.department ?? null,
-      dashboard_role: adoScope ? "ado" : managedGroupName ? "team_leader" : "advisor"
+      dashboard_role: bossAccount ? "boss" : adoScope ? "ado" : managedGroupName ? "team_leader" : "advisor"
     }
   });
 }

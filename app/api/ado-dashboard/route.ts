@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { managedAdoScope } from "@/lib/ado-scope";
+import { isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 import { monthBounds, toMonthStart } from "@/lib/format";
 import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatusText } from "@/lib/reports";
 import { revealVisiblePassword } from "@/lib/user-auth";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { managedTeamName } from "@/lib/team-scope";
 import type { RevenueRecord } from "@/lib/types";
+import recruitmentCandidates from "@/data/recruitment-candidates.json";
 
 const TEAM_ACTIVITY_DATA_BUCKET = "team-activity-data";
+const RECRUITMENT_REGISTRY_MONTH = "2099-12-01";
+const RECRUITMENT_REGISTRY_GROUP = "__RECRUITMENT_POOL_LOCK__";
 
 function statusBucket(value: unknown) {
   const status = normalizeStatusText(value);
@@ -56,6 +59,28 @@ async function readLeaderActivities(supabase: ReturnType<typeof getSupabaseAdmin
   return [...merged.values()];
 }
 
+async function resolveManagementScope(supabase: ReturnType<typeof getSupabaseAdmin>, advisorCode: string, fullName: string) {
+  const adoScope = managedAdoScope(advisorCode, fullName);
+  if (adoScope) return { ...adoScope, role: "ado" as const };
+  if (!isBossAccount(advisorCode)) return null;
+
+  const { data, error } = await supabase
+    .from("authorized_users")
+    .select("group_name,advisor_position")
+    .eq("is_active", true)
+    .not("group_name", "is", null);
+  if (error) throw error;
+  const managementPositions = new Set(["ado", "boss"]);
+  const managementGroups = new Set(["ptkd1", "ptkd2", "toancongty"]);
+  const groups = [...new Set((data ?? []).flatMap((row: any) => {
+    const groupName = String(row.group_name || "").trim();
+    const position = String(row.advisor_position || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const normalizedGroup = groupName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toLowerCase();
+    return groupName && !managementPositions.has(position) && !managementGroups.has(normalizedGroup) ? [groupName] : [];
+  }))].sort((a, b) => a.localeCompare(b, "vi"));
+  return { username: "boss", fullName: fullName || "Boss", department: "Toàn công ty", groups, role: "boss" as const };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const code = userCodeFromRequest(request);
@@ -67,8 +92,8 @@ export async function GET(request: NextRequest) {
       .eq("advisor_code", code)
       .single();
     if (profileError) throw profileError;
-    const scope = managedAdoScope(profile.advisor_code, profile.full_name);
-    if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền ADO." }, { status: 403 });
+    const scope = await resolveManagementScope(supabase, profile.advisor_code, profile.full_name);
+    if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền quản lý." }, { status: 403 });
 
     const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
     const { start, end } = monthBounds(month);
@@ -139,6 +164,42 @@ export async function GET(request: NextRequest) {
         return { ...leader, activities: [] };
       }
     }));
+    const { data: recruitmentRegistry } = await supabase
+      .from("team_target_registrations")
+      .select("selected_advisors,updated_at")
+      .eq("target_month", RECRUITMENT_REGISTRY_MONTH)
+      .eq("group_name", RECRUITMENT_REGISTRY_GROUP)
+      .maybeSingle();
+    const registry = recruitmentRegistry?.selected_advisors && !Array.isArray(recruitmentRegistry.selected_advisors)
+      ? recruitmentRegistry.selected_advisors as any
+      : {};
+    const claims = registry.claims && typeof registry.claims === "object" ? registry.claims : {};
+    const confirmations = registry.confirmations && typeof registry.confirmations === "object" ? registry.confirmations : {};
+    const candidateByCode = new Map((recruitmentCandidates as any[]).map((candidate: any) => [candidate.advisorCode, candidate]));
+    const recruitmentSelections = teamLeaders
+      .map((leader: any) => ({
+        ...leader,
+        isConfirmed: Boolean(confirmations[leader.advisorCode]),
+        confirmedAt: confirmations[leader.advisorCode] || null,
+        candidates: Object.entries(claims)
+          .filter(([, leaderCode]) => leaderCode === leader.advisorCode)
+          .map(([candidateCode]) => candidateByCode.get(candidateCode))
+          .filter(Boolean)
+          .sort((a: any, b: any) => String(a.advisorName).localeCompare(String(b.advisorName), "vi"))
+          .map((candidate: any) => ({
+            id: candidate.id,
+            advisorCode: candidate.advisorCode,
+            advisorName: candidate.advisorName,
+            recruiterCode: candidate.recruiterCode,
+            recruiterName: candidate.recruiterName,
+            startDate: candidate.startDate,
+            inactiveMonths: candidate.inactiveMonths,
+            deposit: candidate.deposit,
+            phone: candidate.phone,
+            address: candidate.address
+          }))
+      }))
+      .sort((a: any, b: any) => String(a.groupName).localeCompare(String(b.groupName), "vi"));
     const competitionIds = programRows.map((program: any) => program.id);
     const { data: resultRows } = competitionIds.length
       ? await supabase.from("competition_results").select("id,program_id,calculated_at").in("program_id", competitionIds).order("calculated_at", { ascending: false })
@@ -158,7 +219,7 @@ export async function GET(request: NextRequest) {
       : [{ data: [] as any[] }, { data: [] as any[] }];
 
     return NextResponse.json({
-      role: "ado",
+      role: scope.role,
       month,
       ado: { code, name: scope.fullName, department: scope.department },
       groups: groupRows,
@@ -183,6 +244,12 @@ export async function GET(request: NextRequest) {
         password: revealVisiblePassword(row.password_hash || "") || row.password_plain || "Chưa thiết lập"
       })),
       leaderActivities,
+      recruitment: {
+        selections: recruitmentSelections,
+        totalLeaders: recruitmentSelections.filter((item: any) => item.candidates.length > 0).length,
+        totalCandidates: recruitmentSelections.reduce((sum: number, item: any) => sum + item.candidates.length, 0),
+        updatedAt: recruitmentRegistry?.updated_at || null
+      },
       competitions: programRows.map((program: any) => ({
         ...program,
         achievedAdvisors: (achievedAdvisors ?? []).filter((row: any) => row.program_id === program.id),
@@ -205,8 +272,8 @@ export async function POST(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase.from("authorized_users")
       .select("advisor_code,full_name").eq("advisor_code", code).single();
     if (profileError) throw profileError;
-    const scope = managedAdoScope(profile.advisor_code, profile.full_name);
-    if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền ADO." }, { status: 403 });
+    const scope = await resolveManagementScope(supabase, profile.advisor_code, profile.full_name);
+    if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền quản lý." }, { status: 403 });
     const body = await request.json().catch(() => ({}));
     const targetMonth = monthStart(String(body.month || ""));
     const requestedTargets = Array.isArray(body.targets) ? body.targets : [];
