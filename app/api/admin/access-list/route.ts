@@ -173,6 +173,7 @@ export async function PUT(request: NextRequest) {
         id: user.id,
         advisor_code: user.advisor_code,
         password_hash: visiblePasswordRecord(password),
+        password_plain: password,
         updated_at: now
       };
     });
@@ -180,7 +181,11 @@ export async function PUT(request: NextRequest) {
     for (const update of updates) {
       const { error } = await supabase
         .from("authorized_users")
-        .update({ password_hash: update.password_hash, updated_at: update.updated_at })
+        .update({
+          password_hash: update.password_hash,
+          password_plain: update.password_plain,
+          updated_at: update.updated_at
+        })
         .eq("id", update.id);
       if (error) throw error;
     }

@@ -908,7 +908,7 @@ export default function HomePage() {
                 {activeFilterChips.map((chip) => (
                   <button className="filter-chip" key={chip.key} type="button" onClick={() => clearFilter(chip.key)} title={`Xóa bộ lọc ${chip.label}`}>
                     <span>{chip.label}: {chip.value}</span>
-                    <b aria-hidden="true">×</b>
+                    <b aria-hidden="true"><X size={14} /></b>
                   </button>
                 ))}
                 {activeFilterChips.length >= 2 && (
@@ -3077,7 +3077,7 @@ function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; 
       <div className="contract-modal contest-detail-modal" role="dialog" aria-modal="true">
         <div className="contract-modal-header">
           <div><h2>Thêm CTTĐ</h2><p>Nhập thể lệ chương trình bằng câu văn, AI sẽ chuyển thành rule nháp để bạn kiểm tra.</p></div>
-          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="Đóng">×</button>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="Đóng"><X size={22} /></button>
         </div>
         <div className="contract-modal-body contest-rule-content">
           <label>
@@ -3365,7 +3365,7 @@ function CompetitionRuleModal({ program, month, onClose, onChanged, inline = fal
     <>
         <div className="contract-modal-header">
           <div><h2>Kiểm tra rule AI</h2><p>{preview.program_name || program.programName || program.program_name}</p></div>
-          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="óng">×</button>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label="Đóng"><X size={22} /></button>
         </div>
         <div className="contract-modal-body contest-rule-content">
           <div className="contest-rule-top-editors">
@@ -4377,7 +4377,7 @@ function ContractDetailModal({ type, title, rows, onClose }: { type: "group" | "
               {isAgentDetail ? <span>{groupSummary}</span> : <span>Số TVV: <b>{formatNumber(agentCount)}</b></span>}
             </div>
           </div>
-          <button className="contract-modal-close" type="button" onClick={onClose} aria-label={`óng ${titlePrefix.toLowerCase()}`}>×</button>
+          <button className="contract-modal-close" type="button" onClick={onClose} aria-label={`Đóng ${titlePrefix.toLowerCase()}`}><X size={22} /></button>
         </div>
         <div className="contract-modal-body">
           <div className="contract-modal-list-header">

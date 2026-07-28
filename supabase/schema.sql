@@ -435,6 +435,23 @@ create table if not exists tvv_target_registrations (
 create index if not exists idx_tvv_target_registrations_advisor_month
   on tvv_target_registrations(advisor_code, target_month desc);
 
+create table if not exists ado_group_target_registrations (
+  id uuid primary key default gen_random_uuid(),
+  target_month date not null,
+  ado_code text not null,
+  ado_name text not null,
+  group_name text not null,
+  revenue_target numeric not null default 0,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(target_month, ado_code, group_name)
+);
+
+create index if not exists idx_ado_group_targets_month
+  on ado_group_target_registrations(target_month desc);
+create index if not exists idx_ado_group_targets_code
+  on ado_group_target_registrations(ado_code, target_month desc);
+
 do $$
 begin
   if not exists (

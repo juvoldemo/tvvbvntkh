@@ -101,6 +101,756 @@
   --ds-touch-target: 44px;
 }
 
+/* ADO mobile workspace
+ * The role-scoped selectors deliberately outrank the legacy global button and
+ * input themes so those themes cannot leak into the ADO screens.
+ */
+body .tvv-app.ado-app,
+body .tvv-app.ado-app button,
+body .tvv-app.ado-app input {
+  font-family: "Segoe UI", Arial, sans-serif !important;
+}
+
+body .tvv-app.ado-app {
+  --ado-navy: #064f7b;
+  --ado-navy-dark: #073a5b;
+  --ado-teal: #078b8f;
+  --ado-green: #12805c;
+  --ado-gold: #d88716;
+  --ado-ink: #12364d;
+  --ado-muted: #637b8c;
+  --ado-line: #dce7ed;
+  --ado-soft: #f3f7f9;
+  background: #edf3f8 !important;
+  color: var(--ado-ink) !important;
+}
+
+body .tvv-app.ado-app .tvv-hero.ado-mode {
+  min-height: 118px !important;
+  height: auto !important;
+  padding: 16px 20px !important;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(255,255,255,.2), transparent 27%),
+    linear-gradient(135deg, #064a76 0%, #076a91 58%, #078e91 100%) !important;
+}
+
+body .tvv-app.ado-app .tvv-hero-main {
+  grid-template-columns: 48px minmax(0, 1fr) 44px !important;
+  gap: 10px 12px !important;
+  align-items: center !important;
+}
+
+body .tvv-app.ado-app .tvv-hero-role-target {
+  display: none !important;
+}
+
+body .tvv-app.ado-app .tvv-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  border: 2px solid rgba(255,255,255,.88) !important;
+  background: #fff !important;
+  color: var(--ado-navy) !important;
+  box-shadow: 0 8px 20px rgba(0,42,68,.18) !important;
+}
+
+body .tvv-app.ado-app .tvv-hero h1 {
+  margin: 0 !important;
+  color: #fff !important;
+  font-size: 17px !important;
+  font-weight: 750 !important;
+  line-height: 1.25 !important;
+}
+
+body .tvv-app.ado-app .tvv-hero p {
+  margin: 4px 0 0 !important;
+  color: rgba(255,255,255,.9) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+body .tvv-app.ado-app .tvv-current-rank {
+  width: fit-content !important;
+  min-height: 24px !important;
+  margin-top: 7px !important;
+  padding: 3px 9px !important;
+  border: 1px solid rgba(255,210,90,.8) !important;
+  border-radius: 999px !important;
+  background: rgba(0,39,65,.18) !important;
+  color: #fff3bd !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .tvv-notification-button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app.ado-app .team-dashboard,
+body .tvv-app.ado-app .ado-page {
+  width: 100% !important;
+  gap: 16px !important;
+  padding-right: 16px !important;
+  padding-left: 16px !important;
+}
+
+body .tvv-app.ado-app .team-dashboard-toolbar {
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 2px !important;
+}
+
+body .tvv-app.ado-app .team-dashboard-toolbar > span {
+  color: #536f82 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app.ado-app .team-dashboard-toolbar .tvv-month-trigger,
+body .tvv-app.ado-app .team-dashboard-toolbar .tvv-month-trigger span {
+  color: var(--ado-navy) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app.ado-app .ado-command-card {
+  min-height: 132px !important;
+  margin-top: 20px !important;
+  padding: 22px !important;
+  border: 0 !important;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg, #064f7b 0%, #087f8f 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 14px 32px rgba(5,73,104,.2) !important;
+}
+
+body .tvv-app.ado-app .ado-command-card span {
+  color: rgba(255,255,255,.82) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-command-card strong {
+  color: #fff !important;
+  font-size: 30px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+}
+
+body .tvv-app.ado-app .ado-command-card small {
+  color: rgba(255,255,255,.9) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-target-ring {
+  width: 78px !important;
+  height: 78px !important;
+  flex-basis: 78px !important;
+}
+
+body .tvv-app.ado-app .ado-target-ring b {
+  color: #fff !important;
+  font-size: 18px !important;
+  line-height: 22px !important;
+}
+
+body .tvv-app.ado-app .ado-target-ring span {
+  color: rgba(255,255,255,.86) !important;
+  font-size: 10px !important;
+  line-height: 13px !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid > button {
+  min-width: 0 !important;
+  min-height: 102px !important;
+  display: grid !important;
+  grid-template-columns: 44px minmax(0, 1fr) !important;
+  grid-template-rows: auto auto auto !important;
+  gap: 2px 11px !important;
+  margin: 0 !important;
+  padding: 16px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  color: var(--ado-ink) !important;
+  box-shadow: 0 7px 18px rgba(20,58,82,.07) !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid > button > span {
+  grid-row: 1 / 4 !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 13px !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid > button > span.blue { background: #e6f4fb !important; color: #0875aa !important; }
+body .tvv-app.ado-app .ado-quick-grid > button > span.green { background: #e7f7ef !important; color: #13805c !important; }
+body .tvv-app.ado-app .ado-quick-grid > button > span.orange { background: #fff1dc !important; color: #bb6809 !important; }
+body .tvv-app.ado-app .ado-quick-grid > button > span.violet { background: #f0ebfb !important; color: #7052b5 !important; }
+
+body .tvv-app.ado-app .ado-quick-grid b {
+  overflow: visible !important;
+  color: #38556a !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  line-height: 16px !important;
+  white-space: normal !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid strong {
+  color: var(--ado-navy-dark) !important;
+  font-size: 20px !important;
+  font-weight: 750 !important;
+  line-height: 23px !important;
+  overflow-wrap: anywhere !important;
+}
+
+body .tvv-app.ado-app .ado-quick-grid small {
+  overflow: visible !important;
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 15px !important;
+  white-space: normal !important;
+}
+
+body .tvv-app.ado-app .team-overview-panel {
+  padding: 18px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(20,58,82,.06) !important;
+}
+
+body .tvv-app.ado-app .team-panel-header h2 {
+  color: var(--ado-navy-dark) !important;
+  font-size: 17px !important;
+  font-weight: 750 !important;
+  line-height: 22px !important;
+}
+
+body .tvv-app.ado-app .team-panel-header p {
+  color: var(--ado-muted) !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-group-list {
+  gap: 11px !important;
+}
+
+body .tvv-app.ado-app .ado-group-list > button {
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 10px 12px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 15px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  color: var(--ado-ink) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-group-rank {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 11px !important;
+  background: #e9f4f7 !important;
+  color: #08788d !important;
+  font-size: 12px !important;
+}
+
+body .tvv-app.ado-app .ado-group-main strong,
+body .tvv-app.ado-app .ado-group-main > b {
+  color: var(--ado-ink) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-group-main span {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-group-progress > i,
+body .tvv-app.ado-app .ado-target-mini-progress > i {
+  height: 7px !important;
+}
+
+body .tvv-app.ado-app .ado-group-progress > span,
+body .tvv-app.ado-app .ado-target-mini-progress > span {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-group-progress em {
+  color: #b75c17 !important;
+  font-size: 11px !important;
+}
+
+body .tvv-app.ado-app .tvv-page-header {
+  min-height: 58px !important;
+  background: var(--ado-navy) !important;
+}
+
+body .tvv-app.ado-app .tvv-page-header h1 {
+  color: #fff !important;
+  font-size: 19px !important;
+  font-weight: 750 !important;
+  line-height: 24px !important;
+}
+
+body .tvv-app.ado-app .ado-page {
+  margin-top: 0 !important;
+  padding-top: 16px !important;
+  padding-bottom: 96px !important;
+}
+
+body .tvv-app.ado-app .tvv-contract-template {
+  margin-top: 0 !important;
+  padding: 16px 12px 104px !important;
+  background: transparent !important;
+}
+
+body .tvv-app.ado-app .tvv-contract-template .ct-period-tabs {
+  margin-top: 0 !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro {
+  min-height: 96px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 18px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #064f7b 0%, #078b8f 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 26px rgba(5,74,106,.18) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro.accounts {
+  background: linear-gradient(135deg, #284d7e 0%, #6258a5 100%) !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro.contests {
+  background: linear-gradient(135deg, #94520e 0%, #d88a1e 100%) !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro > span {
+  width: 46px !important;
+  height: 46px !important;
+  flex: 0 0 46px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,.17) !important;
+  color: #fff !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro p {
+  margin: 0 !important;
+  color: rgba(255,255,255,.86) !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro strong {
+  color: #fff !important;
+  font-size: 22px !important;
+  font-weight: 750 !important;
+  line-height: 28px !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro small {
+  color: rgba(255,255,255,.88) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-target-form {
+  gap: 0 !important;
+  padding: 18px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(20,58,82,.05) !important;
+}
+
+body .tvv-app.ado-app .ado-page-heading {
+  margin-bottom: 8px !important;
+}
+
+body .tvv-app.ado-app .ado-page-heading h2 {
+  color: var(--ado-ink) !important;
+  font-size: 18px !important;
+  line-height: 23px !important;
+}
+
+body .tvv-app.ado-app .ado-page-heading p,
+body .tvv-app.ado-app .ado-page-heading > span {
+  color: var(--ado-muted) !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-page-heading > span {
+  padding: 6px 9px !important;
+  background: #e9f5f6 !important;
+  color: #08798a !important;
+}
+
+body .tvv-app.ado-app .ado-target-row {
+  grid-template-columns: minmax(0, 1fr) 126px !important;
+  gap: 10px 14px !important;
+  padding: 17px 0 !important;
+  border-top: 1px solid #e8eef2 !important;
+}
+
+body .tvv-app.ado-app .ado-target-row b {
+  color: var(--ado-ink) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-target-row > div:first-child span {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-target-input {
+  min-height: 46px !important;
+  border: 1px solid #bdd2df !important;
+  border-radius: 11px !important;
+  background: #f9fbfc !important;
+}
+
+body .tvv-app.ado-app .ado-target-input input {
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 0 6px 0 10px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ado-navy) !important;
+  box-shadow: none !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 44px !important;
+  text-align: right !important;
+}
+
+body .tvv-app.ado-app .ado-target-input > span {
+  padding-right: 10px !important;
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-primary-button {
+  min-height: 50px !important;
+  margin-top: 14px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-radius: 13px !important;
+  background: var(--ado-navy) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(6,79,123,.2) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app.ado-app .ado-group-chips {
+  gap: 8px !important;
+  padding: 2px 0 6px !important;
+}
+
+body .tvv-app.ado-app .ado-group-chips > button {
+  min-height: 40px !important;
+  padding: 0 15px !important;
+  border: 1px solid #cbdce5 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #486476 !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-group-chips > button.active {
+  border-color: var(--ado-navy) !important;
+  background: var(--ado-navy) !important;
+  color: #fff !important;
+}
+
+body .tvv-app.ado-app .ado-account-list {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+
+body .tvv-app.ado-app .ado-account-list > article {
+  gap: 14px !important;
+  padding: 16px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 17px !important;
+  background: #fff !important;
+  box-shadow: 0 6px 18px rgba(20,58,82,.06) !important;
+}
+
+body .tvv-app.ado-app .ado-account-person > img,
+body .tvv-app.ado-app .ado-account-person > span {
+  width: 48px !important;
+  height: 48px !important;
+  flex-basis: 48px !important;
+  border-radius: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-account-person strong {
+  color: var(--ado-ink) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 20px !important;
+}
+
+body .tvv-app.ado-app .ado-account-person small {
+  color: var(--ado-muted) !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-account-list dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+body .tvv-app.ado-app .ado-account-list dl > div {
+  min-height: 70px !important;
+  padding: 11px 12px !important;
+  border-radius: 12px !important;
+  background: var(--ado-soft) !important;
+}
+
+body .tvv-app.ado-app .ado-account-list dt {
+  color: #6e8290 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 15px !important;
+}
+
+body .tvv-app.ado-app .ado-account-list dd {
+  margin-top: 5px !important;
+  color: var(--ado-ink) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-account-list dd > button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: #e5f1f5 !important;
+  color: var(--ado-navy) !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app.ado-app .ado-copy-button {
+  min-height: 44px !important;
+  padding: 0 14px !important;
+  border: 1px solid #bcd4df !important;
+  border-radius: 11px !important;
+  background: #f5fafb !important;
+  color: var(--ado-navy) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app.ado-app .ado-security-note {
+  color: #79591c !important;
+  background: #fff7e7 !important;
+  font-size: 12px !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list {
+  gap: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list > article {
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(20,58,82,.06) !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header {
+  padding: 17px !important;
+  background: linear-gradient(135deg, #fff9ef 0%, #fff 100%) !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header em {
+  min-height: 22px !important;
+  padding: 3px 7px !important;
+  background: #e8f7ef !important;
+  color: #08774b !important;
+  font-size: 9px !important;
+  line-height: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list h2 {
+  color: var(--ado-ink) !important;
+  font-size: 17px !important;
+  line-height: 22px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header p {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header > span {
+  width: 52px !important;
+  height: 52px !important;
+  flex-basis: 52px !important;
+  background: #fff0d8 !important;
+  color: #a45d0d !important;
+  font-size: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header > span small {
+  color: #a45d0d !important;
+  font-size: 9px !important;
+  line-height: 12px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-summary {
+  padding: 14px 17px !important;
+  color: #4e6879 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list {
+  padding: 0 17px 12px !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list > div {
+  grid-template-columns: 36px minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  padding: 12px 0 !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list > div > span {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list b {
+  color: var(--ado-ink) !important;
+  font-size: 13px !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list small {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-achievement-list > div > strong {
+  color: #08764f !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .tvv-bottom-nav.ado-bottom-nav {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  background: rgba(255,255,255,.98) !important;
+  border-color: #d7e4ea !important;
+}
+
+body .tvv-app.ado-app .tvv-bottom-nav.ado-bottom-nav button {
+  min-width: 0 !important;
+  min-height: 48px !important;
+  padding: 4px 2px !important;
+  background: transparent !important;
+  color: #173d62 !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+}
+
+body .tvv-app.ado-app .tvv-bottom-nav.ado-bottom-nav button.active {
+  background: transparent !important;
+  color: #0867d8 !important;
+}
+
+body .tvv-app.ado-app .tvv-bottom-nav.ado-bottom-nav button span {
+  color: currentColor !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 15px !important;
+}
+
+@media (max-width: 390px) {
+  body .tvv-app.ado-app .ado-quick-grid {
+    gap: 9px !important;
+  }
+
+  body .tvv-app.ado-app .ado-quick-grid > button {
+    padding: 13px !important;
+  }
+
+  body .tvv-app.ado-app .ado-target-row {
+    grid-template-columns: minmax(0, 1fr) 112px !important;
+    gap: 9px !important;
+  }
+
+  body .tvv-app.ado-app .ado-account-list dl {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
 html {
   background: var(--ds-bg);
   color: var(--ds-text-primary);
@@ -1721,3 +2471,377 @@ body .tvv-app .tvv-about-grid > button > span img {
   body .tvv-app .tvv-about-grid > button > span img { width: 78px !important; height: 78px !important; }
 }
 
+/* Goal entry card: isolate it from generic button/banner colors. */
+body .tvv-app .team-dashboard > button.team-goal-overview-card,
+body .tvv-app .team-dashboard > button.team-goal-overview-card:hover,
+body .tvv-app .team-dashboard > button.team-goal-overview-card:focus,
+body .tvv-app .team-dashboard > button.team-goal-overview-card:active {
+  min-height: 78px !important;
+  padding: 9px 14px !important;
+  border: 1px solid #ffc9c4 !important;
+  border-radius: 14px !important;
+  background-color: #fff7f3 !important;
+  background-image: linear-gradient(135deg, #fff 0%, #fff7f3 100%) !important;
+  color: #b91c2b !important;
+  box-shadow: 0 9px 24px rgba(226, 51, 59, .14) !important;
+  opacity: 1 !important;
+}
+
+body .tvv-app .team-dashboard > button.team-goal-overview-card > strong {
+  display: block !important;
+  margin: 0 !important;
+  color: #b91c2b !important;
+  font-size: var(--typo-16) !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body .tvv-app .team-dashboard > button.team-goal-overview-card > .team-goal-card-progress {
+  color: #b91c2b !important;
+  font-size: var(--typo-10) !important;
+  font-weight: 800 !important;
+  opacity: 1 !important;
+}
+
+/* Action registration entry inside the goal detail modal. */
+body button.team-activity-preview,
+body button.team-activity-preview:hover,
+body button.team-activity-preview:focus,
+body button.team-activity-preview:active {
+  border: 1px solid #bcdcf5 !important;
+  background-color: #e8f4ff !important;
+  background-image: none !important;
+  color: #004b7a !important;
+  box-shadow: 0 4px 12px rgba(0, 75, 122, .07) !important;
+  opacity: 1 !important;
+}
+
+body button.team-activity-preview > span:nth-child(2) > strong {
+  color: #004b7a !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body button.team-activity-preview > span:nth-child(2) > small {
+  color: #60778d !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+body button.team-activity-preview > svg {
+  color: #0878cc !important;
+  stroke: #0878cc !important;
+}
+
+body .team-activity-create > button.team-activity-add-draft,
+body .team-activity-create > button.team-activity-add-draft:hover,
+body .team-activity-create > button.team-activity-add-draft:focus,
+body .team-activity-create > button.team-activity-add-draft:active {
+  border: 1px dashed #7da9cc !important;
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #0878cc !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+body .team-activity-create > button[type="submit"]:not(:disabled) {
+  border: 0 !important;
+  background-color: #005987 !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(0, 89, 135, .16) !important;
+  opacity: 1 !important;
+}
+
+body .team-activity-create > button[type="submit"]:disabled {
+  border: 0 !important;
+  background-color: #9eb9cc !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+body button.team-activity-confirm:not(.undo),
+body button.team-activity-confirm:not(.undo):hover,
+body button.team-activity-confirm:not(.undo):focus,
+body button.team-activity-confirm:not(.undo):active {
+  border: 0 !important;
+  background-color: #16a34a !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: 0 5px 12px rgba(22, 163, 74, .15) !important;
+  opacity: 1 !important;
+}
+
+body button.team-activity-confirm.undo,
+body button.team-activity-confirm.undo:hover,
+body button.team-activity-confirm.undo:focus,
+body button.team-activity-confirm.undo:active {
+  border: 1px solid #efb7b7 !important;
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #b42318 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+body button.team-activity-confirm svg,
+body .team-activity-create > button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Header notification: keep only the bell and its unread badge. */
+body .tvv-app .tvv-hero button.tvv-notification-button,
+body .tvv-app .tvv-hero button.tvv-notification-button:hover,
+body .tvv-app .tvv-hero button.tvv-notification-button:focus,
+body .tvv-app .tvv-hero button.tvv-notification-button:active {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+body .tvv-app.ado-app .ado-leader-activities {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 18px !important;
+  border: 1px solid var(--ado-line) !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: 0 7px 20px rgba(20,58,82,.05) !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-groups {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group {
+  overflow: hidden !important;
+  border: 1px solid #d7e4eb !important;
+  border-radius: 14px !important;
+  background: #fbfdfe !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group > header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 14px !important;
+  background: #f2f8fa !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group > header > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group > header strong {
+  color: var(--ado-ink) !important;
+  font-size: 14px !important;
+  line-height: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group > header small {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-group > header > span {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  color: #08798a !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  line-height: 18px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list {
+  padding: 0 14px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list > div {
+  display: grid !important;
+  grid-template-columns: 30px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-height: 62px !important;
+  padding: 10px 0 !important;
+  border-top: 1px solid #e5edf1 !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list > div:first-child {
+  border-top: 0 !important;
+}
+
+body .tvv-app.ado-app .ado-activity-status {
+  display: grid !important;
+  width: 30px !important;
+  height: 30px !important;
+  place-items: center !important;
+  border-radius: 9px !important;
+  background: #eaf3f7 !important;
+  color: #08798a !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list > div.completed .ado-activity-status {
+  background: #e4f7eb !important;
+  color: #16834d !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list > div > div {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list strong {
+  color: var(--ado-ink) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list small {
+  color: var(--ado-muted) !important;
+  font-size: 11px !important;
+  line-height: 15px !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list em {
+  padding: 5px 7px !important;
+  border-radius: 999px !important;
+  background: #fff3db !important;
+  color: #a65b00 !important;
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 700 !important;
+  line-height: 14px !important;
+  white-space: nowrap !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-list > div.completed em {
+  background: #e4f7eb !important;
+  color: #16834d !important;
+}
+
+body .tvv-app.ado-app .ado-leader-activity-empty {
+  margin: 0 !important;
+  padding: 14px !important;
+  color: var(--ado-muted) !important;
+  font-size: 12px !important;
+  line-height: 17px !important;
+}
+
+body .tvv-app.ado-app .ado-target-view-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  width: 100% !important;
+  padding: 5px !important;
+  border: 1px solid #d7e4eb !important;
+  border-radius: 14px !important;
+  background: #e8f0f4 !important;
+}
+
+body .tvv-app.ado-app .ado-target-view-tabs > button {
+  min-width: 0 !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #587184 !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  text-align: center !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-target-view-tabs > button.active {
+  background: var(--ado-navy) !important;
+  color: #fff !important;
+  box-shadow: 0 5px 13px rgba(6,79,123,.2) !important;
+}
+
+body .tvv-app.ado-app .ado-competition-view-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  width: 100% !important;
+  padding: 5px !important;
+  border: 1px solid #d7e4eb !important;
+  border-radius: 14px !important;
+  background: #e8f0f4 !important;
+}
+
+body .tvv-app.ado-app .ado-competition-view-tabs > button {
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #587184 !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  transform: none !important;
+}
+
+body .tvv-app.ado-app .ado-competition-view-tabs > button > span {
+  display: grid !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 5px !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  background: rgba(88,113,132,.12) !important;
+  color: inherit !important;
+  font-size: 11px !important;
+  line-height: 22px !important;
+}
+
+body .tvv-app.ado-app .ado-competition-view-tabs > button.active {
+  background: #b86a12 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 13px rgba(157,87,10,.22) !important;
+}
+
+body .tvv-app.ado-app .ado-competition-view-tabs > button.active > span {
+  background: rgba(255,255,255,.2) !important;
+}
+
+body .tvv-app.ado-app .ado-page-intro.contests.ended {
+  background: linear-gradient(135deg, #465d72 0%, #6f8190 100%) !important;
+}
+
+body .tvv-app.ado-app .ado-competition-list header em.ended {
+  background: #eef1f4 !important;
+  color: #607181 !important;
+}
