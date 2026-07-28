@@ -112,8 +112,9 @@ export async function GET(request: NextRequest) {
       supabase.from("authorized_users")
         .select("advisor_code,full_name,group_name,advisor_position,advisor_status,avatar_url,password_hash,password_plain,is_active")
         .in("group_name", scope.groups).eq("is_active", true).order("group_name").order("full_name"),
-      supabase.from("ado_group_target_registrations").select("*")
-        .eq("target_month", monthStart(month)).eq("ado_code", code),
+      supabase.from("team_target_registrations")
+        .select("group_name,leader_code,leader_name,revenue_target,active_advisor_target,updated_at")
+        .eq("target_month", monthStart(month)).in("group_name", scope.groups),
       supabase.from("competition_programs")
         .select("id,program_name,ai_summary,start_date,end_date,status,last_calculated_at,is_hidden")
         .eq("is_hidden", false).lte("start_date", end).order("end_date", { ascending: false })
@@ -125,12 +126,13 @@ export async function GET(request: NextRequest) {
     const contracts = (monthRows ?? []) as RevenueRecord[];
     const counted = contracts.filter(isCountedRevenueRecord);
     const targets = targetError ? [] : (targetRows ?? []);
-    const targetByGroup = new Map(targets.map((row: any) => [row.group_name, Number(row.revenue_target) || 0]));
+    const targetByGroup = new Map(targets.map((row: any) => [row.group_name, row]));
     const groupRows = scope.groups.map((groupName) => {
       const rows = contracts.filter((row) => row.group_name === groupName);
       const valid = rows.filter(isCountedRevenueRecord);
       const afyp = valid.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0);
-      const target = targetByGroup.get(groupName) || 0;
+      const targetRegistration: any = targetByGroup.get(groupName);
+      const target = Number(targetRegistration?.revenue_target) || 0;
       return {
         groupName,
         afyp,
@@ -139,6 +141,11 @@ export async function GET(request: NextRequest) {
         activeAdvisors: new Set(valid.map((row) => row.agent_code || row.agent_name).filter(Boolean)).size,
         attention: rows.filter((row) => ["attention", "pending", "invalid"].includes(statusBucket(row.policy_status))).length,
         target,
+        targetRegistered: Boolean(targetRegistration),
+        targetLeaderCode: targetRegistration?.leader_code || null,
+        targetLeaderName: targetRegistration?.leader_name || null,
+        targetActiveAdvisors: Number(targetRegistration?.active_advisor_target) || 0,
+        targetUpdatedAt: targetRegistration?.updated_at || null,
         targetRate: target > 0 ? afyp / target * 100 : 0
       };
     }).sort((a, b) => b.afyp - a.afyp);
@@ -256,7 +263,7 @@ export async function GET(request: NextRequest) {
         achievedGroups: (achievedGroups ?? []).filter((row: any) => row.program_id === program.id)
       })),
       warnings: {
-        targets: targetError ? "Chưa tạo bảng mục tiêu ADO. Hãy chạy supabase/ado-accounts-and-targets.sql." : null
+        targets: targetError ? "Chưa tải được mục tiêu do trưởng nhóm đăng ký." : null
       }
     }, { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (error) {
@@ -265,34 +272,5 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const code = userCodeFromRequest(request);
-    if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
-    const supabase = getSupabaseAdmin();
-    const { data: profile, error: profileError } = await supabase.from("authorized_users")
-      .select("advisor_code,full_name").eq("advisor_code", code).single();
-    if (profileError) throw profileError;
-    const scope = await resolveManagementScope(supabase, profile.advisor_code, profile.full_name);
-    if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền quản lý." }, { status: 403 });
-    const body = await request.json().catch(() => ({}));
-    const targetMonth = monthStart(String(body.month || ""));
-    const requestedTargets = Array.isArray(body.targets) ? body.targets : [];
-    const rows = requestedTargets
-      .filter((item: any) => scope.groups.includes(String(item.groupName || "")))
-      .map((item: any) => ({
-        target_month: targetMonth,
-        ado_code: code,
-        ado_name: scope.fullName,
-        group_name: String(item.groupName),
-        revenue_target: Math.max(0, Number(item.revenueTarget) || 0),
-        updated_at: new Date().toISOString()
-      }));
-    if (rows.length !== scope.groups.length) return NextResponse.json({ error: "Vui lòng nhập mục tiêu cho đầy đủ các nhóm." }, { status: 400 });
-    const { data, error } = await supabase.from("ado_group_target_registrations")
-      .upsert(rows, { onConflict: "target_month,ado_code,group_name" }).select("*");
-    if (error) throw error;
-    return NextResponse.json({ targets: data ?? [] });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Không lưu được mục tiêu ADO." }, { status: 500 });
-  }
+  return NextResponse.json({ error: "Mục tiêu doanh thu do Trưởng nhóm đăng ký." }, { status: 403 });
 }

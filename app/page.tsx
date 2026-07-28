@@ -2,6 +2,7 @@
 
 import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { toPng } from "html-to-image";
 import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
@@ -356,6 +357,7 @@ export default function TvvMobilePage() {
   const [boardContractData, setBoardContractData] = useState<any>(null);
   const [adoData, setAdoData] = useState<any>(null);
   const [adoContractData, setAdoContractData] = useState<any>(null);
+  const [adoRefreshGeneration, setAdoRefreshGeneration] = useState(0);
   const isBoardMode = activeRole === "board_leader" && Boolean(userProfile?.has_board_leader_role);
   const isAdoMode = userProfile?.dashboard_role === "ado" || userProfile?.dashboard_role === "boss";
   const isBossMode = userProfile?.dashboard_role === "boss";
@@ -483,6 +485,48 @@ export default function TvvMobilePage() {
       .catch(() => setAdoData(null))
       .finally(() => setTeamOverviewReady(true));
     return () => controller.abort();
+  }, [adoRefreshGeneration, isAdoMode, month, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn || !isAdoMode) return;
+    let refreshTimer: number | undefined;
+    const refresh = () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => setAdoRefreshGeneration((current) => current + 1), 120);
+    };
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    const localRecruitment = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("recruitment-pool-updates") : null;
+    if (localRecruitment) localRecruitment.onmessage = refresh;
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !anonKey) {
+      return () => {
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        window.removeEventListener("focus", onFocus);
+        localRecruitment?.close();
+      };
+    }
+    const liveClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const managementChannel = liveClient
+      .channel("ado-management-live")
+      .on("broadcast", { event: "changed" }, (event: any) => {
+        if (!event?.payload?.month || event.payload.month === month) refresh();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "team_target_registrations" }, refresh)
+      .subscribe();
+    const recruitmentChannel = liveClient
+      .channel("recruitment-pool-live")
+      .on("broadcast", { event: "changed" }, refresh)
+      .subscribe();
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      window.removeEventListener("focus", onFocus);
+      localRecruitment?.close();
+      void liveClient.removeChannel(managementChannel);
+      void liveClient.removeChannel(recruitmentChannel);
+    };
   }, [isAdoMode, month, signedIn]);
 
   useEffect(() => {
@@ -1021,7 +1065,7 @@ export default function TvvMobilePage() {
             : <Overview advisorCode={userProfile?.advisor_code} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
-          {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} onSaved={(targets: any[]) => setAdoData((current: any) => ({ ...current, groups: (current?.groups ?? []).map((group: any) => ({ ...group, target: Number(targets.find((item: any) => item.group_name === group.groupName)?.revenue_target ?? group.target) })) }))} />}
+          {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} />}
           {tab === "ado_accounts" && isAdoMode && <AdoAccountsPage data={adoData} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
@@ -1456,7 +1500,7 @@ function AdoRecruitmentOverview({ recruitment }: any) {
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   return <section className="team-overview-panel ado-recruitment-panel">
     <div className="team-panel-header">
-      <div><UserPlus size={19} /><div><h2>Tuyển dụng</h2><p>Ứng viên được các trưởng nhóm lựa chọn tại /tuyendung</p></div></div>
+      <div><UserPlus size={19} /><div><h2>Tuyển dụng</h2></div></div>
       <span>{recruitment?.totalCandidates || 0}<small>ứng viên</small></span>
     </div>
     <div className="ado-recruitment-summary">
@@ -1504,37 +1548,11 @@ function AdoRecruitmentOverview({ recruitment }: any) {
   </section>;
 }
 
-function AdoTargetsPage({ data, month, onSaved }: any) {
+function AdoTargetsPage({ data, month }: any) {
   const [targetView, setTargetView] = useState<"group" | "activity">("group");
-  const [targets, setTargets] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  useEffect(() => {
-    setTargets(Object.fromEntries((data?.groups ?? []).map((group: any) => [group.groupName, String(Math.round((Number(group.target) || 0) / 1_000_000) || "")])));
-  }, [data?.groups, month]);
-  const total = (data?.groups ?? []).reduce((sum: number, group: any) => sum + (Number(targets[group.groupName]) || 0) * 1_000_000, 0);
+  const total = (data?.groups ?? []).reduce((sum: number, group: any) => sum + (Number(group.target) || 0), 0);
   const leaderActivities = (data?.leaderActivities ?? []).flatMap((leader: any) => leader.activities ?? []);
   const completedActivities = leaderActivities.filter((activity: any) => activity.completed).length;
-  async function save(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    try {
-      const response = await fetch("/api/ado-dashboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month, targets: (data?.groups ?? []).map((group: any) => ({ groupName: group.groupName, revenueTarget: (Number(targets[group.groupName]) || 0) * 1_000_000 })) })
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không lưu được mục tiêu.");
-      onSaved(payload.targets ?? []);
-      setMessage("Đã lưu mục tiêu cho tất cả nhóm.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Không lưu được mục tiêu.");
-    } finally {
-      setBusy(false);
-    }
-  }
   return <section className="tvv-content tvv-subpage tvv-after-sub-header ado-page">
     <nav className="ado-target-view-tabs" aria-label="Chọn loại mục tiêu">
       <button type="button" className={targetView === "group" ? "active" : ""} onClick={() => setTargetView("group")}>Mục tiêu nhóm</button>
@@ -1545,21 +1563,19 @@ function AdoTargetsPage({ data, month, onSaved }: any) {
         ? <><p>MỤC TIÊU {monthLabel(month).toUpperCase()}</p><strong>{formatCompactVnd(total)}</strong><small>Tổng mục tiêu {data?.groups?.length || 0} nhóm quản lý</small></>
         : <><p>HOẠT ĐỘNG {monthLabel(month).toUpperCase()}</p><strong>{completedActivities}/{leaderActivities.length} hoàn thành</strong><small>Mục tiêu hoạt động của các trưởng nhóm</small></>}
     </div></section>
-    {targetView === "group" && <form className="ado-target-form" onSubmit={save}>
-      <div className="ado-page-heading"><div><h2>Đăng ký theo từng nhóm</h2><p>Nhập số tiền theo đơn vị triệu đồng</p></div><span>Đơn vị: triệu</span></div>
+    {targetView === "group" && <section className="ado-target-form ado-target-readonly">
+      <div className="ado-page-heading"><div><h2>Mục tiêu doanh thu từng nhóm</h2><p>Dữ liệu do trưởng nhóm đăng ký</p></div></div>
       {(data?.groups ?? []).map((group: any) => {
-        const target = (Number(targets[group.groupName]) || 0) * 1_000_000;
+        const target = Number(group.target) || 0;
         const rate = target > 0 ? Math.round((Number(group.afyp) / target) * 100) : 0;
-        return <label className="ado-target-row" key={group.groupName}>
-          <div><b>{group.groupName}</b><span>Đã thực hiện {formatCompactVnd(group.afyp)}</span></div>
-          <div className="ado-target-input"><input value={targets[group.groupName] || ""} onChange={(event) => setTargets((current) => ({ ...current, [group.groupName]: millionInput(event.target.value).slice(0, 5) }))} inputMode="numeric" placeholder="0" aria-label={`Mục tiêu nhóm ${group.groupName} theo triệu đồng`} /><span>triệu</span></div>
+        return <article className="ado-target-row" key={group.groupName}>
+          <div><b>{group.groupName}</b><span>{group.targetLeaderName ? `Trưởng nhóm: ${group.targetLeaderName}` : "Trưởng nhóm chưa đăng ký"}</span><small>Đã thực hiện {formatCompactVnd(group.afyp)}</small></div>
+          <div className={`ado-target-value${group.targetRegistered ? "" : " empty"}`}><strong>{formatCompactVnd(target)}</strong><span>{group.targetActiveAdvisors || 0} TVV mục tiêu</span></div>
           <div className="ado-target-mini-progress"><i><u style={{ width: `${Math.min(100, rate)}%` }} /></i><span>{rate}%</span></div>
-        </label>;
+        </article>;
       })}
       {data?.warnings?.targets && <p className="team-form-error">{data.warnings.targets}</p>}
-      {message && <p className={message.startsWith("Đã") ? "ado-form-success" : "team-form-error"}>{message}</p>}
-      <button className="ado-primary-button" type="submit" disabled={busy}>{busy ? "Đang lưu…" : "Lưu mục tiêu các nhóm"}</button>
-    </form>}
+    </section>}
     {targetView === "activity" && <section className="ado-leader-activities">
       <div className="ado-page-heading">
         <div><h2>Mục tiêu hoạt động của trưởng nhóm</h2><p>Hoạt động đã đăng ký trong tháng {monthLabel(month)}</p></div>

@@ -551,6 +551,45 @@ body .tvv-app.ado-app .ado-target-row > div:first-child span {
   line-height: 16px !important;
 }
 
+body .tvv-app.ado-app .ado-target-row > div:first-child small {
+  color: #7890a0 !important;
+  font-size: 10px !important;
+  line-height: 15px !important;
+}
+
+body .tvv-app.ado-app .ado-target-value {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 8px 10px !important;
+  border-radius: 11px !important;
+  background: #eaf6f6 !important;
+}
+
+body .tvv-app.ado-app .ado-target-value strong {
+  color: #08798a !important;
+  font-size: 15px !important;
+  line-height: 19px !important;
+}
+
+body .tvv-app.ado-app .ado-target-value span {
+  color: var(--ado-muted) !important;
+  font-size: 10px !important;
+  line-height: 14px !important;
+}
+
+body .tvv-app.ado-app .ado-target-value.empty {
+  background: #f2f5f7 !important;
+}
+
+body .tvv-app.ado-app .ado-target-value.empty strong,
+body .tvv-app.ado-app .ado-target-value.empty span {
+  color: #8193a0 !important;
+}
+
 body .tvv-app.ado-app .ado-target-input {
   min-height: 46px !important;
   border: 1px solid #bdd2df !important;
@@ -2859,8 +2898,9 @@ body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header {
 body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header > span {
   display: flex !important;
   flex: 0 0 auto !important;
-  flex-direction: column !important;
-  align-items: flex-end !important;
+  flex-direction: row !important;
+  align-items: baseline !important;
+  gap: 4px !important;
   color: #08798a !important;
   font-size: 18px !important;
   font-weight: 750 !important;
@@ -2872,6 +2912,7 @@ body .tvv-app.ado-app .ado-recruitment-panel .team-panel-header > span small {
   font-size: 10px !important;
   font-weight: 600 !important;
   line-height: 14px !important;
+  white-space: nowrap !important;
 }
 
 body .tvv-app.ado-app .ado-recruitment-summary {

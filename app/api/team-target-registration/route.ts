@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { broadcastAdoManagementChange } from "@/lib/ado-live";
 
 function monthStart(value: string) {
   return `${String(value || new Date().toISOString().slice(0, 7)).slice(0, 7)}-01`;
@@ -161,6 +162,7 @@ export async function POST(request: NextRequest) {
       .select("*")
       .single();
     if (error) throw error;
+    await broadcastAdoManagementChange(supabase, "target", targetMonth.slice(0, 7), profile.advisor_code);
     return NextResponse.json({ registration: data });
   } catch (error) {
     return NextResponse.json({ error: errorText(error, "Khong luu duoc dang ky muc tieu.") }, { status: 500 });

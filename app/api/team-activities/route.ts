@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { broadcastAdoManagementChange } from "@/lib/ado-live";
 
 const DATA_BUCKET = "team-activity-data";
 const BUCKET = "team-activity-evidence";
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       }));
     await Promise.all(createdActivities.map((activity: any) => writeActivityObject(context.supabase, context.profile.advisor_code, activity)));
+    await broadcastAdoManagementChange(context.supabase, "activity", createdActivities[0].target_month, context.profile.advisor_code);
     return NextResponse.json({ activity: createdActivities[0], activities: createdActivities });
   } catch (error) {
     return NextResponse.json({ error: errorText(error, "Không lưu được hoạt động.") }, { status: 500 });
@@ -186,6 +188,7 @@ export async function PATCH(request: NextRequest) {
       await writeActivities(context.supabase, context.profile.advisor_code, legacyActivities);
     }
     const { _object_path, ...responseActivity } = activity;
+    await broadcastAdoManagementChange(context.supabase, "activity", activity.target_month, context.profile.advisor_code);
     return NextResponse.json({ activity: responseActivity });
   } catch (error) {
     return NextResponse.json({ error: errorText(error, "Không cập nhật được hoạt động.") }, { status: 500 });
