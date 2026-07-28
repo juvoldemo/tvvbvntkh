@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 
@@ -997,7 +997,7 @@ export default function TvvMobilePage() {
   return (
     <main className={`tvv-app${isAdoMode ? " ado-app" : ""}`}>
       {tab === "recruitment" ? (
-        <RecruitmentIncomeCalculator onBack={() => setTab("overview")} />
+        <RecruitmentSimulator onBack={() => setTab("overview")} />
       ) : tab === "calculator" ? (
         userProfile?.dashboard_role === "team_leader"
           ? <TeamLeaderCalculator month={month} teamData={teamData} baseline={teamRewards} onBack={() => setTab("overview")} />
@@ -1061,7 +1061,7 @@ export default function TvvMobilePage() {
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} />
+            ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} />
             : <Overview advisorCode={userProfile?.advisor_code} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -1089,8 +1089,8 @@ export default function TvvMobilePage() {
   );
 }
 
-function TvvSubHeader({ title, onBack, showHelp = false }: { title: string; onBack: () => void; showHelp?: boolean }) {
-  return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{title === "Hợp đồng" && <button className="tvv-header-filter" type="button" aria-label="Lọc hợp đồng"><Filter size={22} /></button>}{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
+function TvvSubHeader({ title, onBack, showHelp = false, onReset }: { title: string; onBack: () => void; showHelp?: boolean; onReset?: () => void }) {
+  return <header className="tvv-calc-header tvv-page-header"><button className="tvv-back-button" onClick={onBack} aria-label="Quay lại tổng quan"><img src="/Icon/arrow-back-up.svg" alt="" /></button><h1>{title}</h1>{title === "Hợp đồng" && <button className="tvv-header-filter" type="button" aria-label="Lọc hợp đồng"><Filter size={22} /></button>}{onReset && <button className="tvv-header-reset" type="button" onClick={onReset} aria-label="Đặt lại mô phỏng"><RotateCcw size={20} /></button>}{showHelp && <span className="tvv-header-help"><Info size={18} /> Hướng dẫn</span>}</header>;
 }
 
 function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void; className?: string; ariaLabel: string }) {
@@ -1895,7 +1895,7 @@ function TeamActivityManager({ month, activities, error, onReload, onClose }: an
   );
 }
 
-function TeamLeaderOverview({ data, targetRegistration, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests }: any) {
+function TeamLeaderOverview({ data, targetRegistration, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
@@ -1960,6 +1960,8 @@ function TeamLeaderOverview({ data, targetRegistration, teamGoalDetailSignal, on
         </CardTag>;
       })}
     </div>
+
+    <RecruitmentPreview onOpen={onOpenRecruitment} />
 
     <TeamGoalPanel data={data} registration={targetRegistration} month={month} onOpenTarget={onOpenTarget} detailOpenSignal={teamGoalDetailSignal} />
 
@@ -2560,7 +2562,7 @@ function RecruitmentPreview({ onOpen }: { onOpen: () => void }) {
     <span className="tvv-recruitment-preview-icon"><UserPlus size={29} /></span>
     <span className="tvv-leaderboard-preview-copy">
       <strong>Tuyển dụng</strong>
-      <small>Tính toàn bộ thu nhập và phúc lợi cho TVV mới</small>
+      <small>Mô phỏng thu nhập TVV mới và tuyển ngang</small>
     </span>
     <ChevronRight size={22} />
   </button>;
@@ -3230,7 +3232,48 @@ function ContractDetailModal({ row, onClose, showAdvisorName = false, hideCustom
   return <div className="tvv-contract-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contract-detail" role="dialog" aria-modal="true" aria-label="Chi tiết hợp đồng" onClick={(event) => event.stopPropagation()}><header><div><p>{display.applicationNo}</p><h2>{showAdvisorName ? row.agent_name || "TVV" : display.policyOwner}</h2></div><button type="button" onClick={onClose} aria-label="Đóng"><X size={22} /></button></header><div className="tvv-contract-detail-grid">{detailRows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div></section></div>;
 }
 
-function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
+function RecruitmentSimulator({ onBack }: { onBack: () => void }) {
+  const [mode, setMode] = useState<"new-advisor" | "lateral">("new-advisor");
+  const [lateralResetSignal, setLateralResetSignal] = useState(0);
+  return <section className="recruitment-simulator-shell">
+    <TvvSubHeader title="Mô phỏng tuyển dụng" onBack={onBack} onReset={mode === "lateral" ? () => setLateralResetSignal((current) => current + 1) : undefined} />
+    <nav className="recruitment-simulator-tabs" aria-label="Chọn hình thức tuyển dụng">
+      <button type="button" className={mode === "new-advisor" ? "active" : ""} onClick={() => setMode("new-advisor")}>TVV mới</button>
+      <button type="button" className={mode === "lateral" ? "active" : ""} onClick={() => setMode("lateral")}>Tuyển ngang</button>
+    </nav>
+    {mode === "new-advisor"
+      ? <RecruitmentIncomeCalculator onBack={onBack} embedded />
+      : <LateralRecruitmentSimulator resetSignal={lateralResetSignal} />}
+  </section>;
+}
+
+function LateralRecruitmentSimulator({ resetSignal }: { resetSignal: number }) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
+  const [frameHeight, setFrameHeight] = useState(720);
+  function syncFrameHeight() {
+    const frame = frameRef.current;
+    const documentElement = frame?.contentDocument?.documentElement;
+    const body = frame?.contentDocument?.body;
+    if (!documentElement || !body) return;
+    const update = () => setFrameHeight(Math.max(620, body.scrollHeight, documentElement.scrollHeight));
+    observerRef.current?.disconnect();
+    observerRef.current = new ResizeObserver(update);
+    observerRef.current.observe(documentElement);
+    observerRef.current.observe(body);
+    update();
+  }
+  useEffect(() => () => observerRef.current?.disconnect(), []);
+  useEffect(() => {
+    if (!resetSignal) return;
+    frameRef.current?.contentWindow?.postMessage({ type: "reset-lateral-recruitment" }, window.location.origin);
+  }, [resetSignal]);
+  return <section className="lateral-recruitment-embed">
+    <iframe ref={frameRef} src="/tuyen-ngang/index.html" title="Mô phỏng tuyển ngang" style={{ height: `${frameHeight}px` }} onLoad={syncFrameHeight} scrolling="no" />
+  </section>;
+}
+
+function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () => void; embedded?: boolean }) {
   const [advisorName, setAdvisorName] = useState("");
   const [monthlyRevenue, setMonthlyRevenue] = useState<string[]>(() => Array(6).fill("20"));
   const [estimates, setEstimates] = useState<any[]>([]);
@@ -3400,8 +3443,8 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
         const imageFile = new File([imageBlob], fileName, { type: "image/png" });
         if (typeof navigator.canShare !== "function" || navigator.canShare({ files: [imageFile] })) {
           await navigator.share({
-            title: `Mô phỏng thu nhập 6 tháng - ${name}`,
-            text: `Mô phỏng thu nhập 6 tháng dành cho TVV ${name}`,
+            title: `Mô phỏng tuyển dụng - ${name}`,
+            text: `Mô phỏng tuyển dụng dành cho TVV mới ${name}`,
             files: [imageFile]
           });
           return;
@@ -3420,7 +3463,7 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
   }
 
   return <section className="tvv-calculator recruitment-calculator">
-    <TvvSubHeader title="Mô phỏng thu nhập 6 tháng" onBack={onBack} />
+    {!embedded && <TvvSubHeader title="Mô phỏng tuyển dụng" onBack={onBack} />}
     <section className="tvv-calc-card recruitment-input-card">
       <label className="recruitment-advisor-name">
         <span>Họ và tên TVV</span>
@@ -3499,7 +3542,7 @@ function RecruitmentIncomeCalculator({ onBack }: { onBack: () => void }) {
 
       <div className="recruitment-export-canvas recruitment-export-v2" ref={simulationExportRef}>
         <header>
-          <div><span>BẢO VIỆT NHÂN THỌ <i>✦</i></span><h1>MÔ PHỎNG THU NHẬP 6 THÁNG</h1></div>
+          <div><span>BẢO VIỆT NHÂN THỌ <i>✦</i></span><h1>MÔ PHỎNG TUYỂN DỤNG · TVV MỚI</h1></div>
           <strong><UserRound size={19} />Dành cho TVV mới</strong>
         </header>
         <section className="recruitment-export-advisor">
