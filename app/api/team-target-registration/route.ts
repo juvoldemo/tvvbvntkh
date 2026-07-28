@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { managedTeamName } from "@/lib/team-scope";
+import { readTargetRegistrationCycle } from "@/lib/target-registration-cycle";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { broadcastAdoManagementChange } from "@/lib/ado-live";
 
@@ -72,7 +73,9 @@ export async function GET(request: NextRequest) {
     const context = await teamContext(request);
     if (context.error) return context.error;
     const { supabase, profile, groupName } = context;
-    const targetMonth = monthStart(request.nextUrl.searchParams.get("month") || "");
+    const requestedMonth = request.nextUrl.searchParams.get("month");
+    const cycle = requestedMonth ? null : await readTargetRegistrationCycle(supabase);
+    const targetMonth = monthStart(requestedMonth || cycle?.activeMonth || "");
     const [{ data, error }, { data: teamUsers, error: teamUsersError }] = await Promise.all([
       supabase
         .from("team_target_registrations")
@@ -136,6 +139,19 @@ export async function POST(request: NextRequest) {
     const { supabase, profile, groupName } = context;
     const body = await request.json();
     const targetMonth = monthStart(body.month);
+    const cycle = await readTargetRegistrationCycle(supabase);
+    if (targetMonth.slice(0, 7) !== cycle.activeMonth) {
+      return NextResponse.json({
+        error: `Đợt đăng ký tháng ${targetMonth.slice(5, 7)}/${targetMonth.slice(0, 4)} đã đóng. Tháng đang mở là ${cycle.activeMonth.slice(5, 7)}/${cycle.activeMonth.slice(0, 4)}.`,
+        activeMonth: cycle.activeMonth
+      }, { status: 409 });
+    }
+    if (cycle.activeMonthSaved) {
+      return NextResponse.json({
+        error: `Mục tiêu tháng ${cycle.activeMonth.slice(5, 7)}/${cycle.activeMonth.slice(0, 4)} đã được quản trị lưu và khóa.`,
+        activeMonth: cycle.activeMonth
+      }, { status: 409 });
+    }
     const selectedAdvisors = Array.isArray(body.selectedAdvisors)
       ? body.selectedAdvisors.map((item: any) => ({
         advisor_code: String(item.advisor_code || item.agentCode || "").trim(),

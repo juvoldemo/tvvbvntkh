@@ -348,6 +348,8 @@ export default function TvvMobilePage() {
   const [teamContractData, setTeamContractData] = useState<any>(null);
   const [teamRewards, setTeamRewards] = useState<any>(null);
   const [teamTarget, setTeamTarget] = useState<any>(null);
+  const [targetRegistrationMonth, setTargetRegistrationMonth] = useState(currentMonth());
+  const [targetRegistrationClosed, setTargetRegistrationClosed] = useState(false);
   const [tvvTarget, setTvvTarget] = useState<any>(null);
   const [targetModalOpen, setTargetModalOpen] = useState(false);
   const [targetReturnToTeamGoal, setTargetReturnToTeamGoal] = useState(false);
@@ -569,11 +571,39 @@ export default function TvvMobilePage() {
       setTeamTarget(null);
       return;
     }
-    fetch(`/api/team-target-registration?month=${month}`, { cache: "no-store" })
+    fetch(`/api/team-target-registration?month=${targetRegistrationMonth}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : { registration: null })
       .then((payload) => setTeamTarget(payload.registration ?? null))
       .catch(() => setTeamTarget(null));
-  }, [month, signedIn, userProfile?.dashboard_role]);
+  }, [signedIn, targetRegistrationMonth, userProfile?.dashboard_role]);
+
+  useEffect(() => {
+    if (!signedIn || userProfile?.dashboard_role !== "team_leader") {
+      setTargetRegistrationMonth(currentMonth());
+      setTargetRegistrationClosed(false);
+      return;
+    }
+    let active = true;
+    const loadCycle = () => fetch("/api/target-registration-cycle", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => {
+        const activeMonth = String(payload?.cycle?.activeMonth || "").slice(0, 7);
+        if (active && activeMonth) {
+          setTargetRegistrationMonth(activeMonth);
+          setTargetRegistrationClosed(Boolean(payload?.cycle?.activeMonthSaved));
+        }
+      })
+      .catch(() => undefined);
+    const onFocus = () => { void loadCycle(); };
+    void loadCycle();
+    const timer = window.setInterval(loadCycle, 15_000);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [signedIn, userProfile?.dashboard_role]);
 
   useEffect(() => {
     if (!userProfile?.advisor_code) {
@@ -1008,8 +1038,8 @@ export default function TvvMobilePage() {
           <header className={`tvv-hero${isBoardMode ? " board-mode" : ""}${isAdoMode ? " ado-mode" : ""}`}>
             <div className="tvv-hero-main">
               <button className="tvv-avatar tvv-avatar-button" type="button" onClick={() => setTab("profile")} aria-label="Mở trang cá nhân">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</button>
-              <div>
-                <h1>Xin chào, {userProfile?.full_name || advisor?.name || "TVV"}</h1>
+              <div className="tvv-hero-copy">
+                <h1 className="tvv-hero-greeting" title={`Xin chào, ${userProfile?.full_name || advisor?.name || "TVV"}`}>Xin chào, {userProfile?.full_name || advisor?.name || "TVV"}</h1>
                 <p>{isBossMode ? "BOSS · Toàn công ty" : isAdoMode ? "ADO" : isBoardMode ? `Trưởng ban ${boardData?.boardName || userProfile?.managed_board_name || ""}` : userProfile?.dashboard_role === "team_leader" ? `Trưởng nhóm ${teamData?.groupName || userProfile?.managed_group_name || ""}` : `TVV - ${advisor?.code || "Chưa có mã"}`}</p>
                 {isAdoMode
                   ? <strong className="tvv-current-rank"><Layers3 size={13} />{adoData ? `${adoData.groups.length} nhóm · ${adoData.summary.activeAdvisors} TVV hoạt động` : "Đang tổng hợp khu vực quản lý"}</strong>
@@ -1061,7 +1091,7 @@ export default function TvvMobilePage() {
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} />
+            ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} />
             : <Overview advisorCode={userProfile?.advisor_code} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -1081,7 +1111,7 @@ export default function TvvMobilePage() {
       )}
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
       {targetModalOpen && (userProfile?.dashboard_role === "team_leader"
-        ? <TeamTargetRegistrationModal month={month} teamData={teamData} registration={teamTarget} onSaved={(value) => setTeamTarget({ ...value, personal_advisor_targets: teamTarget?.personal_advisor_targets ?? [] })} onClose={closeTargetModal} />
+        ? <TeamTargetRegistrationModal key={targetRegistrationMonth} month={targetRegistrationMonth} reportMonth={month} teamData={teamData} registration={teamTarget} onSaved={(value) => setTeamTarget({ ...value, personal_advisor_targets: teamTarget?.personal_advisor_targets ?? [] })} onClose={closeTargetModal} />
         : <TvvTargetRegistrationModal month={month} registration={tvvTarget} onSaved={setTvvTarget} onClose={closeTargetModal} />)}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} hideCustomerNames={userProfile?.dashboard_role === "team_leader" || isBoardMode} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} boardMode={isBoardMode} adoMode={isAdoMode} />
@@ -1193,7 +1223,7 @@ function formatCompactFee(value: unknown) {
   return formatVnd(amount);
 }
 
-function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, onClose }: { month: string; teamData: any; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
+function TeamTargetRegistrationModal({ month, reportMonth, teamData, registration, onSaved, onClose }: { month: string; reportMonth: string; teamData: any; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
   const advisors = useMemo(() => {
     const roster = teamData?.allAgents?.length ? teamData.allAgents : (teamData?.agents ?? []);
     const leaderCode = String(teamData?.leader?.code || "").trim();
@@ -1247,7 +1277,7 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
     const code = String(item.advisor_code || item.agentCode || "").trim();
     const agent = advisorByCode.get(code) ?? {};
     const target = Number(item.revenue_target ?? item.revenueTarget ?? 0) || 0;
-    const actual = Number(agent.ip ?? agent.afyp ?? 0) || 0;
+    const actual = month === reportMonth ? Number(agent.ip ?? agent.afyp ?? 0) || 0 : 0;
     const percent = target > 0 ? Math.min(999, Math.round((actual / target) * 100)) : 0;
     const personalTarget = personalTargetsByCode.get(code.toUpperCase()) || 0;
     const personalPercent = personalTarget > 0 ? Math.min(999, Math.round((actual / personalTarget) * 100)) : 0;
@@ -1262,7 +1292,7 @@ function TeamTargetRegistrationModal({ month, teamData, registration, onSaved, o
       personalPercent,
       personalRemaining: Math.max(0, personalTarget - actual)
     };
-  }).sort((a: any, b: any) => b.percent - a.percent || b.actual - a.actual || String(a.name).localeCompare(String(b.name), "vi")), [advisorByCode, personalTargetsByCode, registeredSelectedAdvisors]);
+  }).sort((a: any, b: any) => b.percent - a.percent || b.actual - a.actual || String(a.name).localeCompare(String(b.name), "vi")), [advisorByCode, month, personalTargetsByCode, registeredSelectedAdvisors, reportMonth]);
   const trackingTarget = trackingRows.reduce((sum: number, row: any) => sum + row.target, 0);
   const trackingActual = trackingRows.reduce((sum: number, row: any) => sum + row.actual, 0);
   const trackingPercent = trackingTarget > 0 ? Math.min(999, Math.round((trackingActual / trackingTarget) * 100)) : 0;
@@ -1686,12 +1716,36 @@ function formatPolicyMonthBefore(value?: string | null) {
   return `${String(previousMonth.getUTCMonth() + 1).padStart(2, "0")}/${previousMonth.getUTCFullYear()}`;
 }
 
-function TeamGoalPanel({ data, registration, month, onOpenTarget, detailOpenSignal }: any) {
+function TeamGoalPanel({ data, registration, reportMonth, targetMonth, registrationClosed, onOpen }: any) {
+  const assignedTargets = registration?.selected_advisors ?? [];
+  const personalTargets = registration?.personal_advisor_targets ?? [];
+  const agentByCode = new Map<string, any>((data?.allAgents?.length ? data.allAgents : data?.agents ?? []).map((item: any) => [
+    String(item.agentCode || item.advisor_code || "").trim().toUpperCase(),
+    item
+  ]));
+  const assignedTotal = assignedTargets.reduce((sum: number, item: any) => sum + Number(item.revenue_target ?? item.revenueTarget ?? 0), 0);
+  const targetCodes = new Set([
+    ...assignedTargets.map((item: any) => String(item.advisor_code || item.agentCode || "").trim().toUpperCase()),
+    ...personalTargets.map((item: any) => String(item.advisor_code || "").trim().toUpperCase())
+  ]);
+  const actualTotal = reportMonth === targetMonth ? [...targetCodes].filter(Boolean).reduce((sum: number, code: string) => {
+    const agent = agentByCode.get(code) ?? {};
+    return sum + Number(agent.afyp ?? agent.ip ?? 0);
+  }, 0) : 0;
+  const progress = assignedTotal > 0 ? Math.min(999, Math.round(actualTotal / assignedTotal * 100)) : 0;
+
+  return <button className="team-goal-overview-card" type="button" onClick={onOpen} aria-label="Mở trang mục tiêu hành động">
+    <span className="team-goal-overview-image"><Image src="/Icon/target-goal-icon.png" alt="" width={58} height={58} /></span>
+    <strong>Mục tiêu hành động<small>{registrationClosed ? "Đã lưu" : "Đăng ký"} tháng {Number(targetMonth.slice(5, 7))}/{targetMonth.slice(0, 4)}</small></strong>
+    <span className="team-goal-card-progress" style={{ "--goal-progress": `${Math.min(progress, 100) * 3.6}deg` } as React.CSSProperties}>{progress}%</span>
+  </button>;
+}
+
+function TeamGoalPage({ data, registration, month, reportMonth, registrationClosed, onOpenTarget, onBack }: any) {
   const [activities, setActivities] = useState<any[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
   const [activitiesError, setActivitiesError] = useState("");
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<"revenue" | "actions">("revenue");
   const assignedTargets = registration?.selected_advisors ?? [];
   const personalTargets = useMemo(() => registration?.personal_advisor_targets ?? [], [registration?.personal_advisor_targets]);
   const agentByCode = useMemo(() => new Map<string, any>((data?.allAgents?.length ? data.allAgents : data?.agents ?? []).map((item: any) => [
@@ -1719,7 +1773,7 @@ function TeamGoalPanel({ data, registration, month, onOpenTarget, detailOpenSign
       name: item.full_name || item.agentName || personalItem.advisor_name || agent.agentName || agent.full_name || "TVV",
       assigned: Number(item.revenue_target ?? item.revenueTarget ?? 0),
       personal: personalByCode.get(code) || 0,
-      actual: Number(agent.afyp ?? agent.ip ?? 0)
+      actual: month === reportMonth ? Number(agent.afyp ?? agent.ip ?? 0) : 0
     };
   });
   const assignedTotal = targetRows.reduce((sum: number, item: any) => sum + item.assigned, 0);
@@ -1747,59 +1801,56 @@ function TeamGoalPanel({ data, registration, month, onOpenTarget, detailOpenSign
     void loadActivities();
   }, [loadActivities]);
 
-  useEffect(() => {
-    if (detailOpenSignal > 0) setDetailOpen(true);
-  }, [detailOpenSignal]);
-
   const completedCount = activities.filter((item) => item.completed).length;
-  return <>
-    <button className="team-goal-overview-card" type="button" onClick={() => setDetailOpen(true)} aria-label="Mở chi tiết mục tiêu hành động">
-      <span className="team-goal-overview-image"><Image src="/Icon/target-goal-icon.png" alt="" width={58} height={58} /></span>
-      <strong>Mục tiêu hành động</strong>
-      <span className="team-goal-card-progress" style={{ "--goal-progress": `${Math.min(progress, 100) * 3.6}deg` } as React.CSSProperties}>{progress}%</span>
-    </button>
-    {detailOpen && createPortal(
-      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailOpen(false); }}>
-        <section className="team-contract-modal team-goal-detail-modal" role="dialog" aria-modal="true" aria-label="Chi tiết mục tiêu hành động">
-          <header><div><h2>Mục tiêu hành động</h2><p>Tháng {Number(month.slice(5, 7))}/{month.slice(0, 4)}</p></div><button type="button" onClick={() => setDetailOpen(false)} aria-label="Đóng"><X size={22} /></button></header>
-          <div className="team-goal-detail-body">
-            <div className="team-goal-detail-heading">
-              <div><Target size={18} /><span><strong>Mục tiêu của nhóm</strong></span></div>
-              <button type="button" onClick={() => { setDetailOpen(false); onOpenTarget(); }}>Giao mục tiêu <ChevronRight size={14} /></button>
-            </div>
-            <div className="team-goal-summary">
-              <div className="team-goal-progress-ring" style={{ "--goal-progress": `${Math.min(progress, 100) * 3.6}deg` } as React.CSSProperties}>
-                <span><strong>{progress}%</strong></span>
-              </div>
-              <div className="team-goal-totals">
-                <div><span>Trưởng nhóm giao</span><strong>{formatCompactVnd(assignedTotal)}</strong></div>
-                <div><span>TVV tự đăng ký</span><strong>{formatCompactVnd(personalTotal)}</strong></div>
-              </div>
-            </div>
-            <div className="team-goal-advisors">
-              {targetRows.map((item: any) => (
-                <article key={item.code || item.name}>
-                  <div><strong>{item.name}</strong><small>Đã đạt {formatCompactVnd(item.actual)}</small></div>
-                  <span><b>{formatCompactVnd(item.assigned)}</b><small>{item.personal > 0 ? `Tự đăng ký ${formatCompactVnd(item.personal)}` : "Chưa tự đăng ký"}</small></span>
-                </article>
-              ))}
-              {!targetRows.length && <p className="team-goal-empty">Chưa giao mục tiêu cho TVV trong tháng này.</p>}
-            </div>
-            <button className="team-activity-preview" type="button" onClick={() => { setDetailOpen(false); setActivityModalOpen(true); }}>
-              <span className="team-activity-preview-icon"><CalendarDays size={20} /></span>
-              <span><strong>Đăng ký hành động</strong><small>{activitiesLoading ? "Đang tải…" : activitiesError ? "Chưa thiết lập dữ liệu hành động" : activities.length ? `${completedCount}/${activities.length} hành động đã hoàn thành` : "Đăng ký nhiều hành động và theo dõi thực hiện"}</small></span>
-              <ChevronRight size={18} />
-            </button>
+  return <section className="tvv-content team-goal-page">
+    <header className="team-goal-page-header">
+      <button type="button" onClick={onBack} aria-label="Quay lại tổng quan"><ChevronLeft size={21} /></button>
+      <div><h2>Mục tiêu hành động</h2><p>Tháng {Number(month.slice(5, 7))}/{month.slice(0, 4)}</p></div>
+    </header>
+
+    <div className="team-goal-page-tabs" role="tablist" aria-label="Nội dung mục tiêu hành động">
+      <button type="button" role="tab" aria-selected={activeSection === "revenue"} className={activeSection === "revenue" ? "active" : ""} onClick={() => setActiveSection("revenue")}><BarChart3 size={17} />Doanh thu</button>
+      <button type="button" role="tab" aria-selected={activeSection === "actions"} className={activeSection === "actions" ? "active" : ""} onClick={() => setActiveSection("actions")}><CalendarDays size={17} />Hành động</button>
+    </div>
+
+    {activeSection === "revenue" ? (
+      <section className="team-goal-page-panel" role="tabpanel">
+        <div className="team-goal-detail-heading">
+          <div><Target size={18} /><span><strong>Mục tiêu của nhóm</strong></span></div>
+          <button type="button" disabled={registrationClosed} onClick={onOpenTarget}>{registrationClosed ? "Đã lưu mục tiêu" : "Giao mục tiêu"} {!registrationClosed && <ChevronRight size={14} />}</button>
+        </div>
+        <div className="team-goal-summary">
+          <div className="team-goal-progress-ring" style={{ "--goal-progress": `${Math.min(progress, 100) * 3.6}deg` } as React.CSSProperties}>
+            <span><strong>{progress}%</strong></span>
           </div>
-        </section>
-      </div>,
-      document.body
+          <div className="team-goal-totals">
+            <div><span>Trưởng nhóm giao</span><strong>{formatCompactVnd(assignedTotal)}</strong></div>
+            <div><span>TVV tự đăng ký</span><strong>{formatCompactVnd(personalTotal)}</strong></div>
+          </div>
+        </div>
+        <div className="team-goal-advisors">
+          {targetRows.map((item: any) => (
+            <article key={item.code || item.name}>
+              <div><strong>{item.name}</strong><small>Đã đạt {formatCompactVnd(item.actual)}</small></div>
+              <span><b>{formatCompactVnd(item.assigned)}</b><small>{item.personal > 0 ? `Tự đăng ký ${formatCompactVnd(item.personal)}` : "Chưa tự đăng ký"}</small></span>
+            </article>
+          ))}
+          {!targetRows.length && <p className="team-goal-empty">Chưa giao mục tiêu cho TVV trong tháng này.</p>}
+        </div>
+      </section>
+    ) : (
+      <section className="team-goal-page-panel team-goal-actions-panel" role="tabpanel">
+        <div className="team-goal-actions-summary">
+          <span className="team-activity-preview-icon"><CalendarDays size={20} /></span>
+          <span><strong>Hoạt động của trưởng nhóm</strong><small>{activitiesLoading ? "Đang tải…" : activitiesError ? "Chưa thiết lập dữ liệu hành động" : activities.length ? `${completedCount}/${activities.length} hành động đã hoàn thành` : "Đăng ký hành động và theo dõi thực hiện"}</small></span>
+        </div>
+        <TeamActivityManager month={month} activities={activities} error={activitiesError} onReload={loadActivities} />
+      </section>
     )}
-    {activityModalOpen && <TeamActivityManager month={month} activities={activities} error={activitiesError} onReload={loadActivities} onClose={() => setActivityModalOpen(false)} />}
-  </>;
+  </section>;
 }
 
-function TeamActivityManager({ month, activities, error, onReload, onClose }: any) {
+function TeamActivityManager({ month, activities, error, onReload }: any) {
   const defaultDate = `${month}-${String(Math.min(new Date().getDate(), 28)).padStart(2, "0")}`;
   const [activityDraft, setActivityDraft] = useState(() => ({ content: "", scheduledAt: defaultDate }));
   const [busy, setBusy] = useState(false);
@@ -1852,10 +1903,7 @@ function TeamActivityManager({ month, activities, error, onReload, onClose }: an
     }
   }
 
-  return createPortal(
-    <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="team-contract-modal team-activity-manager" role="dialog" aria-modal="true" aria-label="Quản lý hoạt động">
-        <header><div><h2>Hoạt động của trưởng nhóm</h2><p>Tháng {Number(month.slice(5, 7))}/{month.slice(0, 4)}</p></div><button type="button" onClick={onClose} aria-label="Đóng"><X size={22} /></button></header>
+  return <section className="team-activity-manager team-activity-manager-inline" aria-label="Quản lý hoạt động">
         <div className="team-activity-manager-body">
           <form className="team-activity-create" onSubmit={createActivity}>
             <div className="team-activity-create-heading"><strong>Đăng ký hoạt động</strong></div>
@@ -1889,18 +1937,20 @@ function TeamActivityManager({ month, activities, error, onReload, onClose }: an
             {!activities.length && <p className="team-goal-empty">Chưa có hoạt động nào trong tháng này.</p>}
           </div>
         </div>
-      </section>
-    </div>,
-    document.body
-  );
+      </section>;
 }
 
-function TeamLeaderOverview({ data, targetRegistration, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment }: any) {
+function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
   const [selectedActivityStarAgent, setSelectedActivityStarAgent] = useState<any>(null);
+  const [goalPageOpen, setGoalPageOpen] = useState(false);
+  useEffect(() => {
+    if (teamGoalDetailSignal > 0) setGoalPageOpen(true);
+  }, [teamGoalDetailSignal]);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp hoạt động của nhóm…</p></section>;
+  if (goalPageOpen) return <TeamGoalPage data={data} registration={targetRegistration} month={targetMonth} reportMonth={month} registrationClosed={targetRegistrationClosed} onOpenTarget={onOpenTarget} onBack={() => setGoalPageOpen(false)} />;
   const summary = data.summary ?? {};
   const totalTeamAdvisors = Number(currentTeamAdvisorCount) || summary.agents;
   const kpis = [
@@ -1963,7 +2013,7 @@ function TeamLeaderOverview({ data, targetRegistration, teamGoalDetailSignal, on
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
 
-    <TeamGoalPanel data={data} registration={targetRegistration} month={month} onOpenTarget={onOpenTarget} detailOpenSignal={teamGoalDetailSignal} />
+    <TeamGoalPanel data={data} registration={targetRegistration} reportMonth={month} targetMonth={targetMonth} registrationClosed={targetRegistrationClosed} onOpen={() => setGoalPageOpen(true)} />
 
     <ContestPreview estimate={contestEstimate} onAll={onOpenContests} />
 
@@ -2184,7 +2234,8 @@ function TeamLeaderRewardSummaryCard({ rewards, baseline }: { rewards: any; base
 function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthly" | "quarterly"; rewards: any; onClose: () => void }) {
   const detail = type === "monthly" ? rewards.monthly : rewards.quarterly;
   const title = type === "monthly" ? "Thưởng PTKD tháng" : "Thưởng Quý";
-  const basisLabel = type === "monthly" ? "IP nhóm tháng hiện tại" : "IP nhóm quý hiện tại";
+  const monthlyBasisName = rewards.monthly?.source === "temporary-ptkd-2026-07" ? "FYP" : "IP";
+  const basisLabel = type === "monthly" ? `${monthlyBasisName} nhóm tháng hiện tại` : "IP nhóm quý hiện tại";
   const fycLabel = type === "monthly" ? "FYC tháng hiện tại" : "FYC quý hiện tại";
   const posterUrl = type === "monthly" ? "/Thưởng tháng trưởng nhóm.png" : "/Thưởng Quý trưởng nhóm.png";
   const currentRate = Math.round((detail?.rate || 0) * 100);
@@ -2200,6 +2251,7 @@ function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthl
         <article><span>Bậc hiện tại</span><strong>{currentRate}% FYC</strong></article>
         <article><span>Thưởng hiện tại</span><strong>{formatVnd(Number(detail?.reward || 0))}</strong></article>
       </div>
+      {detail?.source === "temporary-ptkd-2026-07" && <div className="team-policy-detail-note"><span>Nguồn dữ liệu</span><strong>Bảng PTKD tháng 07/2026</strong></div>}
       {type === "monthly" && <div className="team-policy-detail-note"><span>TVV HĐC hiện tại</span><strong>{Number(detail?.hdc || 0)} TVV</strong></div>}
       {type === "quarterly" && <div className="team-policy-detail-note"><span>Điều kiện TVV mới HĐC</span><strong>{detail?.hasNewAdvisor ? "Đã đạt" : "Chưa đạt"}</strong></div>}
       <div className="team-policy-detail-section"><span>Mốc tiếp theo</span>{milestones.length ? <div className="team-policy-next-list">{milestones.map((item: any) => <article key={item.title}><b>{item.title}</b><small>{item.subtitle}</small><div><span>Còn thiếu {formatVnd(Number(item.missing || 0))}</span><strong>{formatVnd(Number(item.projectedReward || 0))}</strong></div><em>+{formatVnd(Number(item.incrementalReward || 0))} so với hiện tại</em></article>)}</div> : <p className="tvv-empty">Đã đạt mốc cao nhất của chương trình này.</p>}</div>
@@ -2263,6 +2315,7 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
   if (!rewards) return <section className="tvv-content tvv-subpage tvv-after-sub-header"><p className="tvv-empty">Đang tính chính sách Trưởng nhóm…</p></section>;
   const newManager = rewards.newManager;
   const newManagerStatus = rewards.newManagerStatus ?? {};
+  const monthlyBasisName = rewards.monthly?.source === "temporary-ptkd-2026-07" ? "FYP" : "IP";
   const programs = [
     {
       id: "team-policy-monthly",
@@ -2270,11 +2323,11 @@ function TeamLeaderPolicyPage({ rewards, embedded = false }: { rewards: any; emb
       period: `Tháng ${Number(rewards.month.slice(5, 7))}/${rewards.month.slice(0, 4)}`,
       poster: "/Thưởng tháng trưởng nhóm.png",
       reward: rewards.monthly.reward,
-      basisLabel: "IP nhóm tháng",
+      basisLabel: `${monthlyBasisName} nhóm tháng`,
       currentBasis: rewards.monthly.ip,
       currentRateLabel: `${Math.round(rewards.monthly.rate * 100)}%`,
       milestones: rewards.monthly.milestones ?? [],
-      stats: [`IP ${formatVnd(rewards.monthly.ip)}`, `FYC ${formatVnd(rewards.monthly.fyc)}`, `KPI04 ${formatVnd(rewards.monthly.kpi04Fyc)}`, `KPI05 ${formatVnd(rewards.monthly.kpi05Fyc)}`, `BC02 bổ sung ${formatVnd(rewards.monthly.bc02Fyc)}`, `${rewards.monthly.hdc} TVV HĐC`, `Tỷ lệ ${Math.round(rewards.monthly.rate * 100)}%`],
+      stats: [`${monthlyBasisName} ${formatVnd(rewards.monthly.ip)}`, `FYC ${formatVnd(rewards.monthly.fyc)}`, `KPI04 ${formatVnd(rewards.monthly.kpi04Fyc)}`, `KPI05 ${formatVnd(rewards.monthly.kpi05Fyc)}`, `BC02 bổ sung ${formatVnd(rewards.monthly.bc02Fyc)}`, `${rewards.monthly.hdc} TVV HĐC`, `Tỷ lệ ${Math.round(rewards.monthly.rate * 100)}%`],
       target: rewards.monthly.nextIpTarget,
       remaining: rewards.monthly.remainingIp,
       contracts: rewards.monthly.contracts
@@ -2559,9 +2612,8 @@ function Overview({ advisorCode, stats, leaderboard, estimate, starViet, starVie
 
 function RecruitmentPreview({ onOpen }: { onOpen: () => void }) {
   return <button className="tvv-card tvv-recruitment-preview" type="button" onClick={onOpen}>
-    <span className="tvv-recruitment-preview-icon"><UserPlus size={29} /></span>
+    <span className="tvv-recruitment-preview-icon"><img src="/Icon/recruitment-sign.png" alt="" /></span>
     <span className="tvv-leaderboard-preview-copy">
-      <strong>Tuyển dụng</strong>
       <small>Mô phỏng thu nhập TVV mới và tuyển ngang</small>
     </span>
     <ChevronRight size={22} />

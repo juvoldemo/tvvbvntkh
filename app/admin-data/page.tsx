@@ -1,7 +1,7 @@
 "use client";
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
@@ -20,6 +20,7 @@ type RewardParticipant = { code: string; name: string; groupName?: string; contr
 type RewardProgram = { id: string; name: string; period: string; totalReward: number; achievedCount: number; participants: RewardParticipant[] };
 type AdminRewardData = { month: string; period: AdminRewardPeriod; tvv: RewardProgram[]; leaders: RewardProgram[] };
 type TargetRegistration = { id: string; target_month: string; leader_name: string | null; group_name: string; revenue_target: number; active_advisor_target: number; reward_target: number; selected_advisors: Array<{ advisor_code?: string; agentCode?: string; full_name?: string; agentName?: string; revenue_target?: number; revenueTarget?: number }>; updated_at: string };
+type TargetRegistrationCycle = { activeMonth: string; nextMonth: string; previousMonth: string | null; savedMonths: string[]; activeMonthSaved: boolean; canRollback: boolean; startedAt: string | null; savedAt: string | null; updatedAt: string | null };
 type ArchiveTab = "forms" | "guides" | "faq";
 type ArchiveDocument = { id: string; title: string; file?: string; size?: string };
 type ArchiveFolder = { id: string; title: string; items: ArchiveDocument[] };
@@ -55,6 +56,8 @@ export default function AdminDataPage() {
   const [targetMonth, setTargetMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [targetRegistrations, setTargetRegistrations] = useState<TargetRegistration[]>([]);
   const [targetLoading, setTargetLoading] = useState(false);
+  const [targetCycle, setTargetCycle] = useState<TargetRegistrationCycle | null>(null);
+  const [targetCycleBusy, setTargetCycleBusy] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -149,8 +152,24 @@ export default function AdminDataPage() {
     }
   }, [targetMonth]);
 
+  const loadTargetCycle = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/target-registration-cycle", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không tải được chu kỳ mục tiêu.");
+      setTargetCycle(payload.cycle ?? null);
+      if (payload.cycle?.activeMonth) setTargetMonth(payload.cycle.activeMonth);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không tải được chu kỳ mục tiêu.");
+    }
+  }, []);
+
   useEffect(() => {
-    if (authenticated && activeTab === "targets") loadTargetRegistrations();
+    if (authenticated && activeTab === "targets") void loadTargetCycle();
+  }, [activeTab, authenticated, loadTargetCycle]);
+
+  useEffect(() => {
+    if (authenticated && activeTab === "targets") void loadTargetRegistrations();
   }, [activeTab, authenticated, loadTargetRegistrations]);
 
   const loadAnalytics = useCallback(async () => {
@@ -177,6 +196,34 @@ export default function AdminDataPage() {
     }
     setMessage("Đã xóa đăng ký mục tiêu.");
     await loadTargetRegistrations();
+  }
+
+  async function updateTargetCycle(action: "save_current" | "start_next" | "rollback_previous") {
+    if (!targetCycle || targetCycleBusy) return;
+    if (action === "start_next" && !window.confirm(
+      `Bắt đầu đăng ký mục tiêu tháng ${targetCycle.nextMonth.slice(5, 7)}/${targetCycle.nextMonth.slice(0, 4)} cho toàn bộ Trưởng nhóm?`
+    )) return;
+    if (action === "rollback_previous" && targetCycle.previousMonth && !window.confirm(
+      `Quay lại và mở khóa mục tiêu tháng ${targetCycle.previousMonth.slice(5, 7)}/${targetCycle.previousMonth.slice(0, 4)} cho toàn bộ Trưởng nhóm? Dữ liệu tháng ${targetCycle.activeMonth.slice(5, 7)} vẫn được giữ lại.`
+    )) return;
+    setTargetCycleBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/target-registration-cycle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Không cập nhật được chu kỳ mục tiêu.");
+      setTargetCycle(payload.cycle);
+      setTargetMonth(payload.cycle.activeMonth);
+      setMessage(payload.message || "Đã cập nhật chu kỳ mục tiêu.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không cập nhật được chu kỳ mục tiêu.");
+    } finally {
+      setTargetCycleBusy(false);
+    }
   }
 
   async function login(event: FormEvent) {
@@ -410,7 +457,7 @@ export default function AdminDataPage() {
 
         {activeTab === "data" && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
 
-        {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
+        {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} cycle={targetCycle} cycleBusy={targetCycleBusy} onCycleAction={updateTargetCycle} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
 
         {activeTab === "archive" && <ArchiveAdminPanel
           forms={archiveForms}
@@ -537,11 +584,14 @@ function AdminDataSummary({ data, loading, audience, period, selectedMonth, setA
   );
 }
 
-function AdminTargetSummary({ month, setMonth, registrations, loading, onReload, onDelete }: {
+function AdminTargetSummary({ month, setMonth, registrations, loading, cycle, cycleBusy, onCycleAction, onReload, onDelete }: {
   month: string;
   setMonth: (value: string) => void;
   registrations: TargetRegistration[];
   loading: boolean;
+  cycle: TargetRegistrationCycle | null;
+  cycleBusy: boolean;
+  onCycleAction: (action: "save_current" | "start_next" | "rollback_previous") => void;
   onReload: () => void;
   onDelete: (id: string, groupName: string) => void;
 }) {
@@ -557,10 +607,28 @@ function AdminTargetSummary({ month, setMonth, registrations, loading, onReload,
     const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
     return parts.length ? parts.at(-1) || value || "TVV" : "TVV";
   };
+  const monthLabel = (value?: string | null) => value ? `Tháng ${Number(value.slice(5, 7))}/${value.slice(0, 4)}` : "—";
 
   return (
     <article className="admin-card admin-target-card">
       <div className="admin-card-title"><Target /><div><h2>Đăng ký mục tiêu</h2><p>Theo dõi mục tiêu từng nhóm và doanh thu trưởng nhóm đăng ký cho từng TVV cụ thể.</p></div></div>
+      {cycle && <section className="admin-target-cycle">
+        <div className="admin-target-cycle-status">
+          <span>Đang mở đăng ký</span>
+          <strong>{monthLabel(cycle.activeMonth)}</strong>
+          <small>{cycle.activeMonthSaved ? "Đã lưu dữ liệu tháng này" : "Chưa lưu dữ liệu tháng này"}</small>
+        </div>
+        <div className="admin-target-cycle-next">
+          <span>Mục tiêu tháng tiếp theo</span>
+          <strong>{monthLabel(cycle.nextMonth)}</strong>
+          <small>Sẵn sàng mở đồng loạt cho Trưởng nhóm</small>
+        </div>
+        <div className="admin-target-cycle-actions">
+          {cycle.canRollback && cycle.previousMonth && <button className="rollback" type="button" disabled={cycleBusy} onClick={() => onCycleAction("rollback_previous")}><RotateCcw size={16} />Quay lại tháng {Number(cycle.previousMonth.slice(5, 7))}</button>}
+          <button type="button" disabled={cycleBusy || cycle.activeMonthSaved} onClick={() => onCycleAction("save_current")}><Save size={16} />{cycle.activeMonthSaved ? "Đã lưu" : `Lưu tháng ${Number(cycle.activeMonth.slice(5, 7))}`}</button>
+          <button className="start" type="button" disabled={cycleBusy || !cycle.activeMonthSaved} onClick={() => onCycleAction("start_next")}><CalendarPlus size={16} />{cycleBusy ? "Đang cập nhật..." : `Bắt đầu tháng ${Number(cycle.nextMonth.slice(5, 7))}`}</button>
+        </div>
+      </section>}
       <div className="admin-target-toolbar">
         <label>Tháng<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>
         <button type="button" disabled={loading} onClick={onReload}>{loading ? "Đang tải..." : "Tải dữ liệu"}</button>

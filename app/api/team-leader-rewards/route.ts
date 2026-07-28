@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { getVietnamToday } from "@/lib/format";
 import { managedTeamName } from "@/lib/team-scope";
 import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
+import { applyTemporaryTeamLeaderPtkd } from "@/lib/temporary-team-leader-ptkd";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import type { RevenueRecord } from "@/lib/types";
@@ -263,8 +264,12 @@ async function calculate(request: NextRequest, body: any = {}) {
     asOfDate: getVietnamToday(),
     drafts: Array.isArray(body.draftContracts) ? body.draftContracts : []
   });
+  const hasDraftContracts = Array.isArray(body.draftContracts) && body.draftContracts.length > 0;
+  const displayedResult = hasDraftContracts
+    ? result
+    : applyTemporaryTeamLeaderPtkd(result, month, groupName);
   return NextResponse.json({
-    ...result,
+    ...displayedResult,
     currentTeamAdvisorCount,
     ongoingPrograms,
     endedPrograms,

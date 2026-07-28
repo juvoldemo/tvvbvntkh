@@ -2537,6 +2537,15 @@ body .tvv-app .team-dashboard > button.team-goal-overview-card > strong {
   visibility: visible !important;
 }
 
+body .tvv-app .team-dashboard > button.team-goal-overview-card > strong > small {
+  display: block;
+  margin-top: 3px;
+  color: #7c6870;
+  font-size: var(--typo-9);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 body .tvv-app .team-dashboard > button.team-goal-overview-card > .team-goal-card-progress {
   color: #b91c2b !important;
   font-size: var(--typo-10) !important;
@@ -2632,6 +2641,19 @@ body button.team-activity-confirm svg,
 body .team-activity-create > button svg {
   color: currentColor !important;
   stroke: currentColor !important;
+}
+
+/* Keep long account names on a single line in the compact dashboard header. */
+body .tvv-app .tvv-hero .tvv-hero-copy {
+  min-width: 0;
+}
+
+body .tvv-app .tvv-hero h1.tvv-hero-greeting {
+  display: block;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 /* Header notification: keep only the bell and its unread badge. */
@@ -3201,4 +3223,151 @@ body .tvv-app .lateral-recruitment-embed iframe {
   min-height: 0;
   border: 0;
   background: #edf3f8;
+}
+
+body .tvv-app button.tvv-recruitment-preview {
+  border: 1px solid #9fd8ab !important;
+  background: #eef9f1 !important;
+}
+
+/* Goal details live as a dashboard subpage instead of a modal. */
+body .tvv-app .team-goal-page {
+  display: grid !important;
+  align-content: start;
+  gap: 12px !important;
+  padding-top: 12px !important;
+}
+
+body .tvv-app .team-goal-page-header {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid #dce7f1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(0, 75, 122, .06);
+}
+
+body .tvv-app .team-goal-page-header > button {
+  display: grid !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  place-items: center;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #eaf4fb !important;
+  color: #005987 !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app .team-goal-page-header h2,
+body .tvv-app .team-goal-page-header p {
+  margin: 0 !important;
+}
+
+body .tvv-app .team-goal-page-header h2 {
+  color: #004b7a !important;
+  font-size: var(--typo-16) !important;
+}
+
+body .tvv-app .team-goal-page-header p {
+  margin-top: 2px !important;
+  color: #6a7e92 !important;
+  font-size: var(--typo-10) !important;
+}
+
+body .tvv-app .team-goal-page-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid #dce7f1;
+  border-radius: 13px;
+  background: #edf3f8;
+}
+
+body .tvv-app .team-goal-page-tabs > button {
+  display: inline-flex !important;
+  min-height: 42px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: #60778d !important;
+  box-shadow: none !important;
+  font-size: var(--typo-12) !important;
+  font-weight: 700 !important;
+}
+
+body .tvv-app .team-goal-page-tabs > button.active {
+  background: #005987 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 13px rgba(0, 89, 135, .18) !important;
+}
+
+body .tvv-app .team-goal-page-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dce7f1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 75, 122, .06);
+}
+
+body .tvv-app .team-goal-page .team-goal-detail-heading > button:disabled {
+  cursor: not-allowed;
+  background: #8ca7b8 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+body .tvv-app .team-goal-actions-summary {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2ebf3;
+}
+
+body .tvv-app .team-goal-actions-summary > span:last-child {
+  min-width: 0;
+}
+
+body .tvv-app .team-goal-actions-summary strong,
+body .tvv-app .team-goal-actions-summary small {
+  display: block;
+}
+
+body .tvv-app .team-goal-actions-summary strong {
+  color: #004b7a;
+  font-size: var(--typo-12);
+}
+
+body .tvv-app .team-goal-actions-summary small {
+  margin-top: 3px;
+  color: #60778d;
+  font-size: var(--typo-9);
+}
+
+body .tvv-app .team-activity-manager-inline {
+  width: 100%;
+  max-height: none;
+  border: 0;
+  background: transparent;
+}
+
+body .tvv-app .team-activity-manager-inline .team-activity-manager-body {
+  max-height: none;
+  padding: 0;
+  overflow: visible;
 }

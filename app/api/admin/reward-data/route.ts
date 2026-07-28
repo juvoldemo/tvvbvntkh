@@ -3,6 +3,7 @@ import { isAdminRequest } from "@/lib/admin-auth";
 import { getVietnamToday } from "@/lib/format";
 import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy-rewards";
 import { calculateTeamLeaderPolicy } from "@/lib/team-leader-policy";
+import { applyTemporaryTeamLeaderPtkd, temporaryTeamLeaderPtkdRows } from "@/lib/temporary-team-leader-ptkd";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { RevenueRecord } from "@/lib/types";
 import { calculateCompetitionReward } from "@/src/lib/competition/competitionRuleEngine";
@@ -224,13 +225,20 @@ export async function GET(request: NextRequest) {
       const code = String(row.agent_code ?? "").trim();
       if (code && row.group_name) latestGroupByAdvisor.set(code, row.group_name);
     });
-    const groups = [...new Set([
+    const availableGroups = [
       ...contracts.map((row) => String(row.group_name || "").trim()).filter(Boolean),
-      ...policyRows.filter((row: any) => String(row.reward_source || "").toLowerCase() === "kpi05").map((row: any) => String(row.group_name || row.ban_name || "").trim()).filter(Boolean)
-    ])];
+      ...policyRows.filter((row: any) => String(row.reward_source || "").toLowerCase() === "kpi05").map((row: any) => String(row.group_name || row.ban_name || "").trim()).filter(Boolean),
+      ...(month === "2026-07" ? temporaryTeamLeaderPtkdRows.map((row) => row.groupName) : [])
+    ];
+    const groupByNormalizedName = new Map<string, string>();
+    availableGroups.forEach((groupName) => {
+      const key = normalizeText(groupName);
+      if (key && !groupByNormalizedName.has(key)) groupByNormalizedName.set(key, groupName);
+    });
+    const groups = [...groupByNormalizedName.values()];
     const leaderPolicyRows = groups.map((groupName) => {
       const leader = advisorProfiles.find((profile: any) => normalizeText(profile.full_name).includes(normalizeText(groupName)) || normalizeText(profile.advisor_position).includes("truong"));
-      const result = calculateTeamLeaderPolicy({
+      const calculatedResult = calculateTeamLeaderPolicy({
         month,
         groupName,
         positionEffectiveDate: leader?.position_effective_date,
@@ -241,6 +249,7 @@ export async function GET(request: NextRequest) {
         advisorProfiles,
         asOfDate: getVietnamToday()
       });
+      const result = applyTemporaryTeamLeaderPtkd(calculatedResult, month, groupName);
       return {
         groupName,
         monthly: result.monthly,
@@ -254,7 +263,7 @@ export async function GET(request: NextRequest) {
     const leaderPrograms = [
       ...(period === "month" ? [toProgram("leader-monthly", "Thưởng tháng Trưởng nhóm", `Tháng ${month.slice(5, 7)}/${year}`, leaderPolicyRows
         .filter((row) => Number(row.monthly.reward) > 0)
-        .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.monthly.hdc ?? 0), ip: Number(row.monthly.ip ?? 0), fyp: 0, fyc: Number(row.monthly.fyc ?? 0), reward: Number(row.monthly.reward ?? 0), detail: `Tỷ lệ ${Math.round(Number(row.monthly.rate ?? 0) * 100)}%` })))] : []),
+        .map((row) => ({ code: "", name: row.monthly.sourceLeaderName || row.groupName, groupName: row.groupName, contractCount: Number(row.monthly.hdc ?? 0), ip: Number(row.monthly.ip ?? 0), fyp: Number(row.monthly.fyp ?? 0), fyc: Number(row.monthly.fyc ?? 0), reward: Number(row.monthly.reward ?? 0), detail: `Tỷ lệ ${Math.round(Number(row.monthly.rate ?? 0) * 100)}%` })))] : []),
       ...(period === "month" ? [toProgram("leader-recruitment-training", "Thưởng tuyển luyện Trưởng nhóm", `Tháng ${month.slice(5, 7)}/${year}`, leaderPolicyRows
         .filter((row) => Number(row.recruitmentTraining.reward) > 0)
         .map((row) => ({ code: "", name: row.groupName, groupName: row.groupName, contractCount: Number(row.recruitmentTraining.activeNewAdvisorCount ?? 0), ip: 0, fyp: 0, fyc: Number(row.recruitmentTraining.totalNewAdvisorReward ?? 0), reward: Number(row.recruitmentTraining.reward ?? 0), detail: `${Math.round(Number(row.recruitmentTraining.rate ?? 0) * 100)}% tổng thưởng TVV mới` })))] : []),
