@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import {
   BadgeCheck,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
@@ -14,10 +15,14 @@ import {
   LogOut,
   MapPin,
   Phone,
+  RotateCcw,
   Search,
+  Settings,
   ShieldCheck,
+  Trash2,
   UserRound,
-  UsersRound
+  UsersRound,
+  X
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -39,9 +44,6 @@ type DetailCandidate = {
   inactiveMonths: number;
   deposit: number;
   phone: string;
-  identityNo: string;
-  department: string;
-  team: string;
   address: string;
 };
 type Usage = {
@@ -61,6 +63,21 @@ type Payload = {
   candidates: Array<ListCandidate | DetailCandidate>;
   pagination?: { page: number; pageSize: number; pageCount: number; total: number };
 };
+type AdminLeaderSelection = {
+  leaderCode: string;
+  leaderName: string;
+  groupName: string;
+  selectedCount: number;
+  changesUsed: number;
+  isConfirmed: boolean;
+  confirmedAt: string | null;
+  candidates: DetailCandidate[];
+};
+type AdminPayload = {
+  selections: AdminLeaderSelection[];
+  totals: { leaders: number; candidates: number };
+  registryUpdatedAt: string;
+};
 
 function dateVi(value: string) {
   if (!value) return "—";
@@ -72,21 +89,33 @@ function money(value: number) {
   return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
 }
 
+function phoneHref(value: string) {
+  return `tel:${value.replace(/[^\d+]/g, "")}`;
+}
+
 export default function RecruitmentPoolPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [tab, setTab] = useState<"list" | "details">("list");
+  const [tab, setTab] = useState<"list" | "details" | "admin">("list");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [payload, setPayload] = useState<Payload | null>(null);
+  const [adminPayload, setAdminPayload] = useState<AdminPayload | null>(null);
+  const [adminAuthenticated, setAdminAuthenticated] = useState<boolean | null>(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [expandedLeaders, setExpandedLeaders] = useState<Set<string>>(new Set());
+  const [selectedAdminCandidate, setSelectedAdminCandidate] = useState<DetailCandidate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyCandidate, setBusyCandidate] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
+  const [clearBusy, setClearBusy] = useState(false);
   const [liveStatus, setLiveStatus] = useState("Đang kết nối");
 
   const load = useCallback(async (quiet = false) => {
@@ -105,6 +134,12 @@ export default function RecruitmentPoolPage() {
         return;
       }
       setAuthenticated(true);
+      if (response.status === 403 && tab === "admin") {
+        setAdminAuthenticated(false);
+        setAdminPayload(null);
+        setError("");
+        return;
+      }
       if (response.status === 403 && tab === "details") {
         setPayload(null);
         setTab("list");
@@ -113,7 +148,12 @@ export default function RecruitmentPoolPage() {
         return;
       }
       if (!response.ok) throw new Error(data.error || "Không tải được danh sách tuyển dụng.");
-      setPayload(data);
+      if (tab === "admin") {
+        setAdminAuthenticated(true);
+        setAdminPayload(data);
+      } else {
+        setPayload(data);
+      }
       setError("");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Không tải được danh sách tuyển dụng.");
@@ -200,9 +240,14 @@ export default function RecruitmentPoolPage() {
   }
 
   async function logout() {
-    await fetch("/api/user/auth", { method: "DELETE" });
+    await Promise.all([
+      fetch("/api/user/auth", { method: "DELETE" }),
+      fetch("/api/recruitment-pool/admin-auth", { method: "DELETE" })
+    ]);
     setAuthenticated(false);
     setPayload(null);
+    setAdminPayload(null);
+    setAdminAuthenticated(null);
     setUsername("");
     setPassword("");
   }
@@ -249,6 +294,101 @@ export default function RecruitmentPoolPage() {
     }
   }
 
+  async function clearSelections() {
+    if (clearBusy || !payload?.usage.selectedCount) return;
+    const accepted = window.confirm(
+      `Bạn có chắc muốn bỏ chọn tất cả ${payload.usage.selectedCount} TVV?`
+    );
+    if (!accepted) return;
+
+    setClearBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/recruitment-pool", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Không bỏ chọn được toàn bộ danh sách.");
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("recruitment-pool-updates");
+        channel.postMessage({ clearAll: true });
+        channel.close();
+      }
+      await load(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không bỏ chọn được toàn bộ danh sách.");
+      await load(true);
+    } finally {
+      setClearBusy(false);
+    }
+  }
+
+  async function loginAdmin(event: FormEvent) {
+    event.preventDefault();
+    if (adminBusy || !adminPassword) return;
+    setAdminBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/recruitment-pool/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Không đăng nhập được trang quản trị.");
+      setAdminAuthenticated(true);
+      setAdminPassword("");
+      await load(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không đăng nhập được trang quản trị.");
+    } finally {
+      setAdminBusy(false);
+    }
+  }
+
+  async function resetAllSelections() {
+    if (resetBusy || !adminPayload?.totals.candidates) return;
+    const accepted = window.confirm(
+      `Reset toàn bộ ${adminPayload.totals.candidates} TVV đã chọn của ${adminPayload.totals.leaders} Trưởng nhóm? Thao tác này không thể hoàn tác.`
+    );
+    if (!accepted) return;
+
+    setResetBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/recruitment-pool", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset-all" })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Không reset được danh sách.");
+      setExpandedLeaders(new Set());
+      setSelectedAdminCandidate(null);
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("recruitment-pool-updates");
+        channel.postMessage({ resetAll: true });
+        channel.close();
+      }
+      await load(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không reset được danh sách.");
+    } finally {
+      setResetBusy(false);
+    }
+  }
+
+  function toggleLeader(leaderCode: string) {
+    setExpandedLeaders((current) => {
+      const next = new Set(current);
+      if (next.has(leaderCode)) next.delete(leaderCode);
+      else next.add(leaderCode);
+      return next;
+    });
+  }
+
   const pages = useMemo(() => {
     const count = payload?.pagination?.pageCount ?? 1;
     const current = payload?.pagination?.page ?? 1;
@@ -291,11 +431,11 @@ export default function RecruitmentPoolPage() {
     </header>
 
     <section className={styles.workspace}>
-      <div className={styles.stats}>
+      {tab !== "admin" && <div className={styles.stats}>
         <article><span><BadgeCheck size={23} /></span><div><small>Đã lựa chọn</small><strong>{payload?.usage.selectedCount ?? 0}/{payload?.usage.selectionLimit ?? 15}</strong></div></article>
         <article><span><Clock3 size={23} /></span><div><small>Lượt thay đổi còn lại</small><strong>{payload?.usage.changesRemaining ?? 3}/{payload?.usage.changeLimit ?? 3}</strong></div></article>
         <p>Mỗi lần bỏ một TVV đã chọn được tính là một lượt thay đổi. Trưởng nhóm khác không nhìn thấy người đã chọn.</p>
-      </div>
+      </div>}
 
       <nav className={styles.tabs}>
         <button type="button" className={tab === "list" ? styles.activeTab : ""} onClick={() => { setTab("list"); setPage(1); }}><ListChecks size={19} />Danh sách</button>
@@ -306,6 +446,11 @@ export default function RecruitmentPoolPage() {
           title={!payload?.usage.isConfirmed ? "Hãy xác nhận danh sách trước khi xem chi tiết" : undefined}
           onClick={() => { setTab("details"); setPage(1); }}
         ><UserRound size={19} />Chi tiết lựa chọn {!payload?.usage.isConfirmed && <LockKeyhole size={14} />}<b>{payload?.usage.selectedCount ?? 0}</b></button>
+        <button
+          type="button"
+          className={tab === "admin" ? styles.activeTab : ""}
+          onClick={() => { setTab("admin"); setPage(1); setError(""); }}
+        ><Settings size={19} />Quản trị<LockKeyhole size={14} /></button>
       </nav>
 
       {error && <div className={styles.errorBanner}><CircleAlert size={18} /><span>{error}</span></div>}
@@ -324,14 +469,26 @@ export default function RecruitmentPoolPage() {
               ? "Bạn có thể mở tab Chi tiết lựa chọn. Nếu thay đổi danh sách, bạn cần xác nhận lại."
               : "Sau khi xác nhận, thông tin chi tiết của các TVV bạn đã chọn mới được hiển thị."}</p>
           </div>
-          <button
-            type="button"
-            disabled={confirmBusy || !payload?.usage.selectedCount || payload?.usage.isConfirmed}
-            onClick={confirmSelections}
-          >
-            {confirmBusy ? <LoaderCircle className={styles.spin} size={19} /> : <BadgeCheck size={19} />}
-            {confirmBusy ? "Đang xác nhận…" : payload?.usage.isConfirmed ? "Đã xác nhận" : "Xác nhận lựa chọn"}
-          </button>
+          <div className={styles.confirmActions}>
+            <button
+              type="button"
+              className={styles.clearAllButton}
+              disabled={clearBusy || confirmBusy || !payload?.usage.selectedCount}
+              onClick={clearSelections}
+            >
+              {clearBusy ? <LoaderCircle className={styles.spin} size={19} /> : <Trash2 size={19} />}
+              {clearBusy ? "Đang bỏ chọn…" : "Bỏ chọn tất cả"}
+            </button>
+            <button
+              type="button"
+              className={styles.confirmButton}
+              disabled={confirmBusy || clearBusy || !payload?.usage.selectedCount || payload?.usage.isConfirmed}
+              onClick={confirmSelections}
+            >
+              {confirmBusy ? <LoaderCircle className={styles.spin} size={19} /> : <BadgeCheck size={19} />}
+              {confirmBusy ? "Đang xác nhận…" : payload?.usage.isConfirmed ? "Đã xác nhận" : "Xác nhận lựa chọn"}
+            </button>
+          </div>
         </div>
         <div className={styles.candidateList}>
           {(payload?.candidates as ListCandidate[] ?? []).map((candidate, index) => {
@@ -362,7 +519,7 @@ export default function RecruitmentPoolPage() {
           <span>Trang {payload?.pagination?.page}/{payload?.pagination?.pageCount}</span>
           <button type="button" disabled={(payload?.pagination?.page ?? 1) >= (payload?.pagination?.pageCount ?? 1)} onClick={() => setPage((current) => current + 1)}>Sau<ChevronRight size={18} /></button>
         </div>}
-      </section> : <section className={styles.detailsPanel}>
+      </section> : tab === "details" ? <section className={styles.detailsPanel}>
         <header><div><h2>TVV bạn đã lựa chọn</h2><p>Thông tin chi tiết chỉ hiển thị cho Trưởng nhóm đã chọn TVV này.</p></div><strong>{payload?.usage.selectedCount ?? 0}/15 người</strong></header>
         <div className={styles.detailGrid}>
           {(payload?.candidates as DetailCandidate[] ?? []).map((candidate, index) => <article key={candidate.advisorCode}>
@@ -372,16 +529,96 @@ export default function RecruitmentPoolPage() {
               <div><dt>Ngày bắt đầu làm việc</dt><dd>{dateVi(candidate.startDate)}</dd></div>
               <div><dt>Số tháng không hoạt động</dt><dd>{candidate.inactiveMonths} tháng</dd></div>
               <div><dt>Ký quỹ</dt><dd>{money(candidate.deposit)}</dd></div>
-              <div><dt><Phone size={15} />SĐT</dt><dd>{candidate.phone || "—"}</dd></div>
-              <div><dt>Số GTTT</dt><dd>{candidate.identityNo || "—"}</dd></div>
-              <div><dt>Ban</dt><dd>{candidate.department || "—"}</dd></div>
-              <div><dt>Nhóm</dt><dd>{candidate.team || "—"}</dd></div>
+              <div>
+                <dt><Phone size={15} />SĐT</dt>
+                <dd>{candidate.phone
+                  ? <a className={styles.phoneLink} href={phoneHref(candidate.phone)} aria-label={`Gọi ${candidate.phone}`}>{candidate.phone}</a>
+                  : "—"}</dd>
+              </div>
               <div className={styles.address}><dt><MapPin size={15} />Địa chỉ</dt><dd>{candidate.address || "—"}</dd></div>
             </dl>
           </article>)}
         </div>
         {!loading && !(payload?.candidates?.length) && <div className={styles.empty}><UserRound size={28} /><b>Bạn chưa lựa chọn TVV nào</b><span>Quay lại tab Danh sách để bắt đầu lựa chọn.</span></div>}
+      </section> : adminAuthenticated ? <section className={styles.adminPanel}>
+        <header className={styles.adminPanelHeader}>
+          <div>
+            <span><Settings size={22} /></span>
+            <div><h2>Quản trị lựa chọn TVV</h2><p>Theo dõi danh sách của toàn bộ Trưởng nhóm và reset khi cần thiết.</p></div>
+          </div>
+          <button
+            type="button"
+            className={styles.resetAllButton}
+            disabled={resetBusy || !adminPayload?.totals.candidates}
+            onClick={resetAllSelections}
+          >
+            {resetBusy ? <LoaderCircle className={styles.spin} size={18} /> : <RotateCcw size={18} />}
+            {resetBusy ? "Đang reset…" : "Reset tất cả lại từ đầu"}
+          </button>
+        </header>
+
+        <div className={styles.adminSummary}>
+          <article><small>Trưởng nhóm đã chọn</small><strong>{adminPayload?.totals.leaders ?? 0}</strong></article>
+          <article><small>Tổng TVV đang được chọn</small><strong>{adminPayload?.totals.candidates ?? 0}</strong></article>
+        </div>
+
+        {(adminPayload?.selections.length ?? 0) > 0 ? <div className={styles.adminTableWrap}>
+          <table className={styles.adminTable}>
+            <thead><tr><th>Trưởng nhóm</th><th>Nhóm</th><th>TVV đã chọn</th><th>Lượt sửa</th><th>Trạng thái</th><th /></tr></thead>
+            <tbody>
+              {adminPayload?.selections.map((selection) => {
+                const expanded = expandedLeaders.has(selection.leaderCode);
+                return <Fragment key={selection.leaderCode}>
+                  <tr>
+                    <td><button type="button" className={styles.leaderNameButton} onClick={() => toggleLeader(selection.leaderCode)}>{selection.leaderName}<small>{selection.leaderCode}</small></button></td>
+                    <td>{selection.groupName || "—"}</td>
+                    <td><b>{selection.selectedCount}</b> TVV</td>
+                    <td>{selection.changesUsed}/3</td>
+                    <td><span className={selection.isConfirmed ? styles.adminConfirmed : styles.adminPending}>{selection.isConfirmed ? "Đã xác nhận" : "Chưa xác nhận"}</span></td>
+                    <td><button type="button" className={`${styles.expandButton} ${expanded ? styles.expanded : ""}`} onClick={() => toggleLeader(selection.leaderCode)} aria-label={expanded ? "Thu gọn danh sách" : "Mở danh sách"}><ChevronDown size={19} /></button></td>
+                  </tr>
+                  {expanded && <tr className={styles.expandedRow}><td colSpan={6}>
+                    <div className={styles.adminCandidateList}>
+                      {selection.candidates.map((candidate, index) => <button type="button" key={candidate.advisorCode} onClick={() => setSelectedAdminCandidate(candidate)}>
+                        <span>{index + 1}</span>
+                        <div><b>{candidate.advisorName}</b><small>{candidate.advisorCode}</small></div>
+                        <em>Xem chi tiết</em>
+                      </button>)}
+                    </div>
+                  </td></tr>}
+                </Fragment>;
+              })}
+            </tbody>
+          </table>
+        </div> : <div className={styles.empty}><UsersRound size={30} /><b>Chưa có Trưởng nhóm nào lựa chọn TVV</b><span>Danh sách hiện đang ở trạng thái ban đầu.</span></div>}
+      </section> : <section className={styles.adminLoginPanel}>
+        <span><LockKeyhole size={28} /></span>
+        <h2>Đăng nhập Quản trị</h2>
+        <p>Nhập mật khẩu quản trị để xem và reset toàn bộ danh sách lựa chọn.</p>
+        <form onSubmit={loginAdmin}>
+          <div><LockKeyhole size={19} /><input type="password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} placeholder="Mật khẩu quản trị" autoComplete="current-password" autoFocus /></div>
+          <button type="submit" disabled={adminBusy || !adminPassword}>{adminBusy ? <LoaderCircle className={styles.spin} size={19} /> : <ShieldCheck size={19} />}{adminBusy ? "Đang kiểm tra…" : "Mở trang quản trị"}</button>
+        </form>
       </section>}
     </section>
+
+    {selectedAdminCandidate && <div className={styles.detailModalBackdrop} role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) setSelectedAdminCandidate(null);
+    }}>
+      <section className={styles.detailModal} role="dialog" aria-modal="true" aria-label={`Chi tiết ${selectedAdminCandidate.advisorName}`}>
+        <header>
+          <div><small>THÔNG TIN TVV</small><h2>{selectedAdminCandidate.advisorName}</h2><p>{selectedAdminCandidate.advisorCode}</p></div>
+          <button type="button" onClick={() => setSelectedAdminCandidate(null)} aria-label="Đóng"><X size={21} /></button>
+        </header>
+        <dl>
+          <div><dt>TVV tuyển dụng</dt><dd>{selectedAdminCandidate.recruiterName || "—"}</dd></div>
+          <div><dt>Ngày bắt đầu làm việc</dt><dd>{dateVi(selectedAdminCandidate.startDate)}</dd></div>
+          <div><dt>Số tháng không hoạt động</dt><dd>{selectedAdminCandidate.inactiveMonths} tháng</dd></div>
+          <div><dt>Ký quỹ</dt><dd>{money(selectedAdminCandidate.deposit)}</dd></div>
+          <div><dt><Phone size={15} />SĐT</dt><dd>{selectedAdminCandidate.phone ? <a className={styles.phoneLink} href={phoneHref(selectedAdminCandidate.phone)}>{selectedAdminCandidate.phone}</a> : "—"}</dd></div>
+          <div className={styles.modalAddress}><dt><MapPin size={15} />Địa chỉ</dt><dd>{selectedAdminCandidate.address || "—"}</dd></div>
+        </dl>
+      </section>
+    </div>}
   </main>;
 }

@@ -3,6 +3,7 @@ import candidatesJson from "@/data/recruitment-candidates.json";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { managedTeamName } from "@/lib/team-scope";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { isRecruitmentAdminRequest } from "@/lib/recruitment-admin-auth";
 
 const PAGE_SIZE = 20;
 const MAX_SELECTIONS = 15;
@@ -150,6 +151,21 @@ function publicCandidate(candidate: Candidate, registry: Registry, leaderCode: s
   };
 }
 
+function publicCandidateDetails(candidate: Candidate) {
+  return {
+    id: candidate.id,
+    advisorCode: candidate.advisorCode,
+    advisorName: candidate.advisorName,
+    recruiterCode: candidate.recruiterCode,
+    recruiterName: candidate.recruiterName,
+    startDate: candidate.startDate,
+    inactiveMonths: candidate.inactiveMonths,
+    deposit: candidate.deposit,
+    phone: candidate.phone,
+    address: candidate.address
+  };
+}
+
 function errorResponse(error: unknown) {
   if (error instanceof RecruitmentPoolError) return NextResponse.json({ error: error.message }, { status: error.status });
   const message = error instanceof Error ? error.message : "Không xử lý được danh sách tuyển dụng.";
@@ -186,9 +202,57 @@ export async function GET(request: NextRequest) {
     const { supabase, profile, groupName } = await leaderContext(request);
     const row = await registryRow(supabase);
     const registry = parseRegistry(row.selected_advisors);
-    const view = request.nextUrl.searchParams.get("view") === "details" ? "details" : "list";
+    const requestedView = request.nextUrl.searchParams.get("view");
+    const view = requestedView === "details" ? "details" : requestedView === "admin" ? "admin" : "list";
     const search = normalize(request.nextUrl.searchParams.get("search"));
     const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
+
+    if (view === "admin") {
+      if (!isRecruitmentAdminRequest(request)) {
+        throw new RecruitmentPoolError("Vui lòng nhập mật khẩu quản trị.", 403);
+      }
+      const candidateByCode = new Map(
+        (candidatesJson as Candidate[]).map((candidate) => [candidate.advisorCode, candidate])
+      );
+      const leaderCodes = [...new Set(Object.values(registry.claims))];
+      const { data: leaders, error: leadersError } = leaderCodes.length
+        ? await supabase
+          .from("authorized_users")
+          .select("advisor_code,full_name,group_name")
+          .in("advisor_code", leaderCodes)
+        : { data: [], error: null };
+      if (leadersError) throw leadersError;
+      const leaderByCode = new Map((leaders ?? []).map((leader) => [leader.advisor_code, leader]));
+      const selections = leaderCodes
+        .map((leaderCode) => {
+          const leader = leaderByCode.get(leaderCode);
+          const candidates = Object.entries(registry.claims)
+            .filter(([, owner]) => owner === leaderCode)
+            .map(([candidateCode]) => candidateByCode.get(candidateCode))
+            .filter((candidate): candidate is Candidate => Boolean(candidate))
+            .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"))
+            .map(publicCandidateDetails);
+          return {
+            leaderCode,
+            leaderName: leader?.full_name || leaderCode,
+            groupName: leader?.group_name || "",
+            selectedCount: candidates.length,
+            changesUsed: Math.max(0, Number(registry.changes[leaderCode]) || 0),
+            isConfirmed: Boolean(registry.confirmations[leaderCode]),
+            confirmedAt: registry.confirmations[leaderCode] || null,
+            candidates
+          };
+        })
+        .sort((a, b) => a.leaderName.localeCompare(b.leaderName, "vi"));
+      return NextResponse.json({
+        selections,
+        totals: {
+          leaders: selections.length,
+          candidates: selections.reduce((total, item) => total + item.selectedCount, 0)
+        },
+        registryUpdatedAt: row.updated_at
+      }, { headers: { "Cache-Control": "no-store" } });
+    }
 
     if (view === "details") {
       if (!registry.confirmations[profile.advisor_code]) {
@@ -196,7 +260,8 @@ export async function GET(request: NextRequest) {
       }
       const details = (candidatesJson as Candidate[])
         .filter((candidate) => registry.claims[candidate.advisorCode] === profile.advisor_code)
-        .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"));
+        .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"))
+        .map(publicCandidateDetails);
       return NextResponse.json({
         leader: { advisorCode: profile.advisor_code, fullName: profile.full_name, groupName },
         usage: usage(registry, profile.advisor_code),
@@ -259,6 +324,26 @@ export async function DELETE(request: NextRequest) {
   try {
     const { supabase, profile } = await leaderContext(request);
     const body = await request.json().catch(() => ({}));
+    const clearAll = body.all === true;
+
+    if (clearAll) {
+      const registry = await mutateRegistry(supabase, (current) => {
+        const claims = Object.fromEntries(
+          Object.entries(current.claims).filter(([, owner]) => owner !== profile.advisor_code)
+        );
+        if (Object.keys(claims).length === Object.keys(current.claims).length) {
+          throw new RecruitmentPoolError("Bạn chưa lựa chọn TVV nào.");
+        }
+        return {
+          ...current,
+          claims,
+          confirmations: invalidateConfirmation(current, profile.advisor_code)
+        };
+      });
+      await broadcastChange(supabase, `clear-all:${profile.advisor_code}`);
+      return NextResponse.json({ ok: true, usage: usage(registry, profile.advisor_code) });
+    }
+
     const candidateId = String(body.candidateId || "").trim().toUpperCase();
     const registry = await mutateRegistry(supabase, (current) => {
       if (current.claims[candidateId] !== profile.advisor_code) {
@@ -302,6 +387,29 @@ export async function PATCH(request: NextRequest) {
     });
     await broadcastChange(supabase, `confirmation:${profile.advisor_code}`);
     return NextResponse.json({ ok: true, usage: usage(registry, profile.advisor_code) });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { supabase } = await leaderContext(request);
+    if (!isRecruitmentAdminRequest(request)) {
+      throw new RecruitmentPoolError("Bạn không có quyền quản trị danh sách.", 403);
+    }
+    const body = await request.json().catch(() => ({}));
+    if (body.action !== "reset-all") {
+      throw new RecruitmentPoolError("Thao tác quản trị không hợp lệ.");
+    }
+    const registry = await mutateRegistry(supabase, (current) => ({
+      ...current,
+      claims: {},
+      changes: {},
+      confirmations: {}
+    }));
+    await broadcastChange(supabase, "admin:reset-all");
+    return NextResponse.json({ ok: true, cleared: true, registryVersion: registry.version });
   } catch (error) {
     return errorResponse(error);
   }
