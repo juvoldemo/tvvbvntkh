@@ -1,4 +1,5 @@
 ﻿const TEAM_BY_LEADER_CODE: Record<string, string> = {
+  ADMINTN: "Quản trị tuyển dụng",
   D251200445: "Phát Thắng",
   D251143802: "Ánh Dương",
   D1021A3RSK: "Sen Vàng",
