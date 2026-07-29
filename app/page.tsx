@@ -84,6 +84,20 @@ function formatDateVi(value?: string | null) {
   return day && month && year ? `${day}/${month}/${year}` : value;
 }
 
+function formatActivitySchedule(activity: any) {
+  const date = formatDateVi(activity?.scheduled_date || activity?.scheduled_at);
+  const time = String(activity?.scheduled_time || "").slice(0, 5);
+  return time ? `${time} · ${date}` : date;
+}
+
+const TEAM_ACTIVITY_OPTIONS = [
+  "Họp định kỳ nhóm",
+  "Hỗ trợ tư vấn viên chốt hợp đồng",
+  "Trao đổi 1:1 với TVV",
+  "Đào tạo nghiệp vụ",
+  "Khác"
+] as const;
+
 function normalizeCompetitionGiftLabel(value: unknown) {
   const original = String(value || "").trim();
   const normalized = original
@@ -1623,7 +1637,7 @@ function AdoTargetsPage({ data, month }: any) {
             {activities.length
               ? <div className="ado-leader-activity-list">{activities.map((activity: any) => <div key={activity.id} className={activity.completed ? "completed" : ""}>
                 <span className="ado-activity-status">{activity.completed ? <CheckCircle2 size={16} /> : <CalendarDays size={16} />}</span>
-                <div><strong>{activity.content}</strong><small>{formatDateVi(activity.scheduled_at)}</small></div>
+                <div><strong>{activity.content}</strong><small>{formatActivitySchedule(activity)}</small></div>
                 <em>{activity.completed ? "Đã thực hiện" : "Đã lên lịch"}</em>
               </div>)}</div>
               : <p className="ado-leader-activity-empty">Trưởng nhóm chưa đăng ký hoạt động trong tháng.</p>}
@@ -1852,15 +1866,30 @@ function TeamGoalPage({ data, registration, month, reportMonth, registrationClos
 
 function TeamActivityManager({ month, activities, error, onReload }: any) {
   const defaultDate = `${month}-${String(Math.min(new Date().getDate(), 28)).padStart(2, "0")}`;
-  const [activityDraft, setActivityDraft] = useState(() => ({ content: "", scheduledAt: defaultDate }));
+  const [activityDraft, setActivityDraft] = useState<{
+    activityType: (typeof TEAM_ACTIVITY_OPTIONS)[number];
+    otherContent: string;
+    scheduledDate: string;
+    scheduledTime: string;
+  }>(() => ({
+    activityType: TEAM_ACTIVITY_OPTIONS[0],
+    otherContent: "",
+    scheduledDate: defaultDate,
+    scheduledTime: "08:00"
+  }));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(error || "");
   const [evidenceById, setEvidenceById] = useState<Record<string, File | null>>({});
 
   async function createActivity(event: FormEvent) {
     event.preventDefault();
-    if (!activityDraft.scheduledAt || !activityDraft.content.trim()) {
-      setMessage("Vui lòng chọn ngày và nhập nội dung hoạt động.");
+    const content = activityDraft.activityType === "Khác"
+      ? activityDraft.otherContent.trim()
+      : activityDraft.activityType;
+    if (!activityDraft.scheduledDate || !activityDraft.scheduledTime || !content) {
+      setMessage(activityDraft.activityType === "Khác"
+        ? "Vui lòng chọn ngày, giờ và nhập nội dung chi tiết cho hoạt động khác."
+        : "Vui lòng chọn đầy đủ ngày và giờ thực hiện.");
       return;
     }
     setBusy(true);
@@ -1869,11 +1898,16 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
       const response = await fetch("/api/team-activities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(activityDraft)
+        body: JSON.stringify({ ...activityDraft, content })
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Không lưu được hoạt động.");
-      setActivityDraft({ content: "", scheduledAt: defaultDate });
+      setActivityDraft({
+        activityType: TEAM_ACTIVITY_OPTIONS[0],
+        otherContent: "",
+        scheduledDate: defaultDate,
+        scheduledTime: "08:00"
+      });
       await onReload();
     } catch (saveError) {
       setMessage(saveError instanceof Error ? saveError.message : "Không lưu được hoạt động.");
@@ -1908,19 +1942,30 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
           <form className="team-activity-create" onSubmit={createActivity}>
             <div className="team-activity-create-heading"><strong>Đăng ký hoạt động</strong></div>
             <div className="team-activity-draft">
-              <label><span>Ngày thực hiện</span><input type="date" value={activityDraft.scheduledAt} onChange={(event) => setActivityDraft((current) => ({ ...current, scheduledAt: event.target.value }))} /></label>
-              <label><span>Nội dung hoạt động</span><textarea value={activityDraft.content} onChange={(event) => setActivityDraft((current) => ({ ...current, content: event.target.value }))} maxLength={500} placeholder="Ví dụ: Họp nhóm đầu tuần, đào tạo kỹ năng tư vấn…" /></label>
+              <div className="team-activity-schedule-fields">
+                <label><span>Ngày thực hiện</span><div className="team-activity-schedule-control">
+                  <output>{formatDateVi(activityDraft.scheduledDate)}</output>
+                  <input type="date" aria-label="Ngày thực hiện" value={activityDraft.scheduledDate} onChange={(event) => setActivityDraft((current) => ({ ...current, scheduledDate: event.target.value }))} />
+                </div></label>
+                <label><span>Giờ thực hiện</span><div className="team-activity-schedule-control">
+                  <output>{activityDraft.scheduledTime}</output>
+                  <input type="time" aria-label="Giờ thực hiện" step="60" value={activityDraft.scheduledTime} onChange={(event) => setActivityDraft((current) => ({ ...current, scheduledTime: event.target.value }))} />
+                </div></label>
+              </div>
+              <label><span>Nội dung hoạt động</span><select value={activityDraft.activityType} onChange={(event) => setActivityDraft((current) => ({ ...current, activityType: event.target.value as typeof current.activityType }))}>
+                {TEAM_ACTIVITY_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+              </select></label>
+              {activityDraft.activityType === "Khác" && <label className="team-activity-other-content"><span>Nội dung chi tiết</span><textarea autoFocus value={activityDraft.otherContent} onChange={(event) => setActivityDraft((current) => ({ ...current, otherContent: event.target.value }))} maxLength={500} placeholder="Nhập nội dung hoạt động khác…" /></label>}
             </div>
             <button type="submit" disabled={busy}><CalendarDays size={17} />{busy ? "Đang lưu…" : "Đăng ký hoạt động"}</button>
           </form>
           {message && <p className="team-activity-message" role="alert">{message}</p>}
           <div className="team-activity-list">
             {activities.map((activity: any) => {
-              const date = new Date(activity.scheduled_at);
               const evidence = evidenceById[activity.id];
               return <article key={activity.id} className={activity.completed ? "completed" : ""}>
                 <div className="team-activity-item-head">
-                  <span><CalendarDays size={16} />{date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
+                  <span><CalendarDays size={16} />{formatActivitySchedule(activity)}</span>
                   <em>{activity.completed ? <><CheckCircle2 size={15} />Đã thực hiện</> : "Đã lên lịch"}</em>
                 </div>
                 <strong>{activity.content}</strong>

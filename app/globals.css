@@ -20439,6 +20439,63 @@ button.team-activity-preview {
 }
 .team-activity-create label,
 .team-activity-create label > span { display: block; }
+.team-activity-schedule-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.team-activity-schedule-fields label,
+.team-activity-schedule-fields input {
+  min-width: 0;
+}
+.team-activity-schedule-fields label > span {
+  width: 100%;
+  text-align: center;
+}
+.team-activity-schedule-control {
+  position: relative;
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #cedbea;
+  border-radius: 8px;
+  background: #fff;
+  color: #173c5b;
+}
+.team-activity-schedule-control output {
+  display: block;
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  font-size: var(--typo-10);
+  font-weight: 500;
+  text-align: center;
+  pointer-events: none;
+}
+.team-activity-create .team-activity-schedule-control input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.team-activity-create .team-activity-schedule-control input:focus {
+  border: 0;
+  box-shadow: none;
+}
+.team-activity-schedule-control:focus-within {
+  border-color: #0878cc;
+  box-shadow: 0 0 0 3px rgba(8, 120, 204, .1);
+}
 .team-activity-create label > span {
   margin-bottom: 5px;
   color: #004b7a;
@@ -20446,6 +20503,7 @@ button.team-activity-preview {
   font-weight: 700;
 }
 .team-activity-create input,
+.team-activity-create select,
 .team-activity-create textarea {
   width: 100%;
   min-height: 42px;
@@ -20458,8 +20516,30 @@ button.team-activity-preview {
   font-size: var(--typo-10);
   outline: none;
 }
+body .tvv-app .team-activity-create select {
+  cursor: pointer;
+  padding-left: 14px !important;
+  padding-right: 38px !important;
+  font-size: var(--typo-14) !important;
+  text-align: left !important;
+  text-align-last: left !important;
+}
+body .tvv-app .team-activity-create select option {
+  font-size: var(--typo-14);
+  text-align: left !important;
+}
+body .tvv-app .team-activity-create .team-activity-other-content textarea {
+  padding: 12px 14px !important;
+  font-size: var(--typo-14) !important;
+  text-align: left !important;
+}
+body .tvv-app .team-activity-create .team-activity-other-content textarea::placeholder {
+  font-size: var(--typo-14) !important;
+  text-align: left !important;
+}
 .team-activity-create textarea { min-height: 72px; resize: vertical; }
 .team-activity-create input:focus,
+.team-activity-create select:focus,
 .team-activity-create textarea:focus {
   border-color: #0878cc;
   box-shadow: 0 0 0 3px rgba(8, 120, 204, .1);

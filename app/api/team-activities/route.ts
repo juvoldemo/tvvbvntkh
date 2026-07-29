@@ -128,18 +128,27 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const submitted = (Array.isArray(body.activities) ? body.activities : [body]).slice(0, 30).map((item: any) => ({
       content: String(item.content || "").trim(),
-      scheduledAt: String(item.scheduledAt || "").trim()
+      scheduledDate: String(item.scheduledDate || item.scheduledAt || "").trim().slice(0, 10),
+      scheduledTime: String(item.scheduledTime || "").trim().slice(0, 5)
     }));
     if (!submitted.length) return NextResponse.json({ error: "Vui lòng thêm ít nhất một hoạt động." }, { status: 400 });
     if (submitted.some((item: any) => !item.content || item.content.length > 500)) return NextResponse.json({ error: "Vui lòng nhập nội dung cho từng hoạt động (tối đa 500 ký tự)." }, { status: 400 });
-    if (submitted.some((item: any) => !item.scheduledAt || Number.isNaN(Date.parse(item.scheduledAt)))) return NextResponse.json({ error: "Vui lòng chọn thời gian cho từng hoạt động." }, { status: 400 });
+    if (submitted.some((item: any) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(item.scheduledDate) || !/^\d{2}:\d{2}$/.test(item.scheduledTime)) return true;
+      const [hour, minute] = item.scheduledTime.split(":").map(Number);
+      return hour > 23 || minute > 59 || Number.isNaN(Date.parse(`${item.scheduledDate}T${item.scheduledTime}:00+07:00`));
+    })) {
+      return NextResponse.json({ error: "Vui lòng chọn đầy đủ ngày và giờ thực hiện." }, { status: 400 });
+    }
     const createdActivities = submitted.map((item: any) => ({
         id: crypto.randomUUID(),
         group_name: context.groupName,
         leader_code: context.profile.advisor_code,
         leader_name: context.profile.full_name,
-        target_month: item.scheduledAt.slice(0, 7),
-        scheduled_at: new Date(item.scheduledAt).toISOString(),
+        target_month: item.scheduledDate.slice(0, 7),
+        scheduled_date: item.scheduledDate,
+        scheduled_time: item.scheduledTime,
+        scheduled_at: new Date(`${item.scheduledDate}T${item.scheduledTime}:00+07:00`).toISOString(),
         content: item.content,
         completed: false,
         completed_at: null,
