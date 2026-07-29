@@ -147,6 +147,7 @@ function publicCandidate(candidate: Candidate, registry: Registry, leaderCode: s
     advisorCode: candidate.advisorCode,
     advisorName: candidate.advisorName,
     recruiterName: candidate.recruiterName || "—",
+    pdt2017To2025: Number(candidate.pdt2017To2025) || 0,
     selectionState: owner === leaderCode ? "mine" : owner ? "taken" : "available"
   };
 }
@@ -160,6 +161,7 @@ function publicCandidateDetails(candidate: Candidate) {
     recruiterName: candidate.recruiterName,
     startDate: candidate.startDate,
     inactiveMonths: candidate.inactiveMonths,
+    pdt2017To2025: Number(candidate.pdt2017To2025) || 0,
     deposit: candidate.deposit,
     phone: candidate.phone,
     address: candidate.address
@@ -205,6 +207,7 @@ export async function GET(request: NextRequest) {
     const requestedView = request.nextUrl.searchParams.get("view");
     const view = requestedView === "details" ? "details" : requestedView === "admin" ? "admin" : "list";
     const search = normalize(request.nextUrl.searchParams.get("search"));
+    const sort = request.nextUrl.searchParams.get("sort");
     const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
 
     if (view === "admin") {
@@ -276,7 +279,14 @@ export async function GET(request: NextRequest) {
         candidate.advisorName,
         candidate.recruiterName
       ].join(" ")).includes(search))
-      .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"));
+      .sort((a, b) => {
+        if (sort === "pdt-asc" || sort === "pdt-desc") {
+          const direction = sort === "pdt-asc" ? 1 : -1;
+          const byPdt = ((Number(a.pdt2017To2025) || 0) - (Number(b.pdt2017To2025) || 0)) * direction;
+          if (byPdt !== 0) return byPdt;
+        }
+        return a.advisorName.localeCompare(b.advisorName, "vi");
+      });
     const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const safePage = Math.min(page, pageCount);
     const start = (safePage - 1) * PAGE_SIZE;

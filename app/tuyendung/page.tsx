@@ -32,6 +32,7 @@ type ListCandidate = {
   advisorCode: string;
   advisorName: string;
   recruiterName: string;
+  pdt2017To2025: number;
   selectionState: SelectionState;
 };
 type DetailCandidate = {
@@ -42,6 +43,7 @@ type DetailCandidate = {
   recruiterName: string;
   startDate: string;
   inactiveMonths: number;
+  pdt2017To2025: number;
   deposit: number;
   phone: string;
   address: string;
@@ -103,6 +105,7 @@ export default function RecruitmentPoolPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [listSort, setListSort] = useState<"name" | "pdt-desc" | "pdt-asc">("name");
   const [payload, setPayload] = useState<Payload | null>(null);
   const [adminPayload, setAdminPayload] = useState<AdminPayload | null>(null);
   const [adminAuthenticated, setAdminAuthenticated] = useState<boolean | null>(null);
@@ -124,7 +127,8 @@ export default function RecruitmentPoolPage() {
       const params = new URLSearchParams({
         view: tab,
         page: String(page),
-        search: debouncedSearch
+        search: debouncedSearch,
+        sort: listSort
       });
       const response = await fetch(`/api/recruitment-pool?${params}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
@@ -160,7 +164,7 @@ export default function RecruitmentPoolPage() {
     } finally {
       if (!quiet) setLoading(false);
     }
-  }, [tab, page, debouncedSearch]);
+  }, [tab, page, debouncedSearch, listSort]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -458,6 +462,14 @@ export default function RecruitmentPoolPage() {
       {tab === "list" ? <section className={styles.listPanel}>
         <div className={styles.toolbar}>
           <div><Search size={19} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên, mã TVV hoặc TVV tuyển dụng…" /></div>
+          <label className={styles.sortControl}>
+            <span>PĐT</span>
+            <select value={listSort} onChange={(event) => { setPage(1); setListSort(event.target.value as typeof listSort); }}>
+              <option value="name">Tên A-Z</option>
+              <option value="pdt-desc">PĐT lớn trước</option>
+              <option value="pdt-asc">PĐT nhỏ trước</option>
+            </select>
+          </label>
           <p><b>{payload?.pagination?.total ?? 0}</b> TVV · {payload?.pagination?.pageSize ?? 20} người mỗi trang</p>
         </div>
         {loading && payload ? <div className={styles.inlineLoading}><LoaderCircle className={styles.spin} size={21} />Đang cập nhật…</div> : null}
@@ -508,6 +520,7 @@ export default function RecruitmentPoolPage() {
               <span className={styles.checkbox}>{busyCandidate === candidate.advisorCode ? <LoaderCircle className={styles.spin} size={17} /> : isMine ? <BadgeCheck size={18} /> : null}</span>
               <span className={styles.candidateIdentity}><b>{candidate.advisorName}</b><small>{candidate.advisorCode}</small></span>
               <span className={styles.recruiter}><small>TVV tuyển dụng</small><b>{candidate.recruiterName}</b></span>
+              <span className={styles.pdtColumn}><small>PĐT 2017-12/2025</small><b>{money(candidate.pdt2017To2025)}</b></span>
               <span className={styles.state}>{isMine ? "Đã chọn" : isTaken ? "Đã được lựa chọn" : "Có thể chọn"}</span>
             </button>;
           })}
@@ -528,6 +541,7 @@ export default function RecruitmentPoolPage() {
               <div><dt>TVV tuyển dụng</dt><dd>{candidate.recruiterName || "—"}</dd></div>
               <div><dt>Ngày bắt đầu làm việc</dt><dd>{dateVi(candidate.startDate)}</dd></div>
               <div><dt>Số tháng không hoạt động</dt><dd>{candidate.inactiveMonths} tháng</dd></div>
+              <div className={styles.pdtDetail}><dt>PĐT 2017-12/2025</dt><dd>{money(candidate.pdt2017To2025)}</dd></div>
               <div><dt>Ký quỹ</dt><dd>{money(candidate.deposit)}</dd></div>
               <div>
                 <dt><Phone size={15} />SĐT</dt>
@@ -614,6 +628,7 @@ export default function RecruitmentPoolPage() {
           <div><dt>TVV tuyển dụng</dt><dd>{selectedAdminCandidate.recruiterName || "—"}</dd></div>
           <div><dt>Ngày bắt đầu làm việc</dt><dd>{dateVi(selectedAdminCandidate.startDate)}</dd></div>
           <div><dt>Số tháng không hoạt động</dt><dd>{selectedAdminCandidate.inactiveMonths} tháng</dd></div>
+          <div className={styles.pdtDetail}><dt>PĐT 2017-12/2025</dt><dd>{money(selectedAdminCandidate.pdt2017To2025)}</dd></div>
           <div><dt>Ký quỹ</dt><dd>{money(selectedAdminCandidate.deposit)}</dd></div>
           <div><dt><Phone size={15} />SĐT</dt><dd>{selectedAdminCandidate.phone ? <a className={styles.phoneLink} href={phoneHref(selectedAdminCandidate.phone)}>{selectedAdminCandidate.phone}</a> : "—"}</dd></div>
           <div className={styles.modalAddress}><dt><MapPin size={15} />Địa chỉ</dt><dd>{selectedAdminCandidate.address || "—"}</dd></div>

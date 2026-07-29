@@ -413,6 +413,35 @@
   padding: 0 12px;
 }
 
+.sortControl {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cedde8;
+  border-radius: 12px;
+  background: #fff;
+  padding: 0 10px 0 12px;
+}
+
+.sortControl span {
+  color: #6b7f8c;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sortControl select {
+  min-width: 128px;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  color: #173c57;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .toolbar input {
   width: 100%;
   min-width: 0;
@@ -455,7 +484,7 @@
   width: 100% !important;
   min-height: 68px;
   display: grid !important;
-  grid-template-columns: 38px 32px minmax(220px, .9fr) minmax(220px, 1.1fr) 130px !important;
+  grid-template-columns: 38px 32px minmax(210px, .9fr) minmax(200px, 1fr) minmax(150px, .55fr) 130px !important;
   align-items: center !important;
   gap: 13px !important;
   margin: 0 !important;
@@ -510,14 +539,16 @@
 }
 
 .candidateIdentity,
-.recruiter {
+.recruiter,
+.pdtColumn {
   min-width: 0;
   display: grid;
   gap: 4px;
 }
 
 .candidateIdentity b,
-.recruiter b {
+.recruiter b,
+.pdtColumn b {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -529,13 +560,19 @@
 }
 
 .candidateIdentity small,
-.recruiter small {
+.recruiter small,
+.pdtColumn small {
   color: #7a8a86;
   font-size: 10px;
 }
 
 .recruiter b {
   color: #35566b;
+  font-size: 12px;
+}
+
+.pdtColumn b {
+  color: #07558a;
   font-size: 12px;
 }
 
@@ -855,6 +892,11 @@
   font-size: 12px;
   font-weight: 800;
   overflow-wrap: anywhere;
+}
+
+.pdtDetail dd {
+  color: #0069b4;
+  font-size: 13px;
 }
 
 .phoneLink {
@@ -1397,8 +1439,13 @@
     gap: 8px;
   }
 
-  .toolbar > div {
+  .toolbar > div,
+  .sortControl {
     width: 100%;
+  }
+
+  .sortControl select {
+    flex: 1;
   }
 
   .candidateList .candidateRow {
@@ -1408,6 +1455,10 @@
   }
 
   .recruiter {
+    grid-column: 3 / -1;
+  }
+
+  .pdtColumn {
     grid-column: 3 / -1;
   }
 

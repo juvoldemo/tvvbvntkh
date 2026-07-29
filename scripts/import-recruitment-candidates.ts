@@ -22,6 +22,14 @@ function value(row: RawRow, expected: string) {
   return key ? row[key] : "";
 }
 
+function firstValue(row: RawRow, expected: string[]) {
+  for (const key of expected) {
+    const found = value(row, key);
+    if (text(found)) return found;
+  }
+  return "";
+}
+
 function excelDate(value: unknown) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
@@ -39,8 +47,11 @@ function excelDate(value: unknown) {
 const sourcePath = path.resolve(process.argv[2] || "C:/Users/Admin/Downloads/Danh sach de nghi thanh ly khong chuyen doi CC 01.07.2026.xlsx");
 const outputPath = path.resolve(process.argv[3] || "data/recruitment-candidates.json");
 const workbook = XLSX.readFile(sourcePath);
-const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-const rows = XLSX.utils.sheet_to_json<RawRow>(worksheet, { range: 3, defval: "" });
+const sheetName = workbook.SheetNames.includes("Sheet1") ? "Sheet1" : workbook.SheetNames[0];
+const worksheet = workbook.Sheets[sheetName];
+const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
+const headerIndex = rawRows.findIndex((row) => row.some((cell) => normalizedKey(cell) === normalizedKey("Mã TVV")));
+const rows = XLSX.utils.sheet_to_json<RawRow>(worksheet, { range: Math.max(0, headerIndex), defval: "" });
 
 const candidates = rows.map((row) => {
   const advisorCode = text(value(row, "Mã TVV")).toUpperCase();
@@ -56,12 +67,14 @@ const candidates = rows.map((row) => {
     recruiterCode,
     recruiterName: recruiterName || recruiterLabel,
     startDate: excelDate(value(row, "Ngày bắt đầu làm việc")),
+    status: text(value(row, "Trạng thái")),
+    pdt2017To2025: Number(firstValue(row, ["PĐT từ 2017 đến 12/2025", "PDT từ 2017 đến 12/2025"])) || 0,
     inactiveMonths: Number(value(row, "Số tháng không hoạt động")) || 0,
     deposit: Number(value(row, "Ký quỹ (tại 27.06.2026)")) || 0,
     phone: text(value(row, "SĐT")),
     identityNo: text(value(row, "Số GTTT")),
     department: text(value(row, "Ban")),
-    team: text(value(row, "Nhóm")),
+    team: text(value(row, "Nhóm")) || text(value(row, "Ban")),
     address: text(value(row, "Địa chỉ"))
   };
 }).filter((row) => row.advisorCode && row.advisorName);
