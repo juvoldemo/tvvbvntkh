@@ -8,6 +8,7 @@ import { toPng } from "html-to-image";
 import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
+import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
 type PeriodMode = "month" | "quarter" | "year";
@@ -1116,7 +1117,7 @@ export default function TvvMobilePage() {
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
             ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} />
-            : <Overview advisorCode={userProfile?.advisor_code} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
+            : <Overview advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
           {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} />}
@@ -2685,7 +2686,7 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
   </div>;
 }
 
-function Overview({ advisorCode, stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
+function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
   const statItems = [
     ["Tổng HĐ", stats.total, "blue", "contracts"],
     ["Đã phát hành", stats.issued, "green", "contracts"],
@@ -2694,7 +2695,7 @@ function Overview({ advisorCode, stats, leaderboard, estimate, starViet, starVie
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
-    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
+    {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}

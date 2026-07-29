@@ -39,6 +39,10 @@ function normalizeText(value: unknown) {
     .trim();
 }
 
+export function isPreTeamLeaderPosition(position: unknown) {
+  return normalizeText(position) === "tien truong nhom";
+}
+
 export function managedTeamName(advisorCode: unknown, position?: unknown, fullName?: unknown, groupName?: unknown) {
   const normalizedPosition = normalizeText(position);
   const codeGroup = TEAM_BY_LEADER_CODE[String(advisorCode ?? "").trim().toUpperCase()] ?? "";

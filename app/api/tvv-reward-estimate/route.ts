@@ -6,7 +6,7 @@ import { calculatePolicyRewards, policyProgramSummaries } from "@/lib/tvv-policy
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
-import { managedTeamName } from "@/lib/team-scope";
+import { isPreTeamLeaderPosition, managedTeamName } from "@/lib/team-scope";
 import { competitionIsVisibleTo, competitionViewerAudience } from "@/lib/competition-audience";
 
 const ACQUISITION_COMMISSION_BREAKDOWN = [
@@ -142,8 +142,9 @@ export async function POST(request: NextRequest) {
           signedInProfile.group_name
         )
         : "";
-      if (signedInError || !managedGroup) {
-        return NextResponse.json({ error: "Tính năng này chỉ dành cho tài khoản tuyển dụng hoặc Trưởng nhóm." }, { status: 403 });
+      const isPreTeamLeader = isPreTeamLeaderPosition(signedInProfile?.advisor_position);
+      if (signedInError || (!managedGroup && !isPreTeamLeader)) {
+        return NextResponse.json({ error: "Tính năng này chỉ dành cho tài khoản tuyển dụng, Tiền trưởng nhóm hoặc Trưởng nhóm." }, { status: 403 });
       }
     }
     const month = String(payload.month || new Date().toISOString().slice(0, 7)).slice(0, 7);

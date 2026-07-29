@@ -156,6 +156,12 @@ function recruitingReward(advisorRewards, contracts) {
   return { rate, reward: advisorRewards * rate };
 }
 
+function outstandingReward(fyp, contracts) {
+  if (contracts >= 3) return fyp >= 45 ? 5 : fyp >= 35 ? 3 : 0;
+  if (contracts === 2) return fyp >= 35 ? 3 : 0;
+  return 0;
+}
+
 function developmentRate(fyp, contracts) {
   const column = contracts >= 5 ? 0 : contracts >= 3 ? 1 : contracts === 2 ? 2 : 3;
   if (fyp >= 400) return [0.30, 0.28, 0.26, 0.10][column];
@@ -225,10 +231,7 @@ function calculate() {
 
     if (isTtn && monthIndex < MONTH_TARGETS.length) {
       month.companion = active === 1 ? advisorRewards : active >= 2 ? advisorRewards * 2 : 0;
-      month.outstanding = active >= 2 ? advisors.reduce((sum, advisor) => {
-        const advisorFyp = effectiveFyp(advisor, monthIndex);
-        return sum + (advisorFyp >= 45 ? 5 : advisorFyp >= 35 ? 3 : 0);
-      }, 0) : 0;
+      month.outstanding = outstandingReward(fyp, contracts);
       month.total = month.mgmt + month.companion + month.outstanding;
       ttnTotal += month.total;
     }
@@ -376,8 +379,7 @@ window.toggleMatrixCell = (advisorIndex, monthIndex) => {
   render();
 };
 
-function positionAdvisorDialog() {
-  const dialog = document.querySelector('#advisorDialog');
+function positionEmbeddedDialog(dialog) {
   if (!dialog.open) return;
   const hostWindow = window.parent !== window ? window.parent : window;
   const frameRect = window.frameElement?.getBoundingClientRect();
@@ -396,7 +398,18 @@ function positionAdvisorDialog() {
   dialog.style.margin = '0';
   dialog.style.transform = 'translateX(-50%)';
   dialog.style.maxHeight = `${availableHeight}px`;
-  dialog.querySelector('form').style.maxHeight = `${availableHeight}px`;
+  const form = dialog.querySelector('form');
+  if (form) form.style.maxHeight = `${availableHeight}px`;
+  const posterView = dialog.querySelector('.poster-view');
+  if (posterView) posterView.style.maxHeight = `${Math.max(220, availableHeight - 58)}px`;
+}
+
+function positionAdvisorDialog() {
+  positionEmbeddedDialog(document.querySelector('#advisorDialog'));
+}
+
+function positionPosterDialog() {
+  positionEmbeddedDialog(document.querySelector('#posterDialog'));
 }
 
 window.openAdvisorDialog = (index = null) => {
@@ -429,8 +442,11 @@ window.addAdvisor = () => openAdvisorDialog(null);
 
 window.openPoster = (file, title) => {
   document.querySelector('#posterTitle').textContent = title;
-  document.querySelector('#posterImage').src = file;
+  const image = document.querySelector('#posterImage');
+  image.onload = positionPosterDialog;
+  image.src = file;
   document.querySelector('#posterDialog').showModal();
+  requestAnimationFrame(positionPosterDialog);
 };
 
 window.updateDialogMonthReward = () => {
@@ -497,8 +513,12 @@ const closeAdvisorDialog = () => document.querySelector('#advisorDialog').close(
 document.querySelector('#closeDialog').onclick = closeAdvisorDialog;
 document.querySelector('#cancelDialog').onclick = closeAdvisorDialog;
 const dialogHostWindow = window.parent !== window ? window.parent : window;
-dialogHostWindow.addEventListener('scroll', positionAdvisorDialog, { passive: true });
-dialogHostWindow.addEventListener('resize', positionAdvisorDialog);
+const positionOpenDialogs = () => {
+  positionAdvisorDialog();
+  positionPosterDialog();
+};
+dialogHostWindow.addEventListener('scroll', positionOpenDialogs, { passive: true });
+dialogHostWindow.addEventListener('resize', positionOpenDialogs);
 document.querySelector('#closePoster').onclick = () => document.querySelector('#posterDialog').close();
 document.querySelector('#posterDialog').onclick = event => {
   if (event.target === event.currentTarget) event.currentTarget.close();
