@@ -20,6 +20,7 @@ function getBrowser(userAgent: string) {
 
 export default function AccessLogger() {
   useEffect(() => {
+    if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) return;
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
     sessionStorage.setItem(SESSION_KEY, "true");

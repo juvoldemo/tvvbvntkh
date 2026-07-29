@@ -216,6 +216,45 @@ export async function GET(request: NextRequest) {
         };
       })
       .sort((a, b) => Number(b.ip || 0) - Number(a.ip || 0) || String(a.agentName).localeCompare(String(b.agentName), "vi"));
+    const accessCodes = allAgents.map((agent: any) => String(agent.agentCode || "").trim().toUpperCase()).filter(Boolean);
+    let accessWarning = "";
+    const lastAccessByCode = new Map<string, string>();
+    if (accessCodes.length) {
+      const { data: accessEvents, error: accessError } = await supabase
+        .from("app_analytics_events")
+        .select("advisor_code,created_at")
+        .eq("event_name", "session_start")
+        .in("advisor_code", accessCodes)
+        .order("created_at", { ascending: false })
+        .limit(10000);
+      if (accessError) {
+        accessWarning = accessError.message;
+      } else {
+        for (const event of accessEvents ?? []) {
+          const code = String(event.advisor_code || "").trim().toUpperCase();
+          if (code && !lastAccessByCode.has(code)) lastAccessByCode.set(code, event.created_at);
+        }
+      }
+    }
+    const now = Date.now();
+    const accessUsers = allAgents
+      .map((agent: any) => {
+        const advisorCode = String(agent.agentCode || "").trim().toUpperCase();
+        const lastAccess = lastAccessByCode.get(advisorCode) || null;
+        return {
+          advisorCode,
+          fullName: agent.agentName || "TVV",
+          avatarUrl: agent.avatarUrl || null,
+          lastAccess,
+          inactive7Days: Boolean(lastAccess && now - new Date(lastAccess).getTime() >= 7 * 86400000)
+        };
+      })
+      .sort((a: any, b: any) => {
+        if (!a.lastAccess && !b.lastAccess) return a.fullName.localeCompare(b.fullName, "vi");
+        if (!a.lastAccess) return 1;
+        if (!b.lastAccess) return -1;
+        return new Date(b.lastAccess).getTime() - new Date(a.lastAccess).getTime();
+      });
     const issued = contracts.filter((row) => statusBucket(row.policy_status) === "issued").length;
     const invalid = contracts.filter((row) => statusBucket(row.policy_status) === "invalid").length;
     const dgrr = contracts.filter((row) => statusBucket(row.policy_status) === "dgrr").length;
@@ -265,6 +304,14 @@ export async function GET(request: NextRequest) {
       },
       agents: ranking,
       allAgents,
+      accessStats: {
+        accessedCount: accessUsers.filter((user: any) => user.lastAccess).length,
+        totalCount: accessUsers.length,
+        neverAccessed: accessUsers.filter((user: any) => !user.lastAccess),
+        inactive7Days: accessUsers.filter((user: any) => user.inactive7Days),
+        recentAccess: accessUsers.filter((user: any) => user.lastAccess),
+        warning: accessWarning || null
+      },
       starViet,
       starVietRows,
       starVietWarning: starVietData.warning,

@@ -22,7 +22,16 @@ function analyticsTimeParts(date: Date) {
   );
 }
 
+function isLocalRequest(request: NextRequest) {
+  const host = String(request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.hostname)
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  return /^(localhost|127(?:\.\d{1,3}){3}|\[?::1\]?)(:\d+)?$/.test(host);
+}
+
 export async function POST(request: NextRequest) {
+  if (isLocalRequest(request)) return NextResponse.json({ ok: true, skipped: "localhost" });
   const advisorCode = userCodeFromRequest(request);
   if (!advisorCode) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
   const body = await request.json().catch(() => ({}));

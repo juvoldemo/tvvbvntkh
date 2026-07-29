@@ -10,8 +10,17 @@ type AccessLogPayload = {
   referrer?: string;
 };
 
+function isLocalRequest(request: Request) {
+  const host = String(request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+  return /^(localhost|127(?:\.\d{1,3}){3}|\[?::1\]?)(:\d+)?$/.test(host);
+}
+
 export async function POST(request: Request) {
   try {
+    if (isLocalRequest(request)) return NextResponse.json({ success: true, skipped: "localhost" });
     const payload = (await request.json()) as AccessLogPayload;
     const requestHeaders = headers();
     const ip =

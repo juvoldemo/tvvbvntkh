@@ -33,6 +33,10 @@ const emptyEstimate = {
   rewardByDraftContract: []
 };
 
+function isLocalAnalyticsHost() {
+  return typeof window !== "undefined" && ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 const POLICY_MONTH_TIERS = [
   { minimum: 12_000_000, rate: 0.1 },
   { minimum: 24_000_000, rate: 0.15 },
@@ -379,6 +383,10 @@ export default function TvvMobilePage() {
   const isBossMode = userProfile?.dashboard_role === "boss";
 
   useEffect(() => {
+    if (isLocalAnalyticsHost()) {
+      analyticsSessionRef.current = "";
+      return;
+    }
     if (!signedIn || !userProfile?.advisor_code) {
       analyticsSessionRef.current = "";
       return;
@@ -400,6 +408,7 @@ export default function TvvMobilePage() {
   }, [signedIn, userProfile?.advisor_code, tab, analyticsGeneration]);
 
   useEffect(() => {
+    if (isLocalAnalyticsHost()) return;
     if (!signedIn || !userProfile?.advisor_code || !analyticsSessionRef.current) return;
     const startedAt = Date.now();
     const sessionId = analyticsSessionRef.current;
@@ -427,6 +436,7 @@ export default function TvvMobilePage() {
   }, []);
 
   useEffect(() => {
+    if (isLocalAnalyticsHost()) return;
     if (!signedIn || !userProfile?.advisor_code) return;
     const receiveIllustrationEvent = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.data?.type !== "bvnt-analytics") return;
@@ -1988,6 +1998,8 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
 function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
+  const [showTeamAccess, setShowTeamAccess] = useState(false);
+  const [teamAccessTab, setTeamAccessTab] = useState<"never" | "inactive7" | "recent">("recent");
   const [showAllTeamAgents, setShowAllTeamAgents] = useState(false);
   const [selectedActivityStarAgent, setSelectedActivityStarAgent] = useState<any>(null);
   const [goalPageOpen, setGoalPageOpen] = useState(false);
@@ -1998,11 +2010,13 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
   if (goalPageOpen) return <TeamGoalPage data={data} registration={targetRegistration} month={targetMonth} reportMonth={month} registrationClosed={targetRegistrationClosed} onOpenTarget={onOpenTarget} onBack={() => setGoalPageOpen(false)} />;
   const summary = data.summary ?? {};
   const totalTeamAdvisors = Number(currentTeamAdvisorCount) || summary.agents;
+  const accessStats = data.accessStats ?? { accessedCount: 0, totalCount: totalTeamAdvisors, neverAccessed: [], inactive7Days: [], recentAccess: [] };
   const kpis = [
-    { label: "Doanh thu AFYP", value: formatCompactVnd(summary.afyp), tone: "blue", icon: BarChart3 },
-    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "red", icon: Users },
-    { label: "Hợp đồng", value: summary.contracts, tone: "orange", icon: FileText },
-    { label: "Có hiệu lực", value: summary.issued, tone: "green", icon: CheckCircle2 }
+    { label: "Doanh thu AFYP", value: formatCompactVnd(summary.afyp), tone: "blue", icon: BarChart3, action: "" },
+    { label: "TVV hoạt động", value: `${summary.activeAgents} / ${totalTeamAdvisors}`, tone: "red", icon: Users, action: "activity" },
+    { label: "Hợp đồng", value: summary.contracts, tone: "orange", icon: FileText, action: "contracts" },
+    { label: "Có hiệu lực", value: summary.issued, tone: "green", icon: CheckCircle2, action: "" },
+    { label: "TVV truy cập", value: `${accessStats.accessedCount}/${accessStats.totalCount}`, tone: "purple", icon: Eye, action: "access" }
   ];
   const allTeamContracts = (data.contracts ?? []).slice().sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")));
   const teamAgents = data.allAgents?.length ? data.allAgents : data.agents ?? [];
@@ -2010,6 +2024,11 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
   const inactiveTeamAgents = teamAgents.filter((agent: any) => Number(agent.afyp || agent.ip || 0) <= 0);
   const sosTeamAgents = inactiveTeamAgents.filter((agent: any) => agent.needsSos);
   const visibleTeamAgents = showAllTeamAgents ? (data.agents ?? []) : (data.agents ?? []).slice(0, 5);
+  const accessRows = teamAccessTab === "never"
+    ? accessStats.neverAccessed ?? []
+    : teamAccessTab === "inactive7"
+      ? accessStats.inactive7Days ?? []
+      : accessStats.recentAccess ?? [];
   async function openActivityAdvisor(value: any) {
     const agent = value?.agent ?? {};
     setSelectedActivityStarAgent({ ...value, tab: "star", rewardLoading: true, rewardError: "", rewardEstimate: null });
@@ -2044,11 +2063,15 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
     <div className="team-kpi-grid">
       {kpis.map((item) => {
         const Icon = item.icon;
-        const isActivityCard = item.label.includes("TVV");
-        const isContractsCard = item.label.includes("Hợp");
-        const isInteractive = isActivityCard || isContractsCard;
+        const isInteractive = Boolean(item.action);
         const CardTag = isInteractive ? "button" : "article";
-        const onClick = isActivityCard ? () => setShowTeamActivity(true) : isContractsCard ? () => setShowAllTeamContracts(true) : undefined;
+        const onClick = item.action === "activity"
+          ? () => setShowTeamActivity(true)
+          : item.action === "contracts"
+            ? () => setShowAllTeamContracts(true)
+            : item.action === "access"
+              ? () => { setTeamAccessTab("recent"); setShowTeamAccess(true); }
+              : undefined;
         return <CardTag className={`team-kpi-card ${item.tone}${isInteractive ? " clickable" : ""}`} key={item.label} type={isInteractive ? "button" : undefined} onClick={onClick}>
           <Icon size={20} />
           <strong>{item.value}</strong>
@@ -2095,6 +2118,31 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
             <TeamActivityGroup title="TVV cần SOS" count={sosTeamAgents.length} agents={sosTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={openActivityAdvisor} />
             <TeamActivityGroup title="TVV chưa hoạt động" count={inactiveTeamAgents.length} agents={inactiveTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={openActivityAdvisor} />
             <TeamActivityGroup title="TVV đã hoạt động" count={activeTeamAgents.length} agents={activeTeamAgents} starRows={data?.starVietRows ?? []} onOpenStar={openActivityAdvisor} />
+          </div>
+        </section>
+      </div>,
+      document.body
+    )}
+    {showTeamAccess && typeof document !== "undefined" && createPortal(
+      <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowTeamAccess(false); }}>
+        <section className="team-access-modal" role="dialog" aria-modal="true" aria-label="Thống kê truy cập TVV" onMouseDown={(event) => event.stopPropagation()}>
+          <header>
+            <div><h2>Truy cập của TVV trong nhóm</h2><p>{accessStats.accessedCount}/{accessStats.totalCount} TVV đã từng truy cập</p></div>
+            <button type="button" onClick={() => setShowTeamAccess(false)} aria-label="Đóng"><X size={22} /></button>
+          </header>
+          <nav className="team-access-tabs" role="tablist" aria-label="Phân loại truy cập">
+            <button type="button" role="tab" aria-selected={teamAccessTab === "never"} className={teamAccessTab === "never" ? "active" : ""} onClick={() => setTeamAccessTab("never")}>TVV chưa truy cập <b>{accessStats.neverAccessed?.length ?? 0}</b></button>
+            <button type="button" role="tab" aria-selected={teamAccessTab === "inactive7"} className={teamAccessTab === "inactive7" ? "active" : ""} onClick={() => setTeamAccessTab("inactive7")}>7 ngày chưa truy cập <b>{accessStats.inactive7Days?.length ?? 0}</b></button>
+            <button type="button" role="tab" aria-selected={teamAccessTab === "recent"} className={teamAccessTab === "recent" ? "active" : ""} onClick={() => setTeamAccessTab("recent")}>Truy cập gần nhất <b>{accessStats.recentAccess?.length ?? 0}</b></button>
+          </nav>
+          <div className="team-access-list" role="tabpanel">
+            {accessRows.map((user: any) => <article key={user.advisorCode || user.fullName}>
+              <span className="team-access-avatar">{user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <UserRound size={19} />}</span>
+              <div><strong>{user.fullName}</strong><small>{user.advisorCode || "Chưa có mã TVV"}</small></div>
+              <time>{user.lastAccess ? new Date(user.lastAccess).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" }) : "Chưa từng truy cập"}</time>
+            </article>)}
+            {!accessRows.length && <p className="team-access-empty">{teamAccessTab === "never" ? "Tất cả TVV trong nhóm đã từng truy cập." : teamAccessTab === "inactive7" ? "Không có TVV nào ngừng truy cập từ 7 ngày trở lên." : "Chưa có dữ liệu truy cập của TVV trong nhóm."}</p>}
+            {accessStats.warning && <p className="team-form-error">Chưa đọc được đầy đủ dữ liệu truy cập.</p>}
           </div>
         </section>
       </div>,
