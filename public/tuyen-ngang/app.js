@@ -376,6 +376,29 @@ window.toggleMatrixCell = (advisorIndex, monthIndex) => {
   render();
 };
 
+function positionAdvisorDialog() {
+  const dialog = document.querySelector('#advisorDialog');
+  if (!dialog.open) return;
+  const hostWindow = window.parent !== window ? window.parent : window;
+  const frameRect = window.frameElement?.getBoundingClientRect();
+  const viewportHeight = hostWindow.innerHeight;
+  const visibleTop = frameRect ? Math.max(12, -frameRect.top + 12) : 12;
+  const visibleBottom = frameRect
+    ? Math.min(frameRect.height - 12, -frameRect.top + viewportHeight - 12)
+    : viewportHeight - 12;
+  const availableHeight = Math.max(320, visibleBottom - visibleTop);
+  const dialogHeight = Math.min(dialog.scrollHeight, availableHeight);
+
+  dialog.style.position = 'fixed';
+  dialog.style.inset = 'auto';
+  dialog.style.left = '50%';
+  dialog.style.top = `${visibleTop + Math.max(0, (availableHeight - dialogHeight) / 2)}px`;
+  dialog.style.margin = '0';
+  dialog.style.transform = 'translateX(-50%)';
+  dialog.style.maxHeight = `${availableHeight}px`;
+  dialog.querySelector('form').style.maxHeight = `${availableHeight}px`;
+}
+
 window.openAdvisorDialog = (index = null) => {
   editingAdvisor = index;
   const advisor = index === null ? {
@@ -399,6 +422,7 @@ window.openAdvisorDialog = (index = null) => {
   }).join('');
   updateSelectAllButton();
   document.querySelector('#advisorDialog').showModal();
+  requestAnimationFrame(positionAdvisorDialog);
 };
 
 window.addAdvisor = () => openAdvisorDialog(null);
@@ -472,6 +496,9 @@ document.querySelector('#selectAllMonths').onclick = () => {
 const closeAdvisorDialog = () => document.querySelector('#advisorDialog').close();
 document.querySelector('#closeDialog').onclick = closeAdvisorDialog;
 document.querySelector('#cancelDialog').onclick = closeAdvisorDialog;
+const dialogHostWindow = window.parent !== window ? window.parent : window;
+dialogHostWindow.addEventListener('scroll', positionAdvisorDialog, { passive: true });
+dialogHostWindow.addEventListener('resize', positionAdvisorDialog);
 document.querySelector('#closePoster').onclick = () => document.querySelector('#posterDialog').close();
 document.querySelector('#posterDialog').onclick = event => {
   if (event.target === event.currentTarget) event.currentTarget.close();
