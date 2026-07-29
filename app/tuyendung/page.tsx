@@ -47,6 +47,8 @@ type DetailCandidate = {
   deposit: number;
   phone: string;
   address: string;
+  contactedAt: string | null;
+  contactedByLeaderCode: string | null;
 };
 type Usage = {
   selectedCount: number;
@@ -329,6 +331,29 @@ export default function RecruitmentPoolPage() {
     }
   }
 
+  function markCandidateContact(candidate: DetailCandidate) {
+    const contactedAt = new Date().toISOString();
+    setPayload((current) => current ? {
+      ...current,
+      candidates: current.candidates.map((item) => item.advisorCode === candidate.advisorCode
+        ? { ...item, contactedAt, contactedByLeaderCode: current.leader.advisorCode }
+        : item)
+    } : current);
+    void fetch("/api/recruitment-pool", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+      body: JSON.stringify({ action: "contact", candidateId: candidate.advisorCode })
+    }).then(async (response) => {
+      if (response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "Không ghi nhận được trạng thái liên hệ.");
+    }).catch((reason) => {
+      setError(reason instanceof Error ? reason.message : "Không ghi nhận được trạng thái liên hệ.");
+      void load(true);
+    });
+  }
+
   async function loginAdmin(event: FormEvent) {
     event.preventDefault();
     if (adminBusy || !adminPassword) return;
@@ -546,7 +571,7 @@ export default function RecruitmentPoolPage() {
               <div>
                 <dt><Phone size={15} />SĐT</dt>
                 <dd>{candidate.phone
-                  ? <a className={styles.phoneLink} href={phoneHref(candidate.phone)} aria-label={`Gọi ${candidate.phone}`}>{candidate.phone}</a>
+                  ? <a className={styles.phoneLink} href={phoneHref(candidate.phone)} aria-label={`Gọi ${candidate.phone}`} onClick={() => markCandidateContact(candidate)}>{candidate.phone}</a>
                   : "—"}</dd>
               </div>
               <div className={styles.address}><dt><MapPin size={15} />Địa chỉ</dt><dd>{candidate.address || "—"}</dd></div>
@@ -595,7 +620,7 @@ export default function RecruitmentPoolPage() {
                     <div className={styles.adminCandidateList}>
                       {selection.candidates.map((candidate, index) => <button type="button" key={candidate.advisorCode} onClick={() => setSelectedAdminCandidate(candidate)}>
                         <span>{index + 1}</span>
-                        <div><b>{candidate.advisorName}</b><small>{candidate.advisorCode}</small></div>
+                        <div><div className={styles.adminCandidateName}><b>{candidate.advisorName}</b>{candidate.contactedAt && <span>Đã liên hệ</span>}</div><small>{candidate.advisorCode}</small></div>
                         <em>Xem chi tiết</em>
                       </button>)}
                     </div>

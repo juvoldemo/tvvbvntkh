@@ -17,6 +17,7 @@ type Registry = {
   claims: Record<string, string>;
   changes: Record<string, number>;
   confirmations: Record<string, string>;
+  contacts: Record<string, { leaderCode: string; contactedAt: string }>;
 };
 
 class RecruitmentPoolError extends Error {
@@ -37,14 +38,15 @@ function normalize(value: unknown) {
 
 function parseRegistry(value: unknown): Registry {
   if (!value || Array.isArray(value) || typeof value !== "object") {
-    return { version: 1, claims: {}, changes: {}, confirmations: {} };
+    return { version: 1, claims: {}, changes: {}, confirmations: {}, contacts: {} };
   }
   const raw = value as Partial<Registry>;
   return {
     version: 1,
     claims: raw.claims && typeof raw.claims === "object" ? raw.claims : {},
     changes: raw.changes && typeof raw.changes === "object" ? raw.changes : {},
-    confirmations: raw.confirmations && typeof raw.confirmations === "object" ? raw.confirmations : {}
+    confirmations: raw.confirmations && typeof raw.confirmations === "object" ? raw.confirmations : {},
+    contacts: raw.contacts && typeof raw.contacts === "object" ? raw.contacts : {}
   };
 }
 
@@ -83,7 +85,7 @@ async function registryRow(supabase: ReturnType<typeof getSupabaseAdmin>) {
     revenue_target: 0,
     active_advisor_target: 0,
     reward_target: 0,
-    selected_advisors: { version: 1, claims: {}, changes: {} },
+    selected_advisors: { version: 1, claims: {}, changes: {}, confirmations: {}, contacts: {} },
     updated_at: now
   }, { onConflict: "target_month,group_name", ignoreDuplicates: true });
   if (insertError) throw insertError;
@@ -152,7 +154,7 @@ function publicCandidate(candidate: Candidate, registry: Registry, leaderCode: s
   };
 }
 
-function publicCandidateDetails(candidate: Candidate) {
+function publicCandidateDetails(candidate: Candidate, contact?: Registry["contacts"][string]) {
   return {
     id: candidate.id,
     advisorCode: candidate.advisorCode,
@@ -164,7 +166,9 @@ function publicCandidateDetails(candidate: Candidate) {
     pdt2017To2025: Number(candidate.pdt2017To2025) || 0,
     deposit: candidate.deposit,
     phone: candidate.phone,
-    address: candidate.address
+    address: candidate.address,
+    contactedAt: contact?.contactedAt || null,
+    contactedByLeaderCode: contact?.leaderCode || null
   };
 }
 
@@ -234,7 +238,7 @@ export async function GET(request: NextRequest) {
             .map(([candidateCode]) => candidateByCode.get(candidateCode))
             .filter((candidate): candidate is Candidate => Boolean(candidate))
             .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"))
-            .map(publicCandidateDetails);
+            .map((candidate) => publicCandidateDetails(candidate, registry.contacts[candidate.advisorCode]));
           return {
             leaderCode,
             leaderName: leader?.full_name || leaderCode,
@@ -264,7 +268,7 @@ export async function GET(request: NextRequest) {
       const details = (candidatesJson as Candidate[])
         .filter((candidate) => registry.claims[candidate.advisorCode] === profile.advisor_code)
         .sort((a, b) => a.advisorName.localeCompare(b.advisorName, "vi"))
-        .map(publicCandidateDetails);
+        .map((candidate) => publicCandidateDetails(candidate, registry.contacts[candidate.advisorCode]));
       return NextResponse.json({
         leader: { advisorCode: profile.advisor_code, fullName: profile.full_name, groupName },
         usage: usage(registry, profile.advisor_code),
@@ -310,6 +314,23 @@ export async function POST(request: NextRequest) {
     if (!(candidatesJson as Candidate[]).some((candidate) => candidate.advisorCode === candidateId)) {
       throw new RecruitmentPoolError("Không tìm thấy TVV trong danh sách.", 404);
     }
+    if (body.action === "contact") {
+      const contactedAt = new Date().toISOString();
+      const registry = await mutateRegistry(supabase, (current) => {
+        if (current.claims[candidateId] !== profile.advisor_code) {
+          throw new RecruitmentPoolError("Bạn không có quyền liên hệ TVV này.", 403);
+        }
+        return {
+          ...current,
+          contacts: {
+            ...current.contacts,
+            [candidateId]: { leaderCode: profile.advisor_code, contactedAt }
+          }
+        };
+      });
+      await broadcastChange(supabase, `contact:${candidateId}`);
+      return NextResponse.json({ ok: true, contact: registry.contacts[candidateId] });
+    }
     const registry = await mutateRegistry(supabase, (current) => {
       const claimedBy = current.claims[candidateId];
       if (claimedBy === profile.advisor_code) return current;
@@ -347,6 +368,9 @@ export async function DELETE(request: NextRequest) {
         return {
           ...current,
           claims,
+          contacts: Object.fromEntries(
+            Object.entries(current.contacts).filter(([, contact]) => contact.leaderCode !== profile.advisor_code)
+          ),
           confirmations: invalidateConfirmation(current, profile.advisor_code)
         };
       });
@@ -365,9 +389,12 @@ export async function DELETE(request: NextRequest) {
       }
       const claims = { ...current.claims };
       delete claims[candidateId];
+      const contacts = { ...current.contacts };
+      delete contacts[candidateId];
       return {
         ...current,
         claims,
+        contacts,
         changes: { ...current.changes, [profile.advisor_code]: currentUsage.changesUsed + 1 },
         confirmations: invalidateConfirmation(current, profile.advisor_code)
       };
@@ -416,7 +443,8 @@ export async function PUT(request: NextRequest) {
       ...current,
       claims: {},
       changes: {},
-      confirmations: {}
+      confirmations: {},
+      contacts: {}
     }));
     await broadcastChange(supabase, "admin:reset-all");
     return NextResponse.json({ ok: true, cleared: true, registryVersion: registry.version });
