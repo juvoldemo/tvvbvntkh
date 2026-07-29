@@ -46,8 +46,11 @@ function excelDate(value: unknown) {
 
 const sourcePath = path.resolve(process.argv[2] || "C:/Users/Admin/Downloads/Danh sach de nghi thanh ly khong chuyen doi CC 01.07.2026.xlsx");
 const outputPath = path.resolve(process.argv[3] || "data/recruitment-candidates.json");
+const requestedSheetName = process.argv[4];
 const workbook = XLSX.readFile(sourcePath);
-const sheetName = workbook.SheetNames.includes("Sheet1") ? "Sheet1" : workbook.SheetNames[0];
+const sheetName = requestedSheetName && workbook.SheetNames.includes(requestedSheetName)
+  ? requestedSheetName
+  : workbook.SheetNames.includes("Sheet1") ? "Sheet1" : workbook.SheetNames[0];
 const worksheet = workbook.Sheets[sheetName];
 const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, defval: "" });
 const headerIndex = rawRows.findIndex((row) => row.some((cell) => normalizedKey(cell) === normalizedKey("Mã TVV")));
