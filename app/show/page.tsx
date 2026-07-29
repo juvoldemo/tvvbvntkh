@@ -31,21 +31,67 @@ export default function TargetShowPage() {
   const [accessPassword, setAccessPassword] = useState("");
   const [accessError, setAccessError] = useState("");
   const hasData = useRef(false);
+  const requestInFlightRef = useRef(false);
+  const pollingTimeoutRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    let active = true; let refreshTimer: number | undefined;
-    const load = () => fetch("/api/show-targets", { cache: "no-store" }).then(async (response) => {
-      const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Không tải được dữ liệu");
-      if (active) { setData(payload); setError(""); hasData.current = true; }
-    }).catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Không tải được dữ liệu"); });
-    void load(); const pollingTimer = window.setInterval(() => { if (document.visibilityState === "visible") void load(); }, 3000);
+    let active = true; let refreshTimer: number | undefined; let refreshWhenAvailable = false;
+    const clearPollingTimeout = () => {
+      if (pollingTimeoutRef.current) {
+        window.clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
+    };
+    const scheduleNextPoll = () => {
+      if (!active || document.visibilityState !== "visible") return;
+      clearPollingTimeout();
+      pollingTimeoutRef.current = window.setTimeout(() => {
+        pollingTimeoutRef.current = null;
+        void load();
+      }, 20_000);
+    };
+    const load = async () => {
+      if (!active || document.visibilityState !== "visible" || requestInFlightRef.current) return;
+      requestInFlightRef.current = true;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      try {
+        const response = await fetch("/api/show-targets", { cache: "no-store", signal: controller.signal });
+        const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Không tải được dữ liệu");
+        if (active) { setData(payload); setError(""); hasData.current = true; }
+      } catch (reason) {
+        if (reason instanceof DOMException && reason.name === "AbortError") return;
+        if (active) setError(reason instanceof Error ? reason.message : "Không tải được dữ liệu");
+      } finally {
+        requestInFlightRef.current = false;
+        if (abortControllerRef.current === controller) abortControllerRef.current = null;
+        if (refreshWhenAvailable && active && document.visibilityState === "visible") {
+          refreshWhenAvailable = false;
+          void load();
+        } else {
+          scheduleNextPoll();
+        }
+      }
+    };
+    const handleVisibilityChange = () => {
+      clearPollingTimeout();
+      if (document.visibilityState === "visible") {
+        if (requestInFlightRef.current) refreshWhenAvailable = true;
+        else void load();
+      } else {
+        refreshWhenAvailable = false;
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (document.visibilityState === "visible") void load();
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL; const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !anonKey) { setRealtimeStatus("Chưa cấu hình Realtime"); return () => { active = false; window.clearInterval(pollingTimer); }; }
+    if (!url || !anonKey) { setRealtimeStatus("Chưa cấu hình Realtime"); return () => { active = false; clearPollingTimeout(); abortControllerRef.current?.abort(); document.removeEventListener("visibilitychange", handleVisibilityChange); }; }
     const supabase = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const refresh = () => { if (refreshTimer) window.clearTimeout(refreshTimer); refreshTimer = window.setTimeout(load, 150); };
     const localChannel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("tvv-target-updates") : null; if (localChannel) localChannel.onmessage = refresh;
     const channel = supabase.channel("target-show-live").on("postgres_changes", { event: "*", schema: "public", table: "tvv_target_registrations" }, refresh).on("postgres_changes", { event: "*", schema: "public", table: "team_target_registrations" }, refresh).subscribe((status) => { if (active) setRealtimeStatus(status === "SUBSCRIBED" ? "Đang cập nhật trực tiếp" : status === "CHANNEL_ERROR" ? "Mất kết nối Realtime" : "Đang kết nối Realtime"); });
-    return () => { active = false; if (refreshTimer) window.clearTimeout(refreshTimer); window.clearInterval(pollingTimer); localChannel?.close(); void supabase.removeChannel(channel); };
+    return () => { active = false; if (refreshTimer) window.clearTimeout(refreshTimer); clearPollingTimeout(); abortControllerRef.current?.abort(); document.removeEventListener("visibilitychange", handleVisibilityChange); localChannel?.close(); void supabase.removeChannel(channel); };
   }, []);
 
   async function resetTargets(event: React.FormEvent) {
