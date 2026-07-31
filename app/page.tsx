@@ -585,11 +585,11 @@ export default function TvvMobilePage() {
       setTvvTarget(null);
       return;
     }
-    fetch(`/api/tvv-target-registration?month=${month}`, { cache: "no-store" })
+    fetch(`/api/tvv-target-registration?month=${targetRegistrationMonth}`, { cache: "no-store" })
       .then((response) => response.ok ? response.json() : { registration: null })
       .then((payload) => setTvvTarget(payload.registration ?? null))
       .catch(() => setTvvTarget(null));
-  }, [month, profileReady, signedIn, userProfile?.dashboard_role]);
+  }, [profileReady, signedIn, targetRegistrationMonth, userProfile?.dashboard_role]);
 
   useEffect(() => {
     if (!signedIn || userProfile?.dashboard_role !== "team_leader") {
@@ -603,7 +603,8 @@ export default function TvvMobilePage() {
   }, [signedIn, targetRegistrationMonth, userProfile?.dashboard_role]);
 
   useEffect(() => {
-    if (!signedIn || userProfile?.dashboard_role !== "team_leader") {
+    const targetRole = userProfile?.dashboard_role === "team_leader" || userProfile?.dashboard_role === "advisor";
+    if (!signedIn || !targetRole) {
       setTargetRegistrationMonth(currentMonth());
       setTargetRegistrationClosed(false);
       return;
@@ -1137,7 +1138,7 @@ export default function TvvMobilePage() {
       {illustrationLoaded && <IllustrationTab active={tab === "illustration"} premiumText={illustrationPremiumText} />}
       {targetModalOpen && (userProfile?.dashboard_role === "team_leader"
         ? <TeamTargetRegistrationModal key={targetRegistrationMonth} month={targetRegistrationMonth} reportMonth={month} teamData={teamData} registration={teamTarget} onSaved={(value) => setTeamTarget({ ...value, personal_advisor_targets: teamTarget?.personal_advisor_targets ?? [] })} onClose={closeTargetModal} />
-        : <TvvTargetRegistrationModal month={month} registration={tvvTarget} onSaved={setTvvTarget} onClose={closeTargetModal} />)}
+        : <TvvTargetRegistrationModal key={targetRegistrationMonth} month={targetRegistrationMonth} registration={tvvTarget} onSaved={setTvvTarget} onClose={closeTargetModal} />)}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} hideCustomerNames={userProfile?.dashboard_role === "team_leader" || isBoardMode} onClose={() => setSelectedContract(null)} />}
       <BottomNav tab={tab} setTab={setTab} boardMode={isBoardMode} adoMode={isAdoMode} />
     </main>

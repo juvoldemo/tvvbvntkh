@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { readTargetRegistrationCycle } from "@/lib/target-registration-cycle";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
 function monthStart(value: unknown) {
@@ -58,6 +59,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Doanh thu mục tiêu phải từ 15 đến 999 triệu đồng." }, { status: 400 });
     }
     const supabase = getSupabaseAdmin();
+    const cycle = await readTargetRegistrationCycle(supabase);
+    const requestedMonth = monthStart(body.month).slice(0, 7);
+    if (requestedMonth !== cycle.activeMonth) {
+      return NextResponse.json({
+        error: `Đợt đăng ký tháng ${requestedMonth.slice(5, 7)}/${requestedMonth.slice(0, 4)} đã đóng. Tháng đang mở là ${cycle.activeMonth.slice(5, 7)}/${cycle.activeMonth.slice(0, 4)}.`
+      }, { status: 409 });
+    }
     const { data: profile, error: profileError } = await supabase.from("authorized_users")
       .select("advisor_code,full_name")
       .eq("advisor_code", advisorCode)
