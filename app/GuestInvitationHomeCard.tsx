@@ -7,7 +7,7 @@ import { canvasToBlob, downloadInvitationFile, drawInvitation, INVITATION_IMAGE_
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
 const IMAGE_PATH = "/HNKH8826.png";
-const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Khác"] as const;
+const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
   { label: "Xanh", value: "#17448F" },
   { label: "Đỏ", value: "#C52222" },
@@ -25,19 +25,20 @@ export default function GuestInvitationHomeCard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [open, setOpen] = useState(false);
-  const [salutation, setSalutation] = useState<(typeof SALUTATIONS)[number] | "">("Chị");
-  const [customTitle, setCustomTitle] = useState("");
+  const [salutation, setSalutation] = useState<(typeof SALUTATIONS)[number]>("Không");
   const [guestName, setGuestName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [textColor, setTextColor] = useState<(typeof TEXT_COLORS)[number]["value"]>("#17448F");
   const [imageReady, setImageReady] = useState(false);
   const [message, setMessage] = useState("");
-  const selectedTitle = salutation === "Khác" ? normalizeGuestName(customTitle) : salutation;
-  const displayName = useMemo(() => selectedTitle && normalizeGuestName(guestName) ? `${selectedTitle} ${normalizeGuestName(guestName)}` : "", [guestName, selectedTitle]);
+  const selectedTitle = salutation === "Không" ? "" : salutation;
+  const displayName = useMemo(() => {
+    const normalizedName = normalizeGuestName(guestName);
+    return normalizedName ? [selectedTitle, normalizedName].filter(Boolean).join(" ") : "";
+  }, [guestName, selectedTitle]);
   const error = guestName ? validateGuestName(guestName) : "";
-  const customTitleError = salutation === "Khác" && (selectedTitle.length < 2 || selectedTitle.length > 30);
-  const valid = Boolean(selectedTitle && !customTitleError && !validateGuestName(guestName) && imageReady);
+  const valid = Boolean(!validateGuestName(guestName) && imageReady);
 
   useEffect(() => {
     if (!open) return;
@@ -104,7 +105,6 @@ export default function GuestInvitationHomeCard() {
         <div className="hnkh-modal-grid">
           <form onSubmit={(event) => { event.preventDefault(); void download(); }}>
             <div className="hnkh-salutations" role="group" aria-label="Chọn cách xưng hô">{SALUTATIONS.map((item) => <button type="button" key={item} className={salutation === item ? "active" : ""} aria-pressed={salutation === item} onClick={() => setSalutation(item)}>{item}</button>)}</div>
-            {salutation === "Khác" && <label htmlFor="hnkh-custom-title">Chức danh<input id="hnkh-custom-title" value={customTitle} onChange={(event) => setCustomTitle(event.target.value.replace(/[\r\n]/g, " ").slice(0, 30))} onBlur={() => setCustomTitle(normalizeGuestName(customTitle))} placeholder="Ví dụ: Tiến sĩ, Bác sĩ…" maxLength={30} autoFocus aria-invalid={customTitleError} />{customTitleError && <span className="hnkh-field-error">Chức danh phải có từ 2 đến 30 ký tự.</span>}</label>}
             <label htmlFor="hnkh-name">Họ và tên khách hàng<input id="hnkh-name" value={guestName} onChange={(event) => setGuestName(event.target.value.replace(/[\r\n]/g, " ").slice(0, 60))} onBlur={() => setGuestName(normalizeGuestName(guestName))} placeholder="Ví dụ: Nguyễn Văn An" maxLength={60} aria-invalid={Boolean(error)} required />{error && <span className="hnkh-field-error">{error}</span>}</label>
             <div className="hnkh-colors" role="group" aria-label="Chọn màu chữ">{TEXT_COLORS.map((color) => <button type="button" key={color.value} className={textColor === color.value ? "active" : ""} aria-pressed={textColor === color.value} onClick={() => setTextColor(color.value)}><i style={{ background: color.value }} />{color.label}</button>)}</div>
             <div className="hnkh-actions"><button className="hnkh-download" type="submit" disabled={!valid || busy || sharing}>{busy ? <LoaderCircle className="hnkh-spin" /> : <Download size={18} />}{busy ? "Đang xuất ảnh…" : "Xuất thư mời PNG"}</button><button className="hnkh-share" type="button" disabled={!valid || busy || sharing} onClick={() => void shareZalo()}>{sharing ? <LoaderCircle className="hnkh-spin" /> : <Share2 size={18} />}{sharing ? "Đang chia sẻ…" : "Chia sẻ qua Zalo"}</button></div>
