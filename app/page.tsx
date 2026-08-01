@@ -9,6 +9,7 @@ import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, Che
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
+import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
 type PeriodMode = "month" | "quarter" | "year";
@@ -2697,6 +2698,7 @@ function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, 
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
+    {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <GuestInvitationHomeCard />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}

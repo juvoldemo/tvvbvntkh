@@ -1,14 +1,15 @@
 "use client";
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
+import InvitationPersonalizer from "@/app/admin-data/InvitationPersonalizer";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "about" | "access";
+type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "about" | "access" | "invitations";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -390,9 +391,11 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
         <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />BVNT là ai?</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
+        <button type="button" className={activeTab === "invitations" ? "active" : ""} onClick={() => { setActiveTab("invitations"); setAccessError(""); }}><ImageIcon size={17} />Cá nhân hóa thư mời</button>
       </nav>
 
       <section className="admin-panel-area">
+        {activeTab === "invitations" && <InvitationPersonalizer />}
         {activeTab === "access" && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
