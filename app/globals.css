@@ -16576,8 +16576,8 @@ body,
 
 /* Private data administration */
 .tvv-app .hnkh-home-card { position: relative; display: block; width: 100%; overflow: hidden; border: 0 !important; border-radius: 14px !important; padding: 0 !important; background: transparent !important; cursor: pointer; text-align: left; box-shadow: none !important; }
-.tvv-app .hnkh-home-card { aspect-ratio: 1661 / 571; }
-.tvv-app .hnkh-home-card > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.tvv-app .hnkh-home-card { aspect-ratio: 1661 / 540; }
+.tvv-app .hnkh-home-card > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 57%; }
 .hnkh-home-card:focus-visible { outline: 4px solid #ffca45; outline-offset: 3px; }
 .hnkh-modal-backdrop { position: fixed; z-index: 30000; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 24px; background: rgba(1, 12, 34, .74); backdrop-filter: blur(5px); }
 .hnkh-modal { width: min(1180px, calc(100vw - 36px)); max-height: calc(100dvh - 38px); overflow-y: auto; border: 1px solid #d7e3f0; border-radius: 20px; background: #fff; box-shadow: 0 30px 90px rgba(0, 20, 60, .42); }
