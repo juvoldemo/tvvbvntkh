@@ -80,7 +80,7 @@ export default function GuestInvitationHomeCard() {
     setSharing(true); setMessage("");
     try {
       const file = await createFile();
-      const shareData: ShareData = { files: [file], title: "Thư mời chương trình 30 năm Bảo Việt Nhân thọ", text: `Trân trọng kính mời ${displayName} tham dự chương trình.` };
+      const shareData: ShareData = { files: [file] };
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share(shareData);
         setMessage("Đã mở danh sách ứng dụng chia sẻ. Hãy chọn Zalo.");
