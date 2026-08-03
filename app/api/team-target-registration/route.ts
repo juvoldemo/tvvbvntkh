@@ -124,9 +124,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      registration: data ? { ...data, personal_advisor_targets: personalRegistrations } : null
-    });
+    const registration = data || personalRegistrations.length
+      ? {
+        ...(data ?? {
+          target_month: targetMonth,
+          leader_code: profile.advisor_code,
+          leader_name: profile.full_name,
+          group_name: groupName,
+          revenue_target: 0,
+          active_advisor_target: 0,
+          reward_target: 0,
+          selected_advisors: []
+        }),
+        personal_advisor_targets: personalRegistrations
+      }
+      : null;
+
+    return NextResponse.json({ registration });
   } catch (error) {
     return NextResponse.json({ error: errorText(error, "Khong tai duoc dang ky muc tieu.") }, { status: 500 });
   }
