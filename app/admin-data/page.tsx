@@ -1,20 +1,21 @@
 "use client";
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, Download, FileText, HelpCircle, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
-import InvitationPersonalizer from "@/app/admin-data/InvitationPersonalizer";
+import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Download, FileText, HelpCircle, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "archive" | "about" | "access" | "invitations";
+type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
 type AnalyticsUser = { advisorCode: string; fullName: string; groupName: string; position: string; lastAccess: string | null };
-type AnalyticsData = { rows: AnalyticsRow[]; summary: { uniqueAdvisors: number; sessions: number; actions: number; summaryExports: number; totalSeconds: number; averageSeconds: number; viewOnlySessions: number; shortSessions: number }; trends: Array<{ label: string; sessions: number; advisors: number; seconds: number }>; tabStats: Array<{ tabName: string; views: number; seconds: number; advisors: number }>; groups: Array<{ groupName: string; advisors: number; sessions: number; seconds: number; actions: number }>; neverAccessed: AnalyticsUser[]; inactive7Days: AnalyticsUser[]; inactive30Days: AnalyticsUser[] };
+type AnalyticsData = { rows: AnalyticsRow[]; summary: { uniqueAdvisors: number; sessions: number; actions: number; summaryExports: number; invitationsCreated: number; totalSeconds: number; averageSeconds: number; viewOnlySessions: number; shortSessions: number }; trends: Array<{ label: string; sessions: number; advisors: number; seconds: number }>; tabStats: Array<{ tabName: string; views: number; seconds: number; advisors: number }>; groups: Array<{ groupName: string; advisors: number; sessions: number; seconds: number; actions: number }>; neverAccessed: AnalyticsUser[]; inactive7Days: AnalyticsUser[]; inactive30Days: AnalyticsUser[] };
+type TeamActivity = { id: string; content: string; scheduled_date: string; scheduled_time: string; scheduled_at: string; completed: boolean; completed_at: string | null; photo_url: string | null };
+type ActivityGroup = { id: string; group_name: string; leader_code: string; leader_name: string; revenue_target: number; active_advisor_target: number; selected_advisors: unknown[]; updated_at: string; activities: TeamActivity[]; activityError?: string | null };
 type AdminRewardAudience = "tvv" | "leaders";
 type AdminRewardPeriod = "month" | "quarter";
 type RewardParticipant = { code: string; name: string; groupName?: string; contractCount: number; ip: number; fyp: number; fyc: number; reward: number; detail: string };
@@ -59,6 +60,10 @@ export default function AdminDataPage() {
   const [targetLoading, setTargetLoading] = useState(false);
   const [targetCycle, setTargetCycle] = useState<TargetRegistrationCycle | null>(null);
   const [targetCycleBusy, setTargetCycleBusy] = useState(false);
+  const [activityMonth, setActivityMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [activityGroups, setActivityGroups] = useState<ActivityGroup[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -172,6 +177,26 @@ export default function AdminDataPage() {
   useEffect(() => {
     if (authenticated && activeTab === "targets") void loadTargetRegistrations();
   }, [activeTab, authenticated, loadTargetRegistrations]);
+
+  const loadActivities = useCallback(async () => {
+    setActivityLoading(true);
+    setActivityError("");
+    try {
+      const response = await fetch(`/api/admin/team-activities?month=${activityMonth}`, { cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Không tải được theo dõi hoạt động.");
+      setActivityGroups(payload.groups ?? []);
+    } catch (error) {
+      setActivityGroups([]);
+      setActivityError(error instanceof Error ? error.message : "Không tải được theo dõi hoạt động.");
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [activityMonth]);
+
+  useEffect(() => {
+    if (authenticated && activeTab === "activities") void loadActivities();
+  }, [activeTab, authenticated, loadActivities]);
 
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true);
@@ -388,14 +413,13 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
+        <button type="button" className={activeTab === "activities" ? "active" : ""} onClick={() => { setActiveTab("activities"); setAccessError(""); }}><CheckCircle2 size={17} />Theo dõi hoạt động</button>
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
         <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />BVNT là ai?</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
-        <button type="button" className={activeTab === "invitations" ? "active" : ""} onClick={() => { setActiveTab("invitations"); setAccessError(""); }}><ImageIcon size={17} />Cá nhân hóa thư mời</button>
       </nav>
 
       <section className="admin-panel-area">
-        {activeTab === "invitations" && <InvitationPersonalizer />}
         {activeTab === "access" && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
@@ -461,6 +485,8 @@ export default function AdminDataPage() {
         {activeTab === "data" && <AdminDataSummary data={rewardData} loading={rewardLoading} audience={rewardAudience} period={rewardPeriod} selectedMonth={rewardMonth} setAudience={setRewardAudience} setPeriod={setRewardPeriod} setSelectedMonth={setRewardMonth} onReload={loadRewardData} />}
 
         {activeTab === "targets" && <AdminTargetSummary month={targetMonth} setMonth={setTargetMonth} registrations={targetRegistrations} loading={targetLoading} cycle={targetCycle} cycleBusy={targetCycleBusy} onCycleAction={updateTargetCycle} onReload={loadTargetRegistrations} onDelete={removeTargetRegistration} />}
+
+        {activeTab === "activities" && <AdminActivityTracking month={activityMonth} setMonth={setActivityMonth} groups={activityGroups} loading={activityLoading} error={activityError} onReload={loadActivities} />}
 
         {activeTab === "archive" && <ArchiveAdminPanel
           forms={archiveForms}
@@ -748,13 +774,35 @@ function extractYoutubeId(value: string) {
   return match?.[1] ?? "";
 }
 
+function AdminActivityTracking({ month, setMonth, groups, loading, error, onReload }: {
+  month: string; setMonth: (value: string) => void; groups: ActivityGroup[]; loading: boolean; error: string; onReload: () => void;
+}) {
+  const activityCount = groups.reduce((sum, group) => sum + group.activities.length, 0);
+  const completedCount = groups.reduce((sum, group) => sum + group.activities.filter((item) => item.completed).length, 0);
+  const evidenceCount = groups.reduce((sum, group) => sum + group.activities.filter((item) => item.photo_url).length, 0);
+  return <article className="admin-card admin-activity-tracking">
+    <div className="admin-card-title"><CheckCircle2 /><div><h2>Theo dõi hoạt động</h2><p>Nhóm đã đăng ký mục tiêu, kế hoạch thực hiện và hình ảnh minh chứng theo tháng.</p></div></div>
+    <div className="admin-target-toolbar"><label>Tháng<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label><button type="button" disabled={loading} onClick={onReload}>{loading ? "Đang tải..." : "Tải dữ liệu"}</button></div>
+    <div className="admin-data-overview admin-activity-overview"><div><strong>{groups.length}</strong><span>nhóm đã đăng ký mục tiêu</span></div><div><strong>{activityCount}</strong><span>kế hoạch thực hiện</span></div><div><strong>{completedCount}</strong><span>hoạt động hoàn thành</span></div><div><strong>{evidenceCount}</strong><span>hình ảnh minh chứng</span></div></div>
+    {error && <div className="admin-message error">{error}</div>}
+    {!loading && !error && !groups.length && <div className="admin-data-empty">Chưa có nhóm đăng ký mục tiêu trong tháng này.</div>}
+    <div className="admin-activity-groups">{groups.map((group) => <section key={group.id} className="admin-activity-group">
+      <header><div><h3>{group.group_name}</h3><p>{group.leader_name || group.leader_code} · Cập nhật {new Date(group.updated_at).toLocaleString("vi-VN")}</p></div><span>{group.activities.filter((item) => item.completed).length}/{group.activities.length} hoàn thành</span></header>
+      <div className="admin-activity-targets"><span><b>{formatMoney(group.revenue_target)}</b>Mục tiêu doanh thu</span><span><b>{group.active_advisor_target || 0}</b>TVV mục tiêu</span><span><b>{Array.isArray(group.selected_advisors) ? group.selected_advisors.length : 0}</b>TVV được giao</span></div>
+      {group.activityError && <p className="admin-activity-error">{group.activityError}</p>}
+      {!group.activityError && !group.activities.length && <p className="admin-activity-empty">Nhóm đã đăng ký mục tiêu nhưng chưa lập kế hoạch hành động.</p>}
+      <div className="admin-activity-list">{group.activities.map((activity) => <article key={activity.id} className={activity.completed ? "completed" : ""}><div className="admin-activity-status">{activity.completed ? <CheckCircle2 size={18} /> : <CalendarPlus size={18} />}</div><div><strong>{activity.content}</strong><small>{new Date(activity.scheduled_at).toLocaleString("vi-VN")}{activity.completed_at ? ` · Hoàn thành ${new Date(activity.completed_at).toLocaleString("vi-VN")}` : " · Chưa hoàn thành"}</small></div>{activity.photo_url ? <a href={activity.photo_url} target="_blank" rel="noreferrer" className="admin-activity-photo"><img src={activity.photo_url} alt={`Minh chứng ${activity.content}`} /><span>Xem ảnh</span></a> : <span className="admin-activity-no-photo">Chưa có ảnh</span>}</article>)}</div>
+    </section>)}</div>
+  </article>;
+}
+
 function AnalyticsPanel({ period, setPeriod, data, loading, onReload }: { period: AnalyticsPeriod; setPeriod: (value: AnalyticsPeriod) => void; data: AnalyticsData | null; loading: boolean; onReload: () => void }) {
   const [selectedSession, setSelectedSession] = useState<AnalyticsRow | null>(null);
   const [alertView, setAlertView] = useState<"never" | "inactive7" | "inactive30">("never");
   const [showSessionDetails, setShowSessionDetails] = useState(false);
   const [showAccessRanking, setShowAccessRanking] = useState(false);
   const rows = data?.rows ?? [];
-  const summary = data?.summary ?? { uniqueAdvisors: 0, sessions: 0, actions: 0, summaryExports: 0, totalSeconds: 0, averageSeconds: 0, viewOnlySessions: 0, shortSessions: 0 };
+  const summary = data?.summary ?? { uniqueAdvisors: 0, sessions: 0, actions: 0, summaryExports: 0, invitationsCreated: 0, totalSeconds: 0, averageSeconds: 0, viewOnlySessions: 0, shortSessions: 0 };
   const tabLabels: Record<string, string> = { overview: "Tổng quan", contracts: "Hợp đồng", calculator: "Thu nhập", contests: "Thi đua", leaderboard: "Bảng xếp hạng", illustration: "Minh họa", profile: "Cá nhân", archive: "Kho tài liệu" };
   const duration = (seconds: number) => seconds >= 3600 ? `${Math.floor(seconds / 3600)}g ${Math.round((seconds % 3600) / 60)}p` : seconds >= 60 ? `${Math.floor(seconds / 60)}p ${seconds % 60}s` : `${seconds}s`;
   const maxTrend = Math.max(1, ...(data?.trends ?? []).map((item) => item.sessions));
@@ -776,7 +824,7 @@ function AnalyticsPanel({ period, setPeriod, data, loading, onReload }: { period
       <button type="button" onClick={onReload} disabled={loading}>{loading ? "Đang tải..." : "Làm mới"}</button>
     </div>
     {!showSessionDetails && !showAccessRanking && <><div className="admin-analytics-summary admin-analytics-summary-full">
-      <span><strong>{summary.uniqueAdvisors}</strong> TVV truy cập</span><span><strong>{summary.sessions}</strong> phiên truy cập</span><span><strong>{summary.actions}</strong> thao tác</span><span><strong>{duration(summary.averageSeconds)}</strong> trung bình/phiên</span><span><strong>{summary.summaryExports}</strong> lượt xuất tóm tắt</span><span><strong>{summary.viewOnlySessions}</strong> phiên chỉ xem</span>
+      <span><strong>{summary.uniqueAdvisors}</strong> TVV truy cập</span><span><strong>{summary.sessions}</strong> phiên truy cập</span><span><strong>{summary.actions}</strong> thao tác</span><span><strong>{summary.invitationsCreated}</strong> thư mời từ 01/08</span><span><strong>{duration(summary.averageSeconds)}</strong> trung bình/phiên</span><span><strong>{summary.summaryExports}</strong> lượt xuất tóm tắt</span><span><strong>{summary.viewOnlySessions}</strong> phiên chỉ xem</span>
     </div>
 
     <section className="admin-analytics-grid">

@@ -63,6 +63,27 @@ export async function GET(request: NextRequest) {
     supabase.from("app_analytics_events").select("advisor_code,created_at").eq("event_name", "session_start").order("created_at", { ascending: false }).limit(10000)
   ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const invitationSince = "2026-08-01T00:00:00+07:00";
+  let invitationActions: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error: invitationError } = await supabase.from("app_analytics_events")
+      .select("action_name")
+      .eq("event_name", "action")
+      .gte("created_at", invitationSince)
+      .range(from, from + 999);
+    if (invitationError) return NextResponse.json({ error: invitationError.message }, { status: 500 });
+    invitationActions = invitationActions.concat(page ?? []);
+    if ((page ?? []).length < 1000) break;
+  }
+  const normalizeAction = (value: unknown) => String(value || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u0111\u0110]/g, "d")
+    .toLowerCase().replace(/\s+/g, " ").trim();
+  const invitationsCreated = invitationActions.filter((event: any) => {
+    const actionName = normalizeAction(event.action_name);
+    return actionName === "xuat thu moi png"
+      || actionName === "chia se qua zalo"
+      || actionName.startsWith("dang chia se");
+  }).length;
   const profiles = new Map((users ?? []).map((user: any) => [user.advisor_code, user]));
   const rows = new Map<string, any>();
   for (const event of events ?? []) {
@@ -124,6 +145,7 @@ export async function GET(request: NextRequest) {
     sessions: result.length,
     actions: result.reduce((sum, row) => sum + row.actions, 0),
     summaryExports: result.reduce((sum, row) => sum + row.summaryExports, 0),
+    invitationsCreated,
     totalSeconds: result.reduce((sum, row) => sum + row.totalSeconds, 0),
     averageSeconds: result.length ? Math.round(result.reduce((sum, row) => sum + row.totalSeconds, 0) / result.length) : 0,
     viewOnlySessions: result.filter((row) => row.actions === 0).length,
