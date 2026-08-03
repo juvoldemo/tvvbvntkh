@@ -3,6 +3,7 @@ export type AdoScope = {
   fullName: string;
   department: string;
   groups: string[];
+  accountGroupsIncludingInactive?: string[];
 };
 
 const ADO_SCOPES: AdoScope[] = [
@@ -10,7 +11,8 @@ const ADO_SCOPES: AdoScope[] = [
     username: "nguyenthimaitrang",
     fullName: "Nguyễn Thị Mai Trang",
     department: "PTKD 1",
-    groups: ["Banca", "Hoàng Phát", "Quyết Thắng"]
+    groups: ["Banca", "Hoàng Phát", "Quyết Thắng"],
+    accountGroupsIncludingInactive: ["Hoàng Phát"]
   },
   {
     username: "nguyenthitram",
@@ -22,7 +24,8 @@ const ADO_SCOPES: AdoScope[] = [
     username: "nguyenthanhnhan",
     fullName: "Nguyễn Thành Nhân",
     department: "PTKD 2",
-    groups: ["Thành Phú", "Thuận Phát", "Duyên Phát", "Hiệp Phát", "Nguyên Phát", "Tài Phát"]
+    groups: ["Thành Phú", "Thuận Phát", "Duyên Phát", "Hiệp Phát", "Nguyên Phát", "Tài Phát"],
+    accountGroupsIncludingInactive: ["Nguyên Phát"]
   },
   {
     username: "dinhquoctien",
@@ -40,7 +43,8 @@ const ADO_SCOPES: AdoScope[] = [
     username: "nguyenthoc",
     fullName: "Nguyễn Thóc",
     department: "PTKD 2",
-    groups: ["Hồng Phát", "Tâm An", "Tâm Nhiên", "Tâm Phát", "Hùng Phát", "Tấn Phát"]
+    groups: ["Hồng Phát", "Tâm An", "Tâm Nhiên", "Tâm Phát", "Hùng Phát", "Tấn Phát"],
+    accountGroupsIncludingInactive: ["Tâm Phát"]
   }
 ];
 

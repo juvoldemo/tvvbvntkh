@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         .in("group_name", scope.groups).gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`),
       supabase.from("authorized_users")
         .select("advisor_code,full_name,group_name,advisor_position,advisor_status,avatar_url,password_hash,password_plain,is_active")
-        .in("group_name", scope.groups).eq("is_active", true).order("group_name").order("full_name"),
+        .in("group_name", scope.groups).order("group_name").order("full_name"),
       supabase.from("team_target_registrations")
         .select("group_name,leader_code,leader_name,revenue_target,active_advisor_target,updated_at")
         .eq("target_month", monthStart(month)).in("group_name", scope.groups),
@@ -123,6 +123,14 @@ export async function GET(request: NextRequest) {
     if (yearError) throw yearError;
     if (rosterError) throw rosterError;
 
+    const activeRoster = (roster ?? []).filter((row: any) => row.is_active);
+    const accountGroupsIncludingInactive = new Set(
+      "accountGroupsIncludingInactive" in scope ? scope.accountGroupsIncludingInactive ?? [] : []
+    );
+    const visibleRoster = (roster ?? []).filter((row: any) =>
+      row.is_active
+      || (accountGroupsIncludingInactive.has(row.group_name) && Boolean(row.password_hash || row.password_plain))
+    );
     const contracts = (monthRows ?? []) as RevenueRecord[];
     const counted = contracts.filter(isCountedRevenueRecord);
     const targets = targetError ? [] : (targetRows ?? []);
@@ -151,7 +159,7 @@ export async function GET(request: NextRequest) {
     }).sort((a, b) => b.afyp - a.afyp);
 
     const programRows = programError ? [] : (programs ?? []);
-    const teamLeaders = (roster ?? []).flatMap((row: any) => {
+    const teamLeaders = activeRoster.flatMap((row: any) => {
       const managedGroup = managedTeamName(row.advisor_code, row.advisor_position, row.full_name, row.group_name);
       return managedGroup && scope.groups.includes(managedGroup)
         ? [{ advisorCode: row.advisor_code, fullName: row.full_name, groupName: managedGroup }]
@@ -240,7 +248,7 @@ export async function GET(request: NextRequest) {
       },
       contracts: contracts.map(sanitizeContract),
       yearContracts: dedupeRevenueRecordsByContract((yearRows ?? []) as RevenueRecord[]).map(sanitizeContract),
-      advisors: (roster ?? []).map((row: any) => ({
+      advisors: visibleRoster.map((row: any) => ({
         advisorCode: row.advisor_code,
         fullName: row.full_name,
         groupName: row.group_name,
