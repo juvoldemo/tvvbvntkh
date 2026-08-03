@@ -3857,6 +3857,24 @@ function archiveFileSrc(value?: string) {
   return value ? `/api/archive/file?path=${encodeURIComponent(value)}` : "";
 }
 
+function archiveShareFileName(item: ArchiveDocument) {
+  const sourceName = item.file?.split("/").pop();
+  if (sourceName && /\.pdf$/i.test(sourceName)) return sourceName;
+  const safeTitle = item.title.replace(/[\\/:*?"<>|]/g, "-").trim();
+  return `${safeTitle || "tai-lieu"}.pdf`;
+}
+
+function ArchiveShareIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M3 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+    <path d="M15 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+    <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+    <path d="M8.7 10.7l6.6 -3.4" />
+    <path d="M8.7 13.3l6.6 3.4" />
+  </svg>;
+}
+
 function youtubeEmbedSrc(guide: Pick<ArchiveGuide, "youtubeId" | "youtubeUrl">) {
   if (guide.youtubeId) return `https://www.youtube.com/embed/${encodeURIComponent(guide.youtubeId)}`;
   if (!guide.youtubeUrl) return "";
@@ -3880,6 +3898,7 @@ function ArchiveView() {
   const [folderId, setFolderId] = useState("");
   const [selectedFile, setSelectedFile] = useState<ArchiveSelection | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -3901,6 +3920,45 @@ function ArchiveView() {
   const visibleFaq = data?.faq ?? [];
   const documents = activeFolder ? activeFolder.items : [];
 
+  async function shareDocument(item: ArchiveDocument) {
+    if (!item.file || sharingId) return;
+    const relativeUrl = archiveFileSrc(item.file);
+    const absoluteUrl = new URL(relativeUrl, window.location.href).href;
+    setSharingId(item.id);
+
+    try {
+      if (!navigator.share) {
+        await navigator.clipboard?.writeText(absoluteUrl);
+        window.alert("Đã sao chép liên kết tài liệu để bạn gửi qua Zalo.");
+        return;
+      }
+
+      const response = await fetch(relativeUrl);
+      if (!response.ok) throw new Error("Không thể tải tài liệu");
+      const blob = await response.blob();
+      const file = new File([blob], archiveShareFileName(item), { type: blob.type || "application/pdf" });
+      const filePayload = { title: item.title, text: item.title, files: [file] };
+
+      if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+        await navigator.share(filePayload);
+      } else {
+        await navigator.share({ title: item.title, text: item.title, url: absoluteUrl });
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      try {
+        if (navigator.share) await navigator.share({ title: item.title, text: item.title, url: absoluteUrl });
+        else throw error;
+      } catch (fallbackError) {
+        if (!(fallbackError instanceof DOMException && fallbackError.name === "AbortError")) {
+          window.alert("Chưa thể mở giao diện chia sẻ. Vui lòng thử lại.");
+        }
+      }
+    } finally {
+      setSharingId(null);
+    }
+  }
+
   return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-archive-page">
     <div className="tvv-archive-tabs">
       {([["forms", "Mẫu biểu"], ["guides", "Hướng dẫn"], ["faq", "FAQ"]] as const).map(([id, label]) => <button type="button" key={id} className={view === id ? "active" : ""} onClick={() => { setView(id); setFolderId(""); setSelectedFile(null); setOpenFaqId(null); }}>{label}</button>)}
@@ -3915,9 +3973,17 @@ function ArchiveView() {
 
     {view === "forms" && activeFolder && <section className="tvv-archive-list">
       <button type="button" className="tvv-archive-back" onClick={() => { setFolderId(""); setSelectedFile(null); }}><ChevronLeft size={18} />{activeFolder.title}</button>
-      {documents.map((item) => <button type="button" className="tvv-archive-file" key={item.id} onClick={() => item.file && setSelectedFile({ kind: "pdf", title: item.title, file: item.file })}>
-        <span>PDF</span><b>{item.title}</b><small>{item.size ?? "PDF"}</small><ChevronRight size={20} />
-      </button>)}
+      {documents.map((item) => <div className="tvv-archive-file" key={item.id} role="button" tabIndex={item.file ? 0 : -1} onClick={() => item.file && setSelectedFile({ kind: "pdf", title: item.title, file: item.file })} onKeyDown={(event) => {
+        if (item.file && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          setSelectedFile({ kind: "pdf", title: item.title, file: item.file });
+        }
+      }}>
+        <span>PDF</span><b>{item.title}</b><button type="button" className="tvv-archive-share" disabled={!item.file || sharingId === item.id} aria-label={`Chia sẻ ${item.title}`} title="Chia sẻ qua Zalo" onKeyDown={(event) => event.stopPropagation()} onClick={(event) => {
+          event.stopPropagation();
+          void shareDocument(item);
+        }}>{sharingId === item.id ? <LoaderCircle className="tvv-spin" size={22} /> : <ArchiveShareIcon />}</button><ChevronRight size={20} />
+      </div>)}
       {!documents.length && <p className="tvv-empty">Không tìm thấy tài liệu phù hợp.</p>}
     </section>}
 
@@ -3949,9 +4015,14 @@ function ArchiveView() {
 
     {selectedFile && <div className="tvv-archive-viewer-backdrop" role="presentation" onClick={() => setSelectedFile(null)}>
       <section className="tvv-archive-viewer" role="dialog" aria-modal="true" aria-label={selectedFile.title} onClick={(event) => event.stopPropagation()}>
-        <header><span><FileText size={18} /><b>{selectedFile.title}</b></span><button type="button" onClick={() => setSelectedFile(null)} aria-label="Đóng"><X size={22} /></button></header>
+        <header><span><FileText size={18} /><b>{selectedFile.title}</b></span><button className="contract-modal-close" type="button" onClick={() => setSelectedFile(null)} aria-label="Đóng"><X size={22} /></button></header>
         <iframe src={selectedFile.kind === "youtube" ? youtubeEmbedSrc(selectedFile) : archiveFileSrc(selectedFile.file)} title={selectedFile.title} allow={selectedFile.kind === "youtube" ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" : undefined} allowFullScreen={selectedFile.kind === "youtube"} />
-        {selectedFile.kind === "pdf" && <a href={archiveFileSrc(selectedFile.file)} download><Download size={16} />Tải xuống</a>}
+        {selectedFile.kind === "pdf" && <div className="tvv-archive-viewer-actions">
+          <a href={archiveFileSrc(selectedFile.file)} download><Download size={18} />Tải xuống</a>
+          <button type="button" disabled={sharingId === `viewer:${selectedFile.file}`} aria-label={`Chia sẻ ${selectedFile.title}`} onClick={() => void shareDocument({ id: `viewer:${selectedFile.file}`, title: selectedFile.title, file: selectedFile.file })}>
+            {sharingId === `viewer:${selectedFile.file}` ? <LoaderCircle className="tvv-spin" size={22} /> : <ArchiveShareIcon />}<span>Chia sẻ</span>
+          </button>
+        </div>}
       </section>
     </div>}
   </section>;

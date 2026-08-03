@@ -20,8 +20,23 @@ function isLifeCare20() {
   return selectedMainProduct === "LIFE_CARE_20";
 }
 
+function getLifeCareSumAssuredRange(age) {
+  if (!Number.isFinite(age) || age < 18 || age > 60) return null;
+
+  const min = age <= 30
+    ? 500000000
+    : age <= 35
+      ? 300000000
+      : age <= 40
+        ? 200000000
+        : 100000000;
+
+  return { min, max: 1000000000 };
+}
+
 function calculateLifeCarePremium({ gender, age, term, sumAssured }) {
-  if (!Number.isFinite(age) || age < 18 || age > 60 || !sumAssured) return null;
+  const range = getLifeCareSumAssuredRange(age);
+  if (!range || !sumAssured || sumAssured < range.min || sumAssured > range.max) return null;
   const sexKey = gender === "Nam" ? "male" : "female";
   const rate = window.LIFE_CARE_20_RATES?.[sexKey]?.[age]?.[term];
   return rate ? Math.round(rate * sumAssured / 1000) : null;
@@ -3416,9 +3431,28 @@ function updateDeathSumAssuredRange() {
   const rangeNote = document.getElementById("deathSumAssuredRange");
 
   if (isLifeCare20()) {
-    deathSumAssuredInput.setCustomValidity("");
-    rangeNote.textContent = "";
-    rangeNote.classList.remove("is-error");
+    const range = getLifeCareSumAssuredRange(age);
+    const sumAssured = moneyValue("deathSumAssured");
+
+    if (!range) {
+      deathSumAssuredInput.setCustomValidity("");
+      rangeNote.textContent = age === null ? "Nhập ngày sinh để xem khoảng STBH hợp lệ." : "";
+      rangeNote.classList.remove("is-error");
+      normalizeMainIllustrationText();
+      return;
+    }
+
+    const rangeText = `${formatVND(range.min)} - ${formatVND(range.max)}`;
+    rangeNote.textContent = `Hợp lệ: ${rangeText}`;
+
+    if (sumAssured && (sumAssured < range.min || sumAssured > range.max)) {
+      deathSumAssuredInput.setCustomValidity(`Số tiền bảo hiểm phải trong khoảng ${rangeText}.`);
+      rangeNote.textContent = `Ngoài khoảng: ${rangeText}`;
+      rangeNote.classList.add("is-error");
+    } else {
+      deathSumAssuredInput.setCustomValidity("");
+      rangeNote.classList.remove("is-error");
+    }
     normalizeMainIllustrationText();
     return;
   }
@@ -3501,6 +3535,7 @@ document.getElementById("illustrationForm").addEventListener("submit", (event) =
 document.getElementById("illustrationForm").addEventListener("input", () => {
   if (isLifeCare20()) {
     updateAgePreview();
+    updateDeathSumAssuredRange();
     updateLifeCarePremium();
     renderLifeCareBenefits();
     renderRiderUI();

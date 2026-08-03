@@ -18607,6 +18607,31 @@ body .tvv-app .tvv-contest-detail {
   white-space: nowrap;
 }
 
+.tvv-archive-share {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #b9d2ee;
+  border-radius: 10px;
+  background: #eef6ff;
+  color: #004b7a;
+  padding: 6px 9px;
+  cursor: pointer;
+}
+
+.tvv-archive-share small {
+  font: inherit;
+  font-size: var(--typo-10);
+  font-weight: 700;
+}
+
+.tvv-archive-share:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
 .tvv-archive-file:disabled {
   opacity: .58;
 }
@@ -18710,18 +18735,13 @@ body .tvv-app .tvv-contest-detail {
   white-space: nowrap;
 }
 
-.tvv-archive-viewer header button {
+.tvv-archive-viewer header .contract-modal-close {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
   place-items: center;
-  border: 0;
-  border-radius: 10px;
-  background: #004b7a;
-  color: #fff;
-  font-size: var(--typo-24);
-  font-weight: 700;
-  line-height: 1;
 }
 
 .tvv-archive-viewer a {
@@ -18749,6 +18769,47 @@ body .tvv-app .tvv-contest-detail {
   width: fit-content;
   align-items: center;
   gap: 6px;
+}
+
+.tvv-archive-viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+body .tvv-app .tvv-archive-viewer .tvv-archive-viewer-actions > a,
+body .tvv-app .tvv-archive-viewer .tvv-archive-viewer-actions > button {
+  display: inline-flex !important;
+  width: fit-content !important;
+  min-width: 0 !important;
+  min-height: 42px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #e8f2ff !important;
+  color: #004b7a !important;
+  padding: 8px 12px !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: var(--typo-12) !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+}
+
+body .tvv-app .tvv-archive-viewer .tvv-archive-viewer-actions > button svg {
+  width: 22px !important;
+  height: 22px !important;
+  color: #004b7a !important;
+  stroke: #004b7a !important;
+}
+
+body .tvv-app .tvv-archive-viewer .tvv-archive-viewer-actions > button:disabled {
+  cursor: wait;
+  opacity: .65;
 }
 
 .tvv-app .tvv-archive-page {
@@ -18832,6 +18893,31 @@ body .tvv-app .tvv-contest-detail {
 .tvv-app .tvv-archive-folder small,
 .tvv-app .tvv-archive-file small {
   color: #004b7a !important;
+}
+
+body .tvv-app .tvv-archive-file > .tvv-archive-share {
+  display: inline-flex !important;
+  width: 42px !important;
+  min-width: 42px;
+  height: 42px !important;
+  min-height: 42px;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: #005987 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+}
+
+body .tvv-app .tvv-archive-file > .tvv-archive-share svg {
+  display: block !important;
+  color: #005987 !important;
+  stroke: #005987 !important;
+  opacity: 1 !important;
 }
 
 .tvv-app .tvv-archive-back {
