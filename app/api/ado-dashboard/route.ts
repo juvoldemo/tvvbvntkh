@@ -102,6 +102,8 @@ export async function GET(request: NextRequest) {
       { data: monthRows, error: monthError },
       { data: yearRows, error: yearError },
       { data: roster, error: rosterError },
+      { data: unassignedRoster, error: unassignedRosterError },
+      { data: scopeMembershipRows, error: scopeMembershipError },
       { data: targetRows, error: targetError },
       { data: programs, error: programError }
     ] = await Promise.all([
@@ -112,6 +114,11 @@ export async function GET(request: NextRequest) {
       supabase.from("authorized_users")
         .select("advisor_code,full_name,group_name,advisor_position,advisor_status,avatar_url,password_hash,password_plain,is_active")
         .in("group_name", scope.groups).order("group_name").order("full_name"),
+      supabase.from("authorized_users")
+        .select("advisor_code,full_name,group_name,advisor_position,advisor_status,avatar_url,password_hash,password_plain,is_active")
+        .is("group_name", null).eq("is_active", true).order("full_name"),
+      supabase.from("revenue_records")
+        .select("agent_code,group_name").eq("data_month", "2099-01-01").in("group_name", scope.groups),
       supabase.from("team_target_registrations")
         .select("group_name,leader_code,leader_name,revenue_target,active_advisor_target,updated_at")
         .eq("target_month", monthStart(month)).in("group_name", scope.groups),
@@ -122,12 +129,33 @@ export async function GET(request: NextRequest) {
     if (monthError) throw monthError;
     if (yearError) throw yearError;
     if (rosterError) throw rosterError;
+    if (unassignedRosterError) throw unassignedRosterError;
+    if (scopeMembershipError) throw scopeMembershipError;
 
-    const activeRoster = (roster ?? []).filter((row: any) => row.is_active);
+    const membershipByAdvisor = new Map<string, string>();
+    for (const row of scopeMembershipRows ?? []) {
+      const advisorCode = String(row.agent_code || "").trim().toUpperCase();
+      if (advisorCode && row.group_name && !membershipByAdvisor.has(advisorCode)) {
+        membershipByAdvisor.set(advisorCode, row.group_name);
+      }
+    }
+    const rosterByCode = new Map<string, any>();
+    for (const row of [...(roster ?? []), ...(unassignedRoster ?? [])]) {
+      const advisorCode = String(row.advisor_code || "").trim().toUpperCase();
+      const resolvedGroup = String(row.group_name || "").trim()
+        || managedTeamName(row.advisor_code, row.advisor_position, row.full_name, row.group_name)
+        || membershipByAdvisor.get(advisorCode)
+        || "";
+      if (advisorCode && scope.groups.includes(resolvedGroup)) {
+        rosterByCode.set(advisorCode, { ...row, group_name: resolvedGroup });
+      }
+    }
+    const resolvedRoster = [...rosterByCode.values()];
+    const activeRoster = resolvedRoster.filter((row: any) => row.is_active);
     const accountGroupsIncludingInactive = new Set(
       "accountGroupsIncludingInactive" in scope ? scope.accountGroupsIncludingInactive ?? [] : []
     );
-    const visibleRoster = (roster ?? []).filter((row: any) =>
+    const visibleRoster = resolvedRoster.filter((row: any) =>
       row.is_active
       || (accountGroupsIncludingInactive.has(row.group_name) && Boolean(row.password_hash || row.password_plain))
     );
