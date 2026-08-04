@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
   let invitationActions: any[] = [];
   for (let from = 0; ; from += 1000) {
     const { data: page, error: invitationError } = await supabase.from("app_analytics_events")
-      .select("action_name")
+      .select("advisor_code,action_name")
       .eq("event_name", "action")
       .gte("created_at", invitationSince)
       .range(from, from + 999);
@@ -78,13 +78,25 @@ export async function GET(request: NextRequest) {
   const normalizeAction = (value: unknown) => String(value || "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u0111\u0110]/g, "d")
     .toLowerCase().replace(/\s+/g, " ").trim();
-  const invitationsCreated = invitationActions.filter((event: any) => {
+  const invitationEvents = invitationActions.filter((event: any) => {
     const actionName = normalizeAction(event.action_name);
     return actionName === "xuat thu moi png"
       || actionName === "chia se qua zalo"
       || actionName.startsWith("dang chia se");
-  }).length;
+  });
+  const invitationsCreated = invitationEvents.length;
   const profiles = new Map((users ?? []).map((user: any) => [user.advisor_code, user]));
+  const invitationCounts = new Map<string, number>();
+  for (const event of invitationEvents) {
+    const advisorCode = String(event.advisor_code || "").trim() || "—";
+    invitationCounts.set(advisorCode, (invitationCounts.get(advisorCode) || 0) + 1);
+  }
+  const invitationRanking = [...invitationCounts.entries()]
+    .map(([advisorCode, count]) => {
+      const profile: any = profiles.get(advisorCode) || {};
+      return { advisorCode, fullName: profile.full_name || "—", groupName: profile.group_name || "—", position: profile.advisor_position || "—", count };
+    })
+    .sort((a, b) => b.count - a.count || a.fullName.localeCompare(b.fullName, "vi"));
   const rows = new Map<string, any>();
   for (const event of events ?? []) {
     const profile: any = profiles.get(event.advisor_code) || {};
@@ -151,5 +163,5 @@ export async function GET(request: NextRequest) {
     viewOnlySessions: result.filter((row) => row.actions === 0).length,
     shortSessions: result.filter((row) => row.totalSeconds > 0 && row.totalSeconds < 15).length
   };
-  return NextResponse.json({ period, since, rows: result, summary, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days });
+  return NextResponse.json({ period, since, rows: result, summary, invitationRanking, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days });
 }

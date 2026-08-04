@@ -16709,8 +16709,20 @@ body,
 .admin-analytics-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .admin-analytics-summary span { display: grid; gap: 3px; border-radius: 11px; background: #edf5ff; color: #526b82; padding: 13px; font-size: var(--typo-12); }
 .admin-analytics-summary strong { color: #004b7a; font-size: var(--typo-20); }
+body .admin-page button.admin-analytics-summary-action { display: grid; gap: 3px; min-height: 0; border: 0; border-radius: 11px; background: #edf5ff !important; color: #526b82 !important; padding: 13px; font: inherit; font-size: var(--typo-12); font-weight: 400; text-align: left; cursor: pointer; box-shadow: none !important; }
+body .admin-page button.admin-analytics-summary-action strong { display: block; color: #004b7a !important; font-size: var(--typo-20); line-height: normal; }
+body .admin-page button.admin-analytics-summary-action:hover { background: #dcecff !important; transform: translateY(-1px); }
+.admin-analytics-summary-action:focus-visible { outline: 3px solid rgba(0, 89, 135, .25); outline-offset: 2px; }
 .admin-analytics-summary-full { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .admin-activity-overview { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-data-overview.admin-activity-overview button { display: grid; gap: 4px; min-height: 0; border: 1px solid #dce7f8 !important; border-radius: 12px; background: #f8fbff !important; padding: 14px; color: #5b6678 !important; text-align: left; box-shadow: none !important; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.admin-data-overview.admin-activity-overview button strong { color: #004b7a !important; font-size: var(--typo-28); line-height: 1; }
+.admin-data-overview.admin-activity-overview button span { color: #5b6678 !important; font-size: var(--typo-12); font-weight: 700; }
+.admin-data-overview.admin-activity-overview button:hover { border-color: #83b5d4 !important; background: #eef7ff !important; transform: translateY(-1px); }
+.admin-data-overview.admin-activity-overview button.active { border-color: #0077a8 !important; background: #e5f4fb !important; box-shadow: inset 4px 0 #0077a8 !important; }
+.admin-activity-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #e3ebf3; padding: 4px 2px 12px; }
+.admin-activity-list-heading h3 { margin: 0; color: #004b7a; font-size: var(--typo-16); }
+.admin-activity-list-heading span { border-radius: 999px; background: #e8f3fb; color: #005987; padding: 6px 10px; font-size: var(--typo-11); font-weight: 800; }
 .admin-activity-groups { display: grid; gap: 16px; }
 .admin-activity-group { overflow: hidden; border: 1px solid #dce8f5; border-radius: 16px; background: #fff; }
 .admin-activity-group > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; background: #f2f7fc; }
@@ -16778,6 +16790,15 @@ body,
 .admin-session-metrics span { display: grid; gap: 4px; border-radius: 10px; background: #edf5ff; padding: 10px; color: #526b82; font-size: var(--typo-10); }
 .admin-session-metrics b { color: #004b7a; }
 .admin-analytics-modal h4 { margin: 16px 0 8px; color: #004b7a; }
+.admin-invitation-ranking-modal { width: min(680px, calc(100vw - 40px)); }
+.admin-invitation-ranking-list { display: grid; gap: 8px; margin-top: 16px; }
+.admin-invitation-ranking-list > div { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid #e2ebf3; border-radius: 12px; padding: 11px 14px; background: #f8fbff; }
+.admin-invitation-ranking-list span { display: grid; gap: 3px; min-width: 0; }
+.admin-invitation-ranking-list span strong { overflow: hidden; color: #17324f; text-overflow: ellipsis; white-space: nowrap; }
+.admin-invitation-ranking-list span small { color: #718397; }
+.admin-invitation-ranking-list em { color: #005987; font-size: 20px; font-style: normal; font-weight: 900; white-space: nowrap; }
+.admin-invitation-ranking-list em small { font-size: 11px; font-weight: 700; }
+.admin-invitation-ranking-list > p { color: #718397; text-align: center; }
 .admin-session-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .admin-session-tabs > div { display: flex; justify-content: space-between; border-radius: 8px; background: #f5f9fd; padding: 9px 10px; }
 .admin-session-timeline { display: grid; gap: 0; border-left: 2px solid #cfe1f2; margin-left: 7px; padding-left: 15px; }
