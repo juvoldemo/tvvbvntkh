@@ -52,9 +52,9 @@ const bc02OnlyQuarter = calculatePolicyRewards({
     bc02("2026-03-10", "B03", { ip: 110_033_500, afyp: 110_033_500 })
   ]
 });
-assert.equal(bc02OnlyQuarter.quarterly[0].totalFyc, 123_010_050);
+assert.equal(bc02OnlyQuarter.quarterly[0].totalFyc, 102_508_375);
 assert.equal(bc02OnlyQuarter.quarterly[0].rate, 0.2, "BC02 chưa có FYP dùng AFYP để tạm tính bậc thưởng quý");
-assert.equal(bc02OnlyQuarter.quarterly[0].reward, 24_602_010);
+assert.equal(bc02OnlyQuarter.quarterly[0].reward, 20_501_675);
 
 const calculatorQuarter = calculatePolicyRewards({
   selectedMonth: "2026-07",
@@ -62,7 +62,7 @@ const calculatorQuarter = calculatePolicyRewards({
   bc02: [bc02("2026-07-15", "POLICY-DRAFT", { ip: 35_000_000, estimated_fyp: 35_000_000 })]
 });
 assert.equal(calculatorQuarter.quarterly[0].rate, 0.08, "hợp đồng dự kiến 35 triệu phải đạt bậc thưởng quý 8%");
-assert.equal(calculatorQuarter.quarterly[0].reward, 840_000);
+assert.equal(calculatorQuarter.quarterly[0].reward, 700_000);
 
 const movedGroup = calculatePolicyRewards({
   selectedMonth: "2026-03",
@@ -147,7 +147,7 @@ const deduped = calculatePolicyRewards({
   bc02: [bc02("2026-01-10", "GYC001"), bc02("2026-01-11", "NEW001")]
 });
 assert.equal(deduped.rewardMonthContracts.filter((row: any) => row.source === "bc02").length, 1);
-assert.equal(deduped.monthly[0].estimatedFyc, 3_000_000);
+assert.equal(deduped.monthly[0].estimatedFyc, 2_500_000);
 
 const filtered = calculatePolicyRewards({
   selectedMonth: "2026-01",
@@ -166,9 +166,10 @@ const kpi05ReplacesSameAgentMonth = calculatePolicyRewards({
   ],
   bc02: [bc02("2026-04-10", "BC02-001", { ip: 20_000_000 })]
 });
-assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "kpi04").length, 0);
-assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "bc02").length, 0);
-assert.equal(kpi05ReplacesSameAgentMonth.monthly[0].totalFyc, 12_000_000);
+assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "kpi04").length, 1);
+assert.equal(kpi05ReplacesSameAgentMonth.rewardMonthContracts.filter((row: any) => row.source === "bc02").length, 1);
+assert.equal(kpi05ReplacesSameAgentMonth.monthly[0].ip, 32_000_000, "KPI05 không được cộng vào IP tháng");
+assert.equal(kpi05ReplacesSameAgentMonth.monthly[0].totalFyc, 27_000_000);
 
 const kpi05RecurringByMonth = calculatePolicyRewards({
   selectedMonth: "2026-06",
@@ -180,7 +181,8 @@ const kpi05RecurringByMonth = calculatePolicyRewards({
   bc02: []
 });
 assert.equal(Math.round(kpi05RecurringByMonth.monthly[0].totalFyc), 38_915_182);
-assert.equal(Math.round(kpi05RecurringByMonth.monthly[0].reward), 7_004_733);
+assert.equal(kpi05RecurringByMonth.monthly[0].ip, 0);
+assert.equal(Math.round(kpi05RecurringByMonth.monthly[0].reward), 0);
 assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].fyp), 194_268_983);
 assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].totalFyc), 56_045_164);
 assert.equal(Math.round(kpi05RecurringByMonth.quarterly[0].reward), 8_406_775);
@@ -195,8 +197,56 @@ const newAdvisorQuarter = calculatePolicyRewards({
   bc02: [],
   advisorProfiles: [{ advisor_code: "A01", start_date: "2026-04-13" }]
 });
-assert.equal(Math.round(newAdvisorQuarter.quarterly[0].qualificationFyp ?? 0), 268_715_801);
-assert.equal(newAdvisorQuarter.quarterly[0].rate, 0.18);
-assert.equal(Math.round(newAdvisorQuarter.quarterly[0].reward), 12_344_200);
+assert.equal(Math.round(newAdvisorQuarter.quarterly[0].qualificationFyp ?? 0), 233_280_750);
+assert.equal(newAdvisorQuarter.quarterly[0].rate, 0.15);
+assert.equal(Math.round(newAdvisorQuarter.quarterly[0].reward), 10_286_833);
+
+const issueDateWins = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-05", { ip: 3_000_000, raw_data: { application_nos: ["PREV"], "Ngày phát hành": "20/05/2026" } }),
+    kpi("2026-05", { raw_data: { application_nos: ["ISSUE-JUNE"], "Ngày hiệu lực": "18/05/2026", "Ngày phát hành": "24/06/2026" } })
+  ],
+  bc02: []
+});
+assert.equal(issueDateWins.rewardMonthContracts.some((row: any) => row.raw_data.application_nos.includes("ISSUE-JUNE")), true);
+
+const initialKpi05Duplicate = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-05", { ip: 3_000_000, raw_data: { application_nos: ["PREV"] } }),
+    kpi("2026-06", { raw_data: { application_nos: ["SAME"] } }),
+    kpi("2026-06", { reward_source: "kpi05", ip: 0, fyp: 12_000_000, fyc: 3_000_000, raw_data: { application_nos: ["SAME"] } })
+  ], bc02: []
+});
+assert.equal(initialKpi05Duplicate.rewardMonthContracts.filter((row: any) => row.raw_data.application_nos.includes("SAME")).length, 1);
+
+const issuedBc02 = calculatePolicyRewards({
+  selectedMonth: "2026-06", kpi04: [],
+  bc02: [bc02("2026-06-10", "ISSUED-BC02", { issued_date: "2026-06-12" })]
+});
+assert.equal(issuedBc02.rewardMonthContracts.length, 0);
+
+const excludedContracts = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-06", { agent_code: "D1021A1YNG", agent_name: "Lê Thị Mỹ Châu", raw_data: { application_nos: ["MYCHAU"] } }),
+    kpi("2026-06", { raw_data: { application_nos: ["BANCA"], channel: "Banca" } })
+  ],
+  bc02: [bc02("2026-06-10", "BANCA", { channel_name: "Banca" })]
+});
+assert.equal(excludedContracts.rewardMonthContracts.length, 0);
+
+const ngocDuyen = calculatePolicyRewards({
+  selectedMonth: "2026-06",
+  kpi04: [
+    kpi("2026-05", { agent_code: "D102143412", agent_name: "Nguyễn Thị Ngọc Duyên", ip: 3_000_000, fyc: 0, fyp: 3_000_000, raw_data: { application_nos: ["PREV-DUYEN"] } }),
+    kpi("2026-06", { agent_code: "D102143412", agent_name: "Nguyễn Thị Ngọc Duyên", ip: 20_987_430, fyp: 20_987_430, fyc: 5_030_054, raw_data: { application_nos: ["10000017966953"], "Ngày phát hành": "24/06/2026" } }),
+    kpi("2026-06", { reward_source: "kpi05", agent_code: "D102143412", agent_name: "Nguyễn Thị Ngọc Duyên", ip: 0, fyp: 25_088_885, fyc: 7_181_517.1, raw_data: { application_nos: ["10000017072092"] } })
+  ], bc02: []
+});
+assert.equal(ngocDuyen.monthly[0].ip, 20_987_430);
+assert.equal(ngocDuyen.monthly[0].rate, 0.1);
+assert.equal(ngocDuyen.monthly[0].reward, 1_221_157);
 
 console.log("TVV policy reward tests passed.");

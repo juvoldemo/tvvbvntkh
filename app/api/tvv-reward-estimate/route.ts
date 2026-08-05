@@ -205,14 +205,23 @@ export async function POST(request: NextRequest) {
     const dataStartMonth = previousMonth < yearStart ? previousMonth : yearStart;
     const policyDataStart = `${dataStartMonth}-01`;
     const revenueDataStart = `${dataStartMonth}-01`;
-    const advisorProfileQuery = advisor.code
-      ? supabase.from("authorized_users").select("advisor_code,start_date").eq("advisor_code", advisor.code)
-      : supabase.from("authorized_users").select("advisor_code,start_date");
+    const readAll = async (factory: (from: number, to: number) => any) => {
+      const rows: any[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await factory(from, from + 999);
+        if (error) throw error;
+        rows.push(...(data ?? []));
+        if ((data ?? []).length < 1000) return rows;
+      }
+    };
     const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }, { data: advisorProfiles, error: advisorProfilesError }] = await Promise.all([
-      supabase.from("competition_programs").select("*"),
-      supabase.from("tvv_reward_policy_records").select("*").gte("data_month", policyDataStart).lte("data_month", `${year}-12-31`),
-      supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", revenueDataStart).lte("paid_date", `${year}-12-31`),
-      advisorProfileQuery
+      readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)).then((data) => ({ data, error: null })),
+      readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*").gte("data_month", policyDataStart).lte("data_month", `${year}-12-31`).range(from, to)).then((data) => ({ data, error: null })),
+      readAll((from, to) => supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", revenueDataStart).lte("paid_date", `${year}-12-31`).range(from, to)).then((data) => ({ data, error: null })),
+      readAll((from, to) => {
+        const query = supabase.from("authorized_users").select("advisor_code,start_date").range(from, to);
+        return advisor.code ? query.eq("advisor_code", advisor.code) : query;
+      }).then((data) => ({ data, error: null }))
     ]);
     if (programError) throw programError;
     if (yearContractsError) throw yearContractsError;
@@ -234,13 +243,8 @@ export async function POST(request: NextRequest) {
     const ranges = calculablePrograms.map((program: any) => programDateRange(program, month));
     const start = ranges.map((range) => range.start).sort()[0] || monthBounds(month).start;
     const end = ranges.map((range) => range.end).sort().at(-1) || monthBounds(month).end;
-    const { data: contracts, error: contractError } = await supabase
-      .from("revenue_records")
-      .select("*")
-      .neq("data_month", "2099-01-01")
-      .gte("paid_date", start)
-      .lte("paid_date", end);
-    if (contractError) throw contractError;
+    const contracts = await readAll((from, to) => supabase.from("revenue_records").select("*")
+      .neq("data_month", "2099-01-01").gte("paid_date", start).lte("paid_date", end).range(from, to));
     const dedupedContracts = dedupeRevenueRecordsByContract((contracts ?? []) as any);
     const dedupedYearContracts = dedupeRevenueRecordsByContract((yearContracts ?? []) as any);
 
@@ -377,8 +381,7 @@ export async function POST(request: NextRequest) {
       : program.startDate <= today && program.endDate >= today);
     const endedPrograms = allProgramSummaries.filter((program: any) => program.endDate < today);
     const configuredPolicyPrograms = allProgramSummaries.filter((program: any) => isPolicyRewardProgram(program.programName));
-    const missingPolicyTable = policyError?.code === "42P01" || policyError?.code === "PGRST205";
-    if (policyError && !missingPolicyTable) throw policyError;
+    const missingPolicyTable = false;
     const policyResult = calculatePolicyRewards({
       selectedMonth: month,
       kpi04: policyRecords ?? [],

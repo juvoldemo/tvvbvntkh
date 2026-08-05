@@ -20,6 +20,16 @@ const normalizeContract = (value: unknown) => String(value ?? "").trim().toUpper
 const number = (value: unknown) => Number(String(value ?? "").replace(/[^\d.-]/g, "")) || 0;
 const text = (value: unknown) => String(value ?? "").trim();
 
+function date(value: unknown) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
+  if (typeof value === "number" && value > 0) return new Date(Date.UTC(1899, 11, 30 + value)).toISOString().slice(0, 10);
+  const raw = text(value);
+  let match = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  match = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : null;
+}
+
 function pick(row: Record<string, unknown>, aliases: string[]) {
   const aliasSet = new Set(aliases.map(normalizeHeader));
   const key = Object.keys(row).find((header) => aliasSet.has(normalizeHeader(header)));
@@ -30,11 +40,13 @@ function parseRows(buffer: ArrayBuffer, fileName: string, source: RewardSource, 
   const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-  const dataMonth = toMonthStart(month);
   const parsed = rows.map((row) => {
     const contractNo = text(pick(row, ["hop dong", "so hop dong", "contract no", "contract_no"]));
     const applicationNo = text(pick(row, ["gyc", "so gyc", "application no", "application_no", "ma gyc"]));
     const applications = [applicationNo, contractNo].map(normalizeContract).filter(Boolean);
+    const issuedDate = date(pick(row, ["ngay phat hanh", "issue date", "issued date", "issued_date"]));
+    const effectiveDate = date(pick(row, ["ngay hieu luc", "effective date", "effective_date"]));
+    const dataMonth = source === "kpi04" && issuedDate ? `${issuedDate.slice(0, 7)}-01` : toMonthStart(month);
     return {
       data_month: dataMonth,
       reward_source: source,
@@ -50,7 +62,9 @@ function parseRows(buffer: ArrayBuffer, fileName: string, source: RewardSource, 
         ...row,
         application_nos: applications,
         application_no: applicationNo,
-        contract_no: contractNo
+        contract_no: contractNo,
+        issued_date: issuedDate,
+        effective_date: effectiveDate
       },
       source_file: fileName
     };

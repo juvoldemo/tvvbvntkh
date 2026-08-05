@@ -60,12 +60,63 @@ const quarterOf = (value: unknown) => Math.ceil(Number(monthKey(value).slice(5, 
 const normalizeGyc = (value: unknown) => text(value).toUpperCase().replace(/\s+/g, "");
 const rewardSource = (row: Row) => text(row.reward_source || row.source || "kpi04").toLowerCase();
 const MONTHLY_PREVIOUS_GYC_MIN_IP = 3_000_000;
+const EXCLUDED_AGENT_CODE = "D1021A1YNG";
+
+function normalizedText(value: unknown) {
+  return text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+}
+
+function rawValue(row: Row, aliases: string[]) {
+  const raw = row.raw_data ?? {};
+  const wanted = new Set(aliases.map(normalizedText));
+  const key = Object.keys(raw).find((item) => wanted.has(normalizedText(item)));
+  return key ? raw[key] : undefined;
+}
+
+function normalizeDate(value: unknown): string | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
+  if (typeof value === "number" && value > 0) return new Date(Date.UTC(1899, 11, 30 + value)).toISOString().slice(0, 10);
+  const valueText = text(value).slice(0, 10);
+  let match = valueText.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+  if (match) return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+  match = valueText.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  return match ? `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}` : null;
+}
+
+function issuedDate(row: Row) {
+  return normalizeDate(row.issued_date || row.issue_date || rawValue(row, ["Ngày phát hành", "Ngay phat hanh", "issued_date", "issue_date"]));
+}
+
+function effectiveDate(row: Row) {
+  return normalizeDate(row.effective_date || rawValue(row, ["Ngày hiệu lực", "Ngay hieu luc", "effective_date"]));
+}
+
+function excludedStatus(row: Row) {
+  const status = normalizedText(row.policy_status || row.status || rawValue(row, ["Trạng thái hồ sơ", "Trạng thái", "policy_status", "status"]));
+  return ["huy", "hoan phi", "het hieu luc", "tu choi", "tri hoan"].some((item) => status.includes(item));
+}
+
+function globallyExcluded(row: Row) {
+  const haystack = normalizedText([
+    row.agent_code, row.agent_name, row.channel, row.channel_name, row.ban_name, row.group_name,
+    ...Object.values(row.raw_data ?? {})
+  ].join(" "));
+  return normalizeGyc(row.agent_code) === EXCLUDED_AGENT_CODE
+    || haystack.includes("le thi my chau")
+    || haystack.includes("banca")
+    || haystack.includes("banking")
+    || haystack.includes("3rd party")
+    || haystack.includes("kenh doi tac")
+    || haystack.includes("baovietbank")
+    || haystack.includes("pgb");
+}
 
 function applicationNos(row: Row) {
-  const raw = row.raw_data?.application_nos ?? row.line_items?.application_no ?? row.application_no ?? row.contract_no;
+  const raw = row.raw_data?.application_nos;
   const lineItems = Array.isArray(row.line_items) ? row.line_items.map((item: Row) => item.application_no || item.contract_no) : [];
   const values = [
     ...(Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(/[,;\n]+/) : [raw]),
+    row.raw_data?.application_no, row.raw_data?.contract_no, row.application_no, row.contract_no,
     ...lineItems
   ];
   return values.map(normalizeGyc).filter(Boolean);
@@ -142,16 +193,28 @@ function aggregate(rows: Row[]): Omit<PolicyRewardRow, "rate" | "reward" | "achi
 }
 
 export function combineKpi04AndBc02(kpiRows: Row[], bc02Rows: Row[]): Row[] {
-  const kpi05AgentMonths = new Set(kpiRows.filter((row) => rewardSource(row) === "kpi05").map(agentMonthKey).filter(Boolean));
-  const kpi04Rows = kpiRows.filter((row) => rewardSource(row) !== "kpi05" && !kpi05AgentMonths.has(agentMonthKey(row)));
-  const kpi05Rows = kpiRows.filter((row) => rewardSource(row) === "kpi05");
+  const expandedKpiRows = kpiRows.flatMap((row) => {
+    const items = Array.isArray(row.raw_data?.line_items) ? row.raw_data.line_items : [];
+    if (!items.length) return [row];
+    return items.map((item: Row) => ({
+      ...row,
+      ip: number(item.ip), fyp: number(item.fyp), fyc: number(item.fyc),
+      additional_premium: number(item.additional_premium),
+      raw_data: { ...(row.raw_data ?? {}), ...item, application_nos: [item.application_no || item.contract_no].filter(Boolean) }
+    }));
+  });
+  const bc02ExcludedKeys = new Set(bc02Rows.filter(globallyExcluded).flatMap(applicationNos));
+  const kpi04Rows = expandedKpiRows.filter((row) => rewardSource(row) !== "kpi05" && !globallyExcluded(row) && !excludedStatus(row))
+    .filter((row) => !applicationNos(row).some((key) => bc02ExcludedKeys.has(key)));
+  const kpi05Rows = expandedKpiRows.filter((row) => rewardSource(row) === "kpi05" && !globallyExcluded(row) && !excludedStatus(row))
+    .filter((row) => !applicationNos(row).some((key) => bc02ExcludedKeys.has(key)));
   const kpi04Gyc = new Set(kpi04Rows.flatMap(applicationNos));
-  const issuedGyc = new Set([...kpi04Gyc]);
+  const allKpiGyc = new Set([...kpi04Gyc, ...kpi05Rows.flatMap(applicationNos)]);
   const seenBc02 = new Set<string>();
   const estimatedRows: Row[] = bc02Rows.flatMap((row) => {
-    if (kpi05AgentMonths.has(agentMonthKey(row))) return [];
+    if (globallyExcluded(row) || excludedStatus(row) || issuedDate(row)) return [];
     const gyc = normalizeGyc(row.application_no || row.contract_no);
-    if (!gyc || issuedGyc.has(gyc) || seenBc02.has(gyc) || !text(row.agent_code)) return [];
+    if (!gyc || allKpiGyc.has(gyc) || seenBc02.has(gyc) || !text(row.agent_code)) return [];
     seenBc02.add(gyc);
     return [{
       ...row,
@@ -162,25 +225,32 @@ export function combineKpi04AndBc02(kpiRows: Row[], bc02Rows: Row[]): Row[] {
       // FYP dự kiến để TVV vẫn thấy thưởng quý tạm tính. Khi dữ liệu chính thức
       // xuất hiện, cơ chế loại trùng theo TVV/tháng ở trên sẽ thay bản ghi này.
       fyp: number(row.estimated_fyp) || number(row.afyp) || number(row.ip),
-      estimated_fyc: number(row.ip) * 0.3,
+      issued_date: null,
+      effective_date: effectiveDate(row),
+      estimated_fyc: number(row.ip) * 0.25,
       source: "bc02"
     }];
   });
-  const normalizeKpiRows = (rows: Row[]): Row[] => rows.filter((row) => text(row.agent_code)).map((row) => ({
+  const normalizeKpiRows = (rows: Row[], source: "kpi04" | "kpi05"): Row[] => rows.filter((row) => text(row.agent_code)).map((row) => ({
     ...row,
-    paid_date: text(row.data_month).slice(0, 10),
+    data_month: `${source === "kpi04" ? monthKey(issuedDate(row) || row.data_month) : monthKey(row.data_month)}-01`,
+    paid_date: source === "kpi04" ? (issuedDate(row) || text(row.data_month).slice(0, 10)) : text(row.data_month).slice(0, 10),
+    issued_date: issuedDate(row),
+    effective_date: effectiveDate(row),
+    ip: source === "kpi05" ? 0 : number(row.ip),
     policy_status: null,
     estimated_fyc: 0,
     source: rewardSource(row)
   }));
-  const normalizedKpi04 = normalizeKpiRows(kpi04Rows);
+  const normalizedKpi04 = normalizeKpiRows(kpi04Rows, "kpi04");
   const seenKpi05 = new Set<string>();
-  const normalizedKpi05 = normalizeKpiRows(kpi05Rows).filter((row) => {
+  const normalizedKpi05 = normalizeKpiRows(kpi05Rows, "kpi05").filter((row) => {
     const keys = applicationNos(row);
     if (!keys.length) return true;
     const month = monthKey(row.paid_date || row.data_month);
     const scopedKeys = keys.map((key) => `${month}:${key}`);
     if (scopedKeys.some((key) => seenKpi05.has(key))) return false;
+    if (keys.some((key) => kpi04Gyc.has(key)) && normalizedKpi04.some((item) => monthKey(item.paid_date) === month && applicationNos(item).some((key) => keys.includes(key)))) return false;
     scopedKeys.forEach((key) => seenKpi05.add(key));
     return true;
   });
@@ -224,16 +294,8 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
     let qualificationFyp = fypFallback ? (totals.ip || totals.totalFyc) : totals.fyp;
     let newAdvisorFactor = 1;
     let newAdvisorStartDate: string | null = null;
-    if (basis === "fyp" && options.quarterStart && options.quarterEnd) {
-      const startDate = options.advisorStartDates?.get(totals.agentCode);
-      if (startDate && startDate > options.quarterStart && startDate <= options.quarterEnd) {
-        const quarterDays = daysInclusive(options.quarterStart, options.quarterEnd);
-        const workingDays = daysInclusive(startDate, options.quarterEnd);
-        newAdvisorFactor = workingDays > 0 ? quarterDays / workingDays : 1;
-        newAdvisorStartDate = startDate;
-        qualificationFyp *= newAdvisorFactor;
-      }
-    }
+    // PR15 and the adjustment factor default to 100%. INC14/TLTP is deliberately
+    // not inferred until its business rule is formally confirmed.
     const basisValue = basis === "ip" ? totals.ip : qualificationFyp;
     const tier = tierResult(basisValue, tiers);
     const qualified = !options.qualifiedAgents || options.qualifiedAgents.has(agentKey({
@@ -245,7 +307,7 @@ function calculatePeriod(rows: Row[], basis: "ip" | "fyp", tiers: typeof MONTH_T
       ...tier,
       rate: qualified ? tier.rate : 0,
       achieved: qualified ? tier.achieved : false,
-      reward: qualified ? tier.rate * totals.totalFyc : 0,
+      reward: qualified ? Math.round(tier.rate * totals.totalFyc) : 0,
       fypFallback,
       actualFyp: basis === "fyp" ? totals.fyp : undefined,
       qualificationFyp: basis === "fyp" ? qualificationFyp : undefined,
@@ -356,6 +418,7 @@ export function calculatePolicyRewards(params: {
   const previousMonth = previousMonthKey(selectedMonth);
   const monthlyQualifiedAgents = new Set(eligibleContracts
     .filter((row) => monthKey(row.paid_date || row.data_month) === previousMonth)
+    .filter((row) => rewardSource(row) === "kpi04")
     .filter((row) => number(row.ip) >= MONTHLY_PREVIOUS_GYC_MIN_IP && applicationNos(row).length > 0)
     .map(agentKey)
     .filter(Boolean));
