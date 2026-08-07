@@ -1190,6 +1190,23 @@ function MonthPicker({ value, options, onChange, className = "", ariaLabel }: { 
   </div>;
 }
 
+function MonthNavigator({ value, options, onChange, ariaLabel }: { value: string; options: Array<{ value: string; label: string }>; onChange: (value: string) => void; ariaLabel: string }) {
+  const availableMonths = options.map((option) => option.value).slice().sort();
+  const selectedIndex = availableMonths.indexOf(value);
+  const previousMonth = selectedIndex > 0 ? availableMonths[selectedIndex - 1] : null;
+  const nextMonth = selectedIndex >= 0 && selectedIndex < availableMonths.length - 1 ? availableMonths[selectedIndex + 1] : null;
+  const displayValue = `${value.slice(5, 7)}/${value.slice(0, 4)}`;
+  return <div className="tvv-month-navigator" role="group" aria-label={ariaLabel}>
+    <button className="previous" type="button" disabled={!previousMonth} onClick={() => previousMonth && onChange(previousMonth)} aria-label="Tháng trước">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M11 7l-5 5l5 5" /><path d="M17 7l-5 5l5 5" /></svg>
+    </button>
+    <strong aria-live="polite">{displayValue}</strong>
+    <button className="next" type="button" disabled={!nextMonth} onClick={() => nextMonth && onChange(nextMonth)} aria-label="Tháng sau">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7l5 5l-5 5" /><path d="M13 7l5 5l-5 5" /></svg>
+    </button>
+  </div>;
+}
+
 function TvvTargetRegistrationModal({ month, registration, onSaved, onClose }: { month: string; registration: any; onSaved: (value: any) => void; onClose: () => void }) {
   const [revenueText, setRevenueText] = useState(() => String(toMillionTarget(registration?.revenue_target ?? 0) || ""));
   const [busy, setBusy] = useState(false);
@@ -1444,7 +1461,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
     : [];
   return <section className="tvv-content team-dashboard board-dashboard">
     <div className="team-dashboard-toolbar team-dashboard-toolbar-compact">
-      <MonthPicker value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chọn tháng báo cáo ban" />
+      <MonthNavigator value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chuyển tháng báo cáo ban" />
     </div>
     <div className="team-kpi-grid board-kpi-grid">
       <article className="team-kpi-card blue" aria-label="AFYP toàn ban"><BarChart3 size={20} /><strong>{formatCompactVnd(summary.afyp)}</strong></article>
@@ -2062,7 +2079,7 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
   }
   return <section className="tvv-content team-dashboard">
     <div className="team-dashboard-toolbar team-dashboard-toolbar-compact">
-      <MonthPicker value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chọn tháng báo cáo nhóm" />
+      <MonthNavigator value={month} options={monthOptions} onChange={onMonthChange} ariaLabel="Chuyển tháng báo cáo nhóm" />
     </div>
 
     <div className="team-kpi-grid">
@@ -3825,7 +3842,7 @@ function IllustrationView({ advisor, contracts, estimate, onOpenCalculator }: an
 }
 
 function IllustrationTab({ active, premiumText = "" }: { active: boolean; premiumText?: string }) {
-  const minhHoaVersion = "20260716-swap-rate-columns";
+  const minhHoaVersion = "20260807-fix-mobile-terms";
   const src = `/minhhoa2/index.html?embedded=1&v=${minhHoaVersion}${premiumText ? `&annualPremium=${encodeURIComponent(premiumText)}` : ""}`;
   return (
     <section className={`tvv-illustration-embed${active ? " active" : ""}`} aria-hidden={!active}>

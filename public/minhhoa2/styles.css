@@ -8576,6 +8576,11 @@ body.terms-open .bottom-actions {
   visibility: hidden !important;
 }
 
+/* Must outrank the compact viewer's forced display when the modal is closed. */
+.terms-modal[hidden] {
+  display: none !important;
+}
+
 /* Use the complete iframe viewport on iPad/tablet instead of the 430px phone shell. */
 @media (min-width: 768px) and (max-width: 1366px) {
   html,

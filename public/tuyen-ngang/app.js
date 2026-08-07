@@ -384,9 +384,14 @@ function positionEmbeddedDialog(dialog) {
   const hostWindow = window.parent !== window ? window.parent : window;
   const frameRect = window.frameElement?.getBoundingClientRect();
   const viewportHeight = hostWindow.innerHeight;
+  const bottomNavigation = frameRect ? hostWindow.document.querySelector('.tvv-bottom-nav') : null;
+  const bottomNavigationTop = bottomNavigation?.getBoundingClientRect().top;
+  const usableViewportBottom = bottomNavigationTop && bottomNavigationTop < viewportHeight
+    ? bottomNavigationTop
+    : viewportHeight;
   const visibleTop = frameRect ? Math.max(12, -frameRect.top + 12) : 12;
   const visibleBottom = frameRect
-    ? Math.min(frameRect.height - 12, -frameRect.top + viewportHeight - 12)
+    ? Math.min(frameRect.height - 12, -frameRect.top + usableViewportBottom - 12)
     : viewportHeight - 12;
   const availableHeight = Math.max(320, visibleBottom - visibleTop);
   const dialogHeight = Math.min(dialog.scrollHeight, availableHeight);
@@ -419,9 +424,8 @@ window.openAdvisorDialog = (index = null) => {
     months: Array.from({ length: SIM_MONTHS }, blankMonth)
   } : advisors[index];
   document.querySelector('#dialogTitle').textContent = index === null ? 'Thêm TVV' : 'Cập nhật TVV';
-  document.querySelector('#deleteAdvisor').hidden = index === null;
   document.querySelector('#dialogName').value = advisor.name;
-  document.querySelector('#dialogMonths').innerHTML = advisor.months.map((month, monthIndex) => {
+  document.querySelector('#dialogMonths').innerHTML = advisor.months.slice(0, visibleMonths).map((month, monthIndex) => {
     const active = month.fyp > 0 && !month.cancelled;
     const reward = active ? tvvMonthReward(advisor, monthIndex) : 0;
     const commission = active ? month.fyp * 0.3 : 0;
@@ -523,19 +527,18 @@ document.querySelector('#closePoster').onclick = () => document.querySelector('#
 document.querySelector('#posterDialog').onclick = event => {
   if (event.target === event.currentTarget) event.currentTarget.close();
 };
-document.querySelector('#deleteAdvisor').onclick = () => {
-  if (editingAdvisor === null || !confirm(`Xóa ${advisors[editingAdvisor].name} khỏi lộ trình?`)) return;
-  advisors.splice(editingAdvisor, 1);
-  save();
-  closeAdvisorDialog();
-  render();
-};
 document.querySelector('#advisorForm').onsubmit = event => {
   event.preventDefault();
-  const months = [...document.querySelectorAll('.contract-toggle')].map(cell => {
+  const visibleMonthValues = [...document.querySelectorAll('.contract-toggle')].map(cell => {
     const checked = cell.querySelector('.dialog-contract').checked;
     const value = cell.querySelector('.contract-fyp input').value.replace(',', '.');
     return { fyp: checked ? Math.max(0, parseFloat(value) || DEFAULT_FYP) : 0, trained: true, cancelled: false };
+  });
+  const months = editingAdvisor === null
+    ? Array.from({ length: SIM_MONTHS }, blankMonth)
+    : advisors[editingAdvisor].months.map(month => ({ ...month }));
+  visibleMonthValues.forEach((month, monthIndex) => {
+    months[monthIndex] = month;
   });
   const data = {
     id: editingAdvisor === null ? crypto.randomUUID() : advisors[editingAdvisor].id,

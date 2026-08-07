@@ -2679,6 +2679,18 @@ function getRiderTermsPdfUrl(code) {
   return `${RIDER_TERMS_PDF_DIR}/${code}.pdf`;
 }
 
+function openPdfDirectlyOnMobile(pdfUrl) {
+  if (!window.matchMedia("(max-width: 640px)").matches) return false;
+  const link = document.createElement("a");
+  link.href = pdfUrl;
+  link.target = "_blank";
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  return true;
+}
+
 function ensureRiderTermsModal() {
   let modal = document.getElementById("riderTermsModal");
   if (modal) return modal;
@@ -2731,6 +2743,7 @@ function openRiderTerms(code) {
   if (!SPBK_PRODUCTS[code]) return;
   const product = SPBK_PRODUCTS[code];
   const pdfUrl = getRiderTermsPdfUrl(code);
+  if (openPdfDirectlyOnMobile(pdfUrl)) return;
   const modal = ensureRiderTermsModal();
   const frame = modal.querySelector("#termsPdfFrame");
   const codeLabel = modal.querySelector("#termsModalCode");
@@ -2756,6 +2769,7 @@ function openRiderTerms(code) {
 
 function openTermsModal({ code, title, subtitle, pdfUrl, downloadName }) {
   if (!pdfUrl) return;
+  if (openPdfDirectlyOnMobile(pdfUrl)) return;
   const modal = ensureRiderTermsModal();
   const frame = modal.querySelector("#termsPdfFrame");
   const codeLabel = modal.querySelector("#termsModalCode");

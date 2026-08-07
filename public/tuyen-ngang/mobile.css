@@ -149,3 +149,17 @@ body {
 footer {
   display: none !important;
 }
+
+/* Keep the editor clean while retaining touch/wheel scrolling when needed. */
+.advisor-dialog form,
+.advisor-dialog .dialog-months {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.advisor-dialog form::-webkit-scrollbar,
+.advisor-dialog .dialog-months::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
