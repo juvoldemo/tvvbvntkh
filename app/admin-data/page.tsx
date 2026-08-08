@@ -978,7 +978,7 @@ function AboutAdminPanel({ content, setContent, onSaved, setMessage }: {
     const response = await fetch("/api/admin/archive/content?key=about", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(content) });
     const payload = await response.json().catch(() => ({}));
     setSaving(false);
-    setMessage(response.ok ? "Đã lưu nội dung Bảo Việt Nhân thọ là ai?" : payload.error || "Không thể lưu nội dung.");
+    setMessage(response.ok ? "Đã lưu nội dung Cẩm nang tư vấn" : payload.error || "Không thể lưu nội dung.");
     if (response.ok) await onSaved();
   }
 
@@ -986,7 +986,7 @@ function AboutAdminPanel({ content, setContent, onSaved, setMessage }: {
   const selectedSection = content.sections[selectedSectionIndex];
 
   return <article className="admin-card admin-archive-card admin-about-card">
-    <div className="admin-card-title"><ShieldCheck /><div><h2>Bảo Việt Nhân thọ là ai?</h2><p>Chủ động cập nhật nội dung chỉ hiển thị trên giao diện TVV có mã ADMIN.</p></div></div>
+    <div className="admin-card-title"><ShieldCheck /><div><h2>Cẩm nang tư vấn</h2><p>Chủ động cập nhật nội dung chỉ hiển thị trên giao diện TVV có mã ADMIN.</p></div></div>
     <nav className="admin-about-section-tabs" aria-label="Chọn nội dung Bảo Việt Nhân thọ">
       {content.sections.map((section) => <button type="button" key={section.id} className={selectedSectionId === section.id ? "active" : ""} onClick={() => setSelectedSectionId(section.id)}><span>{section.title}</span><small>{section.items.filter((item) => item.imageUrl).length} ảnh</small></button>)}
     </nav>

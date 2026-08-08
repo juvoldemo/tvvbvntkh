@@ -1110,7 +1110,7 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : tab === "about" ? "Bảo Việt Nhân thọ là ai?" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : tab === "about" ? "Cẩm nang tư vấn" : "Cá nhân"} onBack={() => setTab("overview")} />
           )}
           {tab === "overview" && (isAdoMode
             ? <AdoOverview data={adoData} month={month} />
@@ -4158,7 +4158,7 @@ function customAboutDescription(section: AboutSection) {
 function AboutBaoVietPreview({ onOpen }: { onOpen: () => void }) {
   return <button className="tvv-card tvv-about-compact-preview" type="button" onClick={onOpen}>
     <span className="tvv-about-compact-icon" aria-hidden="true"><img src={encodeURI("/BVNT là ai/BVNT là ai.png")} alt="" /></span>
-    <span className="tvv-leaderboard-preview-copy"><strong>Bảo Việt Nhân thọ là ai?</strong><small>Danh hiệu, lãi suất và thông tin chi trả quyền lợi</small></span>
+    <span className="tvv-leaderboard-preview-copy"><strong>Cẩm nang tư vấn</strong><small>Danh hiệu, lãi suất và thông tin chi trả quyền lợi</small></span>
     <ChevronRight size={22} />
   </button>;
 }
@@ -4187,7 +4187,7 @@ function AboutBaoVietPage() {
   </section>;
   return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page">
     <section className="tvv-card tvv-about-preview">
-      <div className="tvv-section-head"><div><h2>Bảo Việt Nhân thọ là ai?</h2></div></div>
+      <div className="tvv-section-head"><div><h2>Cẩm nang tư vấn</h2></div></div>
       <div className="tvv-about-grid">{sections.map((section, index) => <button type="button" key={section.id} onClick={() => setSelected(section)}><span><img src={encodeURI(`/BVNT là ai/${icons[index % icons.length]}`)} alt="" /></span><b>{section.title}</b><i aria-hidden="true" /><em><ChevronRight size={22} /></em></button>)}</div>
     </section>
   </section>;
