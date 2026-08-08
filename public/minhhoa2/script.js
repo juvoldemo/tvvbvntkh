@@ -3877,6 +3877,7 @@ function getSelectedValidRidersForPerson(personKey) {
         personKey,
         personLabel: context.personLabel,
         personName: context.fullName,
+        age: context.age,
         sumInsured: numericSumInsured,
         displaySumInsured,
         r26Plan: selection.r26Plan,
@@ -4028,6 +4029,12 @@ function buildSummarySnapshot() {
       cashValue425: row.cashValue425,
       cashValue476: row.cashValue476
     }));
+  const accountProjection = illustrationRows.map((row) => ({
+    year: row.policyYear,
+    age: row.age,
+    cumulativePremium: row.cumulativePremium,
+    cashValue476: row.cashValue476
+  }));
   const issueDate = new Date();
 
   return {
@@ -4057,7 +4064,8 @@ function buildSummarySnapshot() {
       mainSumInsured: input.deathSumAssured,
       riderSumInsured: totalRiderSumInsured,
       protectionBenefit: input.deathSumAssured + totalRiderSumInsured,
-      accountMilestones
+      accountMilestones,
+      accountProjection
     },
     exportedAt: issueDate,
     exportedAtText: issueDate.toLocaleDateString("vi-VN")
@@ -5723,6 +5731,98 @@ function closeSummaryPreview() {
   document.getElementById("summaryPreviewScreen").hidden = true;
   document.body.classList.remove("summary-preview-open");
 }
+
+const canExportAdvice = new URLSearchParams(window.location.search).get("advisorCode")?.trim().toUpperCase() === "ADMINTN";
+
+function getMainAdviceLines(snapshot) {
+  if (snapshot.isLifeCare20) return [
+    `🛡️ Bệnh lý nghiêm trọng cơ bản: chi trả 100% STBH, tương ứng ${formatCurrency(snapshot.basicBenefit)} (ví dụ ung thư giai đoạn đầu, đột quỵ hoặc nhồi máu cơ tim khi đủ điều kiện).`,
+    `🛡️ Bệnh lý nghiêm trọng nâng cao: tổng chi trả 130% STBH, tương ứng ${formatCurrency(snapshot.advancedBenefit)}; trả ngay ${formatCurrency(snapshot.advancedImmediate)}, sau đó ${formatCurrency(snapshot.advancedMonthly)}/tháng trong 6 tháng.`,
+    "Các mức 100% và 130% là hai cấp quyền lợi của cùng sản phẩm, không cộng thành 230% STBH."
+  ];
+  if (snapshot.mainProduct === "ATPN") return [
+    `⭐ QUYỀN LỢI TỬ VONG: ${formatCurrency(snapshot.mainSumInsured)}. Đây là mức bảo vệ chính đang lựa chọn; nếu Giá trị tài khoản cơ bản cao hơn, quyền lợi Cơ bản được tính theo giá trị cao hơn đó và cộng Giá trị tài khoản đóng thêm.`,
+    `🛡️ Chu toàn hậu sự: trả trước 10% STBH, tối đa ${formatCurrency(snapshot.funeralBenefit)}; khoản này được khấu trừ khi chi trả quyền lợi tử vong.`,
+    "💰 Đáo hạn: nhận Giá trị tài khoản hợp đồng tại thời điểm kết thúc thời hạn bảo hiểm."
+  ];
+  return [
+    `🛡️ Tử vong: với lựa chọn Cơ bản, nhận số lớn hơn giữa STBH ${formatCurrency(snapshot.mainSumInsured)} và Giá trị tài khoản cơ bản, cộng Giá trị tài khoản đóng thêm; với lựa chọn Vượt trội, nhận STBH cộng các Giá trị tài khoản.`,
+    `🛡️ Thương tật toàn bộ vĩnh viễn: áp dụng cùng lựa chọn Cơ bản/Vượt trội như quyền lợi tử vong, với STBH ${formatCurrency(snapshot.disabilitySumInsured)}. Đây là sự kiện bảo hiểm riêng, không cộng quyền lợi tử vong và thương tật vào cùng một số tiền.`,
+    "💰 Đáo hạn: nhận Giá trị tài khoản hợp đồng tại ngày đáo hạn."
+  ];
+}
+
+function getRiderAdviceLines(rider) {
+  const amount = rider.displaySumInsured || formatCurrency(rider.sumInsured);
+  const accidentAgeFactor = rider.age < 1 ? 0.2 : rider.age < 2 ? 0.4 : rider.age < 3 ? 0.6 : rider.age < 4 ? 0.8 : 1;
+  const examples = {
+    R21: `Lá chắn bệnh nan y với STBH ${amount}: ung thư giai đoạn đầu chi trả ${formatCurrency(Math.min(rider.sumInsured * 0.25, 500000000))}; ung thư giai đoạn cuối, đột quỵ hoặc nhồi máu cơ tim chi trả tối đa ${formatCurrency(rider.sumInsured)}.`,
+    R22: `Lá chắn thương tật do tai nạn với STBH ${amount}: ví dụ mất hoàn toàn chức năng 1 mắt chi trả ${formatCurrency(rider.sumInsured * 0.55)}; mất hoàn toàn chức năng nghe của 2 tai chi trả ${formatCurrency(rider.sumInsured * 0.75)}.`,
+    R23: `Lá chắn tai nạn nghiêm trọng với STBH ${amount}: tử vong do tai nạn thông thường chi trả ${formatCurrency(rider.sumInsured * accidentAgeFactor)}; tai nạn hàng không thương mại có thể chi trả ${formatCurrency(rider.sumInsured * 2 * accidentAgeFactor)}; thương tật nghiêm trọng do tai nạn có thể chi trả ${formatCurrency(rider.sumInsured * accidentAgeFactor)}.`,
+    R24: `Lá chắn duy trì hợp đồng: nếu người được bảo hiểm của SPBK tử vong, công ty hỗ trợ đóng phí sản phẩm chính ${amount}/năm trong thời gian đủ điều kiện, giúp quyền lợi sản phẩm chính tiếp tục được duy trì.`,
+    R25: `Lá chắn bệnh lý nghiêm trọng toàn diện với STBH ${amount}: bệnh giai đoạn đầu có thể chi trả ${formatCurrency(Math.min(rider.sumInsured * 0.25, 500000000))}; bệnh giai đoạn cuối thông thường chi trả ${formatCurrency(rider.sumInsured)}; một số bệnh giai đoạn cuối theo giới tính có thể chi trả ${formatCurrency(rider.sumInsured * 1.25)}. Ví dụ gồm ung thư, đột quỵ, nhồi máu cơ tim và các nhóm bệnh nghiêm trọng theo điều khoản.`,
+    R26: (() => { const i = R26_PLANS.indexOf(rider.r26Plan); return `Lá chắn viện phí hạng ${rider.r26Plan}: quyền lợi đã chọn gồm ${(rider.r26Benefits || []).map((key) => R26_BENEFIT_LABELS[key] || key).join(", ")}. Riêng Nội trú có hạn mức tối đa ${formatCurrency(i >= 0 ? R26_BENEFIT_LIMITS.inpatientAnnual[i] : 0)}/năm; tiền phòng và giường tối đa ${formatCurrency(i >= 0 ? R26_BENEFIT_LIMITS.room[i] : 0)}/ngày; điều trị nội trú có phẫu thuật tối đa ${formatCurrency(i >= 0 ? R26_BENEFIT_LIMITS.inpatientSurgery[i] : 0)}/lần nằm viện.`; })(),
+    R29: `Lá chắn trợ cấp viện phí với mức cơ sở ${amount}: ví dụ trợ cấp nằm viện, chăm sóc đặc biệt, phẫu thuật do bệnh hoặc tai nạn đủ điều kiện; quyền lợi được trả bằng tiền mặt theo số ngày hoặc loại phẫu thuật và không phụ thuộc hoàn toàn vào hóa đơn viện phí.`
+  };
+  const highlightedBenefits = examples[rider.code] || `Quyền lợi bảo vệ: ${amount}.`;
+  return `【${rider.code}】 ${rider.name}\n   Người được bảo hiểm: ${rider.personName || "Khách hàng"}\n   Phí: ${formatCurrency(rider.annualPremium)}/năm\n   ${highlightedBenefits}\n   ℹ️ Trên đây chỉ là một vài quyền lợi nổi bật để Anh/Chị dễ hình dung; sản phẩm còn nhiều quyền lợi và trường hợp bảo vệ khác theo Quy tắc, Điều khoản.`;
+}
+
+function buildAdviceText(snapshot) {
+  const dailySaving = Math.ceil(snapshot.totals.firstYearPremium / 365);
+  const dailyComparison = dailySaving < 50000 ? "chưa đến giá một tô bún" : dailySaving < 80000 ? "khoảng một tô bún" : dailySaving < 120000 ? "khoảng một tô bún kèm một ly cà phê" : dailySaving <= 200000 ? "khoảng một cân thịt" : "khoảng một bữa ăn gia đình";
+  const projection = snapshot.totals.accountProjection || [];
+  const breakEvenIndex = projection.findIndex((item, index) => { if (item.cumulativePremium <= 0 || item.cashValue476 < item.cumulativePremium) return false; const previous = projection[index - 1]; return !previous || previous.cashValue476 < previous.cumulativePremium; });
+  const breakEven = breakEvenIndex >= 0 ? projection[breakEvenIndex] : null;
+  const milestoneYears = new Set([5, 10, 15, 20, snapshot.policyTermYears]);
+  const projectionLines = projection.filter((item) => milestoneYears.has(item.year)).map((item) => {
+    if (item.year === snapshot.policyTermYears) return `💰 Đến năm thứ ${item.year} (kết thúc thời hạn bảo hiểm dự kiến), với tổng phí sản phẩm chính đã đóng là ${formatCurrency(item.cumulativePremium)}, Giá trị tài khoản minh họa đạt khoảng ${formatCurrency(item.cashValue476)}.`;
+    if (item.year > snapshot.premiumPaymentYears) return `📈 Đến năm thứ ${item.year}, dù thời gian đóng phí dự kiến đã kết thúc từ năm thứ ${snapshot.premiumPaymentYears}, Giá trị tài khoản vẫn tiếp tục tích lũy và đạt khoảng ${formatCurrency(item.cashValue476)}.`;
+    if (item.year === snapshot.premiumPaymentYears) return `✅ Đến năm thứ ${item.year}, Anh/Chị dự kiến hoàn thành kế hoạch đóng ${formatCurrency(item.cumulativePremium)} phí sản phẩm chính; Giá trị tài khoản khi đó khoảng ${formatCurrency(item.cashValue476)}.`;
+    return `🌱 Sau ${item.year} năm đầu, tổng phí sản phẩm chính dự kiến đã đóng là ${formatCurrency(item.cumulativePremium)} và Giá trị tài khoản đã hình thành khoảng ${formatCurrency(item.cashValue476)}.`;
+  });
+  const riderLines = snapshot.riders.length ? snapshot.riders.map((rider, index) => `${index + 1}. ${getRiderAdviceLines(rider)}`) : ["Phương án hiện chưa chọn sản phẩm bảo hiểm bán kèm."];
+  return [
+    "BẢN TƯ VẤN GIẢI PHÁP BẢO VỆ", `Phương án đang chọn: ${snapshot.productName}.`, "",
+    "1. PHÍ THAM GIA - DỄ HÌNH DUNG",
+    `💳 Phí sản phẩm chính: ${formatCurrency(snapshot.mainPremium)}/năm.`,
+    snapshot.additionalPremium > 0 ? `💳 Phí đóng thêm dự kiến: ${formatCurrency(snapshot.additionalPremium)}/năm.` : null,
+    `💳 Tổng phí năm đầu, gồm sản phẩm bán kèm: ${formatCurrency(snapshot.totals.firstYearPremium)}.`,
+    `🍜 Bình quân ${formatCurrency(dailySaving)}/ngày, tương đương ${dailyComparison}.`,
+    `📅 Thời gian dự kiến đóng phí: ${snapshot.premiumPaymentYears} năm.`,
+    `🛡️ Thời hạn bảo hiểm: ${snapshot.policyTermYears} năm.`, "",
+    "2. SẢN PHẨM CHÍNH BẢO VỆ ĐIỀU GÌ?", ...getMainAdviceLines(snapshot), "",
+    "3. SẢN PHẨM BÁN KÈM - NHẬN BIẾT NHANH", ...riderLines, "",
+    ...(snapshot.isLifeCare20 ? [] : [
+      "4. DÒNG TIỀN VÀ GIÁ TRỊ TÀI KHOẢN Ở MỨC MINH HỌA 4,76%",
+      ...projectionLines, "",
+      breakEven ? `✅ Điểm hòa vốn dự kiến xuất hiện tại năm hợp đồng thứ ${breakEven.year}. Đây là năm đầu tiên Giá trị tài khoản minh họa 4,76% đạt ${formatCurrency(breakEven.cashValue476)}, vừa vượt Tổng phí sản phẩm chính đã đóng ${formatCurrency(breakEven.cumulativePremium)}.` : `⏳ Trong ${snapshot.policyTermYears} năm minh họa, giá trị tài khoản chưa bằng tổng phí sản phẩm chính đã đóng; chưa xuất hiện mốc hòa vốn.`
+    ])
+  ].filter((line) => line !== null).join("\n");
+}
+
+function renderAdviceContent(text) {
+  const container = document.getElementById("adviceExportText"); container.innerHTML = ""; const lines = text.split("\n");
+  lines.forEach((line, index) => { if (!line) return; let element = document.createElement("p"); if (line === "BẢN TƯ VẤN GIẢI PHÁP BẢO VỆ") element = document.createElement("h2"); else if (/^\d+\. [A-ZÀ-Ỹ]/.test(line)) element = document.createElement("h3"); else if (/^\d+\. 【R\d+】/.test(line)) element = document.createElement("h4"); else if (line.startsWith("⭐") || line.startsWith("✅")) element.className = "advice-highlight"; else if (index === lines.length - 1) element.className = "advice-cta"; element.textContent = line; container.appendChild(element); });
+}
+
+function openAdviceExport() {
+  const snapshot = buildSummarySnapshot();
+  if (!snapshot.valid) return updateSummaryExportAvailability();
+  renderAdviceContent(buildAdviceText(snapshot));
+  document.getElementById("adviceExportStatus").textContent = "";
+  document.getElementById("adviceExportScreen").hidden = false;
+}
+
+function closeAdviceExport() { document.getElementById("adviceExportScreen").hidden = true; }
+async function copyAdviceText() {
+  const text = document.getElementById("adviceExportText").innerText;
+  await navigator.clipboard.writeText(text);
+  document.getElementById("adviceExportStatus").textContent = "Đã sao chép nội dung tư vấn.";
+}
+document.querySelectorAll("#exportAdviceButton, #riderExportAdviceButton").forEach((button) => { button.hidden = !canExportAdvice; button.addEventListener("click", openAdviceExport); });
+document.getElementById("closeAdviceExport")?.addEventListener("click", closeAdviceExport);
+document.getElementById("copyAdviceText")?.addEventListener("click", () => copyAdviceText().catch(() => { document.getElementById("adviceExportStatus").textContent = "Không sao chép tự động được. Hãy chọn nội dung và sao chép thủ công."; }));
 
 document.getElementById("exportSummaryButton")?.addEventListener("click", openSummaryPreview);
 document.getElementById("riderExportSummaryButton")?.addEventListener("click", openSummaryPreview);

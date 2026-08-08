@@ -307,6 +307,7 @@
 
         <section id="summaryExportBar" class="summary-export-bar" hidden>
           <button id="exportSummaryButton" class="summary-export-button" type="button">📄 Xuất tóm tắt</button>
+          <button id="exportAdviceButton" class="summary-export-button advice-export-button" type="button" hidden>💬 Xuất tư vấn</button>
           <p id="summaryExportStatus" class="summary-export-status" role="status"></p>
         </section>
       </section>
@@ -360,6 +361,7 @@
 
         <section id="riderSummaryExportBar" class="summary-export-bar rider-summary-export-bar" hidden>
           <button id="riderExportSummaryButton" class="summary-export-button" type="button">📄 Xuất tóm tắt</button>
+          <button id="riderExportAdviceButton" class="summary-export-button advice-export-button" type="button" hidden>💬 Xuất tư vấn</button>
           <p id="riderSummaryExportStatus" class="summary-export-status" role="status"></p>
         </section>
       </section>
@@ -409,6 +411,17 @@
 
         <p id="summaryShareStatus" class="summary-share-status" role="status"></p>
       </div>
+    </section>
+
+    <section id="adviceExportScreen" class="advice-export-screen" hidden role="dialog" aria-modal="true" aria-label="Bản tư vấn khách hàng">
+      <article class="advice-export-dialog">
+        <div id="adviceExportText" class="advice-export-content" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Nội dung tư vấn khách hàng"></div>
+        <div class="advice-export-actions">
+          <button id="copyAdviceText" class="summary-action-button primary" type="button">📋 Sao chép</button>
+          <button id="closeAdviceExport" class="summary-action-button advice-close-button" type="button">Đóng</button>
+        </div>
+        <p id="adviceExportStatus" class="summary-share-status" role="status"></p>
+      </article>
     </section>
 
     <script src="occupation-data.js?v=20260613-occupation"></script>
