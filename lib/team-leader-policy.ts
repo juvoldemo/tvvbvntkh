@@ -153,7 +153,9 @@ export function calculateTeamLeaderPolicy(params: {
     agent_name: draft.advisorCode || `TVV dự kiến ${index + 1}`,
     contract_no: `DRAFT-${index}`,
     paid_date: draft.expectedPaidDate || monthStart,
-    issued_date: draft.expectedIssueDate || draft.expectedPaidDate || monthStart,
+    // A draft has no official KPI04/KPI05 row yet. Keep it unissued in the
+    // synthetic BC02 data so combineKpi04AndBc02 can estimate its FYC.
+    issued_date: null,
     policy_status: "Có hiệu lực",
     ip: Number(draft.ip) || 0,
     afyp: Number(draft.ip) || 0

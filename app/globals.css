@@ -16895,19 +16895,47 @@ body .admin-page button.admin-analytics-summary-action:hover { background: #dcec
 .tvv-about-grid button > svg { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
 .tvv-about-modal-backdrop { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; box-sizing: border-box; background: rgba(5, 29, 50, .58); padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); }
 .tvv-about-modal { width: min(680px, 100%); height: min(92dvh, 820px); display: flex; flex-direction: column; overflow: hidden; border-radius: 24px; background: #f4f8fc; box-shadow: 0 24px 60px rgba(0, 38, 66, .28); }
-.tvv-about-modal > header { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; gap: 16px; background: linear-gradient(135deg, #005987, #0077aa); color: #fff; padding: 22px; }
-.tvv-about-modal header h2 { margin: 4px 0; font-size: var(--typo-20); }
+.tvv-about-modal > header { position: sticky; top: 0; z-index: 2; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: linear-gradient(135deg, #005987, #0077aa); color: #fff; padding: 12px 16px 12px 18px; }
+.tvv-about-modal header h2 { margin: 0; color: #fff; font-size: var(--typo-17); font-weight: 800 !important; line-height: 1.3; }
 .tvv-about-modal header p, .tvv-about-modal header small { margin: 0; opacity: .86; }
 .tvv-about-modal header button { flex: 0 0 36px; height: 36px; border: 1px solid rgba(255,255,255,.4); border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: 26px; }
 .tvv-about-modal-content { min-height: 0; display: grid; align-content: start; gap: 14px; overflow-y: auto; padding: 18px; }
 .tvv-about-modal-content article { overflow: hidden; border: 1px solid #dce7f3; border-radius: 16px; background: #fff; }
-.tvv-about-modal-content article img { display: block; width: 100%; max-height: 340px; object-fit: cover; }
+.tvv-about-modal-content article img { display: block; width: 100%; max-height: 440px; object-fit: contain; background: #fff; }
+.tvv-handbook-image-button { position: relative; width: 100%; display: block; overflow: hidden; border: 0; background: #fff; padding: 0; cursor: zoom-in; }
+.tvv-handbook-image-button img { pointer-events: none; }
+.tvv-handbook-image-button span { position: absolute; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; background: rgba(0, 55, 88, .82); color: #fff; padding: 6px 10px; font-size: var(--typo-11); font-weight: 700; }
+.tvv-handbook-carousel { overflow: hidden; border: 1px solid #dce7f3; border-radius: 16px; background: #fff; }
+.tvv-handbook-carousel-stage { position: relative; min-height: 240px; display: grid; place-items: center; overflow: hidden; background: #f7fafc; touch-action: pan-y; }
+.tvv-handbook-carousel-image { width: 100%; display: grid; place-items: center; background: #fff; }
+.tvv-handbook-carousel-image img { display: block; width: 100%; max-height: 520px; object-fit: contain; }
+.tvv-handbook-thumbnail-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 8px; padding: 10px 12px 4px; background: #fff; }
+.tvv-handbook-thumbnail-strip > button { height: 58px; min-height: 58px; overflow: hidden; margin: 0; padding: 0; border: 2px solid transparent; border-radius: 9px; background: #eef3f6; box-shadow: none; transition: opacity .2s, border-color .2s, transform .2s; }
+.tvv-handbook-thumbnail-strip > button img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tvv-handbook-thumbnail-strip > button.adjacent { opacity: .38; transform: scale(.92); }
+.tvv-handbook-thumbnail-strip > button.active { border-color: #087daf; opacity: 1; transform: scale(1); }
+.tvv-handbook-carousel-caption { padding: 14px 16px; }
+.tvv-handbook-carousel-caption h3 { margin: 0 0 7px; }
+.tvv-handbook-carousel-footer { min-height: 28px; display: flex; align-items: center; justify-content: center; background: #fff; padding: 2px 12px 8px; }
+.tvv-handbook-carousel-footer span { color: #58758a; font-size: var(--typo-11); font-weight: 700; }
+.tvv-handbook-lightbox { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; box-sizing: border-box; background: rgba(2, 16, 27, .94); padding: max(54px, env(safe-area-inset-top)) 10px max(20px, env(safe-area-inset-bottom)); }
+.tvv-handbook-lightbox > button { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.45); border-radius: 50%; background: rgba(0,0,0,.28); color: #fff; }
+.tvv-handbook-lightbox > img { display: block; width: auto; max-width: 100%; height: auto; max-height: calc(100dvh - 78px); object-fit: contain; }
 .tvv-about-modal-content article div { padding: 16px; }
 .tvv-about-modal-content h3 { margin: 0 0 8px; color: #004b7a; font-size: var(--typo-16); }
 .tvv-about-modal-content p { margin: 0; color: #39566d; line-height: 1.65; white-space: pre-wrap; }
-.tvv-about-modal-content .tvv-handbook-text { overflow: visible; }
-.tvv-about-modal-content .tvv-handbook-text p { font-size: var(--typo-15); }
+.tvv-about-modal-content .tvv-handbook-text { overflow: visible; padding: 18px 20px; }
+.tvv-handbook-copy { margin: 0; color: #294c63; font-size: var(--typo-14); line-height: 1.65; }
+ul.tvv-handbook-copy { display: grid; gap: 9px; padding-left: 21px; }
+ul.tvv-handbook-copy li { padding-left: 3px; }
+ul.tvv-handbook-copy li::marker { color: #0780b5; font-size: 1.05em; }
+div.tvv-handbook-copy { display: grid; gap: 10px; padding: 0 !important; }
+.tvv-about-modal-content div.tvv-handbook-copy p { margin: 0; color: #294c63; line-height: 1.65; }
 body.tvv-modal-open { overflow: hidden; }
+.ui-close-button { width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important; display: inline-grid !important; flex: 0 0 32px !important; place-items: center !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; outline: 0 !important; background: transparent !important; color: currentColor !important; box-shadow: none !important; cursor: pointer; }
+.ui-close-button svg { width: 18px !important; height: 18px !important; stroke-width: 2.2; }
+.ui-close-button:hover, .ui-close-button:focus-visible { background: transparent !important; opacity: .72; box-shadow: none !important; }
+.tvv-handbook-lightbox > .ui-close-button { color: #fff !important; }
 .admin-data-overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .admin-data-overview div { display: grid; gap: 4px; border: 1px solid #dce7f8; border-radius: 12px; background: #f8fbff; padding: 14px; }
 .admin-data-overview strong { color: #004b7a; font-size: var(--typo-28); line-height: 1; }
@@ -23264,4 +23292,26 @@ body .tvv-app .tvv-bottom-nav.ado-bottom-nav button span { font-size: 9px; }
     align-self: center;
     white-space: nowrap;
   }
+}
+
+/* Chuẩn nút đóng toàn ứng dụng: chỉ icon X, không khung hoặc nền tròn. */
+body button[aria-label^="Đóng"] {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  flex: 0 0 32px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body button[aria-label^="Đóng"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.2 !important;
 }

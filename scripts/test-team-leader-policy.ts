@@ -220,4 +220,22 @@ assert.equal(kpi05ReplacesKpi04AndBc02.monthly.reward, 18_700_000);
 assert.equal(kpi05ReplacesKpi04AndBc02.annual.kpi04Fyc, 0);
 assert.equal(kpi05ReplacesKpi04AndBc02.annual.kpi05Fyc, 40_000_000);
 
+const projectedContract = calculate({
+  month: "2026-08",
+  groupRecords: [],
+  latestGroupByAdvisor: new Map([["A1", "Nhóm A"]]),
+  fycRows: [],
+  drafts: [{
+    advisorCode: "A1",
+    ip: 35_000_000,
+    expectedPaidDate: "2026-08-09",
+    expectedIssueDate: "2026-08-09"
+  }]
+});
+assert.equal(projectedContract.monthly.ip, 35_000_000);
+assert.equal(projectedContract.monthly.hdc, 1);
+assert.equal(projectedContract.monthly.fyc, 8_750_000, "hợp đồng dự kiến phải tạo FYC ước tính bằng 25% IP");
+assert.equal(projectedContract.monthly.rate, 0.1);
+assert.equal(projectedContract.monthly.reward, 875_000, "thưởng PTKD phải được tính từ FYC dự kiến");
+
 console.log("Team leader policy tests passed.");

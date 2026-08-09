@@ -8599,7 +8599,9 @@ body .summary-export-button.advice-export-button { color: #fff !important; backg
 .advice-export-content p { margin: 4px 0; }
 .advice-export-content .advice-highlight { padding: 8px 10px; border-radius: 9px; background: #fff7df; color: #5d4200; font-size: 14px; font-weight: 700; }
 .advice-export-content .advice-cta { margin-top: 10px; padding: 12px; border-radius: 11px; background: #075f8c; color: #fff; font-size: 14px; font-weight: 700; }
-.advice-export-actions { display: flex; gap: 10px; margin-top: 14px; }
+.advice-export-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.advice-export-actions .customer-copy-button { flex: 1 0 100%; border-color: #087f5b; background: #087f5b; color: #fff; }
+.advice-export-actions .customer-copy-button:hover { border-color: #066a4c; background: #066a4c; }
 @media (max-width: 600px) { .advice-export-screen { inset: 0; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); } .advice-export-dialog { height: calc(100% - 32px); max-height: calc(100dvh - 32px); padding: 14px; } .advice-export-content { min-height: 0; padding: 14px; font-size: 12px; } .advice-export-content h2 { font-size: 17px; } .advice-export-content h3 { font-size: 14px; } .advice-export-content h4 { font-size: 13px; } .advice-export-content .advice-highlight, .advice-export-content .advice-cta { font-size: 13px; } .advice-export-actions { flex-direction: row; flex: 0 0 auto; } }
 
 /* Must outrank the compact viewer's forced display when the modal is closed. */

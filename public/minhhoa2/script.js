@@ -5801,6 +5801,46 @@ function buildAdviceText(snapshot) {
   ].filter((line) => line !== null).join("\n");
 }
 
+function buildCustomerExplanationText(snapshot) {
+  const dailySaving = Math.ceil(snapshot.totals.firstYearPremium / 365);
+  const accountProjection = snapshot.totals.accountProjection || [];
+  const accountMilestoneYears = new Set(Array.from({ length: Math.floor(snapshot.policyTermYears / 5) }, (_, index) => (index + 1) * 5));
+  const accountValueLines = accountProjection
+    .filter((item) => accountMilestoneYears.has(item.year))
+    .filter((item, index, items) => items.findIndex((entry) => entry.year === item.year) === index)
+    .sort((a, b) => a.year - b.year)
+    .map((item) => `🔸 NĂM THỨ ${item.year}\n   Tổng phí đã đóng: ${formatCurrency(item.cumulativePremium)}\n   Giá trị tài khoản: ${formatCurrency(item.cashValue476)}`);
+  const mainBenefit = snapshot.isLifeCare20
+    ? `Quyền lợi bệnh lý nghiêm trọng cơ bản: ${formatCurrency(snapshot.basicBenefit)}; quyền lợi nâng cao có thể lên đến ${formatCurrency(snapshot.advancedBenefit)} khi đáp ứng điều kiện.`
+    : snapshot.mainProduct === "ATPN"
+      ? `Quyền lợi tử vong: ${formatCurrency(snapshot.mainSumInsured)}.\n• Quyền lợi Chu toàn hậu sự: chi trả trước 10% Số tiền bảo hiểm, tối đa ${formatCurrency(snapshot.funeralBenefit)}; khoản này được khấu trừ khi chi trả quyền lợi tử vong.`
+      : `Quyền lợi bảo vệ chính theo số tiền bảo hiểm đã chọn: ${formatCurrency(snapshot.mainSumInsured)}; quyền lợi thực tế được xác định theo sự kiện bảo hiểm và điều khoản hợp đồng.`;
+  const riderLines = snapshot.riders.length
+    ? snapshot.riders.map((rider) => {
+      const adviceParts = getRiderAdviceLines(rider).split("\n").map((line) => line.trim()).filter(Boolean);
+      return `🔹 ${rider.name.toUpperCase()}\n   👤 Người được bảo hiểm: ${rider.personName || "Khách hàng"}\n   💳 Phí: ${formatCurrency(rider.annualPremium)}/năm\n   ✅ ${adviceParts[3] || `Mức bảo vệ ${rider.displaySumInsured || formatCurrency(rider.sumInsured)}.`}\n`;
+    })
+    : ["• Phương án hiện chưa bổ sung sản phẩm bảo hiểm bán kèm."];
+  const customerText = [
+    "💳 1. PHÍ BẢO HIỂM",
+    `• Phí sản phẩm chính: ${formatCurrency(snapshot.mainPremium)}/năm`,
+    `• Tổng phí năm đầu: ${formatCurrency(snapshot.totals.firstYearPremium)}`,
+    `• Bình quân: ${formatCurrency(dailySaving)}/ngày`,
+    `• Đóng phí dự kiến: ${snapshot.premiumPaymentYears} năm`,
+    `• Thời hạn bảo hiểm: ${snapshot.policyTermYears} năm`,
+    "",
+    "🛡️ 2. QUYỀN LỢI BẢO VỆ CHÍNH",
+    `• ${mainBenefit}`,
+    "",
+    "➕ 3. CÁC LỚP BẢO VỆ BỔ SUNG",
+    ...riderLines,
+    "",
+    "💰 4. GIÁ TRỊ TÀI KHOẢN HỢP ĐỒNG",
+    ...(accountValueLines.length ? accountValueLines : ["• Phương án này chưa có bảng Giá trị tài khoản minh họa."])
+  ].join("\n");
+  return customerText.replace(/\d[\d.]*\s*đồng/g, (amount) => amount.replace(/\d/g, (digit) => String.fromCodePoint(0x1D7EC + Number(digit))));
+}
+
 function renderAdviceContent(text) {
   const container = document.getElementById("adviceExportText"); container.innerHTML = ""; const lines = text.split("\n");
   lines.forEach((line, index) => { if (!line) return; let element = document.createElement("p"); if (line === "BẢN TƯ VẤN GIẢI PHÁP BẢO VỆ") element = document.createElement("h2"); else if (/^\d+\. [A-ZÀ-Ỹ]/.test(line)) element = document.createElement("h3"); else if (/^\d+\. 【R\d+】/.test(line)) element = document.createElement("h4"); else if (line.startsWith("⭐") || line.startsWith("✅")) element.className = "advice-highlight"; else if (index === lines.length - 1) element.className = "advice-cta"; element.textContent = line; container.appendChild(element); });
@@ -5816,13 +5856,27 @@ function openAdviceExport() {
 
 function closeAdviceExport() { document.getElementById("adviceExportScreen").hidden = true; }
 async function copyAdviceText() {
-  const text = document.getElementById("adviceExportText").innerText;
+  const text = document.getElementById("adviceExportText").innerText
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n[ \t]*\n+/g, "\n")
+    .trim();
   await navigator.clipboard.writeText(text);
   document.getElementById("adviceExportStatus").textContent = "Đã sao chép nội dung tư vấn.";
 }
 document.querySelectorAll("#exportAdviceButton, #riderExportAdviceButton").forEach((button) => { button.hidden = !canExportAdvice; button.addEventListener("click", openAdviceExport); });
 document.getElementById("closeAdviceExport")?.addEventListener("click", closeAdviceExport);
 document.getElementById("copyAdviceText")?.addEventListener("click", () => copyAdviceText().catch(() => { document.getElementById("adviceExportStatus").textContent = "Không sao chép tự động được. Hãy chọn nội dung và sao chép thủ công."; }));
+document.getElementById("copyCustomerText")?.addEventListener("click", async () => {
+  const snapshot = buildSummarySnapshot();
+  if (!snapshot.valid) return;
+  try {
+    await navigator.clipboard.writeText(buildCustomerExplanationText(snapshot));
+    document.getElementById("adviceExportStatus").textContent = "Đã sao chép nội dung dành cho khách hàng.";
+  } catch {
+    document.getElementById("adviceExportStatus").textContent = "Không sao chép tự động được. Vui lòng thử lại.";
+  }
+});
 
 document.getElementById("exportSummaryButton")?.addEventListener("click", openSummaryPreview);
 document.getElementById("riderExportSummaryButton")?.addEventListener("click", openSummaryPreview);

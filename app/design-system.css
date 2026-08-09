@@ -2240,6 +2240,106 @@ body .tvv-app .tvv-about-grid > button > i {
   background: #2785df;
 }
 
+/* Compact handbook list and search field. */
+body .tvv-app .tvv-about-preview .tvv-handbook-search {
+  height: 38px !important;
+  display: grid !important;
+  grid-template-columns: 20px minmax(0, 1fr) auto !important;
+  justify-content: stretch !important;
+  gap: 9px !important;
+  margin: 0 0 14px !important;
+  padding: 0 13px !important;
+  border: 1px solid #c9dbe8 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 3px 10px rgba(0, 63, 102, .04) !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-search:focus-within {
+  border-color: #0879ad !important;
+  box-shadow: 0 0 0 3px rgba(8, 121, 173, .1) !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-search input {
+  width: 100% !important;
+  height: 24px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 0 4px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #173f5a !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  align-self: center !important;
+  transform: none !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-search > svg {
+  display: block !important;
+  transform: none !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-search > svg,
+body .tvv-app .tvv-about-preview .tvv-handbook-search > input,
+body .tvv-app .tvv-about-preview .tvv-handbook-search > button {
+  position: relative !important;
+  top: -3px !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-search button {
+  width: 30px !important;
+  height: 30px !important;
+  min-height: 0 !important;
+  margin: 0 -6px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: #607d91 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-list {
+  gap: 9px !important;
+  margin-top: 0 !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-list > button {
+  min-height: 58px !important;
+  padding: 9px 12px !important;
+  border: 1px solid #d7e4ed !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  color: #083d61 !important;
+  box-shadow: 0 4px 12px rgba(0, 63, 102, .055) !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-list > button > span {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  background: #e9f5fb !important;
+  color: #0879ad !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-list > button > b {
+  display: block !important;
+  color: #083d61 !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
+  opacity: 1 !important;
+}
+
+body .tvv-app .tvv-about-preview .tvv-handbook-list > button > svg {
+  color: #4e829f !important;
+}
+
 body .tvv-app .tvv-about-grid > button:nth-child(2) > i { background: #22a95a; }
 body .tvv-app .tvv-about-grid > button:nth-child(3) > i { background: #e79a00; }
 body .tvv-app .tvv-about-grid > button:nth-child(4) > i { background: #eb6284; }
@@ -3464,4 +3564,40 @@ body .tvv-app .tvv-month-navigator button:disabled {
   box-shadow: none !important;
   opacity: .65 !important;
   cursor: default;
+}
+
+/* Nút đóng chuẩn được đặt cuối design system để không bị theme popup ghi đè. */
+body .tvv-app button[aria-label^="Đóng"],
+body > button[aria-label^="Đóng"],
+body [role="dialog"] button[aria-label^="Đóng"] {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  flex: 0 0 32px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: none !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app button[aria-label^="Đóng"]::before,
+body .tvv-app button[aria-label^="Đóng"]::after,
+body [role="dialog"] button[aria-label^="Đóng"]::before,
+body [role="dialog"] button[aria-label^="Đóng"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+body .tvv-app button[aria-label^="Đóng"] svg,
+body [role="dialog"] button[aria-label^="Đóng"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.2 !important;
 }

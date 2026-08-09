@@ -47,7 +47,8 @@ export type CompetitionRewardRule = {
   condition?: AnyRecord;
   reward?: AnyRecord;
   tiers?: AnyRecord[];
-  pdt_reward_tiers?: Array<{ min_pdt?: number; spc_reward?: number | string; other_reward?: number | string }>;
+  pdt_reward_tiers?: Array<{ min_pdt?: number; spc_reward?: number | string; other_reward?: number | string; early_reward?: number | string; late_reward?: number | string; [key: string]: unknown }>;
+  date_reward_periods?: Array<{ start_date?: string; end_date?: string; reward_key?: string }>;
   spc_products?: string[];
   allow_multiple_rewards?: boolean;
 };
@@ -979,6 +980,7 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       .sort((a, b) => Number(b.min_pdt) - Number(a.min_pdt));
     const spcProducts = new Set((rule.spc_products ?? []).map((product) => String(product ?? "").trim().toUpperCase()).filter(Boolean));
     const priorQualifiedAdvisors = new Set(((rule as AnyRecord).prior_qualified_advisors ?? []).map(normalizeText).filter(Boolean));
+    const dateRewardPeriods = (rule.date_reward_periods ?? []).filter((period) => period.reward_key);
     return contracts.flatMap((contract) => {
       const metricValue = competitionMetricValue(contract);
       const tier = tiers.find((item) => metricValue >= Number(item.min_pdt));
@@ -992,7 +994,12 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
       if (spcProducts.size > 0 && !productCode) {
         rewardDebugLog("[CTTD FILTER]", { gyc_no: contract.gyc_no, step: "product", raw_product_field: rawProductField, result: "missing_product" });
       }
-      const rawReward = isSpc ? tier.spc_reward : tier.other_reward;
+      const matchedDatePeriod = dateRewardPeriods.find((period) =>
+        (!period.start_date || contract.paidDate >= period.start_date)
+        && (!period.end_date || contract.paidDate <= period.end_date)
+      );
+      const periodReward = matchedDatePeriod?.reward_key ? tier[matchedDatePeriod.reward_key] : undefined;
+      const rawReward = periodReward ?? (isSpc ? tier.spc_reward : tier.other_reward);
       const text = String(rawReward ?? "").trim();
       const numericReward = Number(rawReward);
       const percent = text.endsWith("%")
@@ -1001,7 +1008,7 @@ function calculateContractRewards(rule: CompetitionRewardRule, contracts: Normal
           ? numericReward * 100
           : 0;
       const amount = percent > 0 ? metricValue * percent / 100 : parseCompetitionMoney(rawReward);
-      rewardDebugLog("[CTTD PDT TABLE]", { gyc_no: contract.gyc_no, raw_product_field: rawProductField, normalized_product_code: productCode, expected_spc_code: [...spcProducts].join(", "), isSPC: isSpc, metric_value: metricValue, threshold_matched: tier.min_pdt, reward_type: percent > 0 ? "percent" : "fixed", reward_amount: amount });
+      rewardDebugLog("[CTTD PDT TABLE]", { gyc_no: contract.gyc_no, raw_product_field: rawProductField, normalized_product_code: productCode, expected_spc_code: [...spcProducts].join(", "), isSPC: isSpc, date_reward_key: matchedDatePeriod?.reward_key, metric_value: metricValue, threshold_matched: tier.min_pdt, reward_type: percent > 0 ? "percent" : "fixed", reward_amount: amount });
       if (!Number.isFinite(amount) || amount <= 0) return [];
       const eligible = toEligibleContract(contract, rule, amount, `PĐT/HĐ >= ${Number(tier.min_pdt).toLocaleString("vi-VN")}đ`);
       eligible.prizeName = isSpc ? "HĐ SPC An Thịnh Phúc Niên" : "HĐ còn lại";

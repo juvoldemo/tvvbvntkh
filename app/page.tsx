@@ -9,6 +9,7 @@ import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, Che
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
+import CloseIconButton from "@/app/CloseIconButton";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
 type PeriodMode = "month" | "quarter" | "year";
@@ -2599,6 +2600,7 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
             premium: Number(draft.ip) || 0,
             expectedPaidDate: draft.expectedPaidDate,
             expectedIssueDate: draft.expectedIssueDate || draft.expectedPaidDate,
+            isNewAdvisor: draft.isNewAdvisor === true,
             productName: "Hop dong du kien"
           }]
         })
@@ -2632,7 +2634,15 @@ function TeamLeaderCalculator({ month, teamData, baseline, onBack }: any) {
     if (ip <= 0) return setFormError("Vui lòng nhập IP dự kiến lớn hơn 0.");
     if (!expectedPaidDate) return setFormError("Vui lòng chọn ngày thu phí.");
     setFormError("");
-    const next = [...draftContracts, { id: crypto.randomUUID(), advisorCode, ip, expectedPaidDate, expectedIssueDate: expectedPaidDate, isNewAdvisor }];
+    const selectedAdvisor = advisorList.find((item: any) => item.agentCode === advisorCode || item.advisor_code === advisorCode);
+    const next = [...draftContracts, {
+      id: crypto.randomUUID(),
+      advisorCode,
+      ip,
+      expectedPaidDate,
+      expectedIssueDate: expectedPaidDate,
+      isNewAdvisor: isNewAdvisor || selectedAdvisor?.isNewAdvisor === true
+    }];
     setDraftContracts(next);
     setIpText("");
     void calculate(next);
@@ -3104,7 +3114,7 @@ function ContestDetailModal({ item, onClose, policyMonth, monthOptions = [], onP
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [onClose, previewUrl]);
   return <div className="tvv-contest-detail-backdrop" role="presentation" onClick={onClose}><section className="tvv-contest-detail" role="dialog" aria-modal="true" aria-label="Nội dung chương trình thi đua" onClick={(event) => event.stopPropagation()}>
-    <header><div>{policyOptions.length ? <div className="tvv-policy-modal-period"><MonthPicker value={policyPickerValue(item.programId, policyMonth!)} options={policyOptions} onChange={onPolicyMonthChange!} ariaLabel="Chọn kỳ thưởng chính sách" /></div> : <em>{item.period || "ĐANG DIỄN RA"}</em>}<h2>{item.programName || "Chương trình thi đua"}</h2></div><button type="button" onClick={onClose} aria-label="Đóng"><X size={22} /></button></header>
+    <header><div>{policyOptions.length ? <div className="tvv-policy-modal-period"><MonthPicker value={policyPickerValue(item.programId, policyMonth!)} options={policyOptions} onChange={onPolicyMonthChange!} ariaLabel="Chọn kỳ thưởng chính sách" /></div> : <em>{item.period || "ĐANG DIỄN RA"}</em>}<h2>{item.programName || "Chương trình thi đua"}</h2></div><CloseIconButton onClick={onClose} /></header>
     {!policyRows && !item.isTeamPolicy && <p className="tvv-contest-detail-date">
       <span><CalendarDays size={17} />{formatDateVi(item.startDate)} - {formatDateVi(item.endDate)}</span>
       {item.issueDeadline && <span className="tvv-contest-issue-deadline">Phát hành đến {formatDateVi(item.issueDeadline)}</span>}
@@ -4163,9 +4173,18 @@ function AboutBaoVietPreview({ onOpen }: { onOpen: () => void }) {
   </button>;
 }
 
+function HandbookText({ value }: { value: string }) {
+  const lines = value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const isList = lines.length > 1 && lines.filter((line) => /^[-•*]\s*/.test(line)).length >= Math.ceil(lines.length / 2);
+  if (isList) return <ul className="tvv-handbook-copy">{lines.map((line, index) => <li key={index}>{line.replace(/^[-•*]\s*/, "")}</li>)}</ul>;
+  return <div className="tvv-handbook-copy">{lines.map((line, index) => <p key={index}>{line.replace(/^[-•*]\s*/, "")}</p>)}</div>;
+}
+
 function AboutBaoVietPage() {
   const [sections, setSections] = useState<AboutSection[]>([]);
   const [selected, setSelected] = useState<AboutSection | null>(null);
+  const [imageIndex, setImageIndex] = useState(0);
+  const carouselTouchStartX = useRef<number | null>(null);
   const [query, setQuery] = useState("");
   useEffect(() => {
     fetch(`/api/archive/content?updated=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
@@ -4180,21 +4199,41 @@ function AboutBaoVietPage() {
     window.addEventListener("keydown", close);
     return () => { document.body.classList.remove("tvv-modal-open"); window.removeEventListener("keydown", close); };
   }, [selected]);
+  useEffect(() => { setImageIndex(0); }, [selected?.id]);
   const normalizedQuery = query.trim().toLocaleLowerCase("vi");
   const filteredSections = sections.filter((section) => !normalizedQuery || [section.title, section.description, ...section.items.flatMap((item) => [item.title, item.content])].join(" ").toLocaleLowerCase("vi").includes(normalizedQuery));
+  const selectedImages = selected?.items.filter((item) => Boolean(item.imageUrl)) ?? [];
+  const selectedTextItems = selected?.items.filter((item) => !item.imageUrl && (item.title || item.content)) ?? [];
+  const activeImageIndex = Math.min(imageIndex, Math.max(0, selectedImages.length - 1));
+  const activeImage = selectedImages[activeImageIndex];
   return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page">
     <section className="tvv-card tvv-about-preview">
-      <div className="tvv-section-head"><div><h2>Cẩm nang tư vấn</h2></div></div>
       <label className="tvv-handbook-search"><Search size={20} /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm kiếm nội dung tư vấn..." aria-label="Tìm kiếm trong Cẩm nang tư vấn" />{query && <button type="button" onClick={() => setQuery("")} aria-label="Xóa nội dung tìm kiếm"><X size={18} /></button>}</label>
       <div className="tvv-handbook-list">{filteredSections.map((section) => <button type="button" key={section.id} onClick={() => setSelected(section)}><span><BookOpen size={20} /></span><b>{section.title}</b><ChevronRight size={21} /></button>)}</div>
       {!filteredSections.length && <p className="tvv-handbook-empty">Không tìm thấy nội dung phù hợp.</p>}
     </section>
     {selected && createPortal(<div className="tvv-about-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
       <article className="tvv-about-modal" role="dialog" aria-modal="true" aria-labelledby="tvv-handbook-modal-title">
-        <header><div><small>CẨM NANG TƯ VẤN</small><h2 id="tvv-handbook-modal-title">{selected.title}</h2></div><button type="button" onClick={() => setSelected(null)} aria-label="Đóng"><X size={22} /></button></header>
+        <header><div><h2 id="tvv-handbook-modal-title">{selected.title}</h2></div><CloseIconButton onClick={() => setSelected(null)} /></header>
         <div className="tvv-about-modal-content">
-          {selected.description.trim() && <article className="tvv-handbook-text"><p>{selected.description}</p></article>}
-          {selected.items.map((item) => <article key={item.id}>{item.imageUrl && <img src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl)}`} alt={item.title || selected.title} />}{(item.title || item.content) && <div>{item.title && <h3>{item.title}</h3>}{item.content && <p>{item.content}</p>}</div>}</article>)}
+          {selected.description.trim() && <article className="tvv-handbook-text"><HandbookText value={selected.description} /></article>}
+          {selectedTextItems.map((item) => <article key={item.id}><div>{item.title && <h3>{item.title}</h3>}{item.content && <HandbookText value={item.content} />}</div></article>)}
+          {activeImage && (() => {
+            const imageSrc = `/api/archive/file?path=${encodeURIComponent(activeImage.imageUrl!)}`;
+            const imageAlt = activeImage.title || `${selected.title} - ảnh ${activeImageIndex + 1}`;
+            const previewIndices = Array.from(new Set([(activeImageIndex - 1 + selectedImages.length) % selectedImages.length, activeImageIndex, (activeImageIndex + 1) % selectedImages.length]));
+            return <section className="tvv-handbook-carousel" aria-label={`Bộ ảnh ${selected.title}`}>
+              <div className="tvv-handbook-carousel-stage" onTouchStart={(event) => { carouselTouchStartX.current = event.touches[0]?.clientX ?? null; }} onTouchEnd={(event) => { const startX = carouselTouchStartX.current; const endX = event.changedTouches[0]?.clientX; carouselTouchStartX.current = null; if (startX === null || endX === undefined || selectedImages.length < 2) return; const distance = endX - startX; if (Math.abs(distance) < 42) return; setImageIndex((index) => distance < 0 ? (index + 1) % selectedImages.length : (index - 1 + selectedImages.length) % selectedImages.length); }}>
+                <div className="tvv-handbook-carousel-image"><img src={imageSrc} alt={imageAlt} /></div>
+              </div>
+              {selectedImages.length > 1 && <div className="tvv-handbook-thumbnail-strip">{previewIndices.map((index) => {
+                const item = selectedImages[index];
+                return <button type="button" key={`${item.id}-${index}`} className={index === activeImageIndex ? "active" : "adjacent"} onClick={() => setImageIndex(index)} aria-label={`Xem ảnh ${index + 1}`}><img src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl!)}`} alt="" /></button>;
+              })}</div>}
+              {(activeImage.title || activeImage.content) && <div className="tvv-handbook-carousel-caption">{activeImage.title && <h3>{activeImage.title}</h3>}{activeImage.content && <HandbookText value={activeImage.content} />}</div>}
+              {selectedImages.length > 1 && <div className="tvv-handbook-carousel-footer"><span>{activeImageIndex + 1}/{selectedImages.length}</span></div>}
+            </section>;
+          })()}
           {!selected.description.trim() && !selected.items.length && <p className="tvv-empty">Nội dung đang được cập nhật.</p>}
         </div>
       </article>

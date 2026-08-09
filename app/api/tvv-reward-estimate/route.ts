@@ -226,12 +226,21 @@ export async function POST(request: NextRequest) {
     if (programError) throw programError;
     if (yearContractsError) throw yearContractsError;
     if (advisorProfilesError) throw advisorProfilesError;
+    const simulatedNewAdvisorDraft = draftContracts.find((draft: DraftRewardContract & { isNewAdvisor?: boolean }) => draft.isNewAdvisor === true);
     const effectiveAdvisorProfiles = recruitmentMode
       ? [{
           advisor_code: advisor.code,
           start_date: String(payload.recruitmentStartDate || draftContracts[0]?.expectedPaidDate || `${month}-01`).slice(0, 10)
         }]
-      : (advisorProfiles ?? []);
+      : simulatedNewAdvisorDraft
+        ? [{
+            ...(advisorProfiles?.[0] ?? {}),
+            advisor_code: advisor.code,
+            // Khi mô phỏng tuyển mới, ngày hợp đồng dự kiến là mốc bắt đầu tạm tính
+            // để các chính sách TVV mới được cộng vào kết quả của chính hợp đồng đó.
+            start_date: String(simulatedNewAdvisorDraft.expectedIssueDate || simulatedNewAdvisorDraft.expectedPaidDate || `${month}-01`).slice(0, 10)
+          }]
+        : (advisorProfiles ?? []);
 
     const visiblePrograms = (programs ?? []).filter((program: any) =>
       program.is_hidden !== true

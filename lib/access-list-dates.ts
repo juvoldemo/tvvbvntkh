@@ -18,11 +18,11 @@ export function parseAccessListDate(value: unknown) {
   const raw = String(value).trim();
   if (!raw) return null;
 
-  const viDate = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  const viDate = raw.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2}|\d{4})$/);
   if (viDate) {
     const day = Number(viDate[1]);
     const month = Number(viDate[2]);
-    const year = Number(viDate[3]);
+    const year = viDate[3].length === 2 ? 2000 + Number(viDate[3]) : Number(viDate[3]);
     return isoDate(year, month, day);
   }
 
