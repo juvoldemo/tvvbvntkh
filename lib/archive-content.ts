@@ -6,7 +6,7 @@ export type ArchiveContentKey = "forms" | "guides" | "faq" | "about";
 
 export type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
 export type AboutSection = {
-  id: "awards" | "interest" | "benefits" | "payment-images" | "large-benefits";
+  id: string;
   title: string;
   description: string;
   items: AboutItem[];
@@ -84,6 +84,17 @@ function normalizeAboutContent(value: unknown): AboutContent {
   const source = value && typeof value === "object" && "sections" in value && Array.isArray((value as AboutContent).sections)
     ? (value as AboutContent).sections
     : [];
+  if (source.length) {
+    return {
+      sections: source.map((section, index) => ({
+        ...section,
+        id: typeof section.id === "string" && section.id ? section.id : `handbook-${index + 1}`,
+        title: typeof section.title === "string" ? section.title : "",
+        description: typeof section.description === "string" ? section.description : "",
+        items: Array.isArray(section.items) ? section.items : []
+      }))
+    };
+  }
   const byId = new Map(source.map((section) => [section.id, section]));
   const specs: Array<[AboutSection["id"], string, string]> = [
     ["payment-images", "Thông tin về Bảo Việt Nhân thọ", "Những thông tin nổi bật về Bảo Việt Nhân thọ."],

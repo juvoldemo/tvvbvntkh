@@ -4166,30 +4166,39 @@ function AboutBaoVietPreview({ onOpen }: { onOpen: () => void }) {
 function AboutBaoVietPage() {
   const [sections, setSections] = useState<AboutSection[]>([]);
   const [selected, setSelected] = useState<AboutSection | null>(null);
+  const [query, setQuery] = useState("");
   useEffect(() => {
     fetch(`/api/archive/content?updated=${Date.now()}`, { cache: "no-store", headers: { "Cache-Control": "no-cache" } })
       .then((response) => response.json())
-      .then((payload) => setSections((payload.about?.sections ?? []).filter((section: AboutSection) => section.id !== "large-benefits" && !section.title.toLowerCase().includes("quyền lợi lớn"))))
+      .then((payload) => setSections(payload.about?.sections ?? []))
       .catch(() => setSections([]));
   }, []);
-  const icons = [
-    "Thông tin BVNT-transparent.png",
-    "Danh hiệu đạt được-transparent.png",
-    "lãi suất-transparent.png",
-    "quyền lợi chi trả-transparent.png"
-  ];
-  if (selected) return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page tvv-about-detail-page">
-    <button className="tvv-about-page-back" type="button" onClick={() => setSelected(null)}><ChevronLeft size={20} />Tất cả nội dung</button>
-    {customAboutDescription(selected) && <article className="tvv-about-description">{customAboutDescription(selected)}</article>}
-    <div className="tvv-about-page-content">{selected.items.some((item) => Boolean(item.imageUrl)) ? selected.items.filter((item) => Boolean(item.imageUrl)).map((item, index) => <figure key={item.id}>
-      <img src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl!)}`} alt={`Hình ảnh ${index + 1}: ${selected.title}`} />
-    </figure>) : !customAboutDescription(selected) && <p className="tvv-empty">Nội dung đang được cập nhật.</p>}</div>
-  </section>;
+  useEffect(() => {
+    if (!selected) return;
+    const close = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") setSelected(null); };
+    document.body.classList.add("tvv-modal-open");
+    window.addEventListener("keydown", close);
+    return () => { document.body.classList.remove("tvv-modal-open"); window.removeEventListener("keydown", close); };
+  }, [selected]);
+  const normalizedQuery = query.trim().toLocaleLowerCase("vi");
+  const filteredSections = sections.filter((section) => !normalizedQuery || [section.title, section.description, ...section.items.flatMap((item) => [item.title, item.content])].join(" ").toLocaleLowerCase("vi").includes(normalizedQuery));
   return <section className="tvv-content tvv-subpage tvv-after-sub-header tvv-about-page">
     <section className="tvv-card tvv-about-preview">
       <div className="tvv-section-head"><div><h2>Cẩm nang tư vấn</h2></div></div>
-      <div className="tvv-about-grid">{sections.map((section, index) => <button type="button" key={section.id} onClick={() => setSelected(section)}><span><img src={encodeURI(`/BVNT là ai/${icons[index % icons.length]}`)} alt="" /></span><b>{section.title}</b><i aria-hidden="true" /><em><ChevronRight size={22} /></em></button>)}</div>
+      <label className="tvv-handbook-search"><Search size={20} /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm kiếm nội dung tư vấn..." aria-label="Tìm kiếm trong Cẩm nang tư vấn" />{query && <button type="button" onClick={() => setQuery("")} aria-label="Xóa nội dung tìm kiếm"><X size={18} /></button>}</label>
+      <div className="tvv-handbook-list">{filteredSections.map((section) => <button type="button" key={section.id} onClick={() => setSelected(section)}><span><BookOpen size={20} /></span><b>{section.title}</b><ChevronRight size={21} /></button>)}</div>
+      {!filteredSections.length && <p className="tvv-handbook-empty">Không tìm thấy nội dung phù hợp.</p>}
     </section>
+    {selected && createPortal(<div className="tvv-about-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
+      <article className="tvv-about-modal" role="dialog" aria-modal="true" aria-labelledby="tvv-handbook-modal-title">
+        <header><div><small>CẨM NANG TƯ VẤN</small><h2 id="tvv-handbook-modal-title">{selected.title}</h2></div><button type="button" onClick={() => setSelected(null)} aria-label="Đóng"><X size={22} /></button></header>
+        <div className="tvv-about-modal-content">
+          {selected.description.trim() && <article className="tvv-handbook-text"><p>{selected.description}</p></article>}
+          {selected.items.map((item) => <article key={item.id}>{item.imageUrl && <img src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl)}`} alt={item.title || selected.title} />}{(item.title || item.content) && <div>{item.title && <h3>{item.title}</h3>}{item.content && <p>{item.content}</p>}</div>}</article>)}
+          {!selected.description.trim() && !selected.items.length && <p className="tvv-empty">Nội dung đang được cập nhật.</p>}
+        </div>
+      </article>
+    </div>, document.body)}
   </section>;
 }
 

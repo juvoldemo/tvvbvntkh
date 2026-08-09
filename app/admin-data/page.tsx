@@ -31,7 +31,7 @@ type ArchiveForms = { folders: ArchiveFolder[] };
 type ArchiveGuide = { id: string; category?: string; title: string; description?: string; summary?: string; type?: "pdf" | "youtube"; pdfUrl?: string; pageCount?: number; youtubeUrl?: string; youtubeId?: string; isActive?: boolean; order?: number; createdAt?: string };
 type ArchiveFaq = { id: string; question: string; answer: string };
 type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
-type AboutSection = { id: "awards" | "interest" | "benefits" | "payment-images" | "large-benefits"; title: string; description: string; items: AboutItem[] };
+type AboutSection = { id: string; title: string; description: string; items: AboutItem[] };
 type AboutContent = { sections: AboutSection[] };
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
@@ -416,7 +416,7 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
         <button type="button" className={activeTab === "activities" ? "active" : ""} onClick={() => { setActiveTab("activities"); setAccessError(""); }}><CheckCircle2 size={17} />Theo dõi hoạt động</button>
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
-        <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />BVNT là ai?</button>
+        <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />Cẩm nang tư vấn</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
       </nav>
 
@@ -985,15 +985,33 @@ function AboutAdminPanel({ content, setContent, onSaved, setMessage }: {
   const selectedSectionIndex = Math.max(0, content.sections.findIndex((section) => section.id === selectedSectionId));
   const selectedSection = content.sections[selectedSectionIndex];
 
+  function addSection() {
+    const section: AboutSection = { id: `handbook-${Date.now()}`, title: "Tiêu đề mới", description: "", items: [] };
+    const next = { sections: [...contentRef.current.sections, section] };
+    contentRef.current = next;
+    setContent(next);
+    setSelectedSectionId(section.id);
+  }
+
+  function removeSection(sectionId: string) {
+    const nextSections = contentRef.current.sections.filter((section) => section.id !== sectionId);
+    const next = { sections: nextSections };
+    contentRef.current = next;
+    setContent(next);
+    setSelectedSectionId(nextSections[0]?.id ?? "");
+  }
+
   return <article className="admin-card admin-archive-card admin-about-card">
-    <div className="admin-card-title"><ShieldCheck /><div><h2>Cẩm nang tư vấn</h2><p>Chủ động cập nhật nội dung chỉ hiển thị trên giao diện TVV có mã ADMIN.</p></div></div>
-    <nav className="admin-about-section-tabs" aria-label="Chọn nội dung Bảo Việt Nhân thọ">
-      {content.sections.map((section) => <button type="button" key={section.id} className={selectedSectionId === section.id ? "active" : ""} onClick={() => setSelectedSectionId(section.id)}><span>{section.title}</span><small>{section.items.filter((item) => item.imageUrl).length} ảnh</small></button>)}
+    <div className="admin-card-title"><ShieldCheck /><div><h2>Cẩm nang tư vấn</h2><p>Thêm đầu mục và cập nhật tiêu đề, nội dung hiển thị trên ứng dụng.</p></div></div>
+    <div className="admin-about-toolbar"><button type="button" onClick={addSection}><Plus size={17} />Thêm đầu mục</button></div>
+    <nav className="admin-about-section-tabs" aria-label="Chọn đầu mục Cẩm nang tư vấn">
+      {content.sections.map((section) => <button type="button" key={section.id} className={selectedSectionId === section.id ? "active" : ""} onClick={() => setSelectedSectionId(section.id)}><span>{section.title || "Chưa đặt tiêu đề"}</span><small>{section.description.trim() ? "Đã có nội dung" : "Chưa có nội dung"}</small></button>)}
     </nav>
     {selectedSection && <div className="admin-archive-editor">
       <section className="admin-archive-group" key={selectedSection.id}>
-        <label>Tên nhóm nội dung<input value={selectedSection.title} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, title: event.target.value })} /></label>
-        <label>Mô tả ngắn<textarea rows={2} value={selectedSection.description} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, description: event.target.value })} /></label>
+        <label>Tiêu đề<input value={selectedSection.title} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, title: event.target.value })} placeholder="Nhập tiêu đề đầu mục" /></label>
+        <label>Nội dung<textarea rows={12} value={selectedSection.description} onChange={(event) => updateSection(selectedSectionIndex, { ...selectedSection, description: event.target.value })} placeholder="Nhập nội dung tư vấn..." /></label>
+        <div className="admin-about-editor-actions"><button type="button" className="admin-danger" onClick={() => removeSection(selectedSection.id)}><Trash2 size={15} />Xóa đầu mục</button></div>
         <label className="admin-about-multi-upload"><Upload size={18} /><span>{uploadingId === selectedSection.id ? "Đang tải ảnh..." : "Chọn và tải nhiều ảnh"}</span><small>Mỗi ảnh sẽ được tạo thành một dòng riêng.</small><input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" disabled={uploadingId === selectedSection.id} onChange={(event) => { void uploadImages(selectedSectionIndex, event.target.files); event.target.value = ""; }} /></label>
         {selectedSection.items.map((item, itemIndex) => <div className="admin-about-item" key={item.id}>
           {item.imageUrl ? <img className="admin-about-image-preview" src={`/api/archive/file?path=${encodeURIComponent(item.imageUrl)}`} alt={`Ảnh ${itemIndex + 1}`} /> : <span className="admin-about-image-empty">Chưa có ảnh</span>}
