@@ -16812,6 +16812,88 @@ body .admin-page button.admin-analytics-summary-action:hover { background: #dcec
 .admin-message { max-width: 1240px; margin: 0 auto 18px; border-radius: 10px; background: #eaf8ef; color: #18733a; padding: 12px 15px; }
 .admin-message.error { margin: 0; background: #fff0f0; color: #bd252a; }
 .admin-page select { width: 100%; border: 1px solid #d6dce7; border-radius: 10px; background: #fff; padding: 12px 14px; font: inherit; }
+
+/* Admin mobile dashboard */
+.admin-page { padding-bottom: 96px; background: #f4f8fc; }
+.admin-header { max-width: none; margin: -28px -28px 24px; min-height: 154px; padding: 30px max(28px, calc((100vw - 1240px) / 2)); border-radius: 0 0 14px 14px; background: linear-gradient(120deg, #064f86, #00679b); color: #fff; }
+.admin-header span, .admin-header h1 { color: #fff; }
+.admin-header span { opacity: .78; font-size: 15px; }
+.admin-header h1 { margin-top: 8px; font-size: 34px; line-height: 1.1; }
+.admin-header-actions { display: flex; align-items: center; gap: 20px; }
+.admin-page .admin-header-actions button { width: 48px; height: 48px; border: 0; border-radius: 50%; background: transparent; padding: 0; color: #fff; box-shadow: none; }
+.admin-page .admin-header-actions button:nth-child(2) { border: 2px solid rgba(255,255,255,.9); }
+.admin-header-actions svg { width: 30px; height: 30px; stroke-width: 1.8; }
+.admin-main-tabs { display: none; }
+.admin-home-dashboard { display: grid; gap: 20px; }
+.admin-home-section { border: 1px solid #d8e4ef; border-radius: 22px; background: #fff; padding: 24px; box-shadow: 0 7px 25px rgba(38, 78, 117, .05); }
+.admin-home-section h2, .admin-home-section p { margin: 0; }
+.admin-home-section h2 { color: #092f52; font-size: 24px; }
+.admin-home-overview > header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.admin-home-overview > header h2 { margin-right: auto; padding-left: 18px; border-left: 6px solid #1086d1; }
+.admin-home-overview > header span { color: #71849b; font-size: 16px; }
+.admin-page .admin-home-overview > header button, .admin-page .admin-home-chart > header > button { width: 40px; height: 40px; border-radius: 50%; background: transparent; color: #58718e; padding: 0; box-shadow: none; }
+.admin-home-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.admin-home-metrics article { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 13px; min-height: 150px; border: 1px solid #dbe6f1; border-radius: 18px; padding: 18px; }
+.admin-home-metrics article > i { display: grid; width: 64px; height: 64px; place-items: center; border-radius: 15px; background: #edf5fc; color: #0065a5; }
+.admin-home-metrics article svg { width: 34px; height: 34px; }
+.admin-home-metrics article div { display: grid; gap: 3px; }
+.admin-home-metrics article span { color: #4d6078; font-size: 16px; }
+.admin-home-metrics article strong { color: #075b94; font-size: 34px; line-height: 1; }
+.admin-home-metrics article small { grid-column: 1 / -1; color: #70839a; }
+.admin-home-shortcuts > div { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.admin-page .admin-home-shortcuts button { display: grid; min-height: 110px; align-content: center; gap: 12px; border: 1px solid #d6e3ef; border-radius: 16px; background: #fff; color: #1e4568; padding: 14px 8px; box-shadow: none; }
+.admin-home-shortcuts button svg { width: 32px; height: 32px; color: #0567a4; }
+.admin-home-shortcuts button span { font-size: 14px; }
+.admin-home-chart > header { display: flex; align-items: flex-start; gap: 16px; }
+.admin-home-chart > header > div { flex: 1; }
+.admin-home-chart header p { margin-top: 8px; color: #6c7e94; font-size: 15px; }
+.admin-home-periods { display: grid; width: min(520px, 100%); grid-template-columns: repeat(3, 1fr); margin-top: 20px; overflow: hidden; border: 1px solid #d3e0ec; border-radius: 12px; background: #f4f7fb; }
+.admin-page .admin-home-periods button { border-radius: 0; background: transparent; color: #61758d; box-shadow: none; }
+.admin-page .admin-home-periods button.active { background: #087bc5; color: #fff; }
+.admin-home-line-chart { position: relative; min-height: 230px; margin: 14px 0 8px; border-bottom: 1px solid #d7e4ef; background: repeating-linear-gradient(to bottom, transparent 0, transparent 52px, #e2ebf4 53px); }
+.admin-home-line-chart svg { position: absolute; inset: 8px 18px 24px; width: calc(100% - 36px); height: calc(100% - 32px); overflow: visible; }
+.admin-home-line-chart > div { position: absolute; right: 18px; bottom: 0; left: 18px; height: 22px; }
+.admin-home-line-chart > div span { position: absolute; color: #60758c; font-size: 12px; transform: translateX(-50%); white-space: nowrap; }
+.admin-home-line-chart > p { padding-top: 90px; color: #78899b; text-align: center; }
+.admin-home-chart footer { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
+.admin-page .admin-home-chart footer button { border: 1px solid #2f8bc5; background: #fff; color: #0764a0; box-shadow: none; }
+.admin-bottom-nav { position: fixed; z-index: 1000; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #d4e0eb; background: rgba(255,255,255,.97); padding: 8px max(10px, calc((100vw - 700px) / 2)) max(8px, env(safe-area-inset-bottom)); box-shadow: 0 -8px 28px rgba(27, 66, 102, .08); backdrop-filter: blur(12px); }
+.admin-page .admin-bottom-nav button { display: grid; min-height: 58px; gap: 3px; border-radius: 12px; background: transparent; color: #526a83; padding: 5px; box-shadow: none; }
+.admin-bottom-nav button svg { width: 27px; height: 27px; }
+.admin-bottom-nav button span { font-size: 12px; }
+.admin-page .admin-bottom-nav button.active { color: #0571b6; }
+
+@media (max-width: 760px) {
+  .admin-page { padding: 0 12px 92px; }
+  .admin-header { min-height: 144px; margin: 0 -12px 16px; padding: 24px 20px; border-radius: 0 0 10px 10px; }
+  .admin-header span { font-size: 12px; }
+  .admin-header h1 { font-size: 28px; }
+  .admin-header-actions { gap: 8px; }
+  .admin-page .admin-header-actions button { width: 42px; height: 42px; }
+  .admin-header-actions svg { width: 25px; height: 25px; }
+  .admin-panel-area { gap: 14px; }
+  .admin-home-dashboard { gap: 14px; }
+  .admin-home-section { border-radius: 18px; padding: 16px; }
+  .admin-home-section h2 { font-size: 20px; }
+  .admin-home-overview > header { gap: 8px; margin-bottom: 16px; }
+  .admin-home-overview > header h2 { padding-left: 12px; border-left-width: 4px; }
+  .admin-home-overview > header span { font-size: 12px; }
+  .admin-home-metrics { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .admin-home-metrics article { grid-template-columns: 48px 1fr; min-height: 122px; gap: 10px; padding: 13px; }
+  .admin-home-metrics article > i { width: 48px; height: 48px; border-radius: 12px; }
+  .admin-home-metrics article svg { width: 27px; height: 27px; }
+  .admin-home-metrics article span { font-size: 13px; }
+  .admin-home-metrics article strong { font-size: 28px; }
+  .admin-home-metrics article small { font-size: 10px; }
+  .admin-home-shortcuts > div { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .admin-page .admin-home-shortcuts button { min-height: 92px; gap: 8px; border-radius: 13px; }
+  .admin-home-shortcuts button svg { width: 29px; height: 29px; }
+  .admin-home-shortcuts button span { font-size: 12px; }
+  .admin-home-chart header p { font-size: 12px; line-height: 1.45; }
+  .admin-home-line-chart { min-height: 200px; }
+  .admin-home-chart footer { gap: 8px; }
+  .admin-page .admin-home-chart footer button { padding: 10px 6px; font-size: 12px; }
+}
 .admin-archive-card { grid-column: 1 / -1; }
 .admin-archive-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border: 1px solid #dce7f8; border-radius: 14px; background: #f3f7ff; padding: 6px; }
 .admin-archive-tabs button { background: #005987; color: #fff; padding: 10px 12px; box-shadow: none; }
@@ -23314,4 +23396,11 @@ body button[aria-label^="Đóng"] svg {
   width: 18px !important;
   height: 18px !important;
   stroke-width: 2.2 !important;
+}
+
+/* Keep the redesigned admin shell authoritative over legacy responsive rules. */
+@media (max-width: 800px) {
+  body .admin-page { padding: 0 12px 92px; }
+  body .admin-page .admin-header { min-height: 144px; margin: 0 -12px 16px; padding: 24px 20px; }
+  body .admin-page .admin-main-tabs { display: none; }
 }

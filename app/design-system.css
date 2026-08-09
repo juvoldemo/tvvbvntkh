@@ -101,6 +101,203 @@
   --ds-touch-target: 44px;
 }
 
+/* Compact admin-data mobile dashboard. Kept here so it wins over shared tokens. */
+@media (max-width: 800px) {
+  body .admin-page {
+    box-sizing: border-box !important;
+    width: min(442px, 100%) !important;
+    max-width: 442px !important;
+    min-height: 100vh !important;
+    margin: 0 auto !important;
+    padding: 0 10px 72px !important;
+    background: #f4f8fc !important;
+    font-size: 12px !important;
+  }
+  body .admin-page .admin-header {
+    min-height: 82px !important;
+    margin: 0 -10px 10px !important;
+    padding: 12px 18px !important;
+    border-radius: 0 0 8px 8px !important;
+    background: linear-gradient(120deg, #07588e, #08739f) !important;
+  }
+  body .admin-page .admin-header span { font-size: 9px !important; letter-spacing: .06em; }
+  body .admin-page .admin-header h1 { margin-top: 3px !important; font-size: 17px !important; line-height: 1.1 !important; }
+  body .admin-page .admin-header-actions { gap: 4px !important; }
+  body .admin-page .admin-header-actions button {
+    width: 30px !important; height: 30px !important; min-width: 30px !important; min-height: 30px !important;
+    border: 0 !important; border-radius: 50% !important; background: rgba(0, 55, 98, .36) !important;
+    color: #fff !important; padding: 0 !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-header-actions button:nth-child(2) { border: 1.5px solid rgba(255,255,255,.9) !important; }
+  body .admin-page .admin-header-actions svg { width: 18px !important; height: 18px !important; }
+  body .admin-page .admin-panel-area, body .admin-page .admin-home-dashboard { gap: 10px !important; }
+  body .admin-page .admin-home-section {
+    border: 1px solid #d8e4ef !important; border-radius: 15px !important; background: #fff !important;
+    padding: 12px !important; box-shadow: 0 4px 14px rgba(38, 78, 117, .04) !important;
+  }
+  body .admin-page .admin-home-section h2 { color: #092f52 !important; font-size: 17px !important; line-height: 1.2 !important; }
+  body .admin-page .admin-home-overview > header { gap: 6px !important; margin-bottom: 10px !important; }
+  body .admin-page .admin-home-overview > header h2 { padding-left: 10px !important; border-left: 3px solid #1086d1 !important; }
+  body .admin-page .admin-home-overview > header span { font-size: 10px !important; white-space: nowrap; }
+  body .admin-page .admin-home-overview > header button,
+  body .admin-page .admin-home-chart > header > button {
+    width: 32px !important; height: 32px !important; min-width: 32px !important; min-height: 32px !important;
+    border: 0 !important; border-radius: 50% !important; background: #075f98 !important; color: #fff !important;
+    padding: 0 !important; box-shadow: 0 5px 12px rgba(0,75,122,.18) !important;
+  }
+  body .admin-page .admin-home-overview > header button svg,
+  body .admin-page .admin-home-chart > header > button svg { width: 18px !important; height: 18px !important; }
+  body .admin-page .admin-home-metrics { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  body .admin-page .admin-home-metrics article {
+    grid-template-columns: 34px minmax(0,1fr) !important; min-height: 76px !important; gap: 5px !important;
+    border: 1px solid #dbe6f1 !important; border-radius: 11px !important; background: #fff !important; padding: 7px 8px !important;
+  }
+  body .admin-page .admin-home-metrics article > i {
+    width: 34px !important; height: 34px !important; border-radius: 9px !important;
+    background: #edf5fc !important; color: #0573b6 !important;
+  }
+  body .admin-page .admin-home-metrics article svg { width: 20px !important; height: 20px !important; color: #0573b6 !important; }
+  body .admin-page .admin-home-metrics article span { color: #536980 !important; font-size: 9px !important; }
+  body .admin-page .admin-home-metrics article strong { color: #075b94 !important; font-size: 19px !important; line-height: 1 !important; }
+  body .admin-page .admin-home-metrics article small { color: #71849a !important; font-size: 8px !important; line-height: 1.1 !important; }
+  body .admin-page .admin-home-shortcuts { padding: 10px !important; }
+  body .admin-page .admin-home-shortcuts > div { grid-template-columns: repeat(4,1fr) !important; gap: 5px !important; margin-top: 8px !important; }
+  body .admin-page .admin-home-shortcuts button {
+    min-height: 46px !important; height: 46px !important; gap: 0 !important; border: 1px solid #d6e3ef !important; border-radius: 9px !important;
+    background: #fff !important; color: #304d69 !important; padding: 5px 3px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-home-shortcuts button svg { width: 21px !important; height: 21px !important; color: #056fae !important; stroke: #056fae !important; }
+  body .admin-page .admin-home-shortcuts button span { color: #304d69 !important; font-size: 10px !important; line-height: 1.2 !important; }
+  body .admin-page .admin-home-chart header p { margin-top: 4px !important; color: #6c7e94 !important; font-size: 10px !important; }
+  body .admin-page .admin-home-periods { margin-top: 12px !important; border-radius: 9px !important; }
+  body .admin-page .admin-home-periods {
+    overflow: hidden !important; border: 1px solid #d3e0ec !important; background: #f4f7fb !important;
+  }
+  body .admin-page .admin-home-periods button {
+    min-height: 34px !important; border: 0 !important; border-right: 1px solid #dbe5ee !important;
+    border-radius: 0 !important; background: transparent !important; color: #62768d !important;
+    padding: 6px !important; font-size: 11px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-home-periods button:last-child { border-right: 0 !important; }
+  body .admin-page .admin-home-periods button.active {
+    background: #087bc5 !important; color: #fff !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-home-line-chart { min-height: 155px !important; margin: 8px 0 4px !important; }
+  body .admin-page .admin-home-line-chart > div { display: grid !important; right: 0 !important; left: 0 !important; }
+  body .admin-page .admin-home-line-chart > div span {
+    position: static !important; min-width: 0 !important; overflow: hidden !important; color: #60758c !important;
+    font-size: 7px !important; text-align: center !important; text-overflow: clip !important; white-space: nowrap !important;
+    transform: none !important;
+  }
+  body .admin-page .admin-home-chart footer { gap: 7px !important; margin-top: 10px !important; }
+  body .admin-page .admin-home-chart footer button {
+    min-height: 36px !important; border: 1px solid #2f8bc5 !important; border-radius: 9px !important;
+    background: #fff !important; color: #0764a0 !important; padding: 7px 4px !important; font-size: 10px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-bottom-nav {
+    right: auto !important; left: 50% !important; width: min(442px, 100%) !important;
+    transform: translateX(-50%) !important;
+    padding: 5px 8px max(5px, env(safe-area-inset-bottom)) !important; background: rgba(255,255,255,.98) !important;
+  }
+  body .admin-page .admin-bottom-nav button {
+    min-height: 50px !important; gap: 2px !important; border: 0 !important; border-radius: 10px !important;
+    background: transparent !important; color: #526a83 !important; padding: 3px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-bottom-nav button.active { background: transparent !important; color: #0571b6 !important; }
+  body .admin-page .admin-bottom-nav button svg { width: 23px !important; height: 23px !important; color: currentColor !important; stroke: currentColor !important; }
+  body .admin-page .admin-bottom-nav button span { color: currentColor !important; font-size: 10px !important; }
+}
+
+@media (min-width: 801px) {
+  body .admin-page {
+    box-sizing: border-box !important; width: 100% !important; max-width: none !important; min-height: 100vh !important;
+    margin: 0 !important; padding: 0 22px 78px !important; background: #f4f8fc !important; font-size: 12px !important;
+  }
+  body .admin-page .admin-header {
+    position: relative !important; left: 50% !important; width: 100vw !important; max-width: 100vw !important;
+    min-height: 110px !important; margin: 0 0 18px -50vw !important; padding: 20px max(30px, calc((100vw - 980px) / 2)) !important;
+    border-radius: 0 0 10px 10px !important; background: linear-gradient(120deg, #07588e, #08739f) !important;
+  }
+  body .admin-page .admin-header span { color: #fff !important; font-size: 10px !important; }
+  body .admin-page .admin-header h1 { margin-top: 4px !important; color: #fff !important; font-size: 20px !important; }
+  body .admin-page .admin-header-actions { gap: 6px !important; }
+  body .admin-page .admin-header-actions button {
+    width: 34px !important; height: 34px !important; min-width: 34px !important; min-height: 34px !important;
+    border: 0 !important; border-radius: 50% !important; background: rgba(0,55,98,.36) !important;
+    color: #fff !important; padding: 0 !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-header-actions button:nth-child(2) { border: 1.5px solid rgba(255,255,255,.9) !important; }
+  body .admin-page .admin-header-actions svg { width: 20px !important; height: 20px !important; }
+  body .admin-page .admin-panel-area, body .admin-page .admin-home-dashboard { width: 100% !important; max-width: none !important; gap: 14px !important; }
+  body .admin-page .admin-home-section {
+    border: 1px solid #d8e4ef !important; border-radius: 16px !important; background: #fff !important;
+    padding: 16px 18px !important; box-shadow: 0 4px 16px rgba(38,78,117,.04) !important;
+  }
+  body .admin-page .admin-home-section h2 { color: #092f52 !important; font-size: 18px !important; }
+  body .admin-page .admin-home-overview > header { margin-bottom: 14px !important; }
+  body .admin-page .admin-home-overview > header h2 { padding-left: 12px !important; border-left: 4px solid #1086d1 !important; }
+  body .admin-page .admin-home-metrics { grid-template-columns: repeat(4,minmax(0,1fr)) !important; gap: 12px !important; }
+  body .admin-page .admin-home-metrics article {
+    grid-template-columns: 42px minmax(0,1fr) !important; min-height: 88px !important; gap: 8px !important;
+    border: 1px solid #dbe6f1 !important; border-radius: 13px !important; background: #fff !important; padding: 11px 13px !important;
+  }
+  body .admin-page .admin-home-metrics article > i { width: 42px !important; height: 42px !important; border-radius: 10px !important; background: #edf5fc !important; color: #0573b6 !important; }
+  body .admin-page .admin-home-metrics article svg { width: 23px !important; height: 23px !important; color: #0573b6 !important; }
+  body .admin-page .admin-home-metrics article span { color: #536980 !important; font-size: 10px !important; }
+  body .admin-page .admin-home-metrics article strong { color: #075b94 !important; font-size: 23px !important; line-height: 1 !important; }
+  body .admin-page .admin-home-metrics article small { color: #71849a !important; font-size: 9px !important; }
+  body .admin-page .admin-home-shortcuts { padding: 14px 18px !important; }
+  body .admin-page .admin-home-shortcuts > div { grid-template-columns: repeat(8,minmax(0,1fr)) !important; gap: 10px !important; margin-top: 12px !important; }
+  body .admin-page .admin-home-shortcuts button {
+    height: 58px !important; min-height: 58px !important; border: 1px solid #d6e3ef !important; border-radius: 11px !important;
+    background: #fff !important; color: #056fae !important; padding: 6px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-home-shortcuts button svg { width: 25px !important; height: 25px !important; color: #056fae !important; stroke: #056fae !important; }
+  body .admin-page .admin-home-chart header p { margin-top: 5px !important; color: #6c7e94 !important; font-size: 11px !important; }
+  body .admin-page .admin-home-periods {
+    width: min(520px,100%) !important; margin-top: 14px !important; overflow: hidden !important;
+    border: 1px solid #d3e0ec !important; border-radius: 10px !important; background: #f4f7fb !important;
+  }
+  body .admin-page .admin-home-periods button {
+    min-height: 36px !important; border: 0 !important; border-right: 1px solid #dbe5ee !important; border-radius: 0 !important;
+    background: transparent !important; color: #62768d !important; padding: 7px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-home-periods button:last-child { border-right: 0 !important; }
+  body .admin-page .admin-home-periods button.active { background: #087bc5 !important; color: #fff !important; }
+  body .admin-page .admin-home-line-chart { min-height: 220px !important; margin: 10px 0 5px !important; }
+  body .admin-page .admin-home-line-chart > div { display: grid !important; right: 0 !important; left: 0 !important; }
+  body .admin-page .admin-home-line-chart > div span {
+    position: static !important; min-width: 0 !important; overflow: hidden !important; color: #60758c !important;
+    font-size: 9px !important; text-align: center !important; white-space: nowrap !important; transform: none !important;
+  }
+  body .admin-page .admin-home-chart footer { gap: 10px !important; margin-top: 12px !important; }
+  body .admin-page .admin-home-chart footer button {
+    min-height: 38px !important; border: 1px solid #2f8bc5 !important; border-radius: 9px !important;
+    background: #fff !important; color: #0764a0 !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-bottom-nav {
+    right: auto !important; left: 50% !important; width: min(560px,100%) !important; transform: translateX(-50%) !important;
+    padding: 5px 8px !important; background: rgba(255,255,255,.98) !important;
+  }
+  body .admin-page .admin-bottom-nav button {
+    min-height: 50px !important; border: 0 !important; border-radius: 10px !important;
+    background: transparent !important; color: #526a83 !important; padding: 3px !important; box-shadow: none !important;
+  }
+  body .admin-page .admin-bottom-nav button.active { background: transparent !important; color: #0571b6 !important; }
+  body .admin-page .admin-bottom-nav button svg { width: 23px !important; height: 23px !important; color: currentColor !important; stroke: currentColor !important; }
+  body .admin-page .admin-bottom-nav button span { color: currentColor !important; font-size: 10px !important; }
+  body .admin-page .admin-analytics-card { padding: 22px !important; gap: 18px !important; }
+  body .admin-page .admin-analytics-card .admin-card-title h2 { font-size: 22px !important; }
+  body .admin-page .admin-analytics-card .admin-card-title p { font-size: 13px !important; line-height: 1.5 !important; }
+  body .admin-page .admin-analytics-toolbar button { min-height: 40px !important; padding: 9px 14px !important; font-size: 13px !important; }
+  body .admin-page .admin-session-title { font-size: 18px !important; }
+  body .admin-page .admin-analytics-card .admin-table-wrap { max-height: none !important; overflow-x: auto !important; overflow-y: visible !important; }
+  body .admin-page .admin-analytics-card table { width: 100% !important; font-size: 13px !important; }
+  body .admin-page .admin-analytics-card th { padding: 12px 10px !important; font-size: 12px !important; line-height: 1.35 !important; }
+  body .admin-page .admin-analytics-card td { padding: 13px 10px !important; font-size: 13px !important; line-height: 1.4 !important; }
+  body .admin-page .admin-analytics-card td small { margin-top: 4px !important; font-size: 11px !important; line-height: 1.35 !important; }
+}
+
 /* ADO mobile workspace
  * The role-scoped selectors deliberately outrank the legacy global button and
  * input themes so those themes cannot leak into the ADO screens.

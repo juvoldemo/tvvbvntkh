@@ -1,14 +1,14 @@
 "use client";
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Download, FileText, HelpCircle, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, Users, X } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, Grid2X2, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access";
+type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -47,7 +47,7 @@ export default function AdminDataPage() {
   const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgram[]>([]);
   const [competitionAudienceBusy, setCompetitionAudienceBusy] = useState("");
   const [competitionStatusView, setCompetitionStatusView] = useState<"ongoing" | "ended">("ongoing");
-  const [activeTab, setActiveTab] = useState<AdminTab>("events");
+  const [activeTab, setActiveTab] = useState<AdminTab>("home");
   const [analyticsPeriod, setAnalyticsPeriod] = useState<AnalyticsPeriod>("day");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -209,7 +209,7 @@ export default function AdminDataPage() {
   }, [analyticsPeriod]);
 
   useEffect(() => {
-    if (authenticated && activeTab === "analytics") void loadAnalytics();
+    if (authenticated && (activeTab === "home" || activeTab === "analytics")) void loadAnalytics();
   }, [activeTab, authenticated, loadAnalytics]);
 
   async function removeTargetRegistration(id: string, groupName: string) {
@@ -404,7 +404,11 @@ export default function AdminDataPage() {
     <main className="admin-page">
       <header className="admin-header">
         <div><span>BVNT Khánh Hòa</span><h1>Quản trị dữ liệu</h1></div>
-        <button className="admin-secondary" onClick={logout}><LogOut size={17} /> Đăng xuất</button>
+        <div className="admin-header-actions">
+          <button type="button" aria-label="Thông báo" onClick={() => setActiveTab("events")}><Bell /></button>
+          <button type="button" aria-label="Danh sách truy cập" onClick={() => setActiveTab("access")}><UserCircle /></button>
+          <button type="button" aria-label="Đăng xuất" onClick={logout}><LogOut /></button>
+        </div>
       </header>
       {message && <div className="admin-message">{message}</div>}
 
@@ -421,6 +425,7 @@ export default function AdminDataPage() {
       </nav>
 
       <section className="admin-panel-area">
+        {activeTab === "home" && <AdminHomeDashboard data={analyticsData} period={analyticsPeriod} setPeriod={setAnalyticsPeriod} onNavigate={setActiveTab} />}
         {activeTab === "access" && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
           <form onSubmit={uploadList}>
@@ -501,12 +506,78 @@ export default function AdminDataPage() {
         />}
         {activeTab === "about" && <AboutAdminPanel content={aboutContent} setContent={setAboutContent} onSaved={loadData} setMessage={setMessage} />}
       </section>
+      <nav className="admin-bottom-nav" aria-label="Điều hướng nhanh">
+        <button type="button" className={activeTab === "home" ? "active" : ""} onClick={() => setActiveTab("home")}><Home /><span>Tổng quan</span></button>
+        <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => setActiveTab("analytics")}><BarChart3 /><span>Analytics</span></button>
+        <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")}><Database /><span>Dữ liệu</span></button>
+        <button type="button" className={!(["home", "analytics", "data"] as AdminTab[]).includes(activeTab) ? "active" : ""} onClick={() => setActiveTab("events")}><Grid2X2 /><span>Thêm</span></button>
+      </nav>
     </main>
   );
 }
 
+function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
+  data: AnalyticsData | null; period: AnalyticsPeriod;
+  setPeriod: Dispatch<SetStateAction<AnalyticsPeriod>>;
+  onNavigate: Dispatch<SetStateAction<AdminTab>>;
+}) {
+  const summary = data?.summary ?? { uniqueAdvisors: 0, sessions: 0, actions: 0, summaryExports: 0, invitationsCreated: 0, totalSeconds: 0, averageSeconds: 0, viewOnlySessions: 0, shortSessions: 0 };
+  const metrics = [
+    { label: "Lượt truy cập", value: summary.actions, icon: BarChart3 },
+    { label: "TVV hoạt động", value: summary.uniqueAdvisors, icon: Users },
+    { label: "Phiên hôm nay", value: summary.sessions, icon: FileText },
+    { label: "Thời gian TB", value: formatAdminDuration(summary.averageSeconds), icon: Clock3 }
+  ];
+  const shortcuts: Array<{ tab: AdminTab; label: string; icon: typeof Bell }> = [
+    { tab: "events", label: "Thông báo", icon: Bell }, { tab: "competitions", label: "Thi đua", icon: Trophy },
+    { tab: "data", label: "Dữ liệu", icon: BarChart3 }, { tab: "targets", label: "Mục tiêu", icon: Target },
+    { tab: "activities", label: "Hoạt động", icon: CheckCircle2 }, { tab: "archive", label: "Tài liệu", icon: BookOpen },
+    { tab: "about", label: "Cẩm nang", icon: ShieldCheck }, { tab: "access", label: "Truy cập", icon: UserCircle }
+  ];
+  const rawTrends = data?.trends ?? [];
+  const trends = period === "day"
+    ? rawTrends.reduce<Array<{ label: string; sessions: number; advisors: number; seconds: number }>>((groups, item, index) => {
+        if (index % 2 === 0) {
+          const next = rawTrends[index + 1];
+          const shortHour = (label: string) => label.replace(":00", "").padStart(2, "0");
+          groups.push({
+            label: next ? `${shortHour(item.label)}–${shortHour(next.label)}` : shortHour(item.label),
+            sessions: item.sessions + (next?.sessions ?? 0),
+            advisors: Math.max(item.advisors, next?.advisors ?? 0),
+            seconds: item.seconds + (next?.seconds ?? 0)
+          });
+        }
+        return groups;
+      }, [])
+    : rawTrends;
+  const maxTrend = Math.max(1, ...trends.map((item) => item.sessions));
+  const points = trends.map((item, index) => ({ ...item, x: trends.length <= 1 ? 50 : index / (trends.length - 1) * 100, y: 88 - item.sessions / maxTrend * 72 }));
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  return <div className="admin-home-dashboard">
+    <section className="admin-home-section admin-home-overview">
+      <header><h2>Tổng quan hôm nay</h2></header>
+      <div className="admin-home-metrics">{metrics.map((metric) => { const Icon = metric.icon; return <article key={metric.label}><i><Icon /></i><div><span>{metric.label}</span><strong>{metric.value}</strong></div><small>Thống kê theo kỳ đang chọn</small></article>; })}</div>
+    </section>
+    <section className="admin-home-section admin-home-shortcuts"><h2>Quản lý nhanh</h2><div>{shortcuts.map((item) => { const Icon = item.icon; return <button type="button" key={item.tab} aria-label={item.label} title={item.label} onClick={() => onNavigate(item.tab)}><Icon /></button>; })}</div></section>
+    <section className="admin-home-section admin-home-chart">
+      <header><div><h2>Phân tích truy cập</h2><p>Theo dõi lượt đăng nhập, tương tác và thời gian sử dụng theo mã TVV.</p></div></header>
+      <div className="admin-home-periods">{(["day", "week", "month"] as AnalyticsPeriod[]).map((item) => <button type="button" key={item} className={period === item ? "active" : ""} onClick={() => setPeriod(item)}>{item === "day" ? "Ngày" : item === "week" ? "Tuần" : "Tháng"}</button>)}</div>
+      <div className="admin-home-line-chart">{points.length ? <><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Biểu đồ xu hướng truy cập"><defs><linearGradient id="adminTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1688df" stopOpacity=".3"/><stop offset="1" stopColor="#1688df" stopOpacity="0"/></linearGradient></defs><polygon points={`0,92 ${polyline} 100,92`} fill="url(#adminTrendFill)"/><polyline points={polyline} fill="none" stroke="#087fd2" strokeWidth="1.5" vectorEffect="non-scaling-stroke"/>{points.map((point) => <circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r="1.6" fill="#fff" stroke="#087fd2" strokeWidth="1" vectorEffect="non-scaling-stroke" />)}</svg><div style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}>{points.map((point) => <span key={point.label}>{point.label}</span>)}</div></> : <p>Chưa có dữ liệu truy cập.</p>}</div>
+      <footer><button type="button" onClick={() => onNavigate("analytics")}><FileText />Chi tiết phiên</button><button type="button" onClick={() => onNavigate("analytics")}><Trophy />Xếp hạng TVV</button></footer>
+    </section>
+  </div>;
+}
+
 function todayText() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatAdminDuration(seconds: number) {
+  return seconds >= 3600
+    ? `${Math.floor(seconds / 3600)}g ${Math.round((seconds % 3600) / 60)}p`
+    : seconds >= 60
+      ? `${Math.floor(seconds / 60)}p ${seconds % 60}s`
+      : `${seconds}s`;
 }
 
 function formatMoney(value: number) {

@@ -78,6 +78,13 @@ export async function GET(request: NextRequest) {
   const normalizeAction = (value: unknown) => String(value || "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u0111\u0110]/g, "d")
     .toLowerCase().replace(/\s+/g, " ").trim();
+  const isUnmeasuredTab = (value: unknown) => [
+    "overview",
+    "tong quan",
+    "ado_targets",
+    "ado_accounts",
+    "recruitment"
+  ].includes(normalizeAction(value));
   const invitationEvents = invitationActions.filter((event: any) => {
     const actionName = normalizeAction(event.action_name);
     return actionName === "xuat thu moi png"
@@ -106,7 +113,7 @@ export async function GET(request: NextRequest) {
       row.actions += 1;
       if (String(event.action_name || "").startsWith("Xuất tóm tắt")) row.summaryExports += 1;
     }
-    if (event.event_name === "tab_duration" && event.tab_name) {
+    if (event.event_name === "tab_duration" && event.tab_name && !isUnmeasuredTab(event.tab_name)) {
       const seconds = Number(event.duration_seconds) || 0;
       row.totalSeconds += seconds;
       row.tabs[event.tab_name] = (row.tabs[event.tab_name] || 0) + seconds;
@@ -130,8 +137,10 @@ export async function GET(request: NextRequest) {
     const key = period === "day" ? `${dateKey}-${hour}` : dateKey;
     const label = period === "day" ? `${hour}:00` : `${day}/${month}`;
     const trend = trendMap.get(key) || { label, sessions: new Set(), advisors: new Set(), seconds: 0 };
-    trend.sessions.add(event.session_id); trend.advisors.add(event.advisor_code); trend.seconds += Number(event.duration_seconds) || 0; trendMap.set(key, trend);
-    if (event.tab_name && (event.event_name === "tab_view" || event.event_name === "tab_duration")) {
+    trend.sessions.add(event.session_id); trend.advisors.add(event.advisor_code);
+    if (!isUnmeasuredTab(event.tab_name)) trend.seconds += Number(event.duration_seconds) || 0;
+    trendMap.set(key, trend);
+    if (event.tab_name && !isUnmeasuredTab(event.tab_name) && (event.event_name === "tab_view" || event.event_name === "tab_duration")) {
       const tab = tabMap.get(event.tab_name) || { tabName: event.tab_name, views: 0, seconds: 0, advisors: new Set() };
       if (event.event_name === "tab_view") tab.views += 1;
       tab.seconds += Number(event.duration_seconds) || 0; tab.advisors.add(event.advisor_code); tabMap.set(event.tab_name, tab);
