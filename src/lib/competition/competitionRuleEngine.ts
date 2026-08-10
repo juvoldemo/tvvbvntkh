@@ -252,8 +252,6 @@ function valueFrom(record: AnyRecord, aliases: string[]) {
 }
 
 const PRODUCT_CODE_ALIASES = ["product_code", "productCode", "product_id", "ma_san_pham", "ma_sp", "Mã sản phẩm", "Mã SP", "product", "Sản phẩm chính", "SAN PHAM CHINH", "SẢN PHẨM CHÍNH"];
-const PDT_ALIASES = ["pdt", "PDT", "PĐT", "phí đóng thêm", "phi dong them", "PHÍ ĐÓNG THÊM"];
-const PERIODIC_PREMIUM_ALIASES = ["periodic_premium", "premium_due", "phí định kỳ", "phi dinh ky", "PHÍ ĐỊNH KỲ"];
 
 function rawContractProductCode(contract: NormalizedCompetitionContract | AnyRecord) {
   const source = (contract as NormalizedCompetitionContract).source ?? contract;
@@ -265,10 +263,10 @@ export function getContractProductCode(contract: NormalizedCompetitionContract |
 }
 
 function competitionMetricValue(contract: NormalizedCompetitionContract) {
-  const pdt = parseCompetitionMoney(valueFrom(contract.source, PDT_ALIASES));
-  if (pdt > 0) return pdt;
-  if (contract.ip > 0) return contract.ip;
-  return parseCompetitionMoney(valueFrom(contract.source, PERIODIC_PREMIUM_ALIASES));
+  // Trong dữ liệu BC02, PĐT dùng để xét bậc thi đua là IP của hợp đồng.
+  // Cột "Phí đóng thêm" chỉ là một thành phần phí; ưu tiên cột này làm PĐT
+  // sẽ loại sai các hợp đồng có IP đạt bậc nhưng phí đóng thêm thấp.
+  return contract.ip;
 }
 
 function countSpbkProducts(value: unknown) {
@@ -1214,7 +1212,11 @@ export function calculateCompetitionReward(rule: CompetitionRuleInput, contracts
   for (const rewardRule of rewardRules) {
     const kind = rewardKind(rewardRule);
     const conditionScope = rewardConditionScope(rewardRule);
-    const recipientScope = rewardRecipientScope(rewardRule);
+    // Bảng PĐT/HĐ luôn tính độc lập trên từng hợp đồng. Không để AI đọc nhầm
+    // target/result tab thành thưởng nhóm rồi cộng PĐT của nhiều GYC.
+    const recipientScope = kind === "reward_by_policy_pdt_table"
+      ? "contract"
+      : rewardRecipientScope(rewardRule);
     const resultTabScope = rewardResultTabScope(rewardRule);
     const shouldOutputGroupRows = conditionScope === "group" || resultTabScope === "group";
     if (kind === "custom_ai_rule") {
