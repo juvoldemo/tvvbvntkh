@@ -3064,7 +3064,15 @@ function CompetitionUploadModal({ onClose, onAnalyzed }: { onClose: () => void; 
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "AI không tạo được rule.");
-      onAnalyzed(payload.program);
+      const program = payload.program;
+      const confirmResponse = await fetch("/api/competition/confirm-rule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ program_id: program.id, confirmed_rule: payload.aiRule })
+      });
+      const confirmPayload = await confirmResponse.json();
+      if (!confirmResponse.ok) throw new Error(confirmPayload.error || "KhÃ´ng tá»± Ä‘á»™ng xÃ¡c nháº­n Ä‘Æ°á»£c rule.");
+      onAnalyzed({ ...program, confirmed_rule: payload.aiRule, confirmedRule: payload.aiRule });
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI không tạo được rule.");
     } finally {
