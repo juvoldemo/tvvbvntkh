@@ -2,6 +2,7 @@ import { InvitationSalutation } from "@/lib/invitation-types";
 import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-validation";
 
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
+export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
@@ -57,6 +58,44 @@ export async function drawInvitation(
   context.strokeText(displayName, 635 * outputScale, 127 * outputScale, NAME_AREA_WIDTH * outputScale);
   context.fillStyle = textColor;
   context.fillText(displayName, 635 * outputScale, 127 * outputScale, NAME_AREA_WIDTH * outputScale);
+}
+
+export async function drawHomecomingInvitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#17448F"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  canvas.width = width * outputScale;
+  canvas.height = height * outputScale;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  const ratio = width / 1296;
+  const scale = ratio * outputScale;
+  const areaWidth = 460 * scale;
+  // Center the guest name against the whole white invitation panel, not the
+  // dotted input line (which starts after the "Anh/Chị:" label).
+  const centerX = 960 * scale;
+  const centerY = 171 * scale;
+  context.fillStyle = "#fff";
+  context.fillRect(796 * scale, 158 * scale, 430 * scale, 43 * scale);
+  let fontSize = 30 * scale;
+  while (fontSize > 18 * scale) {
+    context.font = `700 ${fontSize}px Arial, "Helvetica Neue", sans-serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = textColor;
+  context.fillText(displayName, centerX, centerY, areaWidth);
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement) {

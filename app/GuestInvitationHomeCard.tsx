@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { canvasToBlob, downloadInvitationFile, drawInvitation, INVITATION_IMAGE_PATH } from "@/lib/invitation-canvas";
+import { canvasToBlob, downloadInvitationFile, drawHomecomingInvitation, HOMECOMING_INVITATION_IMAGE_PATH } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const IMAGE_PATH = "/HNKH8826.png";
+const IMAGE_PATH = "/invitations/banner-hoi-ngo-thap-lua-dam-me.png";
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
   { label: "Xanh", value: "#17448F" },
@@ -44,13 +44,13 @@ export default function GuestInvitationHomeCard() {
     if (!open) return;
     const image = new window.Image();
     image.onload = () => { imageRef.current = image; setImageReady(true); };
-    image.onerror = () => setMessage("Không thể tải ảnh thu-moi-30-nam-bao-viet.png.");
-    image.src = INVITATION_IMAGE_PATH;
+    image.onerror = () => setMessage("Không thể tải ảnh thư mời Hội ngộ thắp lửa đam mê.");
+    image.src = HOMECOMING_INVITATION_IMAGE_PATH;
   }, [open]);
 
   useEffect(() => {
     if (!open || !imageReady || !canvasRef.current || !imageRef.current) return;
-    void drawInvitation(canvasRef.current, imageRef.current, displayName, 1, textColor).catch(() => setMessage("Không thể tạo bản xem trước."));
+    void drawHomecomingInvitation(canvasRef.current, imageRef.current, displayName, 1, textColor).catch(() => setMessage("Không thể tạo bản xem trước."));
   }, [displayName, imageReady, open, textColor]);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function GuestInvitationHomeCard() {
 
   return <>
     <button className="tvv-card hnkh-home-card" type="button" onClick={() => setOpen(true)} aria-label="Mở công cụ tạo thư mời Hội nghị khách hàng">
-      <Image src={IMAGE_PATH} alt="Hội nghị khách hàng ngày 08 tháng 08 năm 2026" width={1661} height={947} />
+      <Image src={IMAGE_PATH} alt="Hội ngộ thắp lửa đam mê" width={2048} height={704} />
     </button>
     {open && <div className="hnkh-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
       <section className="hnkh-modal" role="dialog" aria-modal="true" aria-label="Tạo thư mời có tên khách hàng">
