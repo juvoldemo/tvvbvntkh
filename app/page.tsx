@@ -11,7 +11,7 @@ import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
+type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -463,6 +463,19 @@ export default function TvvMobilePage() {
   useEffect(() => {
     if (tab === "illustration") setIllustrationLoaded(true);
   }, [tab]);
+  useEffect(() => {
+    const handleSmartExportFrame = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || !String(event.data?.type || "").startsWith("bvnt-smart-export-")) return;
+      const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed.smart-export-overlay");
+      if (event.data.type === "bvnt-smart-export-ready") embed?.classList.add("ready");
+      if (event.data.type === "bvnt-smart-export-close") {
+        embed?.classList.remove("active", "smart-export-overlay", "ready");
+        embed?.setAttribute("aria-hidden", "true");
+      }
+    };
+    window.addEventListener("message", handleSmartExportFrame);
+    return () => window.removeEventListener("message", handleSmartExportFrame);
+  }, []);
   const monthOptions = useMemo(() => monthOptionsUntilCurrent(), []);
 
   useEffect(() => {
@@ -1111,14 +1124,15 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : tab === "archive" ? "Kho tài liệu" : tab === "about" ? "Cẩm nang tư vấn" : "Cá nhân"} onBack={() => setTab("overview")} />
+            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
           )}
+          {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && (isAdoMode
             ? <AdoOverview data={adoData} month={month} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} />
+            ? <TeamLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
             : <Overview advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />)}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -1126,7 +1140,7 @@ export default function TvvMobilePage() {
           {tab === "ado_accounts" && isAdoMode && <AdoAccountsPage data={adoData} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
-          {tab === "about" && String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPage />}
+          {tab === "about" && String(authenticatedAdvisorCode || userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPage />}
           {tab === "profile" && <Profile advisor={advisor} contracts={isAdoMode ? (adoData?.contracts ?? []) : myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => {
             setTab("overview");
             setActiveRole("advisor");
@@ -2015,7 +2029,7 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
       </section>;
 }
 
-function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment }: any) {
+function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenSmart, onOpenAbout }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showTeamAccess, setShowTeamAccess] = useState(false);
@@ -2104,6 +2118,9 @@ function TeamLeaderOverview({ data, targetRegistration, targetMonth, targetRegis
     <TeamGoalPanel data={data} registration={targetRegistration} reportMonth={month} targetMonth={targetMonth} registrationClosed={targetRegistrationClosed} onOpen={() => setGoalPageOpen(true)} />
 
     <ContestPreview estimate={contestEstimate} onAll={onOpenContests} />
+
+    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <SmartIllustrationPreview onOpen={onOpenSmart} />}
+    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPreview onOpen={onOpenAbout} />}
 
     <section className="team-overview-panel team-ranking-panel">
       <div className="team-panel-header">
@@ -2726,10 +2743,85 @@ function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, 
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
-    {String(advisorCode || "").trim().toUpperCase() === "ADMIN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}
+    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <SmartIllustrationPreview onOpen={() => onTab("smart_illustration")} />}
+    {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}
     <PersonalStarJourney row={starViet} warning={starVietWarning} />
     <ArchivePreview onOpen={() => onTab("archive")} />
   </section>;
+}
+
+function SmartIllustrationPage({ onBack, onExport }: { onBack: () => void; onExport: (action: "summary" | "advice", data: any) => void }) {
+  const [riders, setRiders] = useState<string[]>([]);
+  const [productOpen, setProductOpen] = useState(false);
+  const [product, setProduct] = useState("");
+  const products = ["An Tâm Hoạch Định", "An Thịnh Phúc Niên", "Life Care 2.0"];
+  const formatSmartDate = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length >= 4) return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    if (digits.length >= 2) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return digits;
+  };
+  useEffect(() => {
+    const inputs = Array.from(document.querySelectorAll<HTMLInputElement>(".tvv-smart-illustration-page .smart-form-grid input"));
+    const [nameInput, nativeDateInput, premiumInput, sumInput, yearsInput] = inputs;
+    if (!nameInput || !nativeDateInput) return;
+    nameInput.value = "Nguyễn Hoàng Vũ";
+    const dateInput = document.createElement("input");
+    dateInput.type = "text";
+    dateInput.inputMode = "numeric";
+    dateInput.maxLength = 10;
+    dateInput.setAttribute("aria-label", "Ngày sinh");
+    dateInput.placeholder = "";
+    dateInput.value = "";
+    nativeDateInput.replaceWith(dateInput);
+    premiumInput && (premiumInput.value = "20");
+    sumInput && (sumInput.value = "500");
+    yearsInput && (yearsInput.value = "10");
+    const productSelect = document.querySelector<HTMLSelectElement>(".tvv-smart-illustration-page .smart-form-grid select");
+    if (productSelect) productSelect.selectedIndex = 2;
+    const handleDateInput = () => {
+      const formatted = formatSmartDate(dateInput.value);
+      dateInput.value = formatted;
+    };
+    dateInput.addEventListener("input", handleDateInput);
+    return () => dateInput.removeEventListener("input", handleDateInput);
+  }, []);
+  useEffect(() => {
+    const summaryButton = document.querySelector<HTMLButtonElement>(".tvv-smart-illustration-page .smart-form-submit");
+    if (!summaryButton) return;
+    summaryButton.textContent = "📄 Xuất tóm tắt";
+    summaryButton.classList.add("smart-summary-export");
+    let adviceButton = document.querySelector<HTMLButtonElement>(".tvv-smart-illustration-page .smart-advice-export");
+    if (!adviceButton) {
+      adviceButton = document.createElement("button");
+      adviceButton.type = "button";
+      adviceButton.className = "smart-form-submit smart-advice-export";
+      adviceButton.textContent = "💬 Xuất tư vấn";
+      summaryButton.after(adviceButton);
+    }
+    const buildPayload = () => {
+      const inputs = Array.from(document.querySelectorAll<HTMLInputElement>(".tvv-smart-illustration-page .smart-form-grid input"));
+      const productSelect = document.querySelector<HTMLSelectElement>(".tvv-smart-illustration-page select");
+      const [name, birthDate, premium, sumAssured, years] = inputs.map((input) => input.value.trim());
+      return { name, birthDate, product: productSelect?.value || "ATPN", premiumMillions: Number(premium), sumAssuredMillions: Number(sumAssured), years: Number(years), riders };
+    };
+    const onSummary = () => onExport("summary", buildPayload());
+    const onAdvice = () => onExport("advice", buildPayload());
+    summaryButton.addEventListener("click", onSummary);
+    adviceButton.addEventListener("click", onAdvice);
+    return () => {
+      summaryButton.removeEventListener("click", onSummary);
+      adviceButton?.removeEventListener("click", onAdvice);
+    };
+  }, [riders, onExport]);
+  const codes = ["R21", "R22", "R23", "R25", "R26", "R29"];
+  return <section className="tvv-content tvv-subpage tvv-smart-illustration-page"><TvvSubHeader title="Minh hoạ thông minh" onBack={onBack} /><section className="tvv-card smart-form-card"><h2>Nhập nhanh nhu cầu khách hàng</h2><div className="smart-form-grid"><label>Họ và tên<input placeholder="Nhập họ và tên" /></label><label>Ngày sinh<input type="date" /></label><label>Sản phẩm chính<select><option value="">Chọn sản phẩm</option><option>An Tâm Hoạch Định</option><option>An Thịnh Phúc Niên</option><option>Life Care 2.0</option></select></label><label>Phí hàng năm (triệu đồng)<input inputMode="decimal" placeholder="20" /></label><label>STBH mong muốn (triệu đồng)<input inputMode="decimal" placeholder="500" /></label><label>Số năm dự kiến đóng phí<input inputMode="numeric" placeholder="15" /></label></div><p className="smart-form-label">Khách hàng tham gia sản phẩm bán kèm</p><div className="smart-form-riders">{codes.map((code) => <button type="button" key={code} className={riders.includes(code) ? "selected" : ""} onClick={() => setRiders((current) => current.includes(code) ? current.filter((item) => item !== code) : [...current, code])}>{code}</button>)}</div><button className="smart-form-submit" type="button">Áp dụng minh hoạ</button></section></section>;
+}
+
+function SmartIllustrationPreview({ onOpen }: { onOpen: () => void }) {
+  return <button type="button" className="tvv-card smart-illustration-card" onClick={onOpen} aria-label="Mở Minh hoạ thông minh">
+    <span className="smart-illustration-icon">✨</span><span className="smart-illustration-copy"><strong>Minh hoạ thông minh</strong><small>Nhập nhanh nhu cầu khách hàng và tạo minh hoạ</small></span><ChevronRight size={22} />
+  </button>;
 }
 
 function RecruitmentPreview({ onOpen }: { onOpen: () => void }) {

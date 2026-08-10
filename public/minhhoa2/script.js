@@ -5730,6 +5730,7 @@ async function shareSummaryViaZalo() {
 function closeSummaryPreview() {
   document.getElementById("summaryPreviewScreen").hidden = true;
   document.body.classList.remove("summary-preview-open");
+  if (window.__smartExportOverlayMode && window.parent !== window) window.parent.postMessage({ type: "bvnt-smart-export-close" }, window.location.origin);
 }
 
 const canExportAdvice = new URLSearchParams(window.location.search).get("advisorCode")?.trim().toUpperCase() === "ADMINTN";
@@ -5854,7 +5855,7 @@ function openAdviceExport() {
   document.getElementById("adviceExportScreen").hidden = false;
 }
 
-function closeAdviceExport() { document.getElementById("adviceExportScreen").hidden = true; }
+function closeAdviceExport() { document.getElementById("adviceExportScreen").hidden = true; if (window.__smartExportOverlayMode && window.parent !== window) window.parent.postMessage({ type: "bvnt-smart-export-close" }, window.location.origin); }
 async function copyAdviceText() {
   const text = document.getElementById("adviceExportText").innerText
     .replace(/\r\n/g, "\n")
@@ -5903,6 +5904,57 @@ loadRiderPlan();
 renderRiderUI();
 syncGenderButtons();
 setActiveTab("main");
+
+window.addEventListener("message", async (event) => {
+  if (event.origin !== window.location.origin || event.data?.type !== "bvnt-smart-export") return;
+  const exportSignature = JSON.stringify([event.data.action, event.data.data]);
+  if (window.__lastSmartExportSignature === exportSignature) return;
+  window.__lastSmartExportSignature = exportSignature;
+  window.setTimeout(() => { if (window.__lastSmartExportSignature === exportSignature) window.__lastSmartExportSignature = ""; }, 2000);
+  sessionStorage.removeItem("bvntSmartExport");
+  window.__smartExportOverlayMode = true;
+  const data = event.data.data || {};
+  const setField = (id, value) => {
+    const field = document.getElementById(id);
+    if (!field) return;
+    field.value = value;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+  setField("fullName", data.name || "");
+  setField("dateOfBirth", data.birthDate || "");
+  const productCode = MAIN_PRODUCTS[data.product] ? data.product : "ATPN";
+  setField("mainProduct", productCode);
+  handleMainProductChange(productCode);
+  setField("annualPremium", formatCommaNumber(Number(data.premiumMillions || 0) * 1000000));
+  const mainSumAssured = Number(data.sumAssuredMillions || 0) * 1000000;
+  setField("deathSumAssured", formatCommaNumber(mainSumAssured));
+  setField("premiumPaymentYears", String(Number(data.years || 0)));
+  const selectedCodes = new Set(Array.isArray(data.riders) ? data.riders : []);
+  VISIBLE_SPBK_PRODUCT_CODES.forEach((code) => {
+    const selection = getRiderSelection(code);
+    selection.selected = selectedCodes.has(code);
+    selection.enabled = selection.selected;
+    const riderProduct = SPBK_PRODUCTS[code];
+    if (selection.selected && riderProduct?.maxSumInsured) {
+      selection.sumInsured = code === "R29"
+        ? normalizeRiderAmount(riderProduct, Math.min(mainSumAssured * 0.002, riderProduct.maxSumInsured))
+        : normalizeRiderAmount(riderProduct, mainSumAssured);
+    }
+  });
+  renderRiderUI();
+  if (!refreshIllustration()) { window.parent.postMessage({ type: "bvnt-smart-export-close" }, window.location.origin); return; }
+  if (event.data.action === "advice") openAdviceExport();
+  else await openSummaryPreview({ currentTarget: { id: "exportSummaryButton" } });
+  window.parent.postMessage({ type: "bvnt-smart-export-ready" }, window.location.origin);
+});
+try {
+  const pendingSmartExport = JSON.parse(sessionStorage.getItem("bvntSmartExport") || "null");
+  if (pendingSmartExport?.type === "bvnt-smart-export") {
+    sessionStorage.removeItem("bvntSmartExport");
+    window.dispatchEvent(new MessageEvent("message", { origin: window.location.origin, data: pendingSmartExport }));
+  }
+} catch { sessionStorage.removeItem("bvntSmartExport"); }
 setDefaultPolicyOwnerGender();
 updateSummaryExportAvailability();
 normalizeVisibleText(document.body);
