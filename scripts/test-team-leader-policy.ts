@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { calculateTeamLeaderPolicy } from "../lib/team-leader-policy";
+import { calculateRecruitmentTrainingReward, calculateTeamLeaderPolicy } from "../lib/team-leader-policy";
 import type { RevenueRecord } from "../lib/types";
 
 function record(code: string, ip: number, paidDate: string, status = "Có hiệu lực"): RevenueRecord {
@@ -82,7 +82,15 @@ function recruitmentTraining(advisorIps: number[]) {
   return calculate({
     groupRecords: rows,
     latestGroupByAdvisor: new Map(rows.map((row) => [String(row.agent_code), "Nhóm A"])),
-    fycRows: [],
+    fycRows: rows.map((row) => ({
+      data_month: "2026-06-01",
+      agent_code: row.agent_code,
+      agent_name: row.agent_name,
+      group_name: "Nhóm A",
+      ip: row.ip,
+      fyc: Number(row.ip) * 0.3,
+      raw_data: { application_nos: [row.contract_no] }
+    })),
     advisorProfiles: rows.map((row) => ({
       advisor_code: row.agent_code,
       start_date: "2026-06-01",
@@ -98,6 +106,16 @@ assert.equal(oneNewAdvisor.rate, 1);
 assert.equal(oneNewAdvisor.monthlyReward, 1_000_000);
 assert.equal(oneNewAdvisor.stageReward, 0);
 assert.equal(oneNewAdvisor.reward, 1_000_000);
+
+const simulatedLeaderReward = calculateRecruitmentTrainingReward(1, 1_000_000, 0);
+assert.deepEqual(simulatedLeaderReward, {
+  activeNewAdvisorCount: 1,
+  rate: 1,
+  monthlyReward: 1_000_000,
+  stageReward: 0,
+  totalNewAdvisorReward: 1_000_000,
+  reward: 1_000_000
+});
 
 const twoNewAdvisors = recruitmentTraining([50_000_000, 13_000_000]);
 assert.equal(twoNewAdvisors.activeNewAdvisorCount, 2);
@@ -121,7 +139,15 @@ const advisorStartedBeforeNewLeader = calculate({
   groupRecords: [earlyAdvisorCurrentRow],
   allRevenueRecords: [earlyAdvisorPreviousGroupRow, earlyAdvisorCurrentRow],
   latestGroupByAdvisor: new Map([["EARLY-NEW", "Nhóm A"]]),
-  fycRows: [],
+  fycRows: [earlyAdvisorPreviousGroupRow, earlyAdvisorCurrentRow].map((row) => ({
+    data_month: `${String(row.paid_date).slice(0, 7)}-01`,
+    agent_code: row.agent_code,
+    agent_name: row.agent_name,
+    group_name: row.group_name,
+    ip: row.ip,
+    fyc: Number(row.ip) * 0.3,
+    raw_data: { application_nos: [row.contract_no] }
+  })),
   advisorProfiles: [{ advisor_code: "EARLY-NEW", start_date: "2026-05-13", group_name: "Nhóm A", is_active: true }]
 }).recruitmentTraining;
 assert.equal(advisorStartedBeforeNewLeader.activeNewAdvisorCount, 1, "TVV mới vào trước ngày hiệu lực của TN mới vẫn được tính");
@@ -131,13 +157,21 @@ assert.equal(advisorStartedBeforeNewLeader.reward, 4_000_000);
 
 const oldLeaderWithNewAdvisor = calculate({
   positionEffectiveDate: "2024-01-01",
-  groupRecords: [record("NEW-FOR-OLD", 50_000_000, "2026-06-20")],
+  groupRecords: [record("NEW-FOR-OLD", 13_000_000, "2026-06-20")],
   latestGroupByAdvisor: new Map([["NEW-FOR-OLD", "Nhóm A"]]),
-  fycRows: [],
+  fycRows: [{
+    data_month: "2026-06-01",
+    agent_code: "NEW-FOR-OLD",
+    agent_name: "NEW-FOR-OLD",
+    group_name: "Nhóm A",
+    ip: 13_000_000,
+    fyc: 3_900_000,
+    raw_data: { application_nos: ["NEW-FOR-OLD-2026-06-20-13000000"] }
+  }],
   advisorProfiles: [{ advisor_code: "NEW-FOR-OLD", start_date: "2026-05-13", group_name: "Nhóm A", is_active: true }]
 }).recruitmentTraining;
-assert.equal(oldLeaderWithNewAdvisor.activeNewAdvisorCount, 0, "TN cũ không áp dụng thưởng tuyển luyện dành cho TN mới");
-assert.equal(oldLeaderWithNewAdvisor.reward, 0);
+assert.equal(oldLeaderWithNewAdvisor.activeNewAdvisorCount, 1, "thưởng tuyển luyện không phụ thuộc thâm niên của Trưởng nhóm");
+assert.equal(oldLeaderWithNewAdvisor.reward, 1_000_000);
 
 const advisorOutsideNewRewardPeriod = calculate({
   positionEffectiveDate: "2024-01-01",

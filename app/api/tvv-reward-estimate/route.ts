@@ -8,6 +8,7 @@ import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from 
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 import { isPreTeamLeaderPosition, managedTeamName } from "@/lib/team-scope";
 import { competitionIsVisibleTo, competitionViewerAudience } from "@/lib/competition-audience";
+import { calculateRecruitmentTrainingReward } from "@/lib/team-leader-policy";
 
 const ACQUISITION_COMMISSION_BREAKDOWN = [
   { label: "Năm 1", rate: 0.3 },
@@ -440,6 +441,17 @@ export async function POST(request: NextRequest) {
       }
     });
     const projectedPolicyPrograms = missingPolicyTable ? [] : policyProgramSummaries(projectedPolicyResult, month);
+    const projectedMonthlyNewAdvisorReward = projectedPolicyResult.newAdvisorMonthly.reduce((sum, row) => sum + Number(row.reward || 0), 0);
+    const projectedStageNewAdvisorReward = projectedPolicyResult.newAdvisorStage.reduce((sum, row) => sum + Number(row.reward || 0), 0);
+    const activeSimulatedNewAdvisorCount = recruitmentMode
+      && projectedPolicyResult.rewardMonthContracts.some((row: any) => Number(row.ip || 0) > 12_000_000)
+      ? 1
+      : 0;
+    const recruitmentTrainingProjection = calculateRecruitmentTrainingReward(
+      activeSimulatedNewAdvisorCount,
+      projectedMonthlyNewAdvisorReward,
+      projectedStageNewAdvisorReward
+    );
     const draftEstimatedFyc = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0) * 0.3, 0);
     const calculatedPolicyById = new Map(calculatedPolicyPrograms.map((program) => [program.programId, program]));
     const calculatorPolicyPrograms = projectedPolicyPrograms.map((projected) => {
@@ -526,6 +538,7 @@ export async function POST(request: NextRequest) {
       rewardMonthContracts: policyResult.rewardMonthContracts,
       rewardYearContracts: policyResult.rewardYearContracts,
       calculatorPrograms,
+      recruitmentTrainingProjection,
       calculatorTotalEstimatedReward: Number(result.totalEstimatedReward ?? 0)
         + policyIncrementalReward
         + draftContracts.reduce((sum, draft) => sum + firstYearAcquisitionCommissionReward(Number(draft.premium) || 0), 0),

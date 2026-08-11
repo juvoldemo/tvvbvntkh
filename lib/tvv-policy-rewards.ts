@@ -418,7 +418,7 @@ export function calculatePolicyRewards(params: {
   const previousMonth = previousMonthKey(selectedMonth);
   const monthlyQualifiedAgents = new Set(eligibleContracts
     .filter((row) => monthKey(row.paid_date || row.data_month) === previousMonth)
-    .filter((row) => rewardSource(row) === "kpi04")
+    .filter((row) => rewardSource(row) === "kpi04" || row.raw_data?.is_reward_estimate === true)
     .filter((row) => number(row.ip) >= MONTHLY_PREVIOUS_GYC_MIN_IP && applicationNos(row).length > 0)
     .map(agentKey)
     .filter(Boolean));

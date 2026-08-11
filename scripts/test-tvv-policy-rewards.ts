@@ -35,6 +35,17 @@ assert.equal(monthly.monthly[0].reward, 1_000_000, "thưởng tháng dùng 10% t
 const monthlyWithoutPreviousGyc = calculatePolicyRewards({ selectedMonth: "2026-01", kpi04: [kpi("2026-01")], bc02: [] });
 assert.equal(monthlyWithoutPreviousGyc.monthly[0].reward, 0, "monthly reward requires previous month GYC with IP from 3 million");
 
+const simulatedPreviousContractQualifies = calculatePolicyRewards({
+  selectedMonth: "2026-02",
+  kpi04: [],
+  bc02: [
+    bc02("2026-01-15", "POLICY-DRAFT-01", { ip: 20_000_000, estimated_fyp: 20_000_000, raw_data: { is_reward_estimate: true } }),
+    bc02("2026-02-15", "POLICY-DRAFT-02", { ip: 20_000_000, estimated_fyp: 20_000_000, raw_data: { is_reward_estimate: true } })
+  ]
+});
+assert.equal(simulatedPreviousContractQualifies.monthly[0].achieved, true, "hợp đồng mô phỏng tháng trước phải đủ điều kiện thưởng năng suất tháng sau");
+assert.equal(simulatedPreviousContractQualifies.monthly[0].reward, 500_000, "thưởng năng suất mô phỏng dùng 10% FYC dự kiến tháng hiện tại");
+
 const quarterly = calculatePolicyRewards({
   selectedMonth: "2026-03",
   kpi04: [kpi("2026-01"), kpi("2026-02"), kpi("2026-03")],

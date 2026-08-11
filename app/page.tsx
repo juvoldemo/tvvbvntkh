@@ -175,6 +175,14 @@ function formatRate(value: unknown) {
   return `${Math.round(rate * 100)}%`;
 }
 
+function estimateRecruitmentTrainingLabel(projection: any) {
+  const count = Number(projection?.activeNewAdvisorCount ?? 0);
+  const rate = Math.round(Number(projection?.rate ?? 0) * 100);
+  const monthlyReward = Number(projection?.monthlyReward ?? 0);
+  const stageReward = Number(projection?.stageReward ?? 0);
+  return `${count} TVV mới HĐC · ${rate}% × (${formatVnd(monthlyReward)} + ${formatVnd(stageReward)})`;
+}
+
 function statusTone(status: unknown) {
   const normalized = normalizeStatusText(status);
   if (normalized === "co hieu luc") return { label: "Đã phát hành", tone: "green", icon: CheckCircle2 };
@@ -3798,6 +3806,10 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
                 <strong className={achieved ? gifts.length ? "achieved" : "achieved reward-amount" : ""}>{gifts.length ? gifts.join(" · ") : achieved ? `+${formatVnd(reward)}` : "Chưa đạt"}</strong>
               </button>;
             })}
+            <div className="recruitment-leader-training-row">
+              <span><UserPlus size={17} />Thưởng tuyển luyện Trưởng nhóm<small>{estimateRecruitmentTrainingLabel(estimates[monthIndex]?.recruitmentTrainingProjection)}</small></span>
+              <strong>{formatVnd(Number(estimates[monthIndex]?.recruitmentTrainingProjection?.reward ?? 0))}</strong>
+            </div>
           </div>
         </article>)}
       </div>

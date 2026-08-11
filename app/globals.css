@@ -520,6 +520,18 @@ body .tvv-app .recruitment-reward-slide-rows > button {
   color: #007f55;
 }
 
+.recruitment-leader-training-row > span {
+  flex-wrap: wrap;
+}
+
+.recruitment-leader-training-row > span small {
+  flex-basis: 100%;
+  padding-left: 24px;
+  color: #6e7c76;
+  font-size: var(--typo-10);
+  font-weight: 700;
+}
+
 body .tvv-app .recruitment-calculator .recruitment-reward-slide-rows > button > strong.reward-amount {
   width: max-content !important;
   min-width: 0 !important;

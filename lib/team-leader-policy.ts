@@ -58,11 +58,28 @@ function quarterRate(ip: number, hasNewAdvisor: boolean) {
   return 0.09;
 }
 
-function recruitmentTrainingRate(activeNewAdvisorCount: number) {
+export function recruitmentTrainingRate(activeNewAdvisorCount: number) {
   if (activeNewAdvisorCount >= 3) return 1.5;
   if (activeNewAdvisorCount === 2) return 1.25;
   if (activeNewAdvisorCount === 1) return 1;
   return 0;
+}
+
+export function calculateRecruitmentTrainingReward(
+  activeNewAdvisorCount: number,
+  monthlyReward: number,
+  stageReward: number
+) {
+  const rate = recruitmentTrainingRate(activeNewAdvisorCount);
+  const totalNewAdvisorReward = Math.max(0, monthlyReward) + Math.max(0, stageReward);
+  return {
+    activeNewAdvisorCount,
+    rate,
+    monthlyReward: Math.max(0, monthlyReward),
+    stageReward: Math.max(0, stageReward),
+    totalNewAdvisorReward,
+    reward: Math.round(totalNewAdvisorReward * rate)
+  };
 }
 
 function newManagerReward(fyp: number, hdc: number) {
@@ -313,7 +330,7 @@ export function calculateTeamLeaderPolicy(params: {
   const directlyManagedNewAdvisorCodes = new Set(rewardAdvisorProfiles.flatMap((profile) => {
     const code = String(profile.advisor_code ?? "").trim();
     const startDate = String(profile.start_date ?? "").slice(0, 10);
-    if (!newManagerEligible || !code || !startDate || startDate > monthEnd || profile.is_active === false) return [];
+    if (!code || !startDate || startDate > monthEnd || profile.is_active === false) return [];
     return currentGroupForAdvisor(code) === groupName ? [code] : [];
   }));
   const monthlyIpByAdvisor = new Map<string, number>();
@@ -358,9 +375,12 @@ export function calculateTeamLeaderPolicy(params: {
     totalReward: rewards.monthlyReward + rewards.stageReward,
     isHdc: activeNewAdvisorCodes.includes(advisorCode)
   }));
-  const totalNewAdvisorReward = recruitmentTrainingAdvisors.reduce((sum, row) => sum + row.totalReward, 0);
-  const trainingRate = recruitmentTrainingRate(activeNewAdvisorCodes.length);
-  const recruitmentTrainingReward = Math.round(totalNewAdvisorReward * trainingRate);
+  const trainingCalculation = calculateRecruitmentTrainingReward(
+    activeNewAdvisorCodes.length,
+    recruitmentTrainingAdvisors.reduce((sum, row) => sum + row.monthlyReward, 0),
+    recruitmentTrainingAdvisors.reduce((sum, row) => sum + row.stageReward, 0)
+  );
+  const { totalNewAdvisorReward, rate: trainingRate, reward: recruitmentTrainingReward } = trainingCalculation;
   const recruitmentTrainingMilestones = [
     { count: 1, rate: 1 },
     { count: 2, rate: 1.25 },
