@@ -175,14 +175,6 @@ function formatRate(value: unknown) {
   return `${Math.round(rate * 100)}%`;
 }
 
-function estimateRecruitmentTrainingLabel(projection: any) {
-  const count = Number(projection?.activeNewAdvisorCount ?? 0);
-  const rate = Math.round(Number(projection?.rate ?? 0) * 100);
-  const monthlyReward = Number(projection?.monthlyReward ?? 0);
-  const stageReward = Number(projection?.stageReward ?? 0);
-  return `${count} TVV mới HĐC · ${rate}% × (${formatVnd(monthlyReward)} + ${formatVnd(stageReward)})`;
-}
-
 function statusTone(status: unknown) {
   const normalized = normalizeStatusText(status);
   if (normalized === "co hieu luc") return { label: "Đã phát hành", tone: "green", icon: CheckCircle2 };
@@ -3557,6 +3549,7 @@ function LateralRecruitmentSimulator({ resetSignal }: { resetSignal: number }) {
 function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () => void; embedded?: boolean }) {
   const [advisorName, setAdvisorName] = useState("");
   const [monthlyRevenue, setMonthlyRevenue] = useState<string[]>(() => Array(6).fill("20"));
+  const [monthlyContractCounts, setMonthlyContractCounts] = useState<string[]>(() => Array(6).fill("1"));
   const [estimates, setEstimates] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
@@ -3591,6 +3584,10 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
     () => monthlyRevenue.map((value) => Math.max(0, Number(value.replace(",", ".")) || 0) * 1_000_000),
     [monthlyRevenue]
   );
+  const contractCountValues = useMemo(
+    () => monthlyContractCounts.map((value) => Math.max(0, Math.floor(Number(value) || 0))),
+    [monthlyContractCounts]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -3598,14 +3595,18 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
       setError("");
       const cumulativeDrafts: DraftContract[] = [];
       const requests = simulationMonths.map((item, index) => {
-        cumulativeDrafts.push({
-          id: `recruitment-${item.month}`,
-          productName: "Doanh thu tuyển dụng dự kiến",
-          premium: revenueValues[index],
-          expectedPaidDate: item.paidDate,
-          expectedIssueDate: item.paidDate,
-          status: "Có hiệu lực"
-        });
+        const contractCount = contractCountValues[index];
+        const premiumPerContract = contractCount > 0 ? revenueValues[index] / contractCount : 0;
+        for (let contractIndex = 0; contractIndex < contractCount; contractIndex += 1) {
+          cumulativeDrafts.push({
+            id: `recruitment-${item.month}-${contractIndex + 1}`,
+            productName: "Doanh thu tuyển dụng dự kiến",
+            premium: premiumPerContract,
+            expectedPaidDate: item.paidDate,
+            expectedIssueDate: item.paidDate,
+            status: "Có hiệu lực"
+          });
+        }
         return fetch("/api/tvv-reward-estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -3635,7 +3636,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [advisorName, revenueValues, simulationMonths]);
+  }, [advisorName, contractCountValues, revenueValues, simulationMonths]);
 
   const monthlyResults = estimates.map((estimate, monthIndex) => {
     const activeContestIds = new Set((estimate?.ongoingPrograms ?? []).map((item: any) => item.programId));
@@ -3675,6 +3676,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
   const simulationExportRows = simulationMonths.map((item, monthIndex) => ({
     ...item,
     revenue: revenueValues[monthIndex],
+    contractCount: contractCountValues[monthIndex],
     commission: monthlyResults[monthIndex]?.commission ?? 0,
     total: monthlyResults[monthIndex]?.total ?? 0,
     rewards: (monthlyResults[monthIndex]?.rows ?? [])
@@ -3760,6 +3762,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
         {simulationMonths.map((item, index) => <label className={`month-tone-${index + 1}`} key={item.month}>
           <i>T{Number(item.month.slice(5, 7))}</i>
           <div><input inputMode="decimal" value={monthlyRevenue[index]} onChange={(event) => setMonthlyRevenue((current) => current.map((value, valueIndex) => valueIndex === index ? event.target.value.replace(/[^\d.,]/g, "") : value))} aria-label={`Doanh thu dự kiến ${item.label}, đơn vị triệu đồng`} /></div>
+          <span className="recruitment-contract-count"><input inputMode="numeric" value={monthlyContractCounts[index]} onChange={(event) => setMonthlyContractCounts((current) => current.map((value, valueIndex) => valueIndex === index ? event.target.value.replace(/\D/g, "") : value))} aria-label={`Số hợp đồng dự kiến ${item.label}`} /> HĐ</span>
         </label>)}
       </div>
       {error && <div className="tvv-user-error" role="alert">{error}</div>}
@@ -3784,7 +3787,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
         if (element.clientWidth) setActiveSimulationMonth(Math.round(element.scrollLeft / element.clientWidth));
       }}>
         {simulationMonths.map((item, monthIndex) => <article className={`recruitment-reward-slide month-tone-${monthIndex + 1}`} key={item.month}>
-          <header><i>{monthIndex + 1}</i><div><span>{item.label}</span><strong>{formatVnd(monthlyResults[monthIndex]?.total ?? 0)}</strong><small>Doanh thu dự kiến {monthlyRevenue[monthIndex] || 0} triệu</small></div></header>
+          <header><i>{monthIndex + 1}</i><div><span>{item.label}</span><strong>{formatVnd(monthlyResults[monthIndex]?.total ?? 0)}</strong><small>Doanh thu dự kiến {monthlyRevenue[monthIndex] || 0} triệu · {contractCountValues[monthIndex]} HĐ</small></div></header>
           <div className="recruitment-reward-slide-rows">
             <div className="recruitment-commission-row">
               <span><Calculator size={17} />Hoa hồng khai thác năm 1</span>
@@ -3806,10 +3809,6 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
                 <strong className={achieved ? gifts.length ? "achieved" : "achieved reward-amount" : ""}>{gifts.length ? gifts.join(" · ") : achieved ? `+${formatVnd(reward)}` : "Chưa đạt"}</strong>
               </button>;
             })}
-            <div className="recruitment-leader-training-row">
-              <span><UserPlus size={17} />Thưởng tuyển luyện Trưởng nhóm<small>{estimateRecruitmentTrainingLabel(estimates[monthIndex]?.recruitmentTrainingProjection)}</small></span>
-              <strong>{formatVnd(Number(estimates[monthIndex]?.recruitmentTrainingProjection?.reward ?? 0))}</strong>
-            </div>
           </div>
         </article>)}
       </div>

@@ -327,6 +327,26 @@ body .tvv-app .recruitment-three-month-grid input:focus {
   font-size: var(--typo-10);
 }
 
+body .tvv-app .recruitment-three-month-grid .recruitment-contract-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #64748b;
+  font-size: var(--typo-10);
+  font-weight: 900;
+}
+
+body .tvv-app .recruitment-three-month-grid .recruitment-contract-count input {
+  width: 34px;
+  height: 26px;
+  border: 1px solid #d4e0ef !important;
+  border-radius: 7px !important;
+  background: #fff !important;
+  padding: 0 3px !important;
+  font-size: var(--typo-12) !important;
+}
+
 .recruitment-carousel-heading {
   display: flex;
   align-items: center;

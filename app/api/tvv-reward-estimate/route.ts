@@ -8,7 +8,7 @@ import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from 
 import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 import { isPreTeamLeaderPosition, managedTeamName } from "@/lib/team-scope";
 import { competitionIsVisibleTo, competitionViewerAudience } from "@/lib/competition-audience";
-import { calculateRecruitmentTrainingReward } from "@/lib/team-leader-policy";
+import { recruitmentOnlyCompetitionPrograms } from "@/lib/recruitment-competition-programs";
 
 const ACQUISITION_COMMISSION_BREAKDOWN = [
   { label: "Năm 1", rate: 0.3 },
@@ -275,6 +275,16 @@ export async function POST(request: NextRequest) {
         issue_deadline: program.issue_deadline || program.confirmed_rule?.issue_deadline
       }
     }));
+    const recruitmentProgramsToAdd = recruitmentMode
+      ? recruitmentOnlyCompetitionPrograms.filter((recruitmentProgram) => !competitionRules.some((program: any) =>
+          program.id === recruitmentProgram.id
+          || normalizeAdvisorIdentity(program.programName) === normalizeAdvisorIdentity(recruitmentProgram.programName)
+        ))
+      : [];
+    competitionRules.push(...recruitmentProgramsToAdd.map((program) => ({
+      ...program,
+      range: { start: program.rule.start_date, end: program.rule.end_date }
+    } as any)));
 
     let result = {
       rewardByProgram: [] as any[],
@@ -346,7 +356,18 @@ export async function POST(request: NextRequest) {
         return [program.id, { actualContractCount: 0, actualReward: 0, isEligible: false }];
       }
     }));
-    const allProgramSummaries = visiblePrograms
+    const summaryPrograms = [...visiblePrograms, ...recruitmentProgramsToAdd.map((program) => ({
+      id: program.id,
+      program_name: program.programName,
+      status: program.status,
+      original_file_url: program.originalFileUrl,
+      original_file_name: program.originalFileName,
+      start_date: program.rule.start_date,
+      end_date: program.rule.end_date,
+      issue_deadline: program.rule.issue_deadline,
+      confirmed_rule: program.rule
+    }))];
+    const allProgramSummaries = summaryPrograms
       .map((program: any) => ({
         id: program.id,
         programName: program.program_name || program.confirmed_rule?.program_name || program.ai_rule?.program_name || "Chương trình thi đua",
@@ -441,17 +462,6 @@ export async function POST(request: NextRequest) {
       }
     });
     const projectedPolicyPrograms = missingPolicyTable ? [] : policyProgramSummaries(projectedPolicyResult, month);
-    const projectedMonthlyNewAdvisorReward = projectedPolicyResult.newAdvisorMonthly.reduce((sum, row) => sum + Number(row.reward || 0), 0);
-    const projectedStageNewAdvisorReward = projectedPolicyResult.newAdvisorStage.reduce((sum, row) => sum + Number(row.reward || 0), 0);
-    const activeSimulatedNewAdvisorCount = recruitmentMode
-      && projectedPolicyResult.rewardMonthContracts.some((row: any) => Number(row.ip || 0) > 12_000_000)
-      ? 1
-      : 0;
-    const recruitmentTrainingProjection = calculateRecruitmentTrainingReward(
-      activeSimulatedNewAdvisorCount,
-      projectedMonthlyNewAdvisorReward,
-      projectedStageNewAdvisorReward
-    );
     const draftEstimatedFyc = draftContracts.reduce((sum, draft) => sum + (Number(draft.premium) || 0) * 0.3, 0);
     const calculatedPolicyById = new Map(calculatedPolicyPrograms.map((program) => [program.programId, program]));
     const calculatorPolicyPrograms = projectedPolicyPrograms.map((projected) => {
@@ -538,7 +548,6 @@ export async function POST(request: NextRequest) {
       rewardMonthContracts: policyResult.rewardMonthContracts,
       rewardYearContracts: policyResult.rewardYearContracts,
       calculatorPrograms,
-      recruitmentTrainingProjection,
       calculatorTotalEstimatedReward: Number(result.totalEstimatedReward ?? 0)
         + policyIncrementalReward
         + draftContracts.reduce((sum, draft) => sum + firstYearAcquisitionCommissionReward(Number(draft.premium) || 0), 0),

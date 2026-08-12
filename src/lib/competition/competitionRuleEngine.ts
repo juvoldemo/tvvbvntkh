@@ -17,6 +17,7 @@ export type CompetitionRewardRule = {
   reward_name?: string;
   prize_name?: string;
   reward_type?: string;
+  reward_value_type?: string;
   type?: string;
   metric_type?: string | string[];
   target_type?: string;
@@ -1079,6 +1080,9 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
   }
   if (kind === "reward_by_revenue_tier") {
     return [...groupBy(contracts, (contract) => contract.tvv).entries()].flatMap(([advisor, rows]) => {
+      const minCount = Number(rule.condition?.min_policy_count ?? rule.condition?.min_contract_count ?? 0);
+      const contractCount = new Set(rows.map(getRewardContractKey).filter(Boolean)).size;
+      if (minCount > 0 && contractCount < minCount) return [];
       const metric = normalizeText(String(rule.calculation_logic || rule.condition?.metric || "afyp")).includes("ip") ? "ip" : "afyp";
       const total = rows.reduce((sum, row) => sum + (metric === "ip" ? row.ip : row.afyp), 0);
       const tier = findTier(rule.thresholds ?? rule.tiers ?? rule.condition?.tiers ?? [], total);
@@ -1099,7 +1103,7 @@ function calculateAdvisorRewards(rule: CompetitionRewardRule, contracts: Normali
         advisor,
         group: rows.find((row) => row.team)?.team ?? "",
         ads: rows.find((row) => row.ads)?.ads ?? "",
-        contractCount: new Set(rows.map(getRewardContractKey).filter(Boolean)).size,
+        contractCount,
         totalIP: rows.reduce((sum, row) => sum + row.ip, 0),
         totalAFYP: rows.reduce((sum, row) => sum + row.afyp, 0),
         prizeName: tierPrizeName,
