@@ -5,7 +5,6 @@ import type { FormEvent, ReactNode, RefObject } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ArrowDownRight, BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Coins, Download, Eye, EyeOff, FileText, Filter, Link2, LockKeyhole, Medal, Megaphone, MoreHorizontal, PieChart, Search, Share2, Sparkles, Target, TrendingDown, TrendingUp, Trophy, Users, UserRound, ClipboardList, LayoutGrid, Layers3, X } from "lucide-react";
 import html2canvas from "html2canvas";
-import Image from "next/image";
 import { toPng } from "html-to-image";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, LineChart, Pie, PieChart as RechartsPieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import * as XLSX from "xlsx";
@@ -3526,16 +3525,16 @@ function competitionPosterUrl(rule: any, programName?: string | null) {
   return null;
 }
 
-function CompetitionRuleVisualPreview({ rule, extractedText, programName }: { rule: any; extractedText?: string | null; programName?: string | null }) {
+function CompetitionRuleVisualPreview({ rule, extractedText, programName, posterOverride }: { rule: any; extractedText?: string | null; programName?: string | null; posterOverride?: string | null }) {
   const rewardRules = Array.isArray(rule?.reward_rules) ? rule.reward_rules : [];
   const eligibleProducts = ruleListText(rule?.eligible_products);
   const minIp = Number(rule?.min_policy_ip ?? 0);
-  const posterUrl = competitionPosterUrl(rule, programName);
+  const posterUrl = posterOverride || competitionPosterUrl(rule, programName);
   return (
     <div className="contest-rule-visual contest-rule-simple">
       {posterUrl && (
         <section className="contest-rule-poster" aria-label="Poster thể lệ chương trình">
-          <Image src={posterUrl} alt={`Poster thể lệ ${programName || rule?.program_name || "chương trình thi đua"}`} width={900} height={1273} sizes="(max-width: 700px) 100vw, 680px" />
+          <img src={posterUrl} alt={`Poster thể lệ ${programName || rule?.program_name || "chương trình thi đua"}`} />
         </section>
       )}
       <section className="contest-content-section">
@@ -3638,6 +3637,8 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
   });
   const [message, setMessage] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [selectedGroupContracts, setSelectedGroupContracts] = useState<{ title: string; rows: any[] } | null>(null);
 
   async function loadDetail() {
@@ -3645,6 +3646,27 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Không tải được chi tiết chương trình.");
     setDetail(payload);
+  }
+
+  async function uploadCompetitionImage(file: File) {
+    setIsUploadingImage(true);
+    setMessage("");
+    try {
+      const formData = new FormData();
+      formData.set("program_id", programId);
+      formData.set("file", file);
+      const response = await fetch("/api/competition/image", { method: "POST", body: formData });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Không thể cập nhật ảnh CTTĐ.");
+      await loadDetail();
+      onChanged();
+      setMessage("Đã cập nhật ảnh CTTĐ.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể cập nhật ảnh CTTĐ.");
+    } finally {
+      setIsUploadingImage(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
   }
 
   useEffect(() => {
@@ -3749,7 +3771,22 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
             </p>
           </div>
         </div>
-        <button className="competition-mobile-back" type="button" onClick={onClose}>Danh sách</button>
+        <div className="competition-detail-actions">
+          <input
+            ref={imageInputRef}
+            className="competition-image-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) uploadCompetitionImage(file);
+            }}
+          />
+          <button className="small-button secondary" type="button" disabled={isUploadingImage || !program} onClick={() => imageInputRef.current?.click()}>
+            {isUploadingImage ? "Đang tải ảnh..." : program?.originalFileUrl ? "Thay đổi hình ảnh" : "Thêm hình ảnh"}
+          </button>
+          <button className="competition-mobile-back" type="button" onClick={onClose}>Danh sách</button>
+        </div>
       </div>
         <div className="contest-detail-tabs" role="tablist">
           {visibleTabs.map(({ id, label, icon: TabIcon }) => {
@@ -3771,6 +3808,10 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
             <>
               {tab === "overview" && program && (
                 <>
+                  {program.originalFileUrl && <button className="competition-overview-poster" type="button" onClick={() => setTab("content")} aria-label="Xem hình ảnh CTTĐ">
+                    <img src={program.originalFileUrl} alt={`Hình ảnh ${program.programName}`} />
+                    <span>Bấm để xem nội dung</span>
+                  </button>}
                   <div className="contest-overview-grid">
                     <CompetitionKpiCard label="Thời gian thi đua" value={`${formatDateVi(program.startDate)} - ${formatDateVi(program.endDate)}`} icon={CalendarDays} />
                     <CompetitionKpiCard label="Phát hành đến" value={formatDateVi(program.issueDeadline) || "-"} icon={Megaphone} />
@@ -3804,6 +3845,7 @@ function CompetitionDetailModal({ programId, month, refreshKey, onClose, onChang
                     rule={program.confirmedRule ?? program.aiRule ?? {}}
                     extractedText={program.extractedText}
                     programName={program.programName}
+                    posterOverride={program.originalFileUrl}
                   />
                 </div>
               )}

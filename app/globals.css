@@ -3774,6 +3774,42 @@ tr.clickable:hover {
   border-radius: 10px;
 }
 
+.competition-image-input {
+  display: none;
+}
+
+.competition-overview-poster {
+  position: relative;
+  display: block;
+  width: min(370px, 100%);
+  margin: 4px auto 24px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #d8e4f1;
+  border-radius: 14px;
+  background: #f8fbff;
+  box-shadow: 0 10px 24px rgba(15, 35, 66, .1);
+  cursor: pointer;
+}
+
+.competition-overview-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.competition-overview-poster span {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(8, 32, 67, .82);
+  color: #fff;
+  font-size: var(--typo-11);
+  font-weight: 700;
+}
+
 .contest-detail-tabs {
   display: flex;
   gap: 28px;
