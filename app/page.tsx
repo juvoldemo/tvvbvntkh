@@ -10,7 +10,6 @@ import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
-import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
 type PeriodMode = "month" | "quarter" | "year";
@@ -384,7 +383,6 @@ export default function TvvMobilePage() {
   const isBoardMode = activeRole === "board_leader" && Boolean(userProfile?.has_board_leader_role);
   const isAdoMode = userProfile?.dashboard_role === "ado" || userProfile?.dashboard_role === "boss";
   const isBossMode = userProfile?.dashboard_role === "boss";
-  const canCreateGuestInvitation = userProfile?.dashboard_role === "team_leader" || userProfile?.dashboard_role === "ado" || isBoardMode;
 
   useEffect(() => {
     if (isLocalAnalyticsHost()) {
@@ -1130,7 +1128,6 @@ export default function TvvMobilePage() {
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
-            {canCreateGuestInvitation && (isBoardMode || userProfile?.dashboard_role === "ado") && <section className="tvv-content invitation-role-section"><GuestInvitationHomeCard /></section>}
             {isAdoMode
             ? <AdoOverview data={adoData} month={month} />
             : isBoardMode
@@ -2117,8 +2114,6 @@ function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth
         </CardTag>;
       })}
     </div>
-
-    <GuestInvitationHomeCard />
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
 
