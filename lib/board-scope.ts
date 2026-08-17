@@ -26,3 +26,10 @@ export function normalizeBoardText(value: unknown) {
 export function managedBoardScope(fullName: unknown) {
   return BOARD_BY_LEADER[normalizeBoardText(fullName)] ?? null;
 }
+
+export function isGroupInManagedBoard(groupName: unknown, boardLeaderName: unknown) {
+  const scope = managedBoardScope(boardLeaderName);
+  if (!scope) return false;
+  const normalizedGroupName = normalizeBoardText(groupName);
+  return scope.groups.some((group) => normalizeBoardText(group) === normalizedGroupName);
+}

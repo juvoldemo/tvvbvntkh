@@ -3,6 +3,7 @@ import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-valida
 
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
 export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
+export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
@@ -96,6 +97,52 @@ export async function drawHomecomingInvitation(
   context.textBaseline = "middle";
   context.fillStyle = textColor;
   context.fillText(displayName, centerX, centerY, areaWidth);
+}
+
+export async function drawAugust20Invitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#17448F"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  // The source PNG is 5831 x 5866. Keeping the canvas below 3200 px avoids
+  // mobile-browser canvas/memory failures while retaining a sharp 10 MP export.
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  const scale = (width / 809) * renderScale;
+  const areaWidth = 350 * scale;
+  const centerX = 608 * scale;
+  // The dotted name row is the geometric midpoint between the two sentences.
+  const centerY = 116 * scale;
+  let fontSize = 21 * scale;
+  while (fontSize > 14 * scale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  context.textAlign = "center";
+  // Center the visible glyph bounds, not the font's em box. This keeps italic
+  // names visually balanced above and below the template's dotted row.
+  const metrics = context.measureText(displayName);
+  const textY = centerY + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+  context.textBaseline = "alphabetic";
+  context.lineJoin = "round";
+  const isBrightYellow = textColor.toUpperCase() === "#FFD400";
+  context.strokeStyle = isBrightYellow ? "rgba(23,68,143,.88)" : "rgba(255,255,255,.98)";
+  context.lineWidth = (isBrightYellow ? 2 : 4) * scale;
+  context.strokeText(displayName, centerX, textY, areaWidth);
+  context.fillStyle = textColor;
+  context.fillText(displayName, centerX, textY, areaWidth);
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement) {

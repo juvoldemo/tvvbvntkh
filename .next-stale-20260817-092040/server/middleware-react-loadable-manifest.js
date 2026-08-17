@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST='{"app\\\\admin-data\\\\page.tsx -> xlsx":{"id":2093,"files":["static/chunks/2170a4aa-cdfe8f07c92c1026.js","static/chunks/919.309cb8bf58085118.js"]}}';
