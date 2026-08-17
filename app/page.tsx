@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
@@ -13,7 +13,7 @@ import { isGroupInManagedBoard } from "@/lib/board-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts";
+type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -1132,12 +1132,12 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
+            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} />
+            ? <AdoOverview data={adoData} month={month} onOpenConferences={() => setTab("ado_conferences")} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
@@ -1148,6 +1148,7 @@ export default function TvvMobilePage() {
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
           {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} />}
           {tab === "ado_accounts" && isAdoMode && <AdoAccountsPage data={adoData} />}
+          {tab === "ado_conferences" && isAdoMode && <AdoConferencesPage />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
           {tab === "about" && String(authenticatedAdvisorCode || userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPage />}
@@ -1536,7 +1537,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month }: any) {
+function AdoOverview({ data, month, onOpenConferences }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1565,7 +1566,11 @@ function AdoOverview({ data, month }: any) {
         })}
       </div>
     </section>
-    <AdoRecruitmentOverview recruitment={data.recruitment} />
+    <button className="ado-conference-home-card" type="button" onClick={onOpenConferences}>
+      <span><CalendarDays size={25} /></span>
+      <div><strong>Hội nghị khách hàng</strong><small>Upload đăng ký và theo dõi kết quả từ BC02</small></div>
+      <ChevronRight size={23} />
+    </button>
     {selectedAdoGroup && typeof document !== "undefined" && createPortal(
       <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedAdoGroup(null); }}>
         <section className="team-contract-modal board-contract-modal ado-group-contract-modal" role="dialog" aria-modal="true" aria-label={`Hợp đồng nhóm ${selectedAdoGroup}`}>
@@ -1699,6 +1704,125 @@ function AdoTargetsPage({ data, month }: any) {
         })}
       </div>
     </section>}
+  </section>;
+}
+
+function AdoConferencesPage() {
+  const [view, setView] = useState<"tracking" | "upload">("tracking");
+  const [conferences, setConferences] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [conferenceName, setConferenceName] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [deletingId, setDeletingId] = useState("");
+  const [noteCustomer, setNoteCustomer] = useState<any>(null);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const load = useCallback(async () => {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/customer-conferences", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không tải được danh sách hội nghị.");
+      setConferences(payload.conferences ?? []);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không tải được danh sách hội nghị."); }
+    finally { setBusy(false); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function upload(event: FormEvent) {
+    event.preventDefault();
+    if (!file || !conferenceName.trim() || !dateFrom || !dateTo) return;
+    setBusy(true); setError(""); setMessage("");
+    const form = new FormData(); form.set("conferenceName", conferenceName.trim()); form.set("dateFrom", dateFrom); form.set("dateTo", dateTo); form.set("file", file);
+    try {
+      const response = await fetch("/api/customer-conferences", { method: "POST", body: form });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Upload không thành công.");
+      setMessage(`Đã tạo hội nghị với ${payload.count} khách hàng đăng ký.`); setConferenceName(""); setDateFrom(""); setDateTo(""); setFile(null); setView("tracking"); await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Upload không thành công."); }
+    finally { setBusy(false); }
+  }
+
+  async function deleteConference(conference: any) {
+    if (!window.confirm(`Xóa hội nghị “${conference.conference_name}” và toàn bộ danh sách đăng ký?`)) return;
+    setDeletingId(conference.id); setError(""); setMessage("");
+    try {
+      const response = await fetch(`/api/customer-conferences/${conference.id}`, { method: "DELETE" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể xóa hội nghị.");
+      setExpanded(null); setMessage("Đã xóa hội nghị khách hàng."); await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể xóa hội nghị."); }
+    finally { setDeletingId(""); }
+  }
+
+  function openCustomerNote(customer: any) {
+    setNoteCustomer(customer);
+    setNoteDraft(customer.note || "");
+  }
+
+  async function saveCustomerNote(event: FormEvent) {
+    event.preventDefault();
+    if (!noteCustomer) return;
+    setNoteBusy(true); setError("");
+    try {
+      const response = await fetch(`/api/customer-conferences/registrations/${noteCustomer.id}/note`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: noteDraft })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể lưu ghi chú.");
+      setNoteCustomer(null); setMessage("Đã lưu ghi chú khách hàng."); await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể lưu ghi chú."); }
+    finally { setNoteBusy(false); }
+  }
+
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header ado-conference-page">
+    <nav className="ado-conference-tabs">
+      <button type="button" className={view === "tracking" ? "active" : ""} onClick={() => setView("tracking")}><BarChart3 size={18} />Theo dõi</button>
+      <button type="button" className={view === "upload" ? "active" : ""} onClick={() => setView("upload")}><UploadCloud size={18} />Upload</button>
+    </nav>
+    {error && <p className="ado-conference-alert error">{error}</p>}
+    {message && <p className="ado-conference-alert success">{message}</p>}
+    {view === "upload" ? <form className="ado-conference-upload" onSubmit={upload}>
+      <span className="ado-conference-upload-icon"><UploadCloud size={32} /></span><h2>Upload danh sách đăng ký</h2>
+      <p>File Excel gồm: Mã TVV, Tên TVV, Nhóm, Tên khách hàng và Phí đăng ký.</p>
+      <a className="ado-conference-template-button" href="/api/customer-conferences/template" download><Download size={18} />Tải mẫu Excel</a>
+      <label>Tên hội nghị<input value={conferenceName} onChange={(event) => setConferenceName(event.target.value)} placeholder="Ví dụ: Hội nghị khách hàng Nha Trang" required /></label>
+      <div className="ado-conference-date-fields"><label>Từ ngày<input type="date" value={dateFrom} max={dateTo || undefined} onChange={(event) => setDateFrom(event.target.value)} required /></label><label>Đến ngày<input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => setDateTo(event.target.value)} required /></label></div>
+      <label className="ado-conference-file"><input type="file" accept=".xlsx,.xls,.csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} required /><FileText size={22} /><span>{file?.name || "Chọn file Excel"}</span></label>
+      <button type="submit" disabled={busy || !file || !conferenceName.trim() || !dateFrom || !dateTo}>{busy ? <LoaderCircle className="spin" size={19} /> : <UploadCloud size={19} />}{busy ? "Đang upload…" : "Upload danh sách"}</button>
+    </form> : <div className="ado-conference-list">
+      {busy && !conferences.length && <p className="tvv-empty">Đang tải danh sách hội nghị…</p>}
+      {conferences.map((conference) => {
+        const open = expanded === conference.id;
+        return <article key={conference.id} className={open ? "expanded" : ""}>
+          <button type="button" className="ado-conference-heading" onClick={() => setExpanded(open ? null : conference.id)}>
+            <span><CalendarDays size={21} /></span><div><strong>{conference.conference_name}</strong><small>{formatDateVi(conference.date_from)} – {formatDateVi(conference.date_to)}</small></div>
+            <div className="ado-conference-totals"><b>{conference.registeredCustomers}<small>đăng ký</small></b><b>{formatCompactVnd(conference.totalFees)}<small>phí đăng ký</small></b></div><ChevronDown size={21} />
+          </button>
+          {open && <div className="ado-conference-customers">
+            <div className="ado-conference-summary"><span><b>{conference.attendedCustomers}</b> có hợp đồng</span><span><b>{formatCompactVnd(conference.totalRevenue)}</b> tổng AFYP</span></div>
+            <div className={`ado-conference-actions${conference.canManage ? "" : " export-only"}`}><a className="ado-conference-export-button" href={`/api/customer-conferences/${conference.id}/export`} download><Download size={17} />Xuất Excel</a>{conference.canManage && <button className="ado-conference-delete-button" type="button" disabled={deletingId === conference.id} onClick={() => void deleteConference(conference)}>{deletingId === conference.id ? <LoaderCircle className="spin" size={17} /> : <Trash2 size={17} />}{deletingId === conference.id ? "Đang xóa…" : "Xóa"}</button>}</div>
+            {(conference.registrations ?? []).map((customer: any) => <div className={customer.attended ? "attended" : ""} key={customer.id}>
+              <span className="status">{customer.attended ? <CheckCircle2 size={18} /> : <Hourglass size={18} />}</span><div><button className="ado-customer-name-button" type="button" onClick={() => openCustomerNote(customer)}>{customer.customer_name}</button><small>{customer.advisor_name}</small>{customer.note && <em className="ado-customer-note-preview">{customer.note}</em>}</div><div className="ado-customer-values"><span><small>Đăng ký</small><b>{formatCompactVnd(customer.registration_fee)}</b></span><span><small>Chốt</small><b>{customer.attended ? formatCompactVnd(customer.revenue) : "—"}</b></span></div>
+            </div>)}
+          </div>}
+        </article>;
+      })}
+      {!busy && !conferences.length && <p className="tvv-empty">Chưa có hội nghị nào được upload.</p>}
+    </div>}
+    {noteCustomer && typeof document !== "undefined" && createPortal(<div className="ado-note-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !noteBusy) setNoteCustomer(null); }}><form className="ado-note-modal" onSubmit={saveCustomerNote}>
+      <header><div><small>Ghi chú khách hàng</small><h2>{noteCustomer.customer_name}</h2><p>TVV: {noteCustomer.advisor_name}</p></div><button type="button" onClick={() => setNoteCustomer(null)} aria-label="Đóng"><X size={20} /></button></header>
+      <label>Nội dung ghi chú<textarea autoFocus maxLength={5000} rows={7} value={noteDraft} onChange={(event) => setNoteDraft(event.target.value)} placeholder="Nhập thông tin chăm sóc, phản hồi hoặc kết quả làm việc với khách hàng…" /></label>
+      {noteCustomer.note_updated_at && <small className="ado-note-updated">Cập nhật gần nhất: {new Date(noteCustomer.note_updated_at).toLocaleString("vi-VN")} · {noteCustomer.note_updated_by}</small>}
+      <div><button type="button" onClick={() => setNoteCustomer(null)} disabled={noteBusy}>Hủy</button><button type="submit" disabled={noteBusy}>{noteBusy ? <LoaderCircle className="spin" size={18} /> : <Check size={18} />}{noteBusy ? "Đang lưu…" : "Lưu ghi chú"}</button></div>
+    </form></div>, document.body)}
   </section>;
 }
 

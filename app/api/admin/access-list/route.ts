@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { parseAccessListDate } from "@/lib/access-list-dates";
+import { ADO_ACCOUNT_SEEDS } from "@/lib/ado-scope";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
@@ -125,7 +126,29 @@ export async function POST(request: NextRequest) {
     }
     if (existingError) throw existingError;
     const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
-    const usersWithPasswords = uniqueUsers.map((user) => {
+    // ADO accounts are application management accounts and are not guaranteed to
+    // be present in the TVV access-list workbook. Keep them active whenever that
+    // workbook is re-imported; otherwise the blanket disable below hides them and
+    // prevents them from signing in.
+    const importedUsers = new Map(uniqueUsers.map((user) => [user.advisor_code, user]));
+    for (const seed of ADO_ACCOUNT_SEEDS) {
+      const advisorCode = normalizeAdvisorCode(seed.advisor_code);
+      const imported = importedUsers.get(advisorCode);
+      importedUsers.set(advisorCode, {
+        advisor_code: advisorCode,
+        full_name: seed.full_name,
+        group_name: seed.group_name,
+        start_date: imported?.start_date ?? null,
+        advisor_status: imported?.advisor_status ?? null,
+        advisor_position: seed.advisor_position,
+        position_effective_date: imported?.position_effective_date ?? null,
+        birth_day: imported?.birth_day ?? null,
+        birth_month: imported?.birth_month ?? null,
+        is_active: true
+      });
+    }
+    const usersToUpsert = [...importedUsers.values()];
+    const usersWithPasswords = usersToUpsert.map((user) => {
       const current = passwords.get(user.advisor_code);
       if (current?.hash) {
         const preservedFields = hasPasswordPlainColumn
@@ -143,7 +166,7 @@ export async function POST(request: NextRequest) {
     if (disableError) throw disableError;
     const { error } = await supabase.from("authorized_users").upsert(usersWithPasswords, { onConflict: "advisor_code" });
     if (error) throw error;
-    return NextResponse.json({ ok: true, count: uniqueUsers.length });
+    return NextResponse.json({ ok: true, count: usersToUpsert.length });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không đọc được file." }, { status: 500 });
   }

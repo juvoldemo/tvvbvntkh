@@ -3798,3 +3798,155 @@ body [role="dialog"] button[aria-label^="Đóng"] svg {
   height: 18px !important;
   stroke-width: 2.2 !important;
 }
+/* Customer-conference segmented control. This file loads after globals.css,
+ * so keep the role-scoped rules here to prevent legacy ADO button colors from
+ * overriding the active/inactive states. */
+body .tvv-app.ado-app .ado-conference-tabs > button {
+  border: 1px solid #c9dce6 !important;
+  background: #fff !important;
+  color: #45677b !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app.ado-app .ado-conference-tabs > button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+body .tvv-app.ado-app .ado-conference-tabs > button.active {
+  border-color: var(--ado-navy) !important;
+  background: var(--ado-navy) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(6, 79, 123, .22) !important;
+}
+
+body .tvv-app.ado-app .ado-conference-list > article {
+  border-color: #d6e3ea !important;
+  background: #fff !important;
+  box-shadow: 0 8px 20px rgba(16, 62, 87, .07) !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading {
+  border: 0 !important;
+  background: #fff !important;
+  color: var(--ado-ink) !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading > span {
+  background: #e4f4f7 !important;
+  color: #007d91 !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading > div:nth-child(2) > strong {
+  color: var(--ado-ink) !important;
+  font-size: 15px !important;
+  line-height: 20px !important;
+  font-weight: 750 !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading > div:nth-child(2) > small {
+  color: #698293 !important;
+  font-size: 11px !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading .ado-conference-totals b {
+  color: #007f91 !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading .ado-conference-totals small {
+  color: #607d8e !important;
+}
+
+body .tvv-app.ado-app .ado-conference-heading > svg {
+  color: #486b7e !important;
+  stroke: currentColor !important;
+}
+
+body .tvv-app.ado-app .ado-conference-page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  padding-right: 16px !important;
+  padding-left: 16px !important;
+}
+
+body .tvv-app.ado-app .ado-conference-page > *,
+body .tvv-app.ado-app .ado-conference-tabs,
+body .tvv-app.ado-app .ado-conference-upload,
+body .tvv-app.ado-app .ado-conference-date-fields,
+body .tvv-app.ado-app .ado-conference-date-fields > label {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body .tvv-app.ado-app .ado-conference-tabs > button,
+body .tvv-app.ado-app .ado-conference-upload input,
+body .tvv-app.ado-app .ado-conference-file,
+body .tvv-app.ado-app .ado-conference-upload > button {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body .tvv-app.ado-app .ado-conference-upload p {
+  overflow-wrap: anywhere !important;
+}
+
+@media (max-width: 560px) {
+  body .tvv-app.ado-app .ado-conference-date-fields {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+body .tvv-app.ado-app .ado-conference-actions > .ado-conference-delete-button {
+  border: 1px solid #efb3b3 !important;
+  background: #fff !important;
+  color: #c83232 !important;
+  box-shadow: none !important;
+}
+
+body .tvv-app.ado-app .ado-conference-actions > .ado-conference-delete-button:hover {
+  background: #fff0f0 !important;
+}
+
+body .tvv-app.ado-app .ado-customer-name-button {
+  min-height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ado-ink) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+body .ado-note-modal > div:last-child > button {
+  min-height: 46px !important;
+  border: 1px solid #bfd1dc !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: #526f80 !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+}
+
+body .ado-note-modal > div:last-child > button[type="submit"] {
+  border-color: #075f87 !important;
+  background: #075f87 !important;
+  color: #fff !important;
+  box-shadow: 0 7px 16px rgba(7, 95, 135, .2) !important;
+}
+
+body .ado-note-modal > div:last-child > button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+body .ado-note-modal > div:last-child > button:disabled {
+  opacity: .55 !important;
+}

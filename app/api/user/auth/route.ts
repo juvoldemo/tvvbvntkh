@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ADO_ACCOUNT_SEEDS } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { USER_COOKIE, createUserToken, normalizeAdvisorCode, userCodeFromRequest, verifyPassword } from "@/lib/user-auth";
+import { USER_COOKIE, createUserToken, normalizeAdvisorCode, userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
 
 export async function GET(request: NextRequest) {
   const code = userCodeFromRequest(request);
@@ -12,13 +13,34 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const code = normalizeAdvisorCode(body.username);
     const password = String(body.password || "");
-    const { data, error } = await getSupabaseAdmin()
+    const supabase = getSupabaseAdmin();
+    let { data, error } = await supabase
       .from("authorized_users")
       .select("advisor_code,password_hash,is_active")
       .eq("advisor_code", code)
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: "Không thể kiểm tra thông tin đăng nhập. Vui lòng thử lại." }, { status: 500 });
+    const adoSeed = ADO_ACCOUNT_SEEDS.find((seed) => normalizeAdvisorCode(seed.advisor_code) === code);
+    if (adoSeed && !data?.is_active) {
+      const account = data
+        ? await supabase.from("authorized_users").update({
+            full_name: adoSeed.full_name,
+            group_name: adoSeed.group_name,
+            advisor_position: adoSeed.advisor_position,
+            is_active: true,
+            updated_at: new Date().toISOString()
+          }).eq("advisor_code", code).select("advisor_code,password_hash,is_active").single()
+        : await supabase.from("authorized_users").insert({
+            ...adoSeed,
+            advisor_code: code,
+            password_hash: visiblePasswordRecord("0000"),
+            is_active: true,
+            updated_at: new Date().toISOString()
+          }).select("advisor_code,password_hash,is_active").single();
+      if (account.error) return NextResponse.json({ error: "Không thể kích hoạt tài khoản ADO. Vui lòng thử lại." }, { status: 500 });
+      data = account.data;
+    }
     if (!data?.is_active) {
       return NextResponse.json({ error: "Mã TVV không đúng hoặc chưa được kích hoạt.", field: "username" }, { status: 401 });
     }

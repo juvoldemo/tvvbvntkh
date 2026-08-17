@@ -8,7 +8,7 @@ function secret() {
 }
 
 export function normalizeAdvisorCode(value: unknown) {
-  return String(value ?? "").trim().toUpperCase();
+  return String(value ?? "").replace(/\s+/g, "").toUpperCase();
 }
 
 export function hashPassword(password: string) {
