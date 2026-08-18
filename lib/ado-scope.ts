@@ -77,3 +77,13 @@ export const ADO_ACCOUNT_SEEDS = ADO_SCOPES.map(({ username, fullName, departmen
   group_name: department,
   advisor_position: "ADO"
 }));
+
+export const MANAGEMENT_ACCOUNT_SEEDS = [
+  ...ADO_ACCOUNT_SEEDS,
+  {
+    advisor_code: "boss",
+    full_name: "Boss",
+    group_name: "Toàn công ty",
+    advisor_position: "BOSS"
+  }
+];

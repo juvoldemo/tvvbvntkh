@@ -13,7 +13,7 @@ import { isGroupInManagedBoard } from "@/lib/board-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences";
+type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -1132,12 +1132,12 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
+            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "ado_report" ? "Báo cáo thúc đẩy TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} onOpenConferences={() => setTab("ado_conferences")} />
+            ? <AdoOverview data={adoData} month={month} onOpenConferences={() => setTab("ado_conferences")} onOpenReport={() => setTab("ado_report")} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
@@ -1149,6 +1149,7 @@ export default function TvvMobilePage() {
           {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} />}
           {tab === "ado_accounts" && isAdoMode && <AdoAccountsPage data={adoData} />}
           {tab === "ado_conferences" && isAdoMode && <AdoConferencesPage />}
+          {tab === "ado_report" && isAdoMode && <AdvisorActivityReportPage initialMonth={month} monthOptions={monthOptions} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
           {tab === "about" && String(authenticatedAdvisorCode || userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPage />}
@@ -1537,7 +1538,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month, onOpenConferences }: any) {
+function AdoOverview({ data, month, onOpenConferences, onOpenReport }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1571,6 +1572,11 @@ function AdoOverview({ data, month, onOpenConferences }: any) {
       <div><strong>Hội nghị khách hàng</strong><small>Upload đăng ký và theo dõi kết quả từ BC02</small></div>
       <ChevronRight size={23} />
     </button>
+    <button className="ado-conference-home-card ado-report-home-card" type="button" onClick={onOpenReport}>
+      <span><BarChart3 size={25} /></span>
+      <div><strong>Báo cáo thúc đẩy TVV</strong><small>Phân loại hoạt động, theo dõi hợp đồng và ghi chú phối hợp</small></div>
+      <ChevronRight size={23} />
+    </button>
     {selectedAdoGroup && typeof document !== "undefined" && createPortal(
       <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedAdoGroup(null); }}>
         <section className="team-contract-modal board-contract-modal ado-group-contract-modal" role="dialog" aria-modal="true" aria-label={`Hợp đồng nhóm ${selectedAdoGroup}`}>
@@ -1594,6 +1600,103 @@ function AdoOverview({ data, month, onOpenConferences }: any) {
       </div>,
       document.body
     )}
+  </section>;
+}
+
+const ACTIVITY_CLASSIFICATIONS = [
+  ["new_advisor", "TVV mới / TVV tháng trước chưa HĐ"],
+  ["conference", "KH đăng ký"],
+  ["conference_no_registration", "KH không đăng ký"],
+  ["tvcn", "TVCN"],
+  ["other", "Khác"]
+] as const;
+
+function notePreview(value: unknown) {
+  const words = String(value || "").trim().split(/\s+/).filter(Boolean);
+  return words.length > 4 ? `${words.slice(0, 4).join(" ")}…` : words.join(" ") || "—";
+}
+
+function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMonth: string; monthOptions: Array<{ value: string; label: string }> }) {
+  const [month, setMonth] = useState(initialMonth);
+  const [payload, setPayload] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [group, setGroup] = useState("");
+  const [historyAdvisor, setHistoryAdvisor] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [draftNote, setDraftNote] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const response = await fetch(`/api/advisor-activity-report?month=${month}`, { cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không tải được báo cáo.");
+      setPayload(data);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không tải được báo cáo."); }
+    finally { setLoading(false); }
+  }, [month]);
+  useEffect(() => { void load(); }, [load]);
+
+  const rows = useMemo(() => (payload?.rows ?? []).filter((row: any) => {
+    const haystack = `${row.advisorCode} ${row.advisorName} ${row.groupName}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const needle = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    return (!group || row.groupName === group) && (!needle || haystack.includes(needle));
+  }), [group, payload, query]);
+
+  async function openHistory(row: any) {
+    setHistoryAdvisor(row); setHistory([]); setDraftNote(""); setHistoryLoading(true);
+    try {
+      const response = await fetch(`/api/advisor-activity-notes?advisorCode=${encodeURIComponent(row.advisorCode)}`, { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không tải được lịch sử.");
+      setHistory(result.notes ?? []);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không tải được lịch sử."); }
+    finally { setHistoryLoading(false); }
+  }
+
+  async function addNote(event: FormEvent) {
+    event.preventDefault();
+    if (!historyAdvisor || !draftNote.trim() || noteSaving) return;
+    setNoteSaving(true); setError("");
+    try {
+      const response = await fetch("/api/advisor-activity-notes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ advisorCode: historyAdvisor.advisorCode, note: draftNote }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không lưu được ghi chú.");
+      setHistory((current) => [result.note, ...current]); setDraftNote("");
+      setPayload((current: any) => ({ ...current, rows: current.rows.map((item: any) => item.advisorCode === historyAdvisor.advisorCode ? { ...item, latestNotes: { ...item.latestNotes, ad: result.note } } : item) }));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không lưu được ghi chú."); }
+    finally { setNoteSaving(false); }
+  }
+
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header advisor-activity-report">
+    <div className="advisor-report-toolbar">
+      <MonthPicker value={month} options={monthOptions} onChange={setMonth} ariaLabel="Chọn tháng báo cáo" />
+      <label><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tìm mã TVV, tên TVV hoặc nhóm" /></label>
+      <select value={group} onChange={(event) => setGroup(event.target.value)} aria-label="Lọc nhóm"><option value="">Tất cả nhóm</option>{(payload?.groups ?? []).map((name: string) => <option key={name}>{name}</option>)}</select>
+    </div>
+    {error && <div className="advisor-report-error" role="alert">{error}<button type="button" onClick={() => void load()}>Thử lại</button></div>}
+    {loading ? <div className="advisor-report-state"><LoaderCircle className="spin" /> Đang tải báo cáo…</div> : rows.length === 0 ? <div className="advisor-report-state">Không có dữ liệu phù hợp.</div> : <><div className="advisor-report-table-wrap"><table><thead><tr>
+      {(["TT","Nhóm","Mã TVV","Tên TVV","Số HĐ","Tổng IP",...ACTIVITY_CLASSIFICATIONS.map((item) => item[1]),"AD","CQL","Ghi chú"] as string[]).map((title) => <th key={title}>{title}</th>)}
+    </tr></thead><tbody>{rows.map((row: any, index: number) => <tr key={row.advisorCode}>
+      <td>{index + 1}</td><td>{row.groupName}</td><td>{row.advisorCode}</td><td>{row.advisorName}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.totalIp)}</td>
+      {ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <td key={value}><span className={`classification-indicator${row.classification === value ? " active" : ""}`} aria-label={row.classification === value ? `${row.advisorName}: ${label}` : undefined}>{row.classification === value ? <Check size={14} /> : null}</span></td>)}
+      {(["ad", "cql", "note"] as const).map((role) => <td key={role}><button className="note-preview" onClick={() => void openHistory(row)} title={row.latestNotes?.[role]?.note || "Mở lịch sử ghi chú"}>{notePreview(row.latestNotes?.[role]?.note)}</button></td>)}
+    </tr>)}</tbody></table></div>
+    <div className="advisor-report-mobile-list">{rows.map((row: any, index: number) => <article className="advisor-report-mobile-card" key={row.advisorCode}>
+      <header><span>{index + 1}</span><div><strong>{row.advisorName}</strong><small>{row.advisorCode} · {row.groupName}</small></div><div className="advisor-mobile-stats"><b>{row.contractCount}<small>HĐ</small></b><b>{formatCompactVnd(row.totalIp)}<small>Tổng IP</small></b></div></header>
+      <section><h3>Phân loại từ dữ liệu tháng</h3><div className="advisor-mobile-classifications">{ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <div key={value} className={row.classification === value ? "active" : ""}><span>{row.classification === value ? <Check size={15} /> : null}</span>{label}</div>)}</div></section>
+      <section className="advisor-mobile-notes"><h3>Ghi chú phối hợp</h3>{(["ad", "cql", "note"] as const).map((role) => <button type="button" key={role} onClick={() => void openHistory(row)}><span>{role === "ad" ? "AD" : role === "cql" ? "CQL" : "Ghi chú"}</span><p>{notePreview(row.latestNotes?.[role]?.note)}</p><ChevronRight size={17} /></button>)}</section>
+      <button type="button" className="advisor-mobile-add-note" onClick={() => void openHistory(row)}><FileText size={17} /> Thêm ghi chú</button>
+    </article>)}</div></>}
+    {historyAdvisor && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setHistoryAdvisor(null); }}><section className="team-contract-modal advisor-note-modal" role="dialog" aria-modal="true">
+      <header><div><h2>Ghi chú · {historyAdvisor.advisorName}</h2><p>{historyAdvisor.advisorCode} · {historyAdvisor.groupName}</p></div><button type="button" onClick={() => setHistoryAdvisor(null)}><X /></button></header>
+      <form onSubmit={addNote}><textarea maxLength={4000} value={draftNote} onChange={(event) => setDraftNote(event.target.value)} placeholder="Nhập ghi chú phối hợp…" /><div><small>{draftNote.length}/4.000</small><button disabled={noteSaving || !draftNote.trim()}>{noteSaving ? "Đang lưu…" : "Thêm ghi chú"}</button></div></form>
+      <div className="advisor-note-history">{historyLoading ? <p>Đang tải lịch sử…</p> : history.map((item) => <article key={item.id}><span>{String(item.source_role).toUpperCase()}</span><p>{item.note}</p><small>{item.created_by} · {new Date(item.created_at).toLocaleString("vi-VN")}</small></article>)}{!historyLoading && !history.length && <p>Chưa có ghi chú.</p>}</div>
+    </section></div>, document.body)}
   </section>;
 }
 

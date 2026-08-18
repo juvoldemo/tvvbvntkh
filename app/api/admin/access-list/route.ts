@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { parseAccessListDate } from "@/lib/access-list-dates";
-import { ADO_ACCOUNT_SEEDS } from "@/lib/ado-scope";
+import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS } from "@/lib/ado-scope";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
@@ -50,9 +50,58 @@ function scoreUserRow(row: Record<string, unknown>) {
   ].reduce((score: number, value: unknown) => score + (value ? 1 : 0), 0);
 }
 
+async function restoreManagementAccounts(supabase: ReturnType<typeof getSupabaseAdmin>) {
+  const codes = MANAGEMENT_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code));
+  const adoCodes = new Set(ADO_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code)));
+  let { data: existing, error } = await supabase
+    .from("authorized_users")
+    .select("advisor_code,password_hash,password_plain")
+    .in("advisor_code", codes);
+  let hasPasswordPlainColumn = true;
+  if (error && missingPasswordPlainColumn(error)) {
+    const fallback = await supabase
+      .from("authorized_users")
+      .select("advisor_code,password_hash")
+      .in("advisor_code", codes);
+    existing = fallback.data?.map((item) => ({ ...item, password_plain: null })) ?? [];
+    error = fallback.error;
+    hasPasswordPlainColumn = false;
+  }
+  if (error) throw error;
+
+  const accounts = new Map((existing ?? []).map((item) => [normalizeAdvisorCode(item.advisor_code), item]));
+  const restored = MANAGEMENT_ACCOUNT_SEEDS.map((seed) => {
+    const advisorCode = normalizeAdvisorCode(seed.advisor_code);
+    const current = accounts.get(advisorCode);
+    const fixedAdoPassword = adoCodes.has(advisorCode);
+    const passwordHash = fixedAdoPassword ? visiblePasswordRecord("0000") : current?.password_hash || visiblePasswordRecord("0000");
+    return {
+      ...seed,
+      advisor_code: advisorCode,
+      password_hash: passwordHash,
+      ...(hasPasswordPlainColumn ? {
+        password_plain: fixedAdoPassword
+          ? "0000"
+          : current
+          ? current.password_plain || revealVisiblePassword(String(passwordHash)) || null
+          : "0000"
+      } : {}),
+      is_active: true,
+      updated_at: new Date().toISOString()
+    };
+  });
+  const restoredResult = await supabase.from("authorized_users").upsert(restored, { onConflict: "advisor_code" });
+  if (restoredResult.error) throw restoredResult.error;
+}
+
 export async function GET(request: NextRequest) {
   if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
   const supabase = getSupabaseAdmin();
+  try {
+    await restoreManagementAccounts(supabase);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Cannot restore management accounts." }, { status: 500 });
+  }
   const users: Record<string, unknown>[] = [];
   const pageSize = 1000;
   for (let from = 0; ; from += pageSize) {
@@ -126,12 +175,13 @@ export async function POST(request: NextRequest) {
     }
     if (existingError) throw existingError;
     const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
+    const adoCodes = new Set(ADO_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code)));
     // ADO accounts are application management accounts and are not guaranteed to
     // be present in the TVV access-list workbook. Keep them active whenever that
     // workbook is re-imported; otherwise the blanket disable below hides them and
     // prevents them from signing in.
     const importedUsers = new Map(uniqueUsers.map((user) => [user.advisor_code, user]));
-    for (const seed of ADO_ACCOUNT_SEEDS) {
+    for (const seed of MANAGEMENT_ACCOUNT_SEEDS) {
       const advisorCode = normalizeAdvisorCode(seed.advisor_code);
       const imported = importedUsers.get(advisorCode);
       importedUsers.set(advisorCode, {
@@ -149,6 +199,14 @@ export async function POST(request: NextRequest) {
     }
     const usersToUpsert = [...importedUsers.values()];
     const usersWithPasswords = usersToUpsert.map((user) => {
+      if (adoCodes.has(user.advisor_code)) {
+        return {
+          ...user,
+          password_hash: visiblePasswordRecord("0000"),
+          ...(hasPasswordPlainColumn ? { password_plain: "0000" } : {}),
+          updated_at: new Date().toISOString()
+        };
+      }
       const current = passwords.get(user.advisor_code);
       if (current?.hash) {
         const preservedFields = hasPasswordPlainColumn
@@ -190,7 +248,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const now = new Date().toISOString();
-    const updates = rows.map((user) => {
+    const adoCodes = new Set(ADO_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code)));
+    const updates = rows.filter((user) => !adoCodes.has(normalizeAdvisorCode(user.advisor_code))).map((user) => {
       const password = randomStrongPassword();
       return {
         id: user.id,

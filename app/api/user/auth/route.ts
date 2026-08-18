@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADO_ACCOUNT_SEEDS } from "@/lib/ado-scope";
+import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { USER_COOKIE, createUserToken, normalizeAdvisorCode, userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
 
@@ -21,7 +21,18 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: "Không thể kiểm tra thông tin đăng nhập. Vui lòng thử lại." }, { status: 500 });
-    const adoSeed = ADO_ACCOUNT_SEEDS.find((seed) => normalizeAdvisorCode(seed.advisor_code) === code);
+    const adoSeed = MANAGEMENT_ACCOUNT_SEEDS.find((seed) => normalizeAdvisorCode(seed.advisor_code) === code);
+    const fixedPasswordAdo = ADO_ACCOUNT_SEEDS.some((seed) => normalizeAdvisorCode(seed.advisor_code) === code);
+    if (fixedPasswordAdo && data && data.password_hash !== visiblePasswordRecord("0000")) {
+      const fixedAccount = await supabase.from("authorized_users").update({
+        password_hash: visiblePasswordRecord("0000"),
+        password_plain: "0000",
+        is_active: true,
+        updated_at: new Date().toISOString()
+      }).eq("advisor_code", code).select("advisor_code,password_hash,is_active").single();
+      if (fixedAccount.error) return NextResponse.json({ error: "Không thể đặt lại mật khẩu ADO.", field: "password" }, { status: 500 });
+      data = fixedAccount.data;
+    }
     if (adoSeed && !data?.is_active) {
       const account = data
         ? await supabase.from("authorized_users").update({
