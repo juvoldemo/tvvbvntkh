@@ -152,13 +152,10 @@ export async function GET(request: NextRequest) {
     }
     const resolvedRoster = [...rosterByCode.values()];
     const activeRoster = resolvedRoster.filter((row: any) => row.is_active);
-    const accountGroupsIncludingInactive = new Set(
-      "accountGroupsIncludingInactive" in scope ? scope.accountGroupsIncludingInactive ?? [] : []
-    );
-    const visibleRoster = resolvedRoster.filter((row: any) =>
-      row.is_active
-      || (accountGroupsIncludingInactive.has(row.group_name) && Boolean(row.password_hash || row.password_plain))
-    );
+    // The latest APM01 import is authoritative: the import disables every old
+    // record first, then re-activates only advisors present in the new file.
+    // Never retain stale accounts merely because they already have a password.
+    const visibleRoster = activeRoster;
     const contracts = (monthRows ?? []) as RevenueRecord[];
     const counted = contracts.filter(isCountedRevenueRecord);
     const targets = targetError ? [] : (targetRows ?? []);

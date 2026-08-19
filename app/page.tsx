@@ -1616,12 +1616,23 @@ function AdoOverview({ data, month, onOpenConferences, onOpenReport }: any) {
 }
 
 const ACTIVITY_CLASSIFICATIONS = [
-  ["new_advisor", "TVV mới / TVV tháng trước chưa HĐ"],
+  ["new_advisor", "TVV mới chưa HĐ"],
   ["conference", "KH đăng ký"],
   ["conference_no_registration", "KH không đăng ký"],
   ["tvcn", "TVCN"],
   ["other", "Khác"]
 ] as const;
+
+function activityCell(row: any, value: typeof ACTIVITY_CLASSIFICATIONS[number][0], label: string, onOpenCustomers?: () => void) {
+  if (value === "new_advisor") return row.newAdvisorMonth ? <span className="activity-data-badge">T{row.newAdvisorMonth}</span> : <span className="activity-empty">—</span>;
+  if (value === "conference") return row.registeredCustomers > 0
+    ? <button type="button" className="activity-data-value activity-customer-button" onClick={onOpenCustomers}><b>{row.registeredCustomers} KH</b><small>{formatCompactVnd(row.registrationFee)} · xem chi tiết</small></button>
+    : <span className="activity-empty">—</span>;
+  if (value === "conference_no_registration") return row.customersWithoutRegistration > 0
+    ? <span className="activity-data-value"><b>{row.customersWithoutRegistration} KH</b><small>không có phí</small></span>
+    : <span className="activity-empty">—</span>;
+  return <span className={`classification-indicator${row.classification === value ? " active" : ""}`} aria-label={row.classification === value ? `${row.advisorName}: ${label}` : undefined}>{row.classification === value ? <Check size={14} /> : null}</span>;
+}
 
 function notePreview(value: unknown) {
   const words = String(value || "").trim().split(/\s+/).filter(Boolean);
@@ -1640,6 +1651,31 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
   const [historyLoading, setHistoryLoading] = useState(false);
   const [draftNote, setDraftNote] = useState("");
   const [noteSaving, setNoteSaving] = useState(false);
+  const [customerAdvisor, setCustomerAdvisor] = useState<any>(null);
+  const [customerNoteDrafts, setCustomerNoteDrafts] = useState<Record<string, string>>({});
+  const [customerNoteSaving, setCustomerNoteSaving] = useState("");
+
+  function openRegisteredCustomers(row: any) {
+    setCustomerAdvisor(row);
+    setCustomerNoteDrafts(Object.fromEntries((row.registeredCustomerDetails ?? []).flatMap((customer: any) => [
+      [`${customer.id}:ad`, customer.adNote || ""], [`${customer.id}:cql`, customer.cqlNote || ""]
+    ])));
+  }
+
+  async function saveRegistrationNote(customer: any, role: "ad" | "cql") {
+    const key = `${customer.id}:${role}`;
+    setCustomerNoteSaving(key); setError("");
+    try {
+      const response = await fetch(`/api/customer-conferences/registrations/${customer.id}/note`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, note: customerNoteDrafts[key] || "" })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không lưu được ghi chú khách hàng.");
+      await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không lưu được ghi chú khách hàng."); }
+    finally { setCustomerNoteSaving(""); }
+  }
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -1695,15 +1731,26 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
       {(["TT","Nhóm","Mã TVV","Tên TVV","Số HĐ","Tổng IP",...ACTIVITY_CLASSIFICATIONS.map((item) => item[1]),"AD","CQL","Ghi chú"] as string[]).map((title) => <th key={title}>{title}</th>)}
     </tr></thead><tbody>{rows.map((row: any, index: number) => <tr key={row.advisorCode}>
       <td>{index + 1}</td><td>{row.groupName}</td><td>{row.advisorCode}</td><td>{row.advisorName}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.totalIp)}</td>
-      {ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <td key={value}><span className={`classification-indicator${row.classification === value ? " active" : ""}`} aria-label={row.classification === value ? `${row.advisorName}: ${label}` : undefined}>{row.classification === value ? <Check size={14} /> : null}</span></td>)}
+      {ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <td key={value}>{activityCell(row, value, label, () => openRegisteredCustomers(row))}</td>)}
       {(["ad", "cql", "note"] as const).map((role) => <td key={role}><button className="note-preview" onClick={() => void openHistory(row)} title={row.latestNotes?.[role]?.note || "Mở lịch sử ghi chú"}>{notePreview(row.latestNotes?.[role]?.note)}</button></td>)}
     </tr>)}</tbody></table></div>
     <div className="advisor-report-mobile-list">{rows.map((row: any, index: number) => <article className="advisor-report-mobile-card" key={row.advisorCode}>
       <header><span>{index + 1}</span><div><strong>{row.advisorName}</strong><small>{row.advisorCode} · {row.groupName}</small></div><div className="advisor-mobile-stats"><b>{row.contractCount}<small>HĐ</small></b><b>{formatCompactVnd(row.totalIp)}<small>Tổng IP</small></b></div></header>
-      <section><h3>Phân loại từ dữ liệu tháng</h3><div className="advisor-mobile-classifications">{ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <div key={value} className={row.classification === value ? "active" : ""}><span>{row.classification === value ? <Check size={15} /> : null}</span>{label}</div>)}</div></section>
+      <section><h3>Dữ liệu hoạt động trong tháng</h3><div className="advisor-mobile-classifications">{ACTIVITY_CLASSIFICATIONS.map(([value, label]) => {
+        const hasData = value === "new_advisor" ? Boolean(row.newAdvisorMonth) : value === "conference" ? row.registeredCustomers > 0 : value === "conference_no_registration" ? row.customersWithoutRegistration > 0 : row.classification === value;
+        return <div key={value} className={hasData ? "active" : ""}><span>{hasData ? <Check size={15} /> : null}</span><div>{label}{value === "new_advisor" && row.newAdvisorMonth ? <small>TVV tháng {row.newAdvisorMonth}</small> : null}{value === "conference" && row.registeredCustomers > 0 ? <small>{row.registeredCustomers} KH · {formatCompactVnd(row.registrationFee)}</small> : null}{value === "conference_no_registration" && row.customersWithoutRegistration > 0 ? <small>{row.customersWithoutRegistration} KH không có phí đăng ký</small> : null}</div></div>;
+      })}</div></section>
       <section className="advisor-mobile-notes"><h3>Ghi chú phối hợp</h3>{(["ad", "cql", "note"] as const).map((role) => <button type="button" key={role} onClick={() => void openHistory(row)}><span>{role === "ad" ? "AD" : role === "cql" ? "CQL" : "Ghi chú"}</span><p>{notePreview(row.latestNotes?.[role]?.note)}</p><ChevronRight size={17} /></button>)}</section>
       <button type="button" className="advisor-mobile-add-note" onClick={() => void openHistory(row)}><FileText size={17} /> Thêm ghi chú</button>
     </article>)}</div></>}
+    {customerAdvisor && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !customerNoteSaving) setCustomerAdvisor(null); }}><section className="team-contract-modal advisor-customer-modal" role="dialog" aria-modal="true">
+      <header><div><h2>Khách hàng đăng ký · {customerAdvisor.advisorName}</h2><p>{customerAdvisor.advisorCode} · {customerAdvisor.groupName} · {(customerAdvisor.registeredCustomerDetails ?? []).length} khách</p></div><button type="button" onClick={() => setCustomerAdvisor(null)} aria-label="Đóng"><X size={22} /></button></header>
+      <div className="advisor-customer-list">{(customerAdvisor.registeredCustomerDetails ?? []).map((customer: any) => <article key={customer.id} className={customer.closed ? "closed" : "pending"}>
+        <div className="advisor-customer-heading"><div><strong>{customer.customerName}</strong><small>{customer.conferenceName} · Phí {formatCompactVnd(customer.registrationFee)}</small></div><span>{customer.closed ? <><CheckCircle2 size={16} /> Đã chốt</> : <><Hourglass size={16} /> Chưa chốt</>}</span></div>
+        <div className="advisor-customer-contract"><span>Số HĐ <b>{customer.contractCount}</b></span><span>AFYP <b>{customer.closed ? formatCompactVnd(customer.revenue) : "—"}</b></span><span>Tình trạng <b>{customer.statuses?.join(", ") || "Chưa phát sinh"}</b></span></div>
+        {(["ad", "cql"] as const).map((role) => { const key = `${customer.id}:${role}`; return <label className="advisor-customer-note" key={role}><span>Ghi chú {role.toUpperCase()}</span><textarea maxLength={5000} rows={2} value={customerNoteDrafts[key] ?? ""} onChange={(event) => setCustomerNoteDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={`Nhập ghi chú của ${role.toUpperCase()}…`} /><button type="button" disabled={Boolean(customerNoteSaving)} onClick={() => void saveRegistrationNote(customer, role)}>{customerNoteSaving === key ? <LoaderCircle className="spin" size={15} /> : <Check size={15} />} Lưu {role.toUpperCase()}</button></label>; })}
+      </article>)}</div>
+    </section></div>, document.body)}
     {historyAdvisor && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setHistoryAdvisor(null); }}><section className="team-contract-modal advisor-note-modal" role="dialog" aria-modal="true">
       <header><div><h2>Ghi chú · {historyAdvisor.advisorName}</h2><p>{historyAdvisor.advisorCode} · {historyAdvisor.groupName}</p></div><button type="button" onClick={() => setHistoryAdvisor(null)}><X /></button></header>
       <form onSubmit={addNote}><textarea maxLength={4000} value={draftNote} onChange={(event) => setDraftNote(event.target.value)} placeholder="Nhập ghi chú phối hợp…" /><div><small>{draftNote.length}/4.000</small><button disabled={noteSaving || !draftNote.trim()}>{noteSaving ? "Đang lưu…" : "Thêm ghi chú"}</button></div></form>
