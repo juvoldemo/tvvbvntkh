@@ -1,4 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+let adminClient: SupabaseClient<any> | null = null;
 
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,10 +10,16 @@ export function getSupabaseAdmin() {
     throw new Error("Missing Supabase environment variables.");
   }
 
-  return createClient(url, serviceRoleKey, {
+  if (adminClient) return adminClient;
+
+  adminClient = createClient<any>(url, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
+    },
+    global: {
+      headers: { "X-Client-Info": "bvnt-dashboard-server" }
     }
   });
+  return adminClient;
 }

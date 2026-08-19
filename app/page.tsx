@@ -632,7 +632,11 @@ export default function TvvMobilePage() {
       return;
     }
     let active = true;
-    const loadCycle = () => fetch("/api/target-registration-cycle", { cache: "no-store" })
+    let loading = false;
+    const loadCycle = () => {
+      if (loading || document.visibilityState !== "visible") return Promise.resolve();
+      loading = true;
+      return fetch("/api/target-registration-cycle")
       .then((response) => response.ok ? response.json() : null)
       .then((payload) => {
         const activeMonth = String(payload?.cycle?.activeMonth || "").slice(0, 7);
@@ -641,10 +645,12 @@ export default function TvvMobilePage() {
           setTargetRegistrationClosed(Boolean(payload?.cycle?.activeMonthSaved));
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => { loading = false; });
+    };
     const onFocus = () => { void loadCycle(); };
     void loadCycle();
-    const timer = window.setInterval(loadCycle, 15_000);
+    const timer = window.setInterval(loadCycle, 60_000);
     window.addEventListener("focus", onFocus);
     return () => {
       active = false;
@@ -670,14 +676,20 @@ export default function TvvMobilePage() {
 
   useEffect(() => {
     let active = true;
-    const loadEvents = () => fetch("/api/events", { cache: "no-store" })
+    let loading = false;
+    const loadEvents = () => {
+      if (loading || document.visibilityState !== "visible") return Promise.resolve();
+      loading = true;
+      return fetch("/api/events")
       .then((response) => response.ok ? response.json() : { events: [] })
       .then((payload) => { if (active) setAdminEvents(payload.events ?? []); })
-      .catch(() => { if (active) setAdminEvents([]); });
+      .catch(() => { if (active) setAdminEvents([]); })
+      .finally(() => { loading = false; });
+    };
     void loadEvents();
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void loadEvents();
-    }, 10000);
+    }, 30_000);
     const refreshVisible = () => { if (document.visibilityState === "visible") void loadEvents(); };
     document.addEventListener("visibilitychange", refreshVisible);
     return () => {

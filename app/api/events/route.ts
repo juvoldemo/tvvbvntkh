@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
+import { cached, clearCached } from "@/lib/server-cache";
 
 const AUDIENCE_PREFIX = "audience:";
 
@@ -23,22 +24,23 @@ function eventAudiences(eventType: unknown) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await getSupabaseAdmin()
-      .from("admin_events")
-      .select("id,title,content,event_date,event_type,created_at")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) throw error;
-    if (isAdminRequest(request)) return NextResponse.json({ events: data ?? [] });
+    const data = await cached("events:active", 10_000, async () => {
+      const result = await getSupabaseAdmin().from("admin_events")
+        .select("id,title,content,event_date,event_type,created_at")
+        .eq("is_active", true).order("created_at", { ascending: false }).limit(50);
+      if (result.error) throw result.error;
+      return result.data ?? [];
+    });
+    if (isAdminRequest(request)) return NextResponse.json({ events: data });
 
     const advisorCode = userCodeFromRequest(request);
     if (!advisorCode) return NextResponse.json({ events: [] });
-    const { data: user, error: userError } = await getSupabaseAdmin().from("authorized_users")
-      .select("advisor_position")
-      .eq("advisor_code", advisorCode)
-      .maybeSingle();
-    if (userError) throw userError;
+    const user = await cached(`events:user:${advisorCode}`, 60_000, async () => {
+      const result = await getSupabaseAdmin().from("authorized_users").select("advisor_position")
+        .eq("advisor_code", advisorCode).maybeSingle();
+      if (result.error) throw result.error;
+      return result.data;
+    });
     const role = audienceRole(user?.advisor_position);
     const now = Date.now();
     const events = (data ?? []).filter((item: any) => {
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
     .select("id,title,content,event_date,event_type,created_at")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  clearCached("events:");
   return NextResponse.json({ event: data });
 }
 
@@ -78,5 +81,6 @@ export async function DELETE(request: NextRequest) {
   if (!id) return NextResponse.json({ error: "Thiếu mã sự kiện." }, { status: 400 });
   const { error } = await getSupabaseAdmin().from("admin_events").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  clearCached("events:");
   return NextResponse.json({ ok: true });
 }
