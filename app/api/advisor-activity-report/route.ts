@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const [notes, registrations] = await Promise.all([
       codes.length ? actor.supabase.from("advisor_activity_notes").select("id,advisor_code,source_role,note,created_by,created_at")
         .in("advisor_code", codes).order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
-      conferenceIds.length ? actor.supabase.from("customer_conference_registrations").select("id,advisor_code,conference_id,customer_name,registration_fee,ad_note,ad_note_updated_by,ad_note_updated_at,cql_note,cql_note_updated_by,cql_note_updated_at")
+      conferenceIds.length ? actor.supabase.from("customer_conference_registrations").select("id,advisor_code,conference_id,customer_name,registration_fee,ad_note,ad_note_updated_by,ad_note_updated_at")
         .in("conference_id", conferenceIds).in("advisor_code", codes) : Promise.resolve({ data: [], error: null })
     ]);
     if (notes.error) throw notes.error;
@@ -93,8 +93,7 @@ export async function GET(request: NextRequest) {
           closed: matches.length > 0, contractCount: matches.length,
           revenue: matches.reduce((sum: number, contract: any) => sum + (Number(contract.afyp) || 0), 0),
           statuses: [...new Set(matches.map((contract: any) => String(contract.policy_status || "Đã ghi nhận")))],
-          adNote: registration.ad_note ?? "", adNoteUpdatedBy: registration.ad_note_updated_by, adNoteUpdatedAt: registration.ad_note_updated_at,
-          cqlNote: registration.cql_note ?? "", cqlNoteUpdatedBy: registration.cql_note_updated_by, cqlNoteUpdatedAt: registration.cql_note_updated_at
+          adNote: registration.ad_note ?? "", adNoteUpdatedBy: registration.ad_note_updated_by, adNoteUpdatedAt: registration.ad_note_updated_at
         };
       });
       return {
@@ -106,7 +105,12 @@ export async function GET(request: NextRequest) {
         customersWithoutRegistration: conferenceStats.customersWithoutRegistration,
         registeredCustomerDetails,
         classification,
-        latestNotes: { ad: latest.get(`${advisor.advisor_code}:ad`) ?? null, cql: latest.get(`${advisor.advisor_code}:cql`) ?? null, note: latest.get(`${advisor.advisor_code}:note`) ?? null }
+        latestNotes: {
+          ad: latest.get(`${advisor.advisor_code}:ad`) ?? null,
+          note: latest.get(`${advisor.advisor_code}:note`) ?? null,
+          tvcn: latest.get(`${advisor.advisor_code}:tvcn`) ?? null,
+          other: latest.get(`${advisor.advisor_code}:other`) ?? null
+        }
       };
     });
     return NextResponse.json({ month, groups: actor.groups, rows }, { headers: { "Cache-Control": "no-store" } });

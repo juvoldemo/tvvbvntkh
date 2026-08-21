@@ -19,7 +19,4 @@ create index if not exists idx_conference_registrations_advisor_conference
 alter table public.customer_conference_registrations
   add column if not exists ad_note text,
   add column if not exists ad_note_updated_by text,
-  add column if not exists ad_note_updated_at timestamptz,
-  add column if not exists cql_note text,
-  add column if not exists cql_note_updated_by text,
-  add column if not exists cql_note_updated_at timestamptz;
+  add column if not exists ad_note_updated_at timestamptz;

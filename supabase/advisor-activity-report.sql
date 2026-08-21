@@ -30,11 +30,14 @@ create table if not exists public.advisor_activity_classifications (
 create table if not exists public.advisor_activity_notes (
   id uuid primary key default gen_random_uuid(),
   advisor_code text not null,
-  source_role text not null check (source_role in ('ad','cql','note')),
+  source_role text not null check (source_role in ('ad','note','tvcn','other')),
   note text not null check (char_length(btrim(note)) between 1 and 4000),
   created_by text not null,
   created_at timestamptz not null default now()
 );
+alter table public.advisor_activity_notes drop constraint if exists advisor_activity_notes_source_role_check;
+alter table public.advisor_activity_notes add constraint advisor_activity_notes_source_role_check
+  check (source_role in ('ad','note','tvcn','other'));
 create index if not exists advisor_activity_notes_advisor_created_idx on public.advisor_activity_notes(advisor_code, created_at desc);
 create index if not exists ads_group_assignments_group_idx on public.ads_group_assignments(group_name);
 
@@ -64,7 +67,7 @@ create policy "ads read scoped notes" on public.advisor_activity_notes for selec
 );
 drop policy if exists "ads insert scoped ad notes" on public.advisor_activity_notes;
 create policy "ads insert scoped ad notes" on public.advisor_activity_notes for insert to authenticated with check (
-  source_role='ad' and exists (select 1 from public.authorized_users u join public.ads_group_assignments g on g.group_name=u.group_name
+  source_role in ('ad','note','tvcn','other') and exists (select 1 from public.authorized_users u join public.ads_group_assignments g on g.group_name=u.group_name
     join public.ads_accounts a on a.user_id=g.ads_user_id where g.ads_user_id=auth.uid() and a.is_active
     and u.advisor_code=advisor_activity_notes.advisor_code and u.is_active)
 );

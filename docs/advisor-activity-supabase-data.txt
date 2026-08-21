@@ -1,0 +1,187 @@
+HƯỚNG DẪN DỮ LIỆU SUPABASE - BÁO CÁO THÚC ĐẨY TVV
+==================================================
+
+Bảng "Báo cáo thúc đẩy TVV" không được lưu nguyên khối trong một bảng Supabase.
+API tổng hợp dữ liệu từ nhiều bảng tại:
+app/api/advisor-activity-report/route.ts
+
+
+1. NGUỒN DỮ LIỆU CỦA TỪNG CỘT
+--------------------------------
+
+Nhóm, mã TVV, tên TVV
+- Bảng: authorized_users
+- Cột: group_name, advisor_code, full_name
+
+Ngày bắt đầu và trạng thái TVV
+- Bảng: authorized_users
+- Cột: start_date, advisor_status, is_active
+
+Số hợp đồng
+- Bảng: revenue_records
+- Ghép revenue_records.agent_code với authorized_users.advisor_code
+- Lọc theo revenue_records.data_month
+- Đếm hợp đồng sau khi loại trạng thái không hợp lệ và chống trùng hợp đồng
+
+Tổng IP
+- Bảng: revenue_records
+- Cột: ip
+- Cộng IP của các hợp đồng hợp lệ theo từng agent_code và data_month
+
+TVV mới chưa có hợp đồng
+- Không lưu trực tiếp trong một cột
+- Được tính từ authorized_users.start_date và số hợp đồng hợp lệ
+- TVV phải không có hợp đồng và có ngày bắt đầu nằm trong cửa sổ ba tháng của tháng báo cáo
+
+Khách hàng đăng ký
+- Bảng: customer_conference_registrations
+- Cột: advisor_code, customer_name, registration_fee, conference_id
+- registration_fee > 0 được tính là khách hàng đăng ký có phí
+
+Khách hàng không đăng ký/không có phí
+- Bảng: customer_conference_registrations
+- Điều kiện: registration_fee = 0
+
+Tên và thời gian chương trình
+- Bảng: customer_conferences
+- Cột: id, conference_name, activity_type, date_from, date_to
+- Ghép customer_conference_registrations.conference_id với customer_conferences.id
+
+Phân loại HNKH, TVCN hoặc Khác
+- Bảng: customer_conferences
+- Cột: activity_type
+- Giá trị được sử dụng: conference, tvcn, other
+
+Ghi chú AD theo từng khách hàng đăng ký
+- Bảng: customer_conference_registrations
+- Cột: ad_note, ad_note_updated_by, ad_note_updated_at
+
+Ghi chú AD theo TVV
+- Bảng: advisor_activity_notes
+- Điều kiện: source_role = 'ad'
+
+Ghi chú chung
+- Bảng: advisor_activity_notes
+- Điều kiện: source_role = 'note'
+
+Ghi chú khi bấm TVCN
+- Bảng: advisor_activity_notes
+- Điều kiện: source_role = 'tvcn'
+
+Ghi chú khi bấm Khác
+- Bảng: advisor_activity_notes
+- Điều kiện: source_role = 'other'
+
+
+2. QUY TẮC TỔNG HỢP
+---------------------
+
+- Chỉ lấy TVV có authorized_users.is_active = true.
+- Chỉ lấy TVV có authorized_users.advisor_status = 'Hoạt động'.
+- Chỉ lấy TVV thuộc các nhóm mà tài khoản ADO được phép quản lý.
+- data_month có dạng ngày đầu tháng, ví dụ tháng 08/2026 là 2026-08-01.
+- Hợp đồng được chống trùng theo contract_no; nếu thiếu contract_no thì dùng application_no.
+- Không tính các trạng thái: hết hiệu lực, trì hoãn, từ chối, YCBH hết hiệu lực và hoàn phí.
+- TVCN và Khác được xác định từ customer_conferences.activity_type.
+- Với mỗi source_role, báo cáo lấy ghi chú mới nhất theo created_at giảm dần.
+- Chi tiết khách hàng được đối chiếu với hợp đồng bằng tên BMBH hoặc NĐBH và khoảng ngày của chương trình.
+
+
+3. API TỔNG HỢP CÓ SẴN
+------------------------
+
+Nếu dự án khác dùng chung hệ thống xác thực, nên gọi API có sẵn:
+
+GET /api/advisor-activity-report?month=2026-08
+
+Ví dụ kết quả:
+
+{
+  "month": "2026-08",
+  "groups": ["Hồng Phát"],
+  "rows": [
+    {
+      "advisorCode": "D267647487",
+      "advisorName": "Đặng Thị Tường Uyên",
+      "groupName": "Hồng Phát",
+      "contractCount": 0,
+      "totalIp": 0,
+      "newAdvisorMonth": null,
+      "registeredCustomers": 1,
+      "registrationFee": 25000000,
+      "customersWithoutRegistration": 0,
+      "classification": "conference",
+      "latestNotes": {
+        "ad": null,
+        "note": null,
+        "tvcn": null,
+        "other": null
+      }
+    }
+  ]
+}
+
+API này yêu cầu người dùng đã đăng nhập và có quyền ADO. Kết quả cũng được giới hạn theo các nhóm mà tài khoản được phép quản lý.
+
+
+4. VÍ DỤ ĐỌC TRỰC TIẾP BẰNG SUPABASE JAVASCRIPT
+------------------------------------------------
+
+const monthStart = "2026-08-01";
+
+const { data: advisors } = await supabase
+  .from("authorized_users")
+  .select("advisor_code,full_name,group_name,start_date,advisor_position")
+  .eq("is_active", true)
+  .eq("advisor_status", "Hoạt động");
+
+const { data: revenue } = await supabase
+  .from("revenue_records")
+  .select("agent_code,contract_no,application_no,ip,afyp,paid_date,policy_status")
+  .eq("data_month", monthStart);
+
+const { data: conferences } = await supabase
+  .from("customer_conferences")
+  .select("id,conference_name,activity_type,date_from,date_to");
+
+const { data: registrations } = await supabase
+  .from("customer_conference_registrations")
+  .select("id,conference_id,advisor_code,customer_name,registration_fee,ad_note,ad_note_updated_by,ad_note_updated_at");
+
+const { data: notes } = await supabase
+  .from("advisor_activity_notes")
+  .select("id,advisor_code,source_role,note,created_by,created_at")
+  .order("created_at", { ascending: false });
+
+
+5. QUAN HỆ GIỮA CÁC BẢNG
+-------------------------
+
+authorized_users.advisor_code
+  = revenue_records.agent_code
+  = customer_conference_registrations.advisor_code
+  = advisor_activity_notes.advisor_code
+
+customer_conferences.id
+  = customer_conference_registrations.conference_id
+
+
+6. LƯU Ý BẢO MẬT
+-----------------
+
+- Không đưa SUPABASE_SERVICE_ROLE_KEY vào mã chạy trên trình duyệt.
+- Service Role Key chỉ được sử dụng trong API hoặc server riêng.
+- Nếu đọc Supabase trực tiếp từ trình duyệt, cần cấu hình RLS phù hợp.
+- Dự án khác cần áp dụng cùng quy tắc phạm vi nhóm để tránh lộ dữ liệu của nhóm khác.
+
+
+7. CÁC FILE SCHEMA LIÊN QUAN
+-----------------------------
+
+- supabase/schema.sql
+- supabase/customer-conferences.sql
+- supabase/advisor-activity-report.sql
+- supabase/performance-indexes.sql
+- app/api/advisor-activity-report/route.ts
+- app/api/advisor-activity-notes/route.ts
+

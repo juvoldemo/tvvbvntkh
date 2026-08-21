@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
+import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
@@ -1149,7 +1149,7 @@ export default function TvvMobilePage() {
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} onOpenConferences={() => setTab("ado_conferences")} onOpenReport={() => setTab("ado_report")} />
+            ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
@@ -1550,7 +1550,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month, onOpenConferences, onOpenReport }: any) {
+function AdoOverview({ data, month, onOpenReport }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1562,6 +1562,11 @@ function AdoOverview({ data, month, onOpenConferences, onOpenReport }: any) {
       .sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")))
     : [];
   return <section className="tvv-content team-dashboard ado-dashboard">
+    <button className="ado-conference-home-card ado-report-home-card" type="button" onClick={onOpenReport}>
+      <span><BarChart3 size={25} /></span>
+      <div><strong>Báo cáo thúc đẩy TVV</strong><small>Phân loại hoạt động, theo dõi hợp đồng và ghi chú phối hợp</small></div>
+      <ChevronRight size={23} />
+    </button>
     <section className="ado-command-card">
       <div><span>DOANH THU KHU VỰC</span><strong>{formatCompactVnd(summary.afyp)}</strong><small>{summary.contracts || 0} hợp đồng · {summary.activeAdvisors || 0} TVV hoạt động</small></div>
       <div className="ado-target-ring" style={{ "--ado-progress": `${Math.min(100, targetRate)}%` } as any}><b>{targetRate}%</b><span>mục tiêu</span></div>
@@ -1579,16 +1584,6 @@ function AdoOverview({ data, month, onOpenConferences, onOpenReport }: any) {
         })}
       </div>
     </section>
-    <button className="ado-conference-home-card" type="button" onClick={onOpenConferences}>
-      <span><CalendarDays size={25} /></span>
-      <div><strong>Hội nghị khách hàng</strong><small>Upload đăng ký và theo dõi kết quả từ BC02</small></div>
-      <ChevronRight size={23} />
-    </button>
-    <button className="ado-conference-home-card ado-report-home-card" type="button" onClick={onOpenReport}>
-      <span><BarChart3 size={25} /></span>
-      <div><strong>Báo cáo thúc đẩy TVV</strong><small>Phân loại hoạt động, theo dõi hợp đồng và ghi chú phối hợp</small></div>
-      <ChevronRight size={23} />
-    </button>
     {selectedAdoGroup && typeof document !== "undefined" && createPortal(
       <div className="team-contract-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedAdoGroup(null); }}>
         <section className="team-contract-modal board-contract-modal ado-group-contract-modal" role="dialog" aria-modal="true" aria-label={`Hợp đồng nhóm ${selectedAdoGroup}`}>
@@ -1623,7 +1618,7 @@ const ACTIVITY_CLASSIFICATIONS = [
   ["other", "Khác"]
 ] as const;
 
-function activityCell(row: any, value: typeof ACTIVITY_CLASSIFICATIONS[number][0], label: string, onOpenCustomers?: () => void) {
+function activityCell(row: any, value: typeof ACTIVITY_CLASSIFICATIONS[number][0], label: string, onOpenCustomers?: () => void, onOpenActivityNote?: () => void) {
   if (value === "new_advisor") return row.newAdvisorMonth ? <span className="activity-data-badge">T{row.newAdvisorMonth}</span> : <span className="activity-empty">—</span>;
   if (value === "conference") return row.registeredCustomers > 0
     ? <button type="button" className="activity-data-value activity-customer-button" onClick={onOpenCustomers}><b>{row.registeredCustomers} KH</b><small>{formatCompactVnd(row.registrationFee)} · xem chi tiết</small></button>
@@ -1631,13 +1626,26 @@ function activityCell(row: any, value: typeof ACTIVITY_CLASSIFICATIONS[number][0
   if (value === "conference_no_registration") return row.customersWithoutRegistration > 0
     ? <span className="activity-data-value"><b>{row.customersWithoutRegistration} KH</b><small>không có phí</small></span>
     : <span className="activity-empty">—</span>;
-  return <span className={`classification-indicator${row.classification === value ? " active" : ""}`} aria-label={row.classification === value ? `${row.advisorName}: ${label}` : undefined}>{row.classification === value ? <Check size={14} /> : null}</span>;
+  return <button type="button" className="activity-note-trigger" onClick={onOpenActivityNote} aria-label={`Nhập ghi chú ${label} cho ${row.advisorName}`}>
+    <span className={`classification-indicator${row.classification === value ? " active" : ""}`}>{row.classification === value ? <Check size={14} /> : null}</span>
+    {row.latestNotes?.[value]?.note ? <small>{notePreview(row.latestNotes[value].note)}</small> : null}
+  </button>;
 }
 
 function notePreview(value: unknown) {
   const words = String(value || "").trim().split(/\s+/).filter(Boolean);
   return words.length > 4 ? `${words.slice(0, 4).join(" ")}…` : words.join(" ") || "—";
 }
+
+type AdvisorReportSortKey = "index" | "groupName" | "advisorCode" | "advisorName" | "contractCount" | "totalIp"
+  | "new_advisor" | "conference" | "conference_no_registration" | "tvcn" | "other" | "ad" | "note";
+
+const ADVISOR_REPORT_COLUMNS: Array<{ key: AdvisorReportSortKey; label: string }> = [
+  { key: "index", label: "TT" }, { key: "groupName", label: "Nhóm" }, { key: "advisorCode", label: "Mã TVV" },
+  { key: "advisorName", label: "Tên TVV" }, { key: "contractCount", label: "Số HĐ" }, { key: "totalIp", label: "Tổng IP" },
+  ...ACTIVITY_CLASSIFICATIONS.map(([key, label]) => ({ key, label })),
+  { key: "ad", label: "AD" }, { key: "note", label: "Ghi chú" }
+];
 
 function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMonth: string; monthOptions: Array<{ value: string; label: string }> }) {
   const [month, setMonth] = useState(initialMonth);
@@ -1654,21 +1662,25 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
   const [customerAdvisor, setCustomerAdvisor] = useState<any>(null);
   const [customerNoteDrafts, setCustomerNoteDrafts] = useState<Record<string, string>>({});
   const [customerNoteSaving, setCustomerNoteSaving] = useState("");
+  const [activityNoteTarget, setActivityNoteTarget] = useState<{ row: any; type: "tvcn" | "other" } | null>(null);
+  const [activityNoteDraft, setActivityNoteDraft] = useState("");
+  const [activityNoteSaving, setActivityNoteSaving] = useState(false);
+  const [sort, setSort] = useState<{ key: AdvisorReportSortKey; direction: "asc" | "desc" }>({ key: "index", direction: "asc" });
 
   function openRegisteredCustomers(row: any) {
     setCustomerAdvisor(row);
-    setCustomerNoteDrafts(Object.fromEntries((row.registeredCustomerDetails ?? []).flatMap((customer: any) => [
-      [`${customer.id}:ad`, customer.adNote || ""], [`${customer.id}:cql`, customer.cqlNote || ""]
-    ])));
+    setCustomerNoteDrafts(Object.fromEntries((row.registeredCustomerDetails ?? []).map((customer: any) =>
+      [`${customer.id}:ad`, customer.adNote || ""]
+    )));
   }
 
-  async function saveRegistrationNote(customer: any, role: "ad" | "cql") {
-    const key = `${customer.id}:${role}`;
+  async function saveRegistrationNote(customer: any) {
+    const key = `${customer.id}:ad`;
     setCustomerNoteSaving(key); setError("");
     try {
       const response = await fetch(`/api/customer-conferences/registrations/${customer.id}/note`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, note: customerNoteDrafts[key] || "" })
+        body: JSON.stringify({ note: customerNoteDrafts[key] || "" })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Không lưu được ghi chú khách hàng.");
@@ -1694,6 +1706,59 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
     const needle = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     return (!group || row.groupName === group) && (!needle || haystack.includes(needle));
   }), [group, payload, query]);
+
+  const originalRowNumbers = useMemo(() => new Map<string, number>(
+    (payload?.rows ?? []).map((row: any, index: number) => [row.advisorCode, index + 1])
+  ), [payload?.rows]);
+
+  const sortedRows = useMemo(() => {
+    const valueOf = (row: any): string | number => {
+      if (sort.key === "index") return Number(originalRowNumbers.get(row.advisorCode) ?? 0);
+      if (sort.key === "new_advisor") return Number(row.newAdvisorMonth || 0);
+      if (sort.key === "conference") return Number(row.registeredCustomers || 0);
+      if (sort.key === "conference_no_registration") return Number(row.customersWithoutRegistration || 0);
+      if (sort.key === "tvcn" || sort.key === "other") return row.classification === sort.key ? 1 : 0;
+      if (sort.key === "ad" || sort.key === "note") return String(row.latestNotes?.[sort.key]?.note || "");
+      return typeof row[sort.key] === "number" ? row[sort.key] : String(row[sort.key] || "");
+    };
+    return [...rows].sort((left: any, right: any) => {
+      const a = valueOf(left); const b = valueOf(right);
+      const compared = typeof a === "number" && typeof b === "number"
+        ? a - b
+        : String(a).localeCompare(String(b), "vi", { numeric: true, sensitivity: "base" });
+      return (sort.direction === "asc" ? compared : -compared)
+        || Number(originalRowNumbers.get(left.advisorCode) ?? 0) - Number(originalRowNumbers.get(right.advisorCode) ?? 0);
+    });
+  }, [originalRowNumbers, rows, sort]);
+
+  function changeSort(key: AdvisorReportSortKey) {
+    setSort((current) => current.key === key
+      ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+      : { key, direction: "desc" });
+  }
+
+  function openActivityNote(row: any, type: "tvcn" | "other") {
+    setActivityNoteTarget({ row, type });
+    setActivityNoteDraft(row.latestNotes?.[type]?.note || "");
+  }
+
+  async function saveActivityNote(event: FormEvent) {
+    event.preventDefault();
+    if (!activityNoteTarget || !activityNoteDraft.trim() || activityNoteSaving) return;
+    setActivityNoteSaving(true); setError("");
+    try {
+      const response = await fetch("/api/advisor-activity-notes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ advisorCode: activityNoteTarget.row.advisorCode, sourceRole: activityNoteTarget.type, note: activityNoteDraft })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không lưu được ghi chú hoạt động.");
+      setPayload((current: any) => ({ ...current, rows: current.rows.map((item: any) => item.advisorCode === activityNoteTarget.row.advisorCode
+        ? { ...item, latestNotes: { ...item.latestNotes, [activityNoteTarget.type]: result.note } } : item) }));
+      setActivityNoteTarget(null); setActivityNoteDraft("");
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không lưu được ghi chú hoạt động."); }
+    finally { setActivityNoteSaving(false); }
+  }
 
   async function openHistory(row: any) {
     setHistoryAdvisor(row); setHistory([]); setDraftNote(""); setHistoryLoading(true);
@@ -1728,19 +1793,20 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
     </div>
     {error && <div className="advisor-report-error" role="alert">{error}<button type="button" onClick={() => void load()}>Thử lại</button></div>}
     {loading ? <div className="advisor-report-state"><LoaderCircle className="spin" /> Đang tải báo cáo…</div> : rows.length === 0 ? <div className="advisor-report-state">Không có dữ liệu phù hợp.</div> : <><div className="advisor-report-table-wrap"><table><thead><tr>
-      {(["TT","Nhóm","Mã TVV","Tên TVV","Số HĐ","Tổng IP",...ACTIVITY_CLASSIFICATIONS.map((item) => item[1]),"AD","CQL","Ghi chú"] as string[]).map((title) => <th key={title}>{title}</th>)}
-    </tr></thead><tbody>{rows.map((row: any, index: number) => <tr key={row.advisorCode}>
-      <td>{index + 1}</td><td>{row.groupName}</td><td>{row.advisorCode}</td><td>{row.advisorName}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.totalIp)}</td>
-      {ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <td key={value}>{activityCell(row, value, label, () => openRegisteredCustomers(row))}</td>)}
-      {(["ad", "cql", "note"] as const).map((role) => <td key={role}><button className="note-preview" onClick={() => void openHistory(row)} title={row.latestNotes?.[role]?.note || "Mở lịch sử ghi chú"}>{notePreview(row.latestNotes?.[role]?.note)}</button></td>)}
+      {ADVISOR_REPORT_COLUMNS.map((column) => <th key={column.key} aria-sort={sort.key === column.key ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}><button type="button" className={sort.key === column.key ? "advisor-sort-button active" : "advisor-sort-button"} onClick={() => changeSort(column.key)}>{column.label}<ArrowUpDown size={14} aria-hidden="true" /></button></th>)}
+    </tr></thead><tbody>{sortedRows.map((row: any) => <tr key={row.advisorCode}>
+      <td>{originalRowNumbers.get(row.advisorCode)}</td><td>{row.groupName}</td><td>{row.advisorCode}</td><td>{row.advisorName}</td><td>{row.contractCount}</td><td>{formatCompactVnd(row.totalIp)}</td>
+      {ACTIVITY_CLASSIFICATIONS.map(([value, label]) => <td key={value}>{activityCell(row, value, label, () => openRegisteredCustomers(row), value === "tvcn" || value === "other" ? () => openActivityNote(row, value) : undefined)}</td>)}
+      {(["ad", "note"] as const).map((role) => <td key={role}><button className="note-preview" onClick={() => void openHistory(row)} title={row.latestNotes?.[role]?.note || "Mở lịch sử ghi chú"}>{notePreview(row.latestNotes?.[role]?.note)}</button></td>)}
     </tr>)}</tbody></table></div>
-    <div className="advisor-report-mobile-list">{rows.map((row: any, index: number) => <article className="advisor-report-mobile-card" key={row.advisorCode}>
-      <header><span>{index + 1}</span><div><strong>{row.advisorName}</strong><small>{row.advisorCode} · {row.groupName}</small></div><div className="advisor-mobile-stats"><b>{row.contractCount}<small>HĐ</small></b><b>{formatCompactVnd(row.totalIp)}<small>Tổng IP</small></b></div></header>
+    <div className="advisor-report-mobile-list">{sortedRows.map((row: any) => <article className="advisor-report-mobile-card" key={row.advisorCode}>
+      <header><span>{originalRowNumbers.get(row.advisorCode)}</span><div><strong>{row.advisorName}</strong><small>{row.advisorCode} · {row.groupName}</small></div><div className="advisor-mobile-stats"><b>{row.contractCount}<small>HĐ</small></b><b>{formatCompactVnd(row.totalIp)}<small>Tổng IP</small></b></div></header>
       <section><h3>Dữ liệu hoạt động trong tháng</h3><div className="advisor-mobile-classifications">{ACTIVITY_CLASSIFICATIONS.map(([value, label]) => {
         const hasData = value === "new_advisor" ? Boolean(row.newAdvisorMonth) : value === "conference" ? row.registeredCustomers > 0 : value === "conference_no_registration" ? row.customersWithoutRegistration > 0 : row.classification === value;
-        return <div key={value} className={hasData ? "active" : ""}><span>{hasData ? <Check size={15} /> : null}</span><div>{label}{value === "new_advisor" && row.newAdvisorMonth ? <small>TVV tháng {row.newAdvisorMonth}</small> : null}{value === "conference" && row.registeredCustomers > 0 ? <small>{row.registeredCustomers} KH · {formatCompactVnd(row.registrationFee)}</small> : null}{value === "conference_no_registration" && row.customersWithoutRegistration > 0 ? <small>{row.customersWithoutRegistration} KH không có phí đăng ký</small> : null}</div></div>;
+        const content = <><span>{hasData ? <Check size={15} /> : null}</span><div>{label}{value === "new_advisor" && row.newAdvisorMonth ? <small>TVV tháng {row.newAdvisorMonth}</small> : null}{value === "conference" && row.registeredCustomers > 0 ? <small>{row.registeredCustomers} KH · {formatCompactVnd(row.registrationFee)}</small> : null}{value === "conference_no_registration" && row.customersWithoutRegistration > 0 ? <small>{row.customersWithoutRegistration} KH không có phí đăng ký</small> : null}{(value === "tvcn" || value === "other") && row.latestNotes?.[value]?.note ? <small>{notePreview(row.latestNotes[value].note)}</small> : null}</div></>;
+        return value === "tvcn" || value === "other" ? <button type="button" key={value} className={hasData ? "active" : ""} onClick={() => openActivityNote(row, value)}>{content}</button> : <div key={value} className={hasData ? "active" : ""}>{content}</div>;
       })}</div></section>
-      <section className="advisor-mobile-notes"><h3>Ghi chú phối hợp</h3>{(["ad", "cql", "note"] as const).map((role) => <button type="button" key={role} onClick={() => void openHistory(row)}><span>{role === "ad" ? "AD" : role === "cql" ? "CQL" : "Ghi chú"}</span><p>{notePreview(row.latestNotes?.[role]?.note)}</p><ChevronRight size={17} /></button>)}</section>
+      <section className="advisor-mobile-notes"><h3>Ghi chú phối hợp</h3>{(["ad", "note"] as const).map((role) => <button type="button" key={role} onClick={() => void openHistory(row)}><span>{role === "ad" ? "AD" : "Ghi chú"}</span><p>{notePreview(row.latestNotes?.[role]?.note)}</p><ChevronRight size={17} /></button>)}</section>
       <button type="button" className="advisor-mobile-add-note" onClick={() => void openHistory(row)}><FileText size={17} /> Thêm ghi chú</button>
     </article>)}</div></>}
     {customerAdvisor && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !customerNoteSaving) setCustomerAdvisor(null); }}><section className="team-contract-modal advisor-customer-modal" role="dialog" aria-modal="true">
@@ -1748,8 +1814,12 @@ function AdvisorActivityReportPage({ initialMonth, monthOptions }: { initialMont
       <div className="advisor-customer-list">{(customerAdvisor.registeredCustomerDetails ?? []).map((customer: any) => <article key={customer.id} className={customer.closed ? "closed" : "pending"}>
         <div className="advisor-customer-heading"><div><strong>{customer.customerName}</strong><small>{customer.conferenceName} · Phí {formatCompactVnd(customer.registrationFee)}</small></div><span>{customer.closed ? <><CheckCircle2 size={16} /> Đã chốt</> : <><Hourglass size={16} /> Chưa chốt</>}</span></div>
         <div className="advisor-customer-contract"><span>Số HĐ <b>{customer.contractCount}</b></span><span>AFYP <b>{customer.closed ? formatCompactVnd(customer.revenue) : "—"}</b></span><span>Tình trạng <b>{customer.statuses?.join(", ") || "Chưa phát sinh"}</b></span></div>
-        {(["ad", "cql"] as const).map((role) => { const key = `${customer.id}:${role}`; return <label className="advisor-customer-note" key={role}><span>Ghi chú {role.toUpperCase()}</span><textarea maxLength={5000} rows={2} value={customerNoteDrafts[key] ?? ""} onChange={(event) => setCustomerNoteDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder={`Nhập ghi chú của ${role.toUpperCase()}…`} /><button type="button" disabled={Boolean(customerNoteSaving)} onClick={() => void saveRegistrationNote(customer, role)}>{customerNoteSaving === key ? <LoaderCircle className="spin" size={15} /> : <Check size={15} />} Lưu {role.toUpperCase()}</button></label>; })}
+        {(() => { const key = `${customer.id}:ad`; return <label className="advisor-customer-note"><span>Ghi chú AD</span><textarea maxLength={5000} rows={2} value={customerNoteDrafts[key] ?? ""} onChange={(event) => setCustomerNoteDrafts((current) => ({ ...current, [key]: event.target.value }))} placeholder="Nhập ghi chú của AD…" /><button type="button" disabled={Boolean(customerNoteSaving)} onClick={() => void saveRegistrationNote(customer)}>{customerNoteSaving === key ? <LoaderCircle className="spin" size={15} /> : <Check size={15} />} Lưu AD</button></label>; })()}
       </article>)}</div>
+    </section></div>, document.body)}
+    {activityNoteTarget && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !activityNoteSaving) setActivityNoteTarget(null); }}><section className="team-contract-modal advisor-note-modal activity-note-modal" role="dialog" aria-modal="true" aria-label={`Ghi chú ${activityNoteTarget.type === "tvcn" ? "TVCN" : "Khác"}`}>
+      <header><div><h2>Ghi chú {activityNoteTarget.type === "tvcn" ? "TVCN" : "Khác"} · {activityNoteTarget.row.advisorName}</h2><p>{activityNoteTarget.row.advisorCode} · {activityNoteTarget.row.groupName}</p></div><button type="button" onClick={() => setActivityNoteTarget(null)} aria-label="Đóng"><X /></button></header>
+      <form onSubmit={saveActivityNote}><textarea autoFocus maxLength={4000} value={activityNoteDraft} onChange={(event) => setActivityNoteDraft(event.target.value)} placeholder={`Nhập ghi chú ${activityNoteTarget.type === "tvcn" ? "TVCN" : "Khác"}…`} /><div><small>{activityNoteDraft.length}/4.000</small><button disabled={activityNoteSaving || !activityNoteDraft.trim()}>{activityNoteSaving ? "Đang lưu…" : "Lưu ghi chú"}</button></div></form>
     </section></div>, document.body)}
     {historyAdvisor && typeof document !== "undefined" && createPortal(<div className="team-contract-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setHistoryAdvisor(null); }}><section className="team-contract-modal advisor-note-modal" role="dialog" aria-modal="true">
       <header><div><h2>Ghi chú · {historyAdvisor.advisorName}</h2><p>{historyAdvisor.advisorCode} · {historyAdvisor.groupName}</p></div><button type="button" onClick={() => setHistoryAdvisor(null)}><X /></button></header>
