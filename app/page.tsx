@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
+import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, Clipboard, ClipboardCheck, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
@@ -4528,6 +4528,7 @@ function UserLoginScreen({ onSuccess }: { onSuccess: (advisorCode: string) => vo
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<{ message: string; field?: "username" | "password" } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [recoveryOpen, setRecoveryOpen] = useState(false);
   async function submit(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -4548,8 +4549,57 @@ function UserLoginScreen({ onSuccess }: { onSuccess: (advisorCode: string) => vo
         <label>Mật khẩu<div className={`tvv-login-input${error?.field === "password" ? " has-error" : ""}`}><ShieldCheck size={19} /><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); if (error?.field === "password") setError(null); }} placeholder="Nhập mật khẩu" autoComplete="current-password" required /><button className="tvv-password-toggle" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={showPassword}>{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}</button></div>{error?.field === "password" && <span className="tvv-field-error" role="alert">{error.message}</span>}</label>
         {error && !error.field && <div className="tvv-user-error" role="alert">{error.message}</div>}
         <button className="tvv-login-submit" disabled={!canSubmit}>{busy && <LoaderCircle className="tvv-login-spinner" size={19} aria-hidden="true" />}{busy ? "Đang đăng nhập…" : "Đăng nhập"}</button>
+        <button className="tvv-recovery-link" type="button" onClick={() => setRecoveryOpen(true)}>Lấy lại mật khẩu</button>
       </form>
+      {recoveryOpen && <PasswordRecoveryDialog initialAdvisorCode={username} onClose={() => setRecoveryOpen(false)} />}
   </main>;
+}
+
+function PasswordRecoveryDialog({ initialAdvisorCode, onClose }: { initialAdvisorCode: string; onClose: () => void }) {
+  const [advisorCode, setAdvisorCode] = useState(initialAdvisorCode);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function recover(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    setPassword("");
+    setCopied(false);
+    const response = await fetch("/api/user/recover-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ advisorCode, identifier })
+    });
+    const payload = await response.json().catch(() => ({}));
+    setBusy(false);
+    if (!response.ok) return setError(payload.error || "Không thể lấy lại mật khẩu. Vui lòng thử lại.");
+    setPassword(payload.password || "");
+  }
+
+  async function copyPassword() {
+    await navigator.clipboard.writeText(password);
+    setCopied(true);
+  }
+
+  return <div className="tvv-recovery-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="tvv-recovery-dialog" role="dialog" aria-modal="true" aria-labelledby="recovery-title">
+      <header><div><h2 id="recovery-title">Lấy lại mật khẩu</h2><p>Nhập Mã TVV và mã số để xem mật khẩu hiện tại.</p></div><button type="button" onClick={onClose} aria-label="Đóng"><X size={21} /></button></header>
+      {!password ? <form onSubmit={recover}>
+        <label>Mã TVV<div className="tvv-login-input"><UserRound size={19} /><input autoFocus value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); setError(""); }} placeholder="Ví dụ: D102123456" autoCapitalize="characters" required /></div></label>
+        <label>Mã số (4 số cuối GTTT)<div className="tvv-login-input"><LockKeyhole size={19} /><input value={identifier} onChange={(event) => { setIdentifier(event.target.value); setError(""); }} placeholder="Nhập 4 số cuối GTTT" inputMode="numeric" maxLength={4} pattern="[0-9]{4}" autoComplete="off" required /></div></label>
+        {error && <div className="tvv-user-error" role="alert">{error}</div>}
+        <button className="tvv-login-submit" disabled={busy || !advisorCode.trim() || !identifier.trim()}>{busy && <LoaderCircle className="tvv-login-spinner" size={19} />}{busy ? "Đang kiểm tra…" : "Kiểm tra"}</button>
+      </form> : <div className="tvv-recovered-password">
+        <p>Mật khẩu đăng nhập hiện tại</p>
+        <div><code>{password}</code><button type="button" onClick={copyPassword}>{copied ? <ClipboardCheck size={19} /> : <Clipboard size={19} />}{copied ? "Đã copy" : "Copy"}</button></div>
+        <button className="tvv-recovery-done" type="button" onClick={onClose}>Đóng</button>
+      </div>}
+    </section>
+  </div>;
 }
 
 function Profile({ advisor, contracts, onAvatarChange, onLogout }: any) {

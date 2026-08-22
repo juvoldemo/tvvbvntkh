@@ -17658,6 +17658,22 @@ body.tvv-modal-open { overflow: hidden; }
 .tvv-login-submit:focus-visible { outline: 3px solid rgba(8,124,169,.28); outline-offset: 3px; }
 .tvv-login-submit:disabled { cursor: not-allowed; opacity: .48; box-shadow: none; }
 .tvv-login-spinner { color: currentColor !important; animation: tvv-login-spin .8s linear infinite; }
+.tvv-recovery-link { align-self: center; margin: -4px 0 0; padding: 7px 12px !important; border: 0 !important; background: transparent !important; box-shadow: none !important; color: #056a9b !important; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tvv-recovery-link:hover { color: #004b76 !important; }
+.tvv-recovery-backdrop { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 18px; background: rgba(4, 28, 45, .56); backdrop-filter: blur(4px); }
+.tvv-recovery-dialog { width: min(500px, 100%); padding: 28px; border-radius: 22px; background: #fff; box-shadow: 0 24px 70px rgba(0, 30, 50, .25); }
+.tvv-recovery-dialog > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.tvv-recovery-dialog h2 { margin: 0 0 7px; color: #052e4a; font-size: 26px; }
+.tvv-recovery-dialog header p, .tvv-recovered-password > p { margin: 0; color: #587080; line-height: 1.5; }
+.tvv-recovery-dialog header > button { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; padding: 0 !important; border: 0; border-radius: 10px; background: #edf4f7 !important; box-shadow: none !important; color: #315f78 !important; cursor: pointer; }
+.tvv-recovery-dialog form { display: grid; gap: 18px; }
+.tvv-recovery-dialog label { display: grid; gap: 9px; color: #102f45; font-weight: 700; }
+.tvv-recovered-password { display: grid; gap: 18px; }
+.tvv-recovered-password > div { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border: 1px solid #9fc4d5; border-radius: 14px; background: #f2f9fc; }
+.tvv-recovered-password code { min-width: 0; flex: 1; overflow-wrap: anywhere; color: #052e4a; font: 700 18px/1.4 var(--font-family-app); }
+.tvv-recovered-password > div button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 13px !important; border: 0; border-radius: 10px; background: #056a9b !important; color: #fff; box-shadow: none !important; font-weight: 700; cursor: pointer; }
+.tvv-user-login .tvv-recovered-password > div button svg { color: #fff !important; stroke: currentColor; }
+.tvv-recovery-done { min-height: 48px; border: 0; border-radius: 12px; background: #e7f1f6 !important; color: #064c70 !important; box-shadow: none !important; font-weight: 700; cursor: pointer; }
 @keyframes tvv-login-spin { to { transform: rotate(360deg); } }
 @media (max-width: 760px) {
   .tvv-user-login { place-items: center; padding: 16px; }
@@ -17665,6 +17681,7 @@ body.tvv-modal-open { overflow: hidden; }
   .tvv-login-form h1 { font-size: 30px; }
   .tvv-login-input, .tvv-login-submit { min-height: 54px; }
   .tvv-user-login .tvv-login-input input { height: 52px; }
+  .tvv-recovery-dialog { padding: 22px 18px; border-radius: 18px; }
 }
 @media (max-height: 650px) {
   .tvv-user-login { place-items: start center; }
