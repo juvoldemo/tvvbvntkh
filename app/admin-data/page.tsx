@@ -7,7 +7,7 @@ type EventItem = { id: string; title: string; content: string; event_date: strin
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
-type UserItem = { id: string; advisor_code: string; full_name: string; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
+type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
 type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
@@ -43,6 +43,7 @@ export default function AdminDataPage() {
   const [accessError, setAccessError] = useState("");
   const [accessSearch, setAccessSearch] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
+  const [copiedAccessCell, setCopiedAccessCell] = useState("");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgram[]>([]);
   const [competitionAudienceBusy, setCompetitionAudienceBusy] = useState("");
@@ -110,6 +111,27 @@ export default function AdminDataPage() {
       setAccessLoading(false);
     }
   }, []);
+
+  async function copyAccessValue(value: string, cellKey: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = value;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+      setCopiedAccessCell(cellKey);
+      window.setTimeout(() => setCopiedAccessCell((current) => current === cellKey ? "" : current), 1500);
+    } catch {
+      setAccessError("Không thể sao chép. Vui lòng thử lại.");
+    }
+  }
 
   useEffect(() => {
     if (!authenticated || activeTab !== "access") return;
@@ -439,10 +461,34 @@ export default function AdminDataPage() {
           <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
           {accessError && <div className="admin-message error">{accessError}</div>}
           <div className="admin-count">{accessLoading ? "Đang tải danh sách..." : `${activeAccessUsers.length} người đang được cấp quyền${accessSearch ? ` · Tìm thấy ${filteredAccessUsers.length}` : ""}`}</div>
-          <div className="admin-table-wrap"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Trạng thái</th><th>Chức vụ</th></tr></thead><tbody>
-            {filteredAccessUsers.map((user) => <tr key={user.id}><td>{user.advisor_code}</td><td>{user.full_name}</td><td><code className="admin-password-code">{user.password_plain || "Chưa tạo"}</code></td><td>{user.advisor_status || "—"}</td><td>{user.advisor_position || "—"}</td></tr>)}
+          <div className="admin-table-wrap admin-access-table"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Nhóm</th><th>Chức vụ</th></tr></thead><tbody>
+            {filteredAccessUsers.map((user) => {
+              const codeKey = `${user.id}-code`;
+              const passwordKey = `${user.id}-password`;
+              return <tr key={user.id}>
+                <td><button type="button" className="admin-copy-cell" title="Bấm để sao chép mã TVV" onClick={() => void copyAccessValue(user.advisor_code, codeKey)}>{copiedAccessCell === codeKey ? "Đã sao chép" : user.advisor_code}</button></td>
+                <td>{user.full_name}</td>
+                <td><button type="button" className="admin-copy-cell admin-copy-password" title={user.password_plain ? "Bấm để sao chép mật khẩu" : "Chưa có mật khẩu"} disabled={!user.password_plain} onClick={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)}><code className="admin-password-code">{copiedAccessCell === passwordKey ? "Đã sao chép" : user.password_plain || "Chưa tạo"}</code></button></td>
+                <td>{user.group_name || "—"}</td><td>{user.advisor_position || "—"}</td>
+              </tr>;
+            })}
             {!accessLoading && !filteredAccessUsers.length && <tr><td colSpan={5}>{accessSearch ? "Không tìm thấy TVV phù hợp." : "Chưa có người dùng được cấp quyền."}</td></tr>}
           </tbody></table></div>
+          <div className="admin-access-mobile-list">
+            {filteredAccessUsers.map((user) => {
+              const codeKey = `${user.id}-mobile-code`;
+              const passwordKey = `${user.id}-mobile-password`;
+              return <article key={user.id} className="admin-access-mobile-card">
+                <header><div><small>Tên TVV</small><strong>{user.full_name}</strong></div><span>{user.advisor_position || "—"}</span></header>
+                <dl>
+                  <div><dt>Mã TVV</dt><dd><button type="button" className="admin-copy-cell" title="Bấm để sao chép mã TVV" onClick={() => void copyAccessValue(user.advisor_code, codeKey)}>{copiedAccessCell === codeKey ? "Đã sao chép" : user.advisor_code}</button></dd></div>
+                  <div><dt>Mật khẩu</dt><dd><button type="button" className="admin-copy-cell admin-copy-password" title={user.password_plain ? "Bấm để sao chép mật khẩu" : "Chưa có mật khẩu"} disabled={!user.password_plain} onClick={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)}><code className="admin-password-code">{copiedAccessCell === passwordKey ? "Đã sao chép" : user.password_plain || "Chưa tạo"}</code></button></dd></div>
+                  <div><dt>Nhóm</dt><dd>{user.group_name || "—"}</dd></div>
+                </dl>
+              </article>;
+            })}
+            {!accessLoading && !filteredAccessUsers.length && <p className="admin-data-empty">{accessSearch ? "Không tìm thấy TVV phù hợp." : "Chưa có người dùng được cấp quyền."}</p>}
+          </div>
         </article>}
 
         {activeTab === "events" && <article className="admin-card">
@@ -526,7 +572,7 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
     { label: "Lượt truy cập", value: summary.actions, icon: BarChart3 },
     { label: "TVV hoạt động", value: summary.uniqueAdvisors, icon: Users },
     { label: "Phiên hôm nay", value: summary.sessions, icon: FileText },
-    { label: "Thời gian TB", value: formatAdminDuration(summary.averageSeconds), icon: Clock3 }
+    { label: "Tổng thời gian truy cập", value: formatAdminDuration(summary.totalSeconds), icon: Clock3 }
   ];
   const shortcuts: Array<{ tab: AdminTab; label: string; icon: typeof Bell }> = [
     { tab: "events", label: "Thông báo", icon: Bell }, { tab: "competitions", label: "Thi đua", icon: Trophy },
@@ -551,8 +597,7 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
       }, [])
     : rawTrends;
   const maxTrend = Math.max(1, ...trends.map((item) => item.sessions));
-  const points = trends.map((item, index) => ({ ...item, x: trends.length <= 1 ? 50 : index / (trends.length - 1) * 100, y: 88 - item.sessions / maxTrend * 72 }));
-  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const totalTrendSessions = trends.reduce((sum, item) => sum + item.sessions, 0);
   return <div className="admin-home-dashboard">
     <section className="admin-home-section admin-home-overview">
       <header><h2>Tổng quan hôm nay</h2></header>
@@ -560,9 +605,9 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
     </section>
     <section className="admin-home-section admin-home-shortcuts"><h2>Quản lý nhanh</h2><div>{shortcuts.map((item) => { const Icon = item.icon; return <button type="button" key={item.tab} aria-label={item.label} title={item.label} onClick={() => onNavigate(item.tab)}><Icon /></button>; })}</div></section>
     <section className="admin-home-section admin-home-chart">
-      <header><div><h2>Phân tích truy cập</h2><p>Theo dõi lượt đăng nhập, tương tác và thời gian sử dụng theo mã TVV.</p></div></header>
+      <header className="admin-chart-heading"><div><h2>Phân tích truy cập</h2><p>Xu hướng số phiên truy cập theo từng khoảng thời gian.</p></div><div className="admin-chart-total"><span><i />Tổng trong kỳ</span><strong>{totalTrendSessions} phiên</strong></div></header>
       <div className="admin-home-periods">{(["day", "week", "month"] as AnalyticsPeriod[]).map((item) => <button type="button" key={item} className={period === item ? "active" : ""} onClick={() => setPeriod(item)}>{item === "day" ? "Ngày" : item === "week" ? "Tuần" : "Tháng"}</button>)}</div>
-      <div className="admin-home-line-chart">{points.length ? <><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Biểu đồ xu hướng truy cập"><defs><linearGradient id="adminTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1688df" stopOpacity=".3"/><stop offset="1" stopColor="#1688df" stopOpacity="0"/></linearGradient></defs><polygon points={`0,92 ${polyline} 100,92`} fill="url(#adminTrendFill)"/><polyline points={polyline} fill="none" stroke="#087fd2" strokeWidth="1.5" vectorEffect="non-scaling-stroke"/>{points.map((point) => <circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r="1.6" fill="#fff" stroke="#087fd2" strokeWidth="1" vectorEffect="non-scaling-stroke" />)}</svg><div style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}>{points.map((point) => <span key={point.label}>{point.label}</span>)}</div></> : <p>Chưa có dữ liệu truy cập.</p>}</div>
+      <div className="admin-home-bar-chart" role="img" aria-label="Biểu đồ số phiên truy cập">{trends.length ? <div className="admin-trend-bars">{trends.map((item) => <figure key={item.label} title={`${item.label}: ${item.sessions} phiên, ${item.advisors} TVV`}><div><span style={{ height: `${Math.max(8, item.sessions / maxTrend * 100)}%` }}><b>{item.sessions}</b></span></div><figcaption>{item.label}</figcaption></figure>)}</div> : <p>Chưa có dữ liệu truy cập trong kỳ này.</p>}</div>
       <footer><button type="button" onClick={() => onNavigate("analytics")}><FileText />Chi tiết phiên</button><button type="button" onClick={() => onNavigate("analytics")}><Trophy />Xếp hạng TVV</button></footer>
     </section>
   </div>;

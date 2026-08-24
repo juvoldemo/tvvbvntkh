@@ -16872,6 +16872,31 @@ body,
 .admin-count { padding: 10px 12px; border-radius: 9px; background: #edf5ff; color: #004b7a; font-weight: 700; }
 .admin-table-wrap { max-height: 360px; overflow: auto; }
 .admin-password-code { display: inline-flex; align-items: center; min-height: 26px; border-radius: 7px; background: #eef5ff; color: #004b7a; padding: 3px 8px; font-family: var(--font-family-app); font-size: var(--typo-12); font-weight: 700; white-space: nowrap; }
+body .admin-page button.admin-copy-cell { appearance: none; display: block; width: 100%; min-height: 0; justify-content: flex-start; border: 0; background: transparent !important; color: #005987 !important; padding: 8px 6px; margin: -8px -6px; box-shadow: none !important; font: inherit; font-weight: inherit; text-align: left; cursor: pointer; touch-action: manipulation; border-radius: 7px; }
+body .admin-page button.admin-copy-cell:hover, body .admin-page button.admin-copy-cell:focus-visible { background: #e8f3ff !important; color: #005b91 !important; outline: none; }
+body .admin-page button.admin-copy-cell:focus-visible { box-shadow: 0 0 0 2px rgba(0, 112, 184, .3) !important; }
+body .admin-page button.admin-copy-cell:disabled { opacity: 1; cursor: default; }
+body .admin-page button.admin-copy-password { padding: 0; margin: 0; }
+body .admin-page button.admin-copy-password:hover, body .admin-page button.admin-copy-password:focus-visible { background: transparent !important; }
+.admin-access-mobile-list { display: none; }
+@media (max-width: 720px) {
+  .admin-access-table { display: none; }
+  .admin-access-mobile-list { display: grid; gap: 10px; margin-top: 14px; }
+  .admin-access-mobile-card { min-width: 0; overflow: hidden; border: 1px solid #d7e5f0; border-radius: 13px; background: #fff; box-shadow: 0 4px 12px rgba(0, 75, 122, .06); }
+  .admin-access-mobile-card > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 12px; background: #f1f7fc; }
+  .admin-access-mobile-card > header div { min-width: 0; display: grid; gap: 3px; }
+  .admin-access-mobile-card > header small, .admin-access-mobile-card dt { color: #6a8092; font-size: 10px; font-weight: 700; }
+  .admin-access-mobile-card > header strong { overflow-wrap: anywhere; color: #004b7a; font-size: 13px; }
+  .admin-access-mobile-card > header span { flex: 0 0 auto; max-width: 42%; border-radius: 999px; background: #dfeeff; color: #075b8c; padding: 4px 8px; font-size: 9px; font-weight: 700; text-align: center; }
+  .admin-access-mobile-card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+  .admin-access-mobile-card dl > div { min-width: 0; display: grid; align-content: start; gap: 5px; padding: 11px 12px; border-top: 1px solid #e5edf4; }
+  .admin-access-mobile-card dl > div:last-child { grid-column: 1 / -1; }
+  .admin-access-mobile-card dt, .admin-access-mobile-card dd { min-width: 0; margin: 0; }
+  .admin-access-mobile-card dd { color: #174d70; font-size: 12px; overflow-wrap: anywhere; }
+  body .admin-page .admin-access-mobile-card button.admin-copy-cell { width: auto; max-width: 100%; margin: 0; padding: 3px 5px; font-weight: 800; }
+  body .admin-page .admin-access-mobile-card button.admin-copy-password { padding: 0; }
+  .admin-access-mobile-card .admin-password-code { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+}
 .admin-access-lock { width: min(560px, 100%); justify-self: center; }
 .admin-access-lock form { margin-top: 6px; }
 .admin-access-lock label { display: grid; gap: 7px; font-weight: 700; }
@@ -17079,6 +17104,32 @@ body .admin-page button.admin-analytics-summary-action:hover { background: #dcec
 .admin-home-line-chart > p { padding-top: 90px; color: #78899b; text-align: center; }
 .admin-home-chart footer { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }
 .admin-page .admin-home-chart footer button { border: 1px solid #2f8bc5; background: #fff; color: #0764a0; box-shadow: none; }
+.admin-chart-heading { align-items: center !important; }
+.admin-chart-total { flex: 0 0 auto; display: grid; gap: 4px; min-width: 150px; border: 1px solid #d9e8f4; border-radius: 13px; background: #f5faff; padding: 10px 14px; }
+.admin-chart-total span { display: flex; align-items: center; gap: 6px; color: #6b8094; font-size: 11px; }
+.admin-chart-total span i { width: 8px; height: 8px; border-radius: 50%; background: #0b83d5; box-shadow: 0 0 0 4px #dcedfb; }
+.admin-chart-total strong { color: #075b94; font-size: 20px; }
+.admin-home-bar-chart { position: relative; min-height: 230px; margin-top: 16px; overflow: hidden; border: 1px solid #e0eaf3; border-radius: 15px; background: linear-gradient(to bottom, rgba(225,235,244,.72) 1px, transparent 1px) 0 0 / 100% 25%, linear-gradient(180deg, #fbfdff, #f7fbfe); padding: 26px 20px 12px; }
+.admin-trend-bars { display: grid; height: 192px; grid-template-columns: repeat(var(--admin-trend-count, auto-fit), minmax(38px, 1fr)); align-items: end; gap: clamp(8px, 1.5vw, 24px); }
+.admin-trend-bars figure { min-width: 0; height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) 24px; gap: 7px; margin: 0; }
+.admin-trend-bars figure > div { height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.admin-trend-bars figure span { position: relative; width: min(54px, 72%); min-height: 8px; border-radius: 8px 8px 3px 3px; background: linear-gradient(180deg, #1196e4, #0874bd); box-shadow: 0 7px 14px rgba(8, 116, 189, .2); transition: height .25s ease, filter .2s ease; }
+.admin-trend-bars figure:hover span { filter: brightness(.92); }
+.admin-trend-bars figure b { position: absolute; top: -23px; left: 50%; color: #075b94; font-size: 11px; transform: translateX(-50%); }
+.admin-trend-bars figcaption { overflow: hidden; color: #60758c; font-size: 10px; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.admin-home-bar-chart > p { margin: 82px 0 0; color: #78899b; text-align: center; }
+@media (max-width: 760px) {
+  .admin-chart-heading { align-items: flex-start !important; }
+  .admin-chart-total { min-width: 108px; padding: 8px 10px; }
+  .admin-chart-total span { font-size: 9px; }
+  .admin-chart-total strong { font-size: 15px; }
+  .admin-home-bar-chart { min-height: 190px; margin-top: 10px; padding: 24px 8px 8px; }
+  .admin-trend-bars { height: 156px; grid-template-columns: repeat(auto-fit, minmax(24px, 1fr)); gap: 5px; }
+  .admin-trend-bars figure { grid-template-rows: minmax(0, 1fr) 20px; gap: 5px; }
+  .admin-trend-bars figure span { width: min(34px, 72%); border-radius: 6px 6px 2px 2px; }
+  .admin-trend-bars figure b { top: -18px; font-size: 9px; }
+  .admin-trend-bars figcaption { font-size: 7px; }
+}
 .admin-bottom-nav { position: fixed; z-index: 1000; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #d4e0eb; background: rgba(255,255,255,.97); padding: 8px max(10px, calc((100vw - 700px) / 2)) max(8px, env(safe-area-inset-bottom)); box-shadow: 0 -8px 28px rgba(27, 66, 102, .08); backdrop-filter: blur(12px); }
 .admin-page .admin-bottom-nav button { display: grid; min-height: 58px; gap: 3px; border-radius: 12px; background: transparent; color: #526a83; padding: 5px; box-shadow: none; }
 .admin-bottom-nav button svg { width: 27px; height: 27px; }

@@ -55,7 +55,11 @@ export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const period = request.nextUrl.searchParams.get("period") || "day";
   const days = period === "month" ? 30 : period === "week" ? 7 : 1;
-  const since = new Date(Date.now() - days * 86400000).toISOString();
+  const nowDate = new Date();
+  const { year, month, day } = analyticsTimeParts(nowDate);
+  const since = period === "day"
+    ? new Date(`${year}-${month}-${day}T00:00:00+07:00`).toISOString()
+    : new Date(nowDate.getTime() - days * 86400000).toISOString();
   const supabase = getSupabaseAdmin();
   const [{ data: events, error }, { data: users }, { data: allStarts }] = await Promise.all([
     supabase.from("app_analytics_events").select("advisor_code,session_id,event_name,tab_name,duration_seconds,action_name,device,created_at").gte("created_at", since).order("created_at", { ascending: false }).limit(10000),

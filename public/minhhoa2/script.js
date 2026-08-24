@@ -2407,6 +2407,25 @@ function setDefaultPolicyOwnerGender() {
   syncPolicyOwnerGenderButtons();
 }
 
+function syncPolicyOwnerCombinedView() {
+  const combined = policyOwnerMode === "different" && activePersonFormTab === "policyOwner";
+  const customerPanel = document.getElementById("customerInfoPanel");
+  const mainForm = document.getElementById("illustrationForm");
+  const ridersTab = document.getElementById("ridersTab");
+  const mainOnlyFields = mainForm?.querySelector(".hidden-main-field")?.closest(".fields");
+  document.body.classList.toggle("policy-owner-combined-view", combined);
+  if (mainOnlyFields) mainOnlyFields.hidden = combined;
+  if (!customerPanel || !mainForm || !ridersTab) return;
+  if (combined) {
+    ridersTab.insertBefore(customerPanel, ridersTab.firstElementChild);
+    setActiveTab("riders");
+  } else {
+    const firstMainPanel = mainForm.querySelector(":scope > .panel");
+    mainForm.insertBefore(customerPanel, firstMainPanel);
+    setActiveTab("main");
+  }
+}
+
 function setActivePersonFormTab(tab) {
   activePersonFormTab = tab === "policyOwner" ? "policyOwner" : "insured";
   document.querySelectorAll("[data-person-form-tab]").forEach((button) => {
@@ -2428,6 +2447,8 @@ function setActivePersonFormTab(tab) {
   if (activePersonFormTab === "policyOwner") {
     setDefaultPolicyOwnerGender();
   }
+  syncPolicyOwnerCombinedView();
+  syncProductTabColors();
   renderRiderUI();
   normalizePolicyOwnerRelationText();
 }
@@ -2540,6 +2561,17 @@ function formatPercent(value) {
   }).format(value);
 }
 
+function syncProductTabColors() {
+  const usePolicyOwnerGold = policyOwnerMode === "different" && activePersonFormTab === "policyOwner";
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    const isActive = button.classList.contains("active");
+    button.style.setProperty("background", isActive ? (usePolicyOwnerGold ? "#f4c542" : "#004b7a") : "#fff", "important");
+    button.style.setProperty("color", isActive ? (usePolicyOwnerGold ? "#004b7a" : "#fff") : "#004b7a", "important");
+    button.style.setProperty("border-color", isActive && usePolicyOwnerGold ? "#f4c542" : "", "important");
+    button.style.setProperty("opacity", "1", "important");
+  });
+}
+
 function setActiveTab(tabName) {
   document.body.classList.toggle("main-mode", tabName === "main");
   document.body.classList.toggle("riders-mode", tabName === "riders");
@@ -2547,10 +2579,8 @@ function setActiveTab(tabName) {
     const isActive = button.dataset.tab === tabName;
     button.classList.toggle("active", isActive);
     button.setAttribute("aria-selected", String(isActive));
-    button.style.setProperty("background", isActive ? "#004b7a" : "#fff", "important");
-    button.style.setProperty("color", isActive ? "#fff" : "#004b7a", "important");
-    button.style.setProperty("opacity", "1", "important");
   });
+  syncProductTabColors();
   document.getElementById("mainTab").classList.toggle("active", tabName === "main");
   document.getElementById("ridersTab").classList.toggle("active", tabName === "riders");
   if (tabName === "riders") renderRiderUI();

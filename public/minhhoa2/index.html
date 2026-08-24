@@ -9,7 +9,7 @@
     <meta property="og:description" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:title" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
-    <link rel="stylesheet" href="styles.css?v=20260809-customer-copy" />
+    <link rel="stylesheet" href="styles.css?v=20260824-hide-bmbh-heading" />
     <script>
       if (new URLSearchParams(window.location.search).get("embedded") === "1") {
         document.documentElement.classList.add("embedded");
@@ -65,7 +65,7 @@
             </div>
             <p id="policyOwnerValidationMessage" class="policy-owner-validation" role="status"></p>
           </section>
-          <section class="panel">
+          <section id="customerInfoPanel" class="panel">
             <h2><span class="section-badge customer-badge"></span><span>1. Thông tin khách hàng</span></h2>
             <div id="insuredPersonFields" class="fields person-fields active">
               <label class="field-row icon-user">
@@ -127,17 +127,17 @@
               </label>
 
               <label class="field-row icon-calendar">
-                <span>Ngày tháng năm sinh BMBH</span>
+                <span class="required-label">Ngày tháng năm sinh</span>
                 <input id="policyOwnerDateOfBirth" name="policyOwnerDateOfBirth" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" />
               </label>
 
               <label class="field-row icon-info">
-                <span>Tuổi BMBH</span>
+                <span>Tuổi bảo hiểm hiện tại</span>
                 <input id="policyOwnerAge" type="text" value="-" readonly />
               </label>
 
               <label class="field-row icon-user">
-                <span>Giới tính BMBH</span>
+                <span class="required-label">Giới tính</span>
                 <select id="policyOwnerGender" name="policyOwnerGender" class="gender-native-select" aria-hidden="true" tabindex="-1">
                   <option>Nam</option>
                   <option selected>Nữ</option>
@@ -430,7 +430,7 @@
     <script src="addonBenefitSummaryService.js?v=20260717-utf8-fix"></script>
     <script src="atpn-data-loader.js?v=20260616-atpn-funeral-ui"></script>
     <script src="lifeCare20Rates.js?v=20260625-life-care-cleanup-3"></script>
-    <script src="script.js?v=20260809-bold-money-copy"></script>
+    <script src="script.js?v=20260824-bmbh-exact-font"></script>
     <script src="supabaseConfig.js"></script>
     <script src="accessLogger.js"></script>
     <script>
