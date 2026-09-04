@@ -34,7 +34,7 @@ const ADO_SCOPES: AdoScope[] = [
     username: "tranxuanthu",
     fullName: "Trần Xuân Thu",
     department: "PTKD 2",
-    groups: ["Đại Thắng", "Hồng Đức", "Phát Thắng"]
+    groups: ["Đại Thắng", "Hồng Đức", "Phát Thắng", "Tâm Đức"]
   },
   {
     username: "nguyenthoc",
