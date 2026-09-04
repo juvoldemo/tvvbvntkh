@@ -599,10 +599,27 @@ export default function TvvMobilePage() {
       setTvvTarget(null);
       return;
     }
-    fetch(`/api/tvv-target-registration?month=${targetRegistrationMonth}`, { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : { registration: null })
-      .then((payload) => setTvvTarget(payload.registration ?? null))
-      .catch(() => setTvvTarget(null));
+    let active = true;
+    let controller: AbortController | null = null;
+    const loadTarget = () => {
+      controller?.abort();
+      controller = new AbortController();
+      return fetchJsonWithRetry(`/api/tvv-target-registration?month=${targetRegistrationMonth}`, controller.signal)
+        .then((payload) => { if (active) setTvvTarget(payload.registration ?? null); })
+        .catch(() => undefined);
+    };
+    const refresh = () => { if (document.visibilityState === "visible") void loadTarget(); };
+    void loadTarget();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = window.setInterval(refresh, 30_000);
+    return () => {
+      active = false;
+      controller?.abort();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [profileReady, signedIn, targetRegistrationMonth, userProfile?.dashboard_role]);
 
   useEffect(() => {
@@ -610,10 +627,27 @@ export default function TvvMobilePage() {
       setTeamTarget(null);
       return;
     }
-    fetch(`/api/team-target-registration?month=${targetRegistrationMonth}`, { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : { registration: null })
-      .then((payload) => setTeamTarget(payload.registration ?? null))
-      .catch(() => setTeamTarget(null));
+    let active = true;
+    let controller: AbortController | null = null;
+    const loadTarget = () => {
+      controller?.abort();
+      controller = new AbortController();
+      return fetchJsonWithRetry(`/api/team-target-registration?month=${targetRegistrationMonth}`, controller.signal)
+        .then((payload) => { if (active) setTeamTarget(payload.registration ?? null); })
+        .catch(() => undefined);
+    };
+    const refresh = () => { if (document.visibilityState === "visible") void loadTarget(); };
+    void loadTarget();
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    const timer = window.setInterval(refresh, 30_000);
+    return () => {
+      active = false;
+      controller?.abort();
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [signedIn, targetRegistrationMonth, userProfile?.dashboard_role]);
 
   useEffect(() => {
