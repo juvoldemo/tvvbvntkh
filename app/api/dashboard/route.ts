@@ -152,7 +152,9 @@ export async function GET(request: NextRequest) {
     // request built and serialized the complete reporting dataset (including
     // several duplicate contract arrays), delaying first paint by seconds.
     if (params.get("view") === "initial" && signedInAdvisorCode) {
-      const compactColumns = "id,agent_code,agent_name,ban_name,group_name,ads_name,application_no,contract_no,product_name,paid_date,issued_date,policy_status,ip,afyp,data_month";
+      // production revenue_records keeps product details inside raw_data; it
+      // does not have the newer product_name column from the local schema.
+      const compactColumns = "id,agent_code,agent_name,ban_name,group_name,ads_name,application_no,contract_no,raw_data,paid_date,issued_date,policy_status,ip,afyp,data_month";
       const [{ data: initialRecords, error: initialError }, { data: initialYearRecords, error: initialYearError }, { data: initialUploads }] = await Promise.all([
         advisorScope(supabase.from("revenue_records").select(compactColumns).eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end)),
         advisorScope(supabase.from("revenue_records").select(compactColumns).neq("data_month", "2099-01-01").gte("paid_date", "2026-01-01").lte("paid_date", "2026-12-31")),

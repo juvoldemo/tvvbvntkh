@@ -783,7 +783,11 @@ export default function TvvMobilePage() {
         const latestMonth = payload?.availableMonths?.[0];
         if (!latestMonthResolvedRef.current) {
           latestMonthResolvedRef.current = true;
-          if (latestMonth && latestMonth !== "2099-01" && latestMonth <= currentMonth() && latestMonth !== month) {
+          // Keep the current month when a newer Sao Viet snapshot already
+          // exists, even if the latest monthly revenue upload is still from
+          // the previous month. Otherwise the follow-up request overwrites a
+          // valid currentStarViet row with an older month that has no snapshot.
+          if (latestMonth && latestMonth !== "2099-01" && latestMonth <= currentMonth() && latestMonth !== month && !payload?.currentStarViet) {
             setMonth(latestMonth);
             setContractMonth(latestMonth);
             setPolicyMonth(latestMonth);
@@ -1196,7 +1200,7 @@ export default function TvvMobilePage() {
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
             ? <TeamLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
-            : <Overview advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} onTab={setTab} />}
+            : <Overview advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} starVietLoading={loading} onTab={setTab} />}
           </>}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -3142,7 +3146,7 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
   </div>;
 }
 
-function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, starViet, starVietWarning, onTab }: any) {
+function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, starViet, starVietWarning, starVietLoading, onTab }: any) {
   const statItems = [
     ["Tổng HĐ", stats.total, "blue", "contracts"],
     ["Đã phát hành", stats.issued, "green", "contracts"],
@@ -3157,7 +3161,7 @@ function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, 
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <SmartIllustrationPreview onOpen={() => onTab("smart_illustration")} />}
     {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}
-    <PersonalStarJourney row={starViet} warning={starVietWarning} />
+    <PersonalStarJourney row={starViet} warning={starVietWarning} loading={starVietLoading} />
     <ArchivePreview onOpen={() => onTab("archive")} />
   </section>;
 }
@@ -3316,7 +3320,8 @@ function RankingSection({ title, subtitle, rows, group = false }: { title: strin
   </section>;
 }
 
-function PersonalStarJourney({ row, warning }: { row?: any; warning?: string | null }) {
+function PersonalStarJourney({ row, warning, loading = false }: { row?: any; warning?: string | null; loading?: boolean }) {
+  if (loading && !row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Đang tải dữ liệu Sao Việt…</p></section>;
   if (warning) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa tải được dữ liệu Sao Việt.</p></section>;
   if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của bạn trong tháng này.</p></section>;
   const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
