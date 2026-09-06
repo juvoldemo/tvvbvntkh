@@ -88,7 +88,8 @@ export async function GET(request: NextRequest) {
     const code = userCodeFromRequest(request);
     if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
     const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
-    const cacheKey = `${code}:${month}`;
+    const summaryOnly = request.nextUrl.searchParams.get("summary") === "1";
+    const cacheKey = `${code}:${month}:${summaryOnly ? "summary" : "full"}`;
     const cached = responseCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
@@ -189,6 +190,27 @@ export async function GET(request: NextRequest) {
         targetRate: target > 0 ? afyp / target * 100 : 0
       };
     }).sort((a, b) => b.afyp - a.afyp);
+
+    if (summaryOnly) {
+      const payload = {
+        role: scope.role,
+        month,
+        ado: { code, name: scope.fullName, department: scope.department },
+        groups: groupRows,
+        summary: {
+          afyp: counted.reduce((sum, row) => sum + (Number(row.afyp) || 0), 0),
+          ip: counted.reduce((sum, row) => sum + (Number(row.ip) || 0), 0),
+          contracts: contracts.length,
+          activeAdvisors: new Set(counted.map((row) => row.agent_code || row.agent_name).filter(Boolean)).size,
+          attention: contracts.filter((row) => ["attention", "pending", "invalid"].includes(statusBucket(row.policy_status))).length,
+          target: groupRows.reduce((sum, row) => sum + row.target, 0)
+        },
+        contracts: contracts.map(sanitizeContract),
+        summaryOnly: true
+      };
+      responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_TTL_MS, payload });
+      return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
+    }
 
     const programRows = programError ? [] : (programs ?? []);
     const teamLeaders = activeRoster.flatMap((row: any) => {

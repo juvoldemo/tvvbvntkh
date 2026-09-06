@@ -274,7 +274,7 @@ async function fetchJsonWithRetry(url: string, signal: AbortSignal, attempts = 3
   let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(url, { cache: "no-store", signal });
+      const response = await fetch(url, { cache: "default", signal });
       if (!response.ok) throw new Error(`${url} trả về lỗi ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -529,12 +529,21 @@ export default function TvvMobilePage() {
     }
     const controller = new AbortController();
     setTeamOverviewReady(false);
-    fetchJsonWithRetry(`/api/ado-dashboard?month=${month}`, controller.signal)
+    fetchJsonWithRetry(`/api/ado-dashboard?month=${month}&summary=1`, controller.signal)
       .then(setAdoData)
       .catch(() => setAdoData(null))
       .finally(() => setTeamOverviewReady(true));
     return () => controller.abort();
   }, [adoRefreshGeneration, isAdoMode, month, signedIn]);
+
+  useEffect(() => {
+    if (!signedIn || !isAdoMode || !adoData?.summaryOnly || !["contests", "ado_targets", "ado_accounts"].includes(tab)) return;
+    const controller = new AbortController();
+    fetchJsonWithRetry(`/api/ado-dashboard?month=${month}`, controller.signal)
+      .then(setAdoData)
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [adoData?.summaryOnly, isAdoMode, month, signedIn, tab]);
 
   useEffect(() => {
     if (!signedIn || !isAdoMode) return;
