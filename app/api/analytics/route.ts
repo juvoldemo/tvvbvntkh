@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     supabase.from("app_analytics_events").select("advisor_code,created_at").eq("event_name", "session_start").order("created_at", { ascending: false }).limit(10000)
   ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const invitationSince = "2026-08-01T00:00:00+07:00";
+  const invitationSince = "2026-09-06T00:00:00+07:00";
   let invitationActions: any[] = [];
   for (let from = 0; ; from += 1000) {
     const { data: page, error: invitationError } = await supabase.from("app_analytics_events")
@@ -91,9 +91,8 @@ export async function GET(request: NextRequest) {
   ].includes(normalizeAction(value));
   const invitationEvents = invitationActions.filter((event: any) => {
     const actionName = normalizeAction(event.action_name);
-    return actionName === "xuat thu moi png"
-      || actionName === "chia se qua zalo"
-      || actionName.startsWith("dang chia se");
+    return actionName === "xuat thu moi hnkh vip png"
+      || actionName === "chia se thu moi hnkh vip qua zalo";
   });
   const invitationsCreated = invitationEvents.length;
   const profiles = new Map((users ?? []).map((user: any) => [user.advisor_code, user]));
