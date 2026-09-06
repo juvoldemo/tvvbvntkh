@@ -270,7 +270,7 @@ function shortText(value: unknown, maxLength = 86) {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}...` : text;
 }
 
-async function fetchJsonWithRetry(url: string, signal: AbortSignal, attempts = 3) {
+async function fetchJsonWithRetry(url: string, signal: AbortSignal, attempts = 2) {
   let lastError: unknown;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
@@ -776,7 +776,7 @@ export default function TvvMobilePage() {
     let cancelled = false;
     const controller = new AbortController();
     setLoading(true);
-    fetchJsonWithRetry(`/api/dashboard?month=${month}`, controller.signal)
+    fetchJsonWithRetry(`/api/dashboard?month=${month}&view=initial`, controller.signal)
       .then((payload) => {
         if (cancelled) return;
         setData(payload);
@@ -900,10 +900,13 @@ export default function TvvMobilePage() {
       setShowSplash(false);
       return;
     }
-    if (profileReady && !loading && teamOverviewReady && leaderboardReady) {
+    // Data panels load independently after the authenticated shell is visible.
+    // A slow dashboard, team overview, or leaderboard must not trap the user
+    // behind the full-screen splash.
+    if (profileReady) {
       setShowSplash(false);
     }
-  }, [authReady, leaderboardReady, loading, profileReady, showSplash, signedIn, teamOverviewReady]);
+  }, [authReady, profileReady, showSplash, signedIn]);
 
   const advisorOptions = useMemo(() => (data?.agents ?? []).map((agent: any) => ({
     key: `${agent.agentCode || ""}__${agent.agentName || ""}`,

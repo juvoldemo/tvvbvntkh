@@ -147,6 +147,60 @@ export async function GET(request: NextRequest) {
 
     const advisorScope = <T extends { ilike: (column: string, pattern: string) => T }>(query: T) =>
       signedInAdvisorCode ? query.ilike("agent_code", signedInAdvisorCode) : query;
+
+    // The home screen only needs a small advisor snapshot. The former initial
+    // request built and serialized the complete reporting dataset (including
+    // several duplicate contract arrays), delaying first paint by seconds.
+    if (params.get("view") === "initial" && signedInAdvisorCode) {
+      const compactColumns = "id,agent_code,agent_name,ban_name,group_name,ads_name,application_no,contract_no,product_name,paid_date,issued_date,policy_status,ip,afyp,data_month";
+      const [{ data: initialRecords, error: initialError }, { data: initialYearRecords, error: initialYearError }, { data: initialUploads }] = await Promise.all([
+        advisorScope(supabase.from("revenue_records").select(compactColumns).eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end)),
+        advisorScope(supabase.from("revenue_records").select(compactColumns).neq("data_month", "2099-01-01").gte("paid_date", "2026-01-01").lte("paid_date", "2026-12-31")),
+        supabase.from("upload_batches").select("data_month,uploaded_at").order("uploaded_at", { ascending: false })
+      ]);
+      if (initialError) throw initialError;
+      if (initialYearError) throw initialYearError;
+
+      const compactRecords = (initialRecords ?? []) as unknown as RevenueRecord[];
+      const compactYearRecords = dedupeRevenueRecordsByContract((initialYearRecords ?? []) as unknown as RevenueRecord[]);
+      const countedRecords = sortContractDetails(compactRecords.filter(isCountedRevenueRecord));
+      const availableMonths = [...new Set(((initialUploads ?? []) as Array<{ data_month?: string | null }>)
+        .map((item) => String(item.data_month ?? "").slice(0, 7))
+        .filter((value) => value && value !== "2099-01"))]
+        .sort((a, b) => b.localeCompare(a));
+      const latestUpload = (initialUploads ?? []).find((item: any) => String(item.data_month || "").slice(0, 7) === month.slice(0, 7));
+
+      let currentStarViet = null;
+      let starVietWarning: string | null = null;
+      try {
+        const initialStarData = await readStarVietData(supabase, month.slice(0, 7));
+        starVietWarning = initialStarData.warning;
+        const starRows = buildStarVietReport(initialStarData.personalRecords).rows;
+        currentStarViet = starRows.find((row) => String(row.agentCode).trim().toUpperCase() === signedInAdvisorCode) ?? null;
+        if (!currentStarViet) {
+          const { data: advisorProfile } = await supabase.from("authorized_users").select("full_name").eq("advisor_code", signedInAdvisorCode).maybeSingle();
+          const advisorName = normalizeText(advisorProfile?.full_name);
+          currentStarViet = advisorName ? starRows.find((row) => normalizeText(row.agentName) === advisorName) ?? null : null;
+        }
+      } catch (error) {
+        starVietWarning = error instanceof Error ? error.message : "Không tải được dữ liệu Sao Việt.";
+      }
+
+      const payload = {
+        month,
+        availableMonths,
+        updatedAt: latestUpload?.uploaded_at ?? null,
+        agents: buildAgentRanking(countedRecords),
+        agentIpPeriods: buildAgentIpPeriods(compactYearRecords, month),
+        statusContracts: sortContractDetails(compactRecords),
+        contracts: countedRecords.slice(0, 500),
+        currentStarViet,
+        starVietWarning
+      };
+      responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_TTL_MS, payload });
+      return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS", "X-Dashboard-View": "initial" } });
+    }
+
     const [{ data: records, error: recordsError }, { data: previousRecords, error: previousRecordsError }, { data: previousMonthRecords, error: previousMonthRecordsError }, { data: yearRecords, error: yearRecordsError }, { data: target, error: targetError }, { data: latestUpload }, { data: uploadsByMonth }] = await Promise.all([
       advisorScope(supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(month)).gte("paid_date", start).lte("paid_date", end)),
       advisorScope(supabase.from("revenue_records").select("*").eq("data_month", toMonthStart(previousFilters.month)).gte("paid_date", previousBounds.start).lte("paid_date", previousEnd)),
