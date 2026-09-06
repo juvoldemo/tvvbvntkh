@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
 const eventNames = new Set(["session_start", "tab_view", "tab_duration", "action"]);
+const analyticsCache = new Map<string, { expiresAt: number; payload: any }>();
 const analyticsTimeZone = "Asia/Ho_Chi_Minh";
 const analyticsDateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
   timeZone: analyticsTimeZone,
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const period = request.nextUrl.searchParams.get("period") || "day";
+  const cached = analyticsCache.get(period);
+  if (cached && cached.expiresAt > Date.now()) return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "HIT" } });
   const days = period === "month" ? 30 : period === "week" ? 7 : 1;
   const nowDate = new Date();
   const { year, month, day } = analyticsTimeParts(nowDate);
@@ -175,5 +178,7 @@ export async function GET(request: NextRequest) {
     viewOnlySessions: result.filter((row) => row.actions === 0).length,
     shortSessions: result.filter((row) => row.totalSeconds > 0 && row.totalSeconds < 15).length
   };
-  return NextResponse.json({ period, since, rows: result, summary, invitationRanking, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days });
+  const payload = { period, since, rows: result, summary, invitationRanking, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days };
+  analyticsCache.set(period, { expiresAt: Date.now() + 20_000, payload });
+  return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "MISS" } });
 }

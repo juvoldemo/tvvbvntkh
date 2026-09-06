@@ -10,6 +10,7 @@ import type { RevenueRecord } from "@/lib/types";
 
 const MONTHLY_MILESTONES = [12_000_000, 24_000_000, 50_000_000];
 const PAGE_SIZE = 1000;
+const responseCache = new Map<string, { expiresAt: number; payload: any }>();
 
 async function readAll<T>(queryFactory: (from: number, to: number) => any) {
   const rows: T[] = [];
@@ -89,6 +90,10 @@ export async function GET(request: NextRequest) {
   try {
     const advisorCode = userCodeFromRequest(request);
     if (!advisorCode) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+    const requestedMonth = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const cacheKey = `${advisorCode}:${requestedMonth}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
 
     const supabase = getSupabaseAdmin();
     const { data: profile, error: profileError } = await supabase
@@ -103,7 +108,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Tài khoản chưa được gán nhóm quản lý." }, { status: 403 });
     }
 
-    const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const month = requestedMonth;
     const currentStarVietMonth = getVietnamToday().slice(0, 7);
     const { start, end } = monthBounds(month);
     const previousMonthKey = previousMonth(month);
@@ -280,7 +285,7 @@ export async function GET(request: NextRequest) {
     const starVietRows = buildStarVietReport(starVietData.personalRecords).rows
       .filter((row) => normalizeText(row.groupName) === normalizeText(groupName));
 
-    return NextResponse.json({
+    const payload = {
       role: "team_leader",
       month,
       groupName,
@@ -319,7 +324,9 @@ export async function GET(request: NextRequest) {
       yearContracts,
       yearRevenue: yearContracts.filter((row: any) => isCountedRevenueRecord(row))
         .reduce((sum: number, row: any) => sum + (Number(row.afyp) || 0), 0)
-    });
+    };
+    responseCache.set(cacheKey, { expiresAt: Date.now() + 30_000, payload });
+    return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không tải được dữ liệu nhóm." }, { status: 500 });
   }

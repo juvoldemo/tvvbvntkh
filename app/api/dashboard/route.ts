@@ -10,6 +10,9 @@ import { getAdsMonthlyTarget, normalizeAdsName, resolveAdsName } from "@/lib/ads
 import { buildAdoReport } from "@/lib/ado-report";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
+const responseCache = new Map<string, { expiresAt: number; payload: any }>();
+const RESPONSE_TTL_MS = 30_000;
+
 function visibleName(value: unknown, codePattern: RegExp) {
   const name = String(value ?? "").trim();
   return name && !codePattern.test(name) ? name : "";
@@ -120,6 +123,11 @@ export async function GET(request: NextRequest) {
   try {
     const signedInAdvisorCode = userCodeFromRequest(request);
     const params = request.nextUrl.searchParams;
+    const cacheKey = `${signedInAdvisorCode || "public"}:${params.toString()}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
+    }
     const month = params.get("month") || new Date().toISOString().slice(0, 7);
     const filters: DashboardFilters = {
       month,
@@ -210,7 +218,7 @@ export async function GET(request: NextRequest) {
       overview.achievementRate = adsMonthlyTarget > 0 ? (overview.monthlyAfyp / adsMonthlyTarget) * 100 : null;
     }
 
-    return NextResponse.json({
+    const payload = {
       month,
       availableMonths,
       updatedAt: latestUpload?.uploaded_at ?? null,
@@ -244,7 +252,12 @@ export async function GET(request: NextRequest) {
       starVietWarning,
       competitionContracts: allRecords,
       contracts: countedRecords.slice(0, 500)
-    });
+    };
+    responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_TTL_MS, payload });
+    if (responseCache.size > 500) {
+      for (const [key, value] of responseCache) if (value.expiresAt <= Date.now()) responseCache.delete(key);
+    }
+    return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown dashboard error.";
     return NextResponse.json({ error: message }, { status: 500 });

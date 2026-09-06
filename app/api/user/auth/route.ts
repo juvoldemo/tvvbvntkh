@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS } from "@/lib/ado-scope";
+import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS, isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { USER_COOKIE, createUserToken, normalizeAdvisorCode, userCodeFromRequest, verifyPassword, visiblePasswordRecord } from "@/lib/user-auth";
+import { managedTeamName } from "@/lib/team-scope";
+import { managedBoardScope } from "@/lib/board-scope";
 
 export async function GET(request: NextRequest) {
   const code = userCodeFromRequest(request);
-  return NextResponse.json({ authenticated: Boolean(code), advisorCode: code || null });
+  if (!code) return NextResponse.json({ authenticated: false, advisorCode: null });
+  const { data, error } = await getSupabaseAdmin().from("authorized_users")
+    .select("advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url,group_name")
+    .eq("advisor_code", code).single();
+  if (error) return NextResponse.json({ authenticated: true, advisorCode: code, profile: null });
+  const boardScope = managedBoardScope(data.full_name);
+  const adoScope = managedAdoScope(data.advisor_code, data.full_name);
+  const bossAccount = isBossAccount(data.advisor_code);
+  return NextResponse.json({
+    authenticated: true,
+    advisorCode: code,
+    profile: {
+      ...data,
+      managed_group_name: managedTeamName(data.advisor_code, data.advisor_position, data.full_name, data.group_name),
+      managed_board_name: boardScope?.boardName ?? null,
+      managed_board_groups: boardScope?.groups ?? [],
+      has_board_leader_role: Boolean(boardScope),
+      managed_ado_groups: adoScope?.groups ?? [],
+      managed_ado_department: adoScope?.department ?? null,
+      dashboard_role: bossAccount ? "boss" : adoScope ? "ado" : managedTeamName(data.advisor_code, data.advisor_position, data.full_name, data.group_name) ? "team_leader" : "advisor"
+    }
+  }, { headers: { "Cache-Control": "private, max-age=30" } });
 }
 
 export async function POST(request: NextRequest) {

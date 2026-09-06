@@ -4,7 +4,6 @@ import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect,
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
-import { toPng } from "html-to-image";
 import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, Clipboard, ClipboardCheck, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
@@ -485,6 +484,10 @@ export default function TvvMobilePage() {
       .then((payload) => {
         setSignedIn(Boolean(payload.authenticated));
         setAuthenticatedAdvisorCode(String(payload.advisorCode || "").trim().toUpperCase());
+        if (payload.profile) {
+          setUserProfile(payload.profile);
+          setProfileReady(true);
+        }
       })
       .finally(() => setAuthReady(true));
   }, []);
@@ -495,13 +498,17 @@ export default function TvvMobilePage() {
       setUserProfile(null);
       return;
     }
+    if (userProfile?.advisor_code === authenticatedAdvisorCode) {
+      setProfileReady(true);
+      return;
+    }
     setProfileReady(false);
     fetch("/api/user/profile", { cache: "no-store" })
       .then((response) => response.json())
       .then((payload) => setUserProfile(payload.profile ?? null))
       .catch(() => setUserProfile(null))
       .finally(() => setProfileReady(true));
-  }, [signedIn]);
+  }, [authenticatedAdvisorCode, signedIn, userProfile?.advisor_code]);
 
   useEffect(() => {
     if (!signedIn || !isBoardMode) {
@@ -536,8 +543,6 @@ export default function TvvMobilePage() {
       if (refreshTimer) window.clearTimeout(refreshTimer);
       refreshTimer = window.setTimeout(() => setAdoRefreshGeneration((current) => current + 1), 120);
     };
-    const onFocus = () => refresh();
-    window.addEventListener("focus", onFocus);
     const localRecruitment = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel("recruitment-pool-updates") : null;
     if (localRecruitment) localRecruitment.onmessage = refresh;
 
@@ -546,7 +551,6 @@ export default function TvvMobilePage() {
     if (!url || !anonKey) {
       return () => {
         if (refreshTimer) window.clearTimeout(refreshTimer);
-        window.removeEventListener("focus", onFocus);
         localRecruitment?.close();
       };
     }
@@ -564,7 +568,6 @@ export default function TvvMobilePage() {
       .subscribe();
     return () => {
       if (refreshTimer) window.clearTimeout(refreshTimer);
-      window.removeEventListener("focus", onFocus);
       localRecruitment?.close();
       void liveClient.removeChannel(managementChannel);
       void liveClient.removeChannel(recruitmentChannel);
@@ -4096,6 +4099,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
     try {
       await document.fonts?.ready;
       const element = simulationExportRef.current;
+      const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(element, {
         cacheBust: true,
         pixelRatio: 2,

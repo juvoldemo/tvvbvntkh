@@ -12,6 +12,8 @@ import recruitmentCandidates from "@/data/recruitment-candidates.json";
 const TEAM_ACTIVITY_DATA_BUCKET = "team-activity-data";
 const RECRUITMENT_REGISTRY_MONTH = "2099-12-01";
 const RECRUITMENT_REGISTRY_GROUP = "__RECRUITMENT_POOL_LOCK__";
+const responseCache = new Map<string, { expiresAt: number; payload: any }>();
+const RESPONSE_TTL_MS = 30_000;
 
 function statusBucket(value: unknown) {
   const status = normalizeStatusText(value);
@@ -85,6 +87,12 @@ export async function GET(request: NextRequest) {
   try {
     const code = userCodeFromRequest(request);
     if (!code) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+    const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
+    const cacheKey = `${code}:${month}`;
+    const cached = responseCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
+    }
     const supabase = getSupabaseAdmin();
     const { data: profile, error: profileError } = await supabase
       .from("authorized_users")
@@ -95,7 +103,6 @@ export async function GET(request: NextRequest) {
     const scope = await resolveManagementScope(supabase, profile.advisor_code, profile.full_name);
     if (!scope) return NextResponse.json({ error: "Tài khoản không có quyền quản lý." }, { status: 403 });
 
-    const month = request.nextUrl.searchParams.get("month") || new Date().toISOString().slice(0, 7);
     const { start, end } = monthBounds(month);
     const year = month.slice(0, 4);
     const [
@@ -258,7 +265,7 @@ export async function GET(request: NextRequest) {
       ])
       : [{ data: [] as any[] }, { data: [] as any[] }];
 
-    return NextResponse.json({
+    const payload = {
       role: scope.role,
       month,
       ado: { code, name: scope.fullName, department: scope.department },
@@ -298,7 +305,12 @@ export async function GET(request: NextRequest) {
       warnings: {
         targets: targetError ? "Chưa tải được mục tiêu do trưởng nhóm đăng ký." : null
       }
-    }, { headers: { "Cache-Control": "no-store, max-age=0" } });
+    };
+    responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_TTL_MS, payload });
+    if (responseCache.size > 100) {
+      for (const [key, value] of responseCache) if (value.expiresAt <= Date.now()) responseCache.delete(key);
+    }
+    return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không tải được dữ liệu ADO." }, { status: 500 });
   }
