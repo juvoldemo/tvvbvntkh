@@ -4,6 +4,7 @@ import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-valida
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
 export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
+export const VIP_INVITATION_IMAGE_PATH = "/invitations/HNKHVIP.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
@@ -143,6 +144,40 @@ export async function drawAugust20Invitation(
   context.strokeText(displayName, centerX, textY, areaWidth);
   context.fillStyle = textColor;
   context.fillText(displayName, centerX, textY, areaWidth);
+}
+
+export async function drawVipInvitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#17448F"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const renderScale = Math.min(outputScale, 2400 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  const scale = (width / 1770) * renderScale;
+  const areaWidth = 700 * scale;
+  const centerX = 1328 * scale;
+  const centerY = 285 * scale;
+  let fontSize = 45 * scale;
+  while (fontSize > 27 * scale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = textColor;
+  context.fillText(displayName, centerX, centerY, areaWidth);
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement) {

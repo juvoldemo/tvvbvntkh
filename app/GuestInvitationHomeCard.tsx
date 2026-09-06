@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { AUGUST_20_INVITATION_IMAGE_PATH, canvasToBlob, downloadInvitationFile, drawAugust20Invitation } from "@/lib/invitation-canvas";
+import { VIP_INVITATION_IMAGE_PATH, canvasToBlob, downloadInvitationFile, drawVipInvitation } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const IMAGE_PATH = "/invitations/Banner 20.08.png";
+const IMAGE_PATH = "/invitations/Banner HNKH VIP.png";
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
   { label: "Xanh", value: "#17448F" },
@@ -44,13 +44,13 @@ export default function GuestInvitationHomeCard() {
     if (!open) return;
     const image = new window.Image();
     image.onload = () => { imageRef.current = image; setImageReady(true); };
-    image.onerror = () => setMessage("Không thể tải ảnh thư mời Hội nghị khách hàng 20/08.");
-    image.src = AUGUST_20_INVITATION_IMAGE_PATH;
+    image.onerror = () => setMessage("Không thể tải ảnh thư mời Hội nghị khách hàng VIP.");
+    image.src = VIP_INVITATION_IMAGE_PATH;
   }, [open]);
 
   useEffect(() => {
     if (!open || !imageReady || !canvasRef.current || !imageRef.current) return;
-    void drawAugust20Invitation(canvasRef.current, imageRef.current, displayName, 1, textColor).catch(() => setMessage("Không thể tạo bản xem trước."));
+    void drawVipInvitation(canvasRef.current, imageRef.current, displayName, 1, textColor).catch(() => setMessage("Không thể tạo bản xem trước."));
   }, [displayName, imageReady, open, textColor]);
 
   useEffect(() => {
@@ -96,8 +96,8 @@ export default function GuestInvitationHomeCard() {
   }
 
   return <>
-    <button className="tvv-card hnkh-home-card" type="button" onClick={() => setOpen(true)} aria-label="Mở công cụ tạo thư mời Hội nghị khách hàng ngày 20 tháng 8">
-      <Image src={IMAGE_PATH} alt="Thư mời Hội nghị khách hàng" width={2804} height={561} />
+    <button className="tvv-card hnkh-home-card" type="button" onClick={() => setOpen(true)} aria-label="Mở công cụ tạo thư mời Hội nghị khách hàng VIP">
+      <Image src={IMAGE_PATH} alt="Thư mời Hội nghị khách hàng VIP" width={2804} height={561} />
     </button>
     {open && <div className="hnkh-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
       <section className="hnkh-modal" role="dialog" aria-modal="true" aria-label="Tạo thư mời có tên khách hàng">
