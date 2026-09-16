@@ -4,6 +4,7 @@ import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-valida
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
 export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
+export const SEPTEMBER_19_INVITATION_IMAGE_PATH = "/invitations/Thu moi 19.09.png";
 export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
@@ -144,6 +145,44 @@ export async function drawAugust20Invitation(
   context.strokeText(displayName, centerX, textY, areaWidth);
   context.fillStyle = textColor;
   context.fillText(displayName, centerX, textY, areaWidth);
+}
+
+export async function drawSeptember19Invitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#17448F"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  // Retain enough pixels for the small customer-name lettering to stay crisp.
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  // The name line is on the upper-right panel of the 19.09 template.
+  const areaWidth = 1_780 * renderScale;
+  const centerX = 3_770 * renderScale;
+  const dottedLineY = 988 * renderScale;
+  let fontSize = 132 * renderScale;
+  while (fontSize > 78 * renderScale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= 2 * renderScale;
+  }
+  const metrics = context.measureText(displayName);
+  // Keep the dotted writing line visible just below the customer's name.
+  const nameY = dottedLineY - (20 * renderScale) - metrics.actualBoundingBoxDescent;
+  context.textAlign = "center";
+  context.textBaseline = "alphabetic";
+  context.fillStyle = textColor;
+  context.fillText(displayName, centerX, nameY, areaWidth);
 }
 
 export async function drawVipInvitation(
