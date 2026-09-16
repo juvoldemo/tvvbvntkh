@@ -4,7 +4,7 @@ import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-valida
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
 export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
-export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.jfif";
+export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
