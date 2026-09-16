@@ -4,7 +4,7 @@ import { buildGuestDisplayName, slugifyGuestName } from "@/lib/invitation-valida
 export const INVITATION_IMAGE_PATH = "/invitations/thu-moi-30-nam-bao-viet.png";
 export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-thap-lua-dam-me.png";
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
-export const VIP_INVITATION_IMAGE_PATH = "/invitations/HNKHVIP.png";
+export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.jfif";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
@@ -164,12 +164,12 @@ export async function drawVipInvitation(
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   if (!displayName) return;
 
-  const scale = (width / 1770) * renderScale;
-  const areaWidth = 700 * scale;
-  const centerX = 1328 * scale;
-  const centerY = 285 * scale;
-  let fontSize = 45 * scale;
-  while (fontSize > 27 * scale) {
+  const scale = (width / 1232) * renderScale;
+  const areaWidth = 466 * scale;
+  const centerX = 914 * scale;
+  const centerY = 194 * scale;
+  let fontSize = 31 * scale;
+  while (fontSize > 19 * scale) {
     context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
     if (context.measureText(displayName).width <= areaWidth) break;
     fontSize -= scale;

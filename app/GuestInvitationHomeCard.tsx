@@ -6,7 +6,7 @@ import { Download, LoaderCircle, Share2, X } from "lucide-react";
 import { VIP_INVITATION_IMAGE_PATH, canvasToBlob, downloadInvitationFile, drawVipInvitation } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const IMAGE_PATH = "/invitations/Banner HNKH VIP.png";
+const IMAGE_PATH = "/invitations/ThumoiCR.png";
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
   { label: "Xanh", value: "#17448F" },
@@ -97,7 +97,7 @@ export default function GuestInvitationHomeCard() {
 
   return <>
     <button className="tvv-card hnkh-home-card" type="button" onClick={() => setOpen(true)} aria-label="Mở công cụ tạo thư mời Hội nghị khách hàng VIP">
-      <Image src={IMAGE_PATH} alt="Thư mời Hội nghị khách hàng VIP" width={2804} height={561} />
+      <Image src={IMAGE_PATH} alt="Thư mời Hội nghị khách hàng VIP" width={2168} height={422} />
     </button>
     {open && <div className="hnkh-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
       <section className="hnkh-modal" role="dialog" aria-modal="true" aria-label="Tạo thư mời có tên khách hàng">
