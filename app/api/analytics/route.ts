@@ -92,11 +92,14 @@ export async function GET(request: NextRequest) {
     "ado_accounts",
     "recruitment"
   ].includes(normalizeAction(value));
-  const invitationEvents = invitationActions.filter((event: any) => {
-    const actionName = normalizeAction(event.action_name);
-    return actionName === "xuat thu moi hnkh vip png"
-      || actionName === "chia se thu moi hnkh vip qua zalo";
-  });
+  const invitationContent = (value: unknown) => {
+    const actionName = normalizeAction(value);
+    if (actionName === "xuat thu moi hnkh vip png" || actionName === "chia se thu moi hnkh vip qua zalo") return "Hội nghị khách hàng VIP";
+    if (actionName === "xuat thu moi ra mat an sinh giao duc" || actionName === "chia se thu moi ra mat an sinh giao duc") return "Ra mắt An Sinh Giáo Dục";
+    return null;
+  };
+  const invitationEvents = invitationActions.map((event: any) => ({ ...event, content: invitationContent(event.action_name) }))
+    .filter((event: any) => event.content);
   const invitationsCreated = invitationEvents.length;
   const profiles = new Map((users ?? []).map((user: any) => [user.advisor_code, user]));
   const invitationCounts = new Map<string, number>();
@@ -110,6 +113,17 @@ export async function GET(request: NextRequest) {
       return { advisorCode, fullName: profile.full_name || "—", groupName: profile.group_name || "—", position: profile.advisor_position || "—", count };
     })
     .sort((a, b) => b.count - a.count || a.fullName.localeCompare(b.fullName, "vi"));
+  const invitationContentMap = new Map<string, { content: string; count: number; advisors: Set<string> }>();
+  for (const event of invitationEvents) {
+    const content = String(event.content);
+    const item = invitationContentMap.get(content) || { content, count: 0, advisors: new Set<string>() };
+    item.count += 1;
+    item.advisors.add(String(event.advisor_code || "").trim());
+    invitationContentMap.set(content, item);
+  }
+  const invitationContents = [...invitationContentMap.values()]
+    .map((item) => ({ content: item.content, count: item.count, advisors: item.advisors.size }))
+    .sort((a, b) => b.count - a.count || a.content.localeCompare(b.content, "vi"));
   const rows = new Map<string, any>();
   for (const event of events ?? []) {
     const profile: any = profiles.get(event.advisor_code) || {};
@@ -178,7 +192,7 @@ export async function GET(request: NextRequest) {
     viewOnlySessions: result.filter((row) => row.actions === 0).length,
     shortSessions: result.filter((row) => row.totalSeconds > 0 && row.totalSeconds < 15).length
   };
-  const payload = { period, since, rows: result, summary, invitationRanking, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days };
+  const payload = { period, since, rows: result, summary, invitationRanking, invitationContents, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days };
   analyticsCache.set(period, { expiresAt: Date.now() + 20_000, payload });
   return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "MISS" } });
 }

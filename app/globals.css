@@ -17040,6 +17040,7 @@ body .admin-page button.admin-analytics-summary-action:hover { background: #dcec
 .admin-invitation-ranking-modal { width: min(680px, calc(100vw - 40px)); }
 .admin-invitation-ranking-list { display: grid; gap: 8px; margin-top: 16px; }
 .admin-invitation-ranking-list > div { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1px solid #e2ebf3; border-radius: 12px; padding: 11px 14px; background: #f8fbff; }
+.admin-invitation-ranking-list > div.admin-invitation-content-item { grid-template-columns: minmax(0, 1fr) auto; }
 .admin-invitation-ranking-list span { display: grid; gap: 3px; min-width: 0; }
 .admin-invitation-ranking-list span strong { overflow: hidden; color: #17324f; text-overflow: ellipsis; white-space: nowrap; }
 .admin-invitation-ranking-list span small { color: #718397; }
