@@ -17,7 +17,7 @@ type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
 
-const INVITATION_ADO_ACCOUNTS = ["nguyenthoc", "tranxuanthu", "dinhquoctien", "nguyenthitram", "nguyenthimaitrang"];
+const INVITATION_ADO_ACCOUNTS = ["nguyenthoc", "tranxuanthu", "dinhquoctien", "nguyenthitram", "nguyenthimaitrang", "nguyenthanhnhan"];
 
 const fallbackAdvisor = {
   key: "D1021A1YNG__Lê Thị Mỹ Châu",
@@ -387,6 +387,9 @@ export default function TvvMobilePage() {
   const isAdoMode = userProfile?.dashboard_role === "ado" || userProfile?.dashboard_role === "boss";
   const isBossMode = userProfile?.dashboard_role === "boss";
   const invitationGroups = INVITATION_ADO_ACCOUNTS.flatMap((account) => managedAdoScope(account)?.groups ?? []);
+  const guestInvitationTemplate = managedAdoScope("nguyenthanhnhan")?.groups.some((group) =>
+    normalizeAdoText(group) === normalizeAdoText(userProfile?.managed_group_name || userProfile?.group_name)
+  ) ? "cr" : "september19";
   const showGuestInvitation = Boolean(
     signedIn && !isAdoMode
     && ["advisor", "team_leader"].includes(userProfile?.dashboard_role)
@@ -1208,10 +1211,10 @@ export default function TvvMobilePage() {
             {isAdoMode
             ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} />
             : isBoardMode
-            ? <BoardLeaderOverview showGuestInvitation={showGuestInvitation} data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
+            ? <BoardLeaderOverview showGuestInvitation={showGuestInvitation} guestInvitationTemplate={guestInvitationTemplate} data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview showGuestInvitation={showGuestInvitation} advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
-            : <Overview showGuestInvitation={showGuestInvitation} advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} starVietLoading={loading} onTab={setTab} />}
+            ? <TeamLeaderOverview showGuestInvitation={showGuestInvitation} guestInvitationTemplate={guestInvitationTemplate} advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
+            : <Overview showGuestInvitation={showGuestInvitation} guestInvitationTemplate={guestInvitationTemplate} advisorCode={userProfile?.advisor_code} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} starVietLoading={loading} onTab={setTab} />}
           </>}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
           {tab === "contests" && (isAdoMode ? <AdoCompetitionPage data={adoData} /> : userProfile?.dashboard_role === "team_leader" ? <TeamLeaderContestPage rewards={teamRewards} estimate={estimate ?? emptyEstimate} /> : <PolicyAwareContestList estimate={estimate ?? emptyEstimate} policyMonth={policyMonth} monthOptions={monthOptions} onPolicyMonthChange={setPolicyMonth} />)}
@@ -1546,7 +1549,7 @@ function TeamTargetRegistrationModal({ month, reportMonth, teamData, registratio
   );
 }
 
-function BoardLeaderOverview({ showGuestInvitation, data, month, monthOptions, onMonthChange, onOpenContracts }: any) {
+function BoardLeaderOverview({ showGuestInvitation, guestInvitationTemplate, data, month, monthOptions, onMonthChange, onOpenContracts }: any) {
   const [selectedBoardGroup, setSelectedBoardGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm trong ban…</p></section>;
   const summary = data.summary ?? {};
@@ -1564,7 +1567,7 @@ function BoardLeaderOverview({ showGuestInvitation, data, month, monthOptions, o
       <button className="team-kpi-card orange clickable" type="button" aria-label="Hợp đồng" onClick={onOpenContracts}><FileText size={20} /><strong>{summary.contracts || 0}</strong></button>
       <button className="team-kpi-card red clickable" type="button" aria-label="Cần theo dõi" onClick={onOpenContracts}><Hourglass size={20} /><strong>{summary.attention || 0}</strong></button>
     </div>
-    {showGuestInvitation && <GuestInvitationHomeCard />}
+    {showGuestInvitation && <GuestInvitationHomeCard key={guestInvitationTemplate} template={guestInvitationTemplate} />}
     <section className="team-overview-panel board-groups-panel">
       <div className="team-panel-header"><div><Users size={18} /><div><h2>Doanh thu từng nhóm</h2></div></div></div>
       <div className="board-group-list">
@@ -2453,7 +2456,7 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
       </section>;
 }
 
-function TeamLeaderOverview({ showGuestInvitation, advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenSmart, onOpenAbout }: any) {
+function TeamLeaderOverview({ showGuestInvitation, guestInvitationTemplate, advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenSmart, onOpenAbout }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showTeamAccess, setShowTeamAccess] = useState(false);
@@ -2536,7 +2539,7 @@ function TeamLeaderOverview({ showGuestInvitation, advisorCode, data, targetRegi
         </CardTag>;
       })}
     </div>
-    {showGuestInvitation && <GuestInvitationHomeCard />}
+    {showGuestInvitation && <GuestInvitationHomeCard key={guestInvitationTemplate} template={guestInvitationTemplate} />}
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
 
@@ -3156,7 +3159,7 @@ function AdvisorRewardPopup({ data, loading, error, onClose }: { data: any; load
   </div>;
 }
 
-function Overview({ showGuestInvitation, advisorCode, showRecruitment, stats, leaderboard, estimate, starViet, starVietWarning, starVietLoading, onTab }: any) {
+function Overview({ showGuestInvitation, guestInvitationTemplate, advisorCode, showRecruitment, stats, leaderboard, estimate, starViet, starVietWarning, starVietLoading, onTab }: any) {
   const statItems = [
     ["Tổng HĐ", stats.total, "blue", "contracts"],
     ["Đã phát hành", stats.issued, "green", "contracts"],
@@ -3165,7 +3168,7 @@ function Overview({ showGuestInvitation, advisorCode, showRecruitment, stats, le
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
-    {showGuestInvitation && <GuestInvitationHomeCard />}
+    {showGuestInvitation && <GuestInvitationHomeCard key={guestInvitationTemplate} template={guestInvitationTemplate} />}
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
