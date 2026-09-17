@@ -386,7 +386,7 @@ export default function TvvMobilePage() {
   const isBoardMode = activeRole === "board_leader" && Boolean(userProfile?.has_board_leader_role);
   const isAdoMode = userProfile?.dashboard_role === "ado" || userProfile?.dashboard_role === "boss";
   const isBossMode = userProfile?.dashboard_role === "boss";
-  const invitationGroups = INVITATION_ADO_ACCOUNTS.flatMap((account) => managedAdoScope(account)?.groups ?? []);
+  const invitationGroups = ["Thiên Phúc", ...INVITATION_ADO_ACCOUNTS.flatMap((account) => managedAdoScope(account)?.groups ?? [])];
   const guestInvitationTemplate = managedAdoScope("nguyenthanhnhan")?.groups.some((group) =>
     normalizeAdoText(group) === normalizeAdoText(userProfile?.managed_group_name || userProfile?.group_name)
   ) ? "cr" : "september19";
