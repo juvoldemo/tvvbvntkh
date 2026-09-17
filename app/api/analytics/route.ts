@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
     const actionName = normalizeAction(value);
     if (actionName === "xuat thu moi hnkh vip png" || actionName === "chia se thu moi hnkh vip qua zalo") return "Hội nghị khách hàng VIP";
     if (actionName === "xuat thu moi ra mat an sinh giao duc" || actionName === "chia se thu moi ra mat an sinh giao duc") return "Ra mắt An Sinh Giáo Dục";
+    if (actionName === "xuat thu moi dau an vinh quang" || actionName === "chia se thu moi dau an vinh quang") return "Dấu ấn vinh quang";
     return null;
   };
   const invitationEvents = invitationActions.map((event: any) => ({ ...event, content: invitationContent(event.action_name) }))
@@ -113,16 +114,23 @@ export async function GET(request: NextRequest) {
       return { advisorCode, fullName: profile.full_name || "—", groupName: profile.group_name || "—", position: profile.advisor_position || "—", count };
     })
     .sort((a, b) => b.count - a.count || a.fullName.localeCompare(b.fullName, "vi"));
-  const invitationContentMap = new Map<string, { content: string; count: number; advisors: Set<string> }>();
+  const invitationContentMap = new Map<string, { content: string; count: number; advisors: Map<string, number> }>();
   for (const event of invitationEvents) {
     const content = String(event.content);
-    const item = invitationContentMap.get(content) || { content, count: 0, advisors: new Set<string>() };
+    const item = invitationContentMap.get(content) || { content, count: 0, advisors: new Map<string, number>() };
     item.count += 1;
-    item.advisors.add(String(event.advisor_code || "").trim());
+    const advisorCode = String(event.advisor_code || "").trim() || "—";
+    item.advisors.set(advisorCode, (item.advisors.get(advisorCode) || 0) + 1);
     invitationContentMap.set(content, item);
   }
   const invitationContents = [...invitationContentMap.values()]
-    .map((item) => ({ content: item.content, count: item.count, advisors: item.advisors.size }))
+    .map((item) => ({
+      content: item.content, count: item.count, advisors: item.advisors.size,
+      ranking: [...item.advisors.entries()].map(([advisorCode, count]) => {
+        const profile: any = profiles.get(advisorCode) || {};
+        return { advisorCode, fullName: profile.full_name || "—", groupName: profile.group_name || "—", position: profile.advisor_position || "—", count };
+      }).sort((a, b) => b.count - a.count || a.fullName.localeCompare(b.fullName, "vi"))
+    }))
     .sort((a, b) => b.count - a.count || a.content.localeCompare(b.content, "vi"));
   const rows = new Map<string, any>();
   for (const event of events ?? []) {

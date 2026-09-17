@@ -14,7 +14,7 @@ type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durat
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
 type AnalyticsUser = { advisorCode: string; fullName: string; groupName: string; position: string; lastAccess: string | null };
 type InvitationRankingItem = { advisorCode: string; fullName: string; groupName: string; position: string; count: number };
-type InvitationContentItem = { content: string; count: number; advisors: number };
+type InvitationContentItem = { content: string; count: number; advisors: number; ranking: InvitationRankingItem[] };
 type AnalyticsData = { rows: AnalyticsRow[]; summary: { uniqueAdvisors: number; sessions: number; actions: number; summaryExports: number; invitationsCreated: number; totalSeconds: number; averageSeconds: number; viewOnlySessions: number; shortSessions: number }; invitationRanking: InvitationRankingItem[]; invitationContents: InvitationContentItem[]; trends: Array<{ label: string; sessions: number; advisors: number; seconds: number }>; tabStats: Array<{ tabName: string; views: number; seconds: number; advisors: number }>; groups: Array<{ groupName: string; advisors: number; sessions: number; seconds: number; actions: number }>; neverAccessed: AnalyticsUser[]; inactive7Days: AnalyticsUser[]; inactive30Days: AnalyticsUser[] };
 type TeamActivity = { id: string; content: string; scheduled_date: string; scheduled_time: string; scheduled_at: string; completed: boolean; completed_at: string | null; photo_url: string | null };
 type ActivityGroup = { id: string; group_name: string; leader_code: string; leader_name: string; revenue_target: number; active_advisor_target: number; selected_advisors: unknown[]; updated_at: string; activities: TeamActivity[]; activityError?: string | null };
@@ -931,6 +931,12 @@ function AnalyticsPanel({ period, setPeriod, data, loading, onReload }: { period
   const [showSessionDetails, setShowSessionDetails] = useState(false);
   const [showAccessRanking, setShowAccessRanking] = useState(false);
   const [showInvitationRanking, setShowInvitationRanking] = useState(false);
+  const [selectedInvitationContent, setSelectedInvitationContent] = useState<string | null>(null);
+  const selectedInvitation = data?.invitationContents?.find((item) => item.content === selectedInvitationContent);
+  function closeInvitationRanking() {
+    setShowInvitationRanking(false);
+    setSelectedInvitationContent(null);
+  }
   const rows = data?.rows ?? [];
   const summary = data?.summary ?? { uniqueAdvisors: 0, sessions: 0, actions: 0, summaryExports: 0, invitationsCreated: 0, totalSeconds: 0, averageSeconds: 0, viewOnlySessions: 0, shortSessions: 0 };
   const tabLabels: Record<string, string> = { overview: "Tổng quan", contracts: "Hợp đồng", calculator: "Thu nhập", contests: "Thi đua", leaderboard: "Bảng xếp hạng", illustration: "Minh họa", profile: "Cá nhân", archive: "Kho tài liệu" };
@@ -953,7 +959,25 @@ function AnalyticsPanel({ period, setPeriod, data, loading, onReload }: { period
       <div>{([["day", "Theo ngày"], ["week", "Theo tuần"], ["month", "Theo tháng"]] as const).map(([id, label]) => <button type="button" className={period === id && !showSessionDetails && !showAccessRanking ? "active" : ""} key={id} onClick={() => { setPeriod(id); setShowSessionDetails(false); setShowAccessRanking(false); }}>{label}</button>)}<button type="button" className={showSessionDetails ? "active" : ""} onClick={() => { setShowSessionDetails(true); setShowAccessRanking(false); }}>Chi tiết từng phiên</button><button type="button" className={showAccessRanking ? "active" : ""} onClick={() => { setShowAccessRanking(true); setShowSessionDetails(false); }}>Bảng xếp hạng TVV truy cập</button></div>
       <button type="button" onClick={onReload} disabled={loading}>{loading ? "Đang tải..." : "Làm mới"}</button>
     </div>
-    {showInvitationRanking && <div className="admin-analytics-modal-backdrop" onClick={() => setShowInvitationRanking(false)}><section className="admin-analytics-modal admin-invitation-ranking-modal" role="dialog" aria-modal="true" aria-labelledby="invitation-ranking-title" onClick={(event) => event.stopPropagation()}><header><div><h3 id="invitation-ranking-title">Thống kê thư mời theo nội dung</h3><p>{summary.invitationsCreated} thư mời đã được tạo bởi tất cả TVV</p></div><button type="button" onClick={() => setShowInvitationRanking(false)} aria-label="Đóng"><X size={22} /></button></header><div className="admin-invitation-ranking-list">{(data?.invitationContents ?? []).map((item) => <div className="admin-invitation-content-item" key={item.content}><span><strong>{item.content}</strong><small>{item.advisors} TVV đã tạo</small></span><em>{item.count}<small> thư</small></em></div>)}{!(data?.invitationContents ?? []).length && <p>Chưa có dữ liệu tạo thư mời.</p>}</div></section></div>}
+    {showInvitationRanking && <div className="admin-analytics-modal-backdrop" onClick={closeInvitationRanking}>
+      <section className="admin-analytics-modal admin-invitation-ranking-modal" role="dialog" aria-modal="true" aria-labelledby="invitation-ranking-title" onClick={(event) => event.stopPropagation()}>
+        <header><div><h3 id="invitation-ranking-title">{selectedInvitation ? selectedInvitation.content : "Thống kê thư mời theo nội dung"}</h3><p>{selectedInvitation ? `${selectedInvitation.advisors} TVV đã tạo ${selectedInvitation.count} thư mời` : `${summary.invitationsCreated} thư mời đã được tạo bởi tất cả TVV`}</p></div><button type="button" onClick={closeInvitationRanking} aria-label="Đóng"><X size={22} /></button></header>
+        {selectedInvitation ? <>
+          <button type="button" className="admin-secondary" onClick={() => setSelectedInvitationContent(null)}>Quay lại danh sách nội dung</button>
+          <div className="admin-invitation-ranking-list">
+            {(selectedInvitation.ranking ?? []).map((item, index) => <div key={item.advisorCode}>
+              <b>{index + 1}</b><span><strong>{item.fullName}</strong><small>Mã TVV: {item.advisorCode} · {item.groupName}</small></span><em>{item.count}<small> thư</small></em>
+            </div>)}
+            {!selectedInvitation.ranking?.length && <p>Chưa có dữ liệu TVV tạo thư mời.</p>}
+          </div>
+        </> : <div className="admin-invitation-ranking-list">
+          {(data?.invitationContents ?? []).map((item) => <button type="button" className="admin-invitation-content-item" key={item.content} onClick={() => setSelectedInvitationContent(item.content)} aria-label={`Xem danh sách TVV tạo thư mời ${item.content}`}>
+            <span><strong>{item.content}</strong><small>{item.advisors} TVV đã tạo</small></span><em>{item.count}<small> thư</small></em>
+          </button>)}
+          {!(data?.invitationContents ?? []).length && <p>Chưa có dữ liệu tạo thư mời.</p>}
+        </div>}
+      </section>
+    </div>}
     {!showSessionDetails && !showAccessRanking && <><div className="admin-analytics-summary admin-analytics-summary-full">
       <span><strong>{summary.uniqueAdvisors}</strong> TVV truy cập</span><span><strong>{summary.sessions}</strong> phiên truy cập</span><span><strong>{summary.actions}</strong> thao tác</span><button type="button" className="admin-analytics-summary-action" onClick={() => setShowInvitationRanking(true)} aria-haspopup="dialog"><strong>{summary.invitationsCreated}</strong> thư mời đã tạo</button><span><strong>{duration(summary.averageSeconds)}</strong> trung bình/phiên</span><span><strong>{summary.summaryExports}</strong> lượt xuất tóm tắt</span><span><strong>{summary.viewOnlySessions}</strong> phiên chỉ xem</span>
     </div>
