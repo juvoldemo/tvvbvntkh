@@ -5175,12 +5175,11 @@ body:not(.riders-mode) .occupation-field {
 
 body:not(.riders-mode) .policy-owner-relation-card {
   display: grid;
-  min-height: 0;
-  gap: 4px;
-  margin: 0 0 6px;
-  padding: 5px 8px;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 10px;
   border: 1px solid #d6e6fb;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 6px 18px rgba(13, 74, 150, 0.08);
 }
@@ -5192,12 +5191,11 @@ body.riders-mode #illustrationForm > .policy-owner-relation-card {
 
 body.riders-mode .global-policy-owner-relation-card {
   display: grid !important;
-  min-height: 0;
-  gap: 4px;
-  margin: 0 0 6px;
-  padding: 5px 8px;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 10px;
   border: 1px solid #d6e6fb;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 6px 18px rgba(13, 74, 150, 0.08);
 }
@@ -5237,12 +5235,12 @@ body.riders-mode .global-policy-owner-relation-card .person-form-tabs[hidden] {
 }
 
 body:not(.riders-mode) .policy-owner-toggle {
-  padding: 3px;
+  padding: 4px;
   border: 1px solid #bfd7f6;
   border-radius: 999px;
   background: #eef6ff;
   justify-self: center;
-  width: min(100%, 180px);
+  width: min(100%, 220px);
 }
 
 body.riders-mode .global-policy-owner-relation-card .policy-owner-toggle,
@@ -5254,8 +5252,8 @@ body.riders-mode .global-policy-owner-relation-card .person-form-tabs {
 
 body.riders-mode .global-policy-owner-relation-card .policy-owner-toggle {
   justify-self: center;
-  width: min(100%, 180px);
-  padding: 3px;
+  width: min(100%, 220px);
+  padding: 4px;
   border: 1px solid #bfd7f6;
   border-radius: 999px;
   background: #eef6ff;
@@ -5283,11 +5281,6 @@ body.riders-mode .global-policy-owner-relation-card .person-form-tabs button {
   letter-spacing: 0 !important;
   white-space: nowrap;
   cursor: pointer;
-}
-
-body:not(.riders-mode) .policy-owner-toggle button,
-body.riders-mode .global-policy-owner-relation-card .policy-owner-toggle button {
-  min-height: 30px;
 }
 
 body:not(.riders-mode) .policy-owner-toggle button {
@@ -6849,6 +6842,36 @@ body:not(.riders-mode) .main-product-option.selected {
   background: #eef5ff;
 }
 
+/* An Sinh Giáo Dục: show the education-specific configuration and protection column. */
+.education-only { display: none; }
+body.education-mode .education-only { display: flex; }
+body.education-mode th.education-only { display: table-cell; }
+body.education-mode td.education-only { display: table-cell; }
+body.education-mode .education-protection-col,
+body.education-mode .protection-value {
+  color: #004b7a;
+  background: #eef7fb;
+  font-weight: 700;
+}
+body.education-mode .results tbody tr:last-child {
+  background: #edf9f4;
+  box-shadow: inset 0 2px 0 #0b7b62;
+}
+
+/* Keep all education maturity options on one line. */
+body.education-mode #educationMaturityField .life-care-term-buttons {
+  grid-template-columns: repeat(3, 68px);
+  gap: 5px;
+  width: 214px;
+}
+
+@media (max-width: 520px) {
+  body.education-mode #educationMaturityField .life-care-term-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   body:not(.riders-mode) .main-product-dropdown {
     width: auto;
@@ -7892,6 +7915,34 @@ body.riders-mode .rider-stbh-error[hidden] {
   box-shadow: none;
 }
 
+.advice-export-button { background: #087f5b; }
+body .summary-export-button.advice-export-button { color: #fff !important; background: #087f5b !important; }
+.advice-export-screen { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; box-sizing: border-box; padding: 18px; background: rgba(10, 31, 48, .72); }
+.advice-export-screen[hidden] { display: none; }
+.advice-export-dialog { display: flex; flex-direction: column; width: min(760px, 100%); max-height: 100%; overflow: hidden; padding: 18px; border-radius: 20px; background: #fff; box-shadow: 0 24px 70px rgba(0, 0, 0, .25); }
+.advice-export-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.advice-export-dialog header span { color: #087f5b; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+.advice-export-dialog h2 { margin: 4px 0 0; color: #12324a; }
+.advice-export-dialog header button { width: auto; height: auto; padding: 0 2px; border: 0; border-radius: 0; background: transparent; color: #234; font-size: 28px; line-height: 1; cursor: pointer; }
+.advice-export-dialog > p { color: #607481; }
+.advice-export-content { box-sizing: border-box; width: 100%; min-height: 280px; flex: 1 1 auto; overflow: auto; padding: 20px; border: 1px solid #cbd9e2; border-radius: 14px; color: #243746; background: #fbfdff; font: 13px/1.5 Arial, sans-serif; outline: none; }
+.advice-export-content { scrollbar-width: none; -ms-overflow-style: none; }
+.advice-export-content::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.advice-export-actions .summary-action-button { flex: 1 1 0; width: auto; }
+.advice-export-actions .advice-close-button { border-color: #d92d3a; background: #d92d3a; color: #fff; }
+.advice-export-actions .advice-close-button:hover { border-color: #b91f2c; background: #b91f2c; }
+.advice-export-content:focus { border-color: #087f5b; box-shadow: 0 0 0 3px rgba(8,127,91,.12); }
+.advice-export-content h2 { margin: 0 0 5px; color: #064b72; font-size: 19px; line-height: 1.25; }
+.advice-export-content h3 { margin: 11px -8px 6px; padding: 7px 10px; border-left: 4px solid #07835d; border-radius: 7px; color: #064b72; background: #eaf7f2; font-size: 15px; line-height: 1.35; }
+.advice-export-content h4 { margin: 9px 0 4px; color: #075f8c; font-size: 14px; line-height: 1.35; }
+.advice-export-content p { margin: 4px 0; }
+.advice-export-content .advice-highlight { padding: 8px 10px; border-radius: 9px; background: #fff7df; color: #5d4200; font-size: 14px; font-weight: 700; }
+.advice-export-content .advice-cta { margin-top: 10px; padding: 12px; border-radius: 11px; background: #075f8c; color: #fff; font-size: 14px; font-weight: 700; }
+.advice-export-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.advice-export-actions .customer-copy-button { flex: 1 0 100%; border-color: #087f5b; background: #087f5b; color: #fff; }
+.advice-export-actions .customer-copy-button:hover { border-color: #066a4c; background: #066a4c; }
+@media (max-width: 600px) { .advice-export-screen { inset: 0; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); } .advice-export-dialog { height: calc(100% - 32px); max-height: calc(100dvh - 32px); padding: 14px; } .advice-export-content { min-height: 0; padding: 14px; font-size: 12px; } .advice-export-content h2 { font-size: 17px; } .advice-export-content h3 { font-size: 14px; } .advice-export-content h4 { font-size: 13px; } .advice-export-content .advice-highlight, .advice-export-content .advice-cta { font-size: 13px; } .advice-export-actions { flex-direction: row; flex: 0 0 auto; } }
+
 body.riders-mode .rider-summary-export-bar {
   width: min(100%, 640px);
   margin: 14px auto 4px;
@@ -8576,517 +8627,54 @@ body.terms-open .bottom-actions {
   visibility: hidden !important;
 }
 
-/* Distinguish the active BMBH input context from NĐBH. */
-body.policy-owner-form-active [data-person-form-tab="policyOwner"].active {
-  border-color: #004b7a !important;
-  background: #004b7a !important;
-  color: #fff !important;
-  box-shadow: 0 6px 14px rgba(0, 75, 122, .22) !important;
-}
-
-.policy-owner-validation {
-  display: none !important;
-}
-
-/* BMBH uses one continuous view: customer information, then rider illustration. */
-body.policy-owner-combined-view > .app-shell > .tabs {
-  grid-template-columns: 1fr !important;
-}
-
-body.policy-owner-combined-view > .app-shell > .tabs .tab-main {
-  display: none !important;
-}
-
-body.policy-owner-combined-view > .app-shell > .tabs .tab-riders {
+/* Final responsive lock for An Sinh Giáo Dục maturity choices. */
+body.education-mode #educationMaturityField .life-care-term-buttons {
   display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
   width: 100% !important;
-  border-color: #f4c542 !important;
-  background: #f4c542 !important;
-  color: #004b7a !important;
 }
 
-body.policy-owner-combined-view #ridersTab {
-  display: grid !important;
-  gap: 12px;
-}
-
-body.policy-owner-combined-view #customerInfoPanel {
-  order: -2;
-  margin: 0 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel h2 span:last-child {
-  font-size: 0;
-}
-
-body.policy-owner-combined-view #customerInfoPanel h2 span:last-child::after {
-  content: "Thông tin khách hàng";
-  font-size: var(--typo-18);
-}
-
-body.policy-owner-combined-view #ridersTab > .rider-customer-card {
-  display: none !important;
-}
-
-/* Reliable combined layout based on the existing BMBH state. */
-body.policy-owner-form-active > .app-shell > .tabs {
-  grid-template-columns: 1fr !important;
-}
-
-body.policy-owner-form-active > .app-shell > .tabs .tab-main {
-  display: none !important;
-}
-
-body.policy-owner-form-active > .app-shell > .tabs .tab-riders {
-  display: flex !important;
-  width: 100% !important;
-  border-color: #f4c542 !important;
-  background: #f4c542 !important;
-  color: #004b7a !important;
-}
-
-body.policy-owner-form-active #mainTab {
-  display: block !important;
-}
-
-body.policy-owner-form-active #mainTab > :not(#illustrationForm) {
-  display: none !important;
-}
-
-body.policy-owner-form-active #illustrationForm {
-  display: block !important;
-}
-
-body.policy-owner-form-active #illustrationForm > :not(#customerInfoPanel) {
-  display: none !important;
-}
-
-body.policy-owner-form-active #ridersTab {
-  display: grid !important;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-body.policy-owner-form-active #ridersTab > .rider-customer-card {
-  display: none !important;
-}
-
-/* Keep BMBH information compact while the rider area uses its original riders-mode layout. */
-body.policy-owner-combined-view #mainTab {
-  display: none !important;
-}
-
-body.policy-owner-combined-view #ridersTab {
-  display: grid !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel {
-  display: block !important;
-  margin: 0 0 4px !important;
-  padding: 8px !important;
-  border-radius: 10px !important;
-  font-family: var(--font-family-app) !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel h2 {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  margin: 0 0 6px !important;
-  color: #004b7a !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  line-height: 1.2 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel > h2 {
-  display: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel h2 .section-badge {
-  flex: 0 0 24px !important;
-  width: 24px !important;
-  height: 24px !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel > .fields:last-child {
-  display: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel > .fields:not(.person-fields),
-body.policy-owner-combined-view #customerInfoPanel .hidden-main-field,
-body.policy-owner-combined-view #customerInfoPanel .hidden-main-field[hidden] {
-  display: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #insuredPersonFields {
-  display: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  gap: 0 !important;
-  overflow: hidden;
-  border: 1px solid #d6e2ee;
-  border-radius: 9px;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields > .field-row {
-  position: relative;
-  display: grid !important;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(112px, max-content) !important;
-  align-items: center !important;
-  gap: 9px !important;
-  min-height: 48px !important;
-  margin: 0 !important;
-  padding: 0 9px !important;
-  border: 0 !important;
-  border-bottom: 1px solid #e0e8f0 !important;
-  border-radius: 0 !important;
-  background-color: #fff !important;
-  box-shadow: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields > .field-row::before {
-  position: relative !important;
-  display: block !important;
-  width: 24px !important;
-  height: 24px !important;
-  justify-self: center !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields > .field-row:last-child {
-  border-bottom: 0 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .field-row > span {
-  grid-column: 2 !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 11px !important;
-  color: #004b7a !important;
-  font-weight: 700 !important;
-  white-space: nowrap !important;
-  line-height: 1.15 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .required-label::after {
-  content: " *";
-  color: #e12632;
-  font-weight: 900;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields input,
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields select {
-  grid-column: 3 !important;
-  width: auto !important;
+body.education-mode #educationMaturityField .life-care-term-buttons > button {
+  flex: 1 1 0 !important;
   min-width: 0 !important;
-  max-width: 190px !important;
-  min-height: 32px !important;
-  justify-self: end !important;
-  border: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  text-align: right !important;
-  color: #004b7a !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
 }
 
-body.policy-owner-combined-view #customerInfoPanel :is(#policyOwnerName, #policyOwnerDateOfBirth, #policyOwnerAge) {
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  color: #004b7a !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 14px !important;
-  font-weight: 700 !important;
-  text-align: right !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-native-select {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-buttons {
-  grid-column: 3 !important;
-  justify-self: end !important;
+body.education-mode #educationMaturityField {
   display: grid !important;
-  grid-template-columns: repeat(2, minmax(60px, 1fr)) !important;
-  gap: 6px !important;
-  width: 130px !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button {
-  display: inline-flex !important;
+  grid-template-columns: 38px 132px minmax(0, 1fr) !important;
   align-items: center !important;
-  justify-content: center !important;
-  gap: 4px !important;
-  white-space: nowrap !important;
-  min-height: 32px !important;
-  border: 1px solid #004b7a !important;
-  border-radius: 8px !important;
-  padding: 0 8px !important;
-  background: #fff !important;
-  color: #004b7a !important;
-  box-shadow: none !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
+  column-gap: 8px !important;
 }
 
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button > span {
-  display: inline-flex !important;
-  align-items: center !important;
-  width: auto !important;
-  white-space: nowrap !important;
+body.education-mode #educationMaturityField::before {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
 }
 
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerName {
-  font-size: 15px !important;
-  font-weight: 700 !important;
+body.education-mode #educationMaturityField > span {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
 }
 
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button.active,
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button[aria-pressed="true"] {
-  border-color: #004b7a !important;
-  background: #004b7a !important;
-  color: #fff !important;
-  box-shadow: 0 3px 9px rgba(0, 75, 147, .22) !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button.active span,
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerFields .gender-button[aria-pressed="true"] span {
-  color: #fff !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel .policy-owner-occupation-field {
-  grid-template-columns: 34px minmax(0, 1fr) minmax(92px, max-content) !important;
-  row-gap: 5px !important;
-  padding-top: 5px !important;
-  padding-bottom: 5px !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel .policy-owner-occupation-field .occupation-search-box {
-  grid-column: 2 / -1 !important;
-  grid-row: 2 !important;
-  display: grid !important;
-  grid-template-columns: 16px minmax(0, 1fr) !important;
-  align-items: center !important;
-  gap: 6px !important;
-  width: 100% !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel .policy-owner-occupation-field .occupation-search-box img {
-  display: block !important;
-  width: 14px !important;
-  height: 14px !important;
-  min-width: 14px !important;
-  opacity: .58 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerOccupationGroup:disabled {
+body.education-mode #educationMaturityField > .life-care-term-buttons {
   grid-column: 3 !important;
   grid-row: 1 !important;
-  opacity: 1 !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  padding-right: 0 !important;
-  color: #004b7a !important;
-  font-weight: 700 !important;
-  background: transparent !important;
-  background-image: none !important;
 }
 
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerOccupation {
-  grid-column: 2 !important;
-  width: 100% !important;
-  max-width: none !important;
-  justify-self: stretch !important;
-  text-align: left !important;
-  font-family: var(--font-family-app) !important;
-  font-size: 10px !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerOccupation::placeholder {
-  color: #9aa8ba !important;
-  font-size: 10px !important;
-  font-weight: 400 !important;
-}
-
-body.policy-owner-combined-view #customerInfoPanel #policyOwnerOccupationNote {
+/* Hide technical fields whenever An Sinh Giáo Dục is selected. */
+body:has(#mainProduct option[value="ASGD"]:checked) #disabilitySumAssured,
+body:has(#mainProduct option[value="ASGD"]:checked) #premiumPaymentYears,
+body:has(#mainProduct option[value="ASGD"]:checked) #illustrationYears,
+body:has(#mainProduct option[value="ASGD"]:checked) #educationTermField {
   display: none !important;
 }
 
-body.policy-owner-form-active #ridersTab > #customerInfoPanel {
-  order: -2;
-}
-
-/* BMBH is an information-only screen; retain the original compact main-form layout. */
-body.policy-owner-form-active > .app-shell > .tabs {
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#disabilitySumAssured),
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#premiumPaymentYears),
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#illustrationYears) {
   display: none !important;
-}
-
-body.policy-owner-form-active #mainTab {
-  display: block !important;
-}
-
-body.policy-owner-form-active #illustrationForm {
-  display: grid !important;
-}
-
-body.policy-owner-form-active #illustrationForm > :not(#customerInfoPanel) {
-  display: none !important;
-}
-
-body.policy-owner-form-active #customerInfoPanel {
-  display: block !important;
-  margin: 0 !important;
-}
-
-body.policy-owner-form-active #customerInfoPanel h2 span:last-child {
-  font-size: inherit;
-}
-
-body.policy-owner-form-active #customerInfoPanel h2 span:last-child::after {
-  content: none;
-}
-
-body.policy-owner-form-active #insuredPersonFields {
-  display: none !important;
-}
-
-body.policy-owner-form-active #policyOwnerFields {
-  display: grid !important;
-}
-
-body.policy-owner-form-active #ridersTab {
-  display: grid !important;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-body.policy-owner-form-active #ridersTab > .rider-customer-card {
-  display: none !important;
-}
-
-.advice-export-button { background: #087f5b; }
-body .summary-export-button.advice-export-button { color: #fff !important; background: #087f5b !important; }
-.advice-export-screen { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; box-sizing: border-box; padding: 18px; background: rgba(10, 31, 48, .72); }
-.advice-export-screen[hidden] { display: none; }
-.advice-export-dialog { display: flex; flex-direction: column; width: min(760px, 100%); max-height: 100%; overflow: hidden; padding: 18px; border-radius: 20px; background: #fff; box-shadow: 0 24px 70px rgba(0, 0, 0, .25); }
-.advice-export-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.advice-export-dialog header span { color: #087f5b; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
-.advice-export-dialog h2 { margin: 4px 0 0; color: #12324a; }
-.advice-export-dialog header button { width: auto; height: auto; padding: 0 2px; border: 0; border-radius: 0; background: transparent; color: #234; font-size: 28px; line-height: 1; cursor: pointer; }
-.advice-export-dialog > p { color: #607481; }
-.advice-export-content { box-sizing: border-box; width: 100%; min-height: 280px; flex: 1 1 auto; overflow: auto; padding: 20px; border: 1px solid #cbd9e2; border-radius: 14px; color: #243746; background: #fbfdff; font: 13px/1.5 Arial, sans-serif; outline: none; }
-.advice-export-content { scrollbar-width: none; -ms-overflow-style: none; }
-.advice-export-content::-webkit-scrollbar { display: none; width: 0; height: 0; }
-.advice-export-actions .summary-action-button { flex: 1 1 0; width: auto; }
-.advice-export-actions .advice-close-button { border-color: #d92d3a; background: #d92d3a; color: #fff; }
-.advice-export-actions .advice-close-button:hover { border-color: #b91f2c; background: #b91f2c; }
-.advice-export-content:focus { border-color: #087f5b; box-shadow: 0 0 0 3px rgba(8,127,91,.12); }
-.advice-export-content h2 { margin: 0 0 5px; color: #064b72; font-size: 19px; line-height: 1.25; }
-.advice-export-content h3 { margin: 11px -8px 6px; padding: 7px 10px; border-left: 4px solid #07835d; border-radius: 7px; color: #064b72; background: #eaf7f2; font-size: 15px; line-height: 1.35; }
-.advice-export-content h4 { margin: 9px 0 4px; color: #075f8c; font-size: 14px; line-height: 1.35; }
-.advice-export-content p { margin: 4px 0; }
-.advice-export-content .advice-highlight { padding: 8px 10px; border-radius: 9px; background: #fff7df; color: #5d4200; font-size: 14px; font-weight: 700; }
-.advice-export-content .advice-cta { margin-top: 10px; padding: 12px; border-radius: 11px; background: #075f8c; color: #fff; font-size: 14px; font-weight: 700; }
-.advice-export-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.advice-export-actions .customer-copy-button { flex: 1 0 100%; border-color: #087f5b; background: #087f5b; color: #fff; }
-.advice-export-actions .customer-copy-button:hover { border-color: #066a4c; background: #066a4c; }
-@media (max-width: 600px) { .advice-export-screen { inset: 0; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); } .advice-export-dialog { height: calc(100% - 32px); max-height: calc(100dvh - 32px); padding: 14px; } .advice-export-content { min-height: 0; padding: 14px; font-size: 12px; } .advice-export-content h2 { font-size: 17px; } .advice-export-content h3 { font-size: 14px; } .advice-export-content h4 { font-size: 13px; } .advice-export-content .advice-highlight, .advice-export-content .advice-cta { font-size: 13px; } .advice-export-actions { flex-direction: row; flex: 0 0 auto; } }
-
-/* Must outrank the compact viewer's forced display when the modal is closed. */
-.terms-modal[hidden] {
-  display: none !important;
-}
-
-/* Use the complete iframe viewport on iPad/tablet instead of the 430px phone shell. */
-@media (min-width: 768px) and (max-width: 1366px) {
-  html,
-  body {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
-
-  body:not(.riders-mode) .app-shell,
-  body.riders-mode .app-shell {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    margin: 0 !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    box-shadow: none !important;
-  }
-
-  body:not(.riders-mode) #illustrationForm {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 16px !important;
-    align-items: start;
-  }
-
-  body:not(.riders-mode) #illustrationForm > .policy-owner-relation-card,
-  body:not(.riders-mode) #illustrationForm > .actions {
-    grid-column: 1 / -1;
-  }
-
-  body:not(.riders-mode) .panel,
-  body:not(.riders-mode) .results {
-    padding: 14px 12px 12px;
-  }
-
-  body:not(.riders-mode) .results {
-    margin-top: 16px;
-  }
-
-  .summary-preview-screen {
-    width: 100% !important;
-    max-width: none !important;
-    padding: 20px !important;
-  }
-
-  .summary-preview-shell {
-    width: 100% !important;
-    max-width: 960px !important;
-    margin-inline: auto !important;
-    gap: 16px;
-  }
-
-  .summary-preview-stage {
-    width: 100% !important;
-    min-height: 0 !important;
-  }
-
-  .summary-preview-stage img,
-  .addon-benefit-preview-page img {
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-  }
-
-  .summary-preview-actions {
-    width: 100% !important;
-    max-width: none !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .summary-action-button {
-    min-height: 44px;
-  }
 }

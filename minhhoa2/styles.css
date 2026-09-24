@@ -6842,6 +6842,36 @@ body:not(.riders-mode) .main-product-option.selected {
   background: #eef5ff;
 }
 
+/* An Sinh Giáo Dục: show the education-specific configuration and protection column. */
+.education-only { display: none; }
+body.education-mode .education-only { display: flex; }
+body.education-mode th.education-only { display: table-cell; }
+body.education-mode td.education-only { display: table-cell; }
+body.education-mode .education-protection-col,
+body.education-mode .protection-value {
+  color: #004b7a;
+  background: #eef7fb;
+  font-weight: 700;
+}
+body.education-mode .results tbody tr:last-child {
+  background: #edf9f4;
+  box-shadow: inset 0 2px 0 #0b7b62;
+}
+
+/* Keep all education maturity options on one line. */
+body.education-mode #educationMaturityField .life-care-term-buttons {
+  grid-template-columns: repeat(3, 68px);
+  gap: 5px;
+  width: 214px;
+}
+
+@media (max-width: 520px) {
+  body.education-mode #educationMaturityField .life-care-term-buttons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+}
+
 @media (max-width: 640px) {
   body:not(.riders-mode) .main-product-dropdown {
     width: auto;
@@ -8595,4 +8625,56 @@ body.terms-open .tabs,
 body.terms-open .tab-panel,
 body.terms-open .bottom-actions {
   visibility: hidden !important;
+}
+
+/* Final responsive lock for An Sinh Giáo Dục maturity choices. */
+body.education-mode #educationMaturityField .life-care-term-buttons {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+
+body.education-mode #educationMaturityField .life-care-term-buttons > button {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+body.education-mode #educationMaturityField {
+  display: grid !important;
+  grid-template-columns: 38px 132px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 8px !important;
+}
+
+body.education-mode #educationMaturityField::before {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+
+body.education-mode #educationMaturityField > span {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+}
+
+body.education-mode #educationMaturityField > .life-care-term-buttons {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+
+/* Hide technical fields whenever An Sinh Giáo Dục is selected. */
+body:has(#mainProduct option[value="ASGD"]:checked) #disabilitySumAssured,
+body:has(#mainProduct option[value="ASGD"]:checked) #premiumPaymentYears,
+body:has(#mainProduct option[value="ASGD"]:checked) #illustrationYears,
+body:has(#mainProduct option[value="ASGD"]:checked) #educationTermField {
+  display: none !important;
+}
+
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#disabilitySumAssured),
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#premiumPaymentYears),
+body:has(#mainProduct option[value="ASGD"]:checked) label:has(#illustrationYears) {
+  display: none !important;
 }

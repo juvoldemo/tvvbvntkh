@@ -5,19 +5,34 @@ const fixedIllustrationInterestRate = 4.76;
 const MAIN_PRODUCTS = {
   ATHD: "An Tâm Hoạch Định",
   ATPN: "An Thịnh Phúc Niên",
-  LIFE_CARE_20: "Life Care 2.0"
+  LIFE_CARE_20: "Life Care 2.0",
+  ASGD: "An Sinh Giáo Dục"
 };
 const MAIN_PRODUCT_TERMS_PDFS = {
   ATHD: "Antamhoachdinh_QTĐK.pdf",
   ATPN: "Anthinhphucnien_QTĐK.pdf",
-  LIFE_CARE_20: "Life-Care-2.0_NH02_QTDK.pdf"
+  LIFE_CARE_20: "Life-Care-2.0_NH02_QTDK.pdf",
+  ASGD: ""
 };
 let selectedMainProduct = "ATPN";
 let isMainProductDropdownOpen = false;
 let lifeCareTerm = 10;
+let educationMaturityAge = 22;
 
 function isLifeCare20() {
   return selectedMainProduct === "LIFE_CARE_20";
+}
+
+function isEducationProduct() {
+  return selectedMainProduct === "ASGD";
+}
+
+function getEducationTerm(age) {
+  return Number.isFinite(age) ? educationMaturityAge - age : null;
+}
+
+function getEducationMilestones() {
+  return educationMaturityAge === 25 ? [22, 25] : [18, 22, 25];
 }
 
 function getLifeCareSumAssuredRange(age) {
@@ -788,7 +803,35 @@ function generateAtpnIllustration(input) {
   return results;
 }
 
+function generateEducationIllustration(input) {
+  if (!window.ASGD) return [];
+  const age = calculateAge(input.dateOfBirth);
+  const paymentYears = getEducationTerm(age);
+  const projection = window.ASGD.project({
+    age,
+    maturityAge: educationMaturityAge,
+    premium: input.annualPremium,
+    sumAssured: input.deathSumAssured,
+    paymentYears,
+    gender: input.gender === "Nam" ? "male" : "female",
+    issueDate: new Date().toISOString().slice(0, 10)
+  });
+  const scenario = projection.scenarios.find((item) => Math.abs(item.rate - input.interestRate) < 0.0001)
+    || projection.scenarios[1];
+  return scenario.rows.map((row, index) => ({
+    policyYear: row.year,
+    age: row.age,
+    cumulativePremium: row.cumulativePremium,
+    cashValue: row.year === projection.term ? scenario.maturityBenefit : row.cashValue,
+    deathBenefit: row.deathBenefit,
+    loyaltyBonus: row.education || 0,
+    unavailable: Boolean(row.depleted),
+    scenarioIndex: index
+  }));
+}
+
 function generateIllustration(input) {
+  if (input.mainProduct === "ASGD") return generateEducationIllustration(input);
   if (input.mainProduct === "ATPN") {
     console.debug("MAIN_PRODUCT_ENGINE", "ATPN");
     return generateAtpnIllustration(input);
@@ -868,7 +911,7 @@ function buildComparableIllustration(input) {
 
   return primaryResults.map((row) => ({
     ...row,
-    cashValue425: alternateCashValueByYear.get(row.policyYear) || 0,
+    cashValue425: alternateCashValueByYear.get(row.policyYear) ?? null,
     cashValue476: row.cashValue
   }));
 }
@@ -1397,6 +1440,7 @@ function getCurrentInputContext(personKey = getActiveRiderPersonKey()) {
     mainAnnualPremium: moneyValue("annualPremium"),
     premiumPaymentYears: numberValue("premiumPaymentYears"),
     illustrationYears: numberValue("illustrationYears"),
+    educationMaturityAge,
     relation: isPolicyOwner ? "POLICY_HOLDER" : "MAIN_INSURED",
     fullName: person.name || "",
     personKey,
@@ -2498,8 +2542,9 @@ function renderResults(results, input) {
         <tr class="${row.loyaltyBonus > 0 ? "milestone-row" : ""}">
           <td><strong>Năm ${row.policyYear}</strong><span>/ Tuổi ${row.age}</span></td>
           <td>${formatThousandVND(row.cumulativePremium)}</td>
-          <td class="cash-value">${formatThousandVND(row.cashValue425)}</td>
-          <td class="cash-value">${formatThousandVND(row.cashValue476)}</td>
+          ${isEducationProduct() ? `<td class="education-only protection-value">${row.deathBenefit == null ? "—" : formatThousandVND(row.deathBenefit)}</td>` : ""}
+          <td class="cash-value">${row.cashValue425 == null ? "—" : formatThousandVND(row.cashValue425)}</td>
+          <td class="cash-value">${row.cashValue476 == null ? "—" : formatThousandVND(row.cashValue476)}</td>
         </tr>
       `
     )
@@ -2522,7 +2567,7 @@ function renderPendingResults(message = "Nhập ngày sinh để xem giá trị 
 
   resultsBody.innerHTML = `
     <tr class="empty-result-row">
-      <td colspan="4">${message}</td>
+      <td colspan="${isEducationProduct() ? 5 : 4}">${message}</td>
     </tr>
   `;
   document.getElementById("milestoneView")?.classList.toggle("active", resultViewMode === "milestone");
@@ -3196,10 +3241,15 @@ function updateAthdTermAndAgeValidity(age = "-") {
   const premiumPaymentYearsInput = document.getElementById("premiumPaymentYears");
   const isAthd = selectedMainProduct === "ATHD";
   const isLifeCare = isLifeCare20();
+  const isEducation = isEducationProduct();
   const hasValidAge = Number.isFinite(age);
 
   dateOfBirthInput.setCustomValidity(
-    isLifeCare && hasValidAge && (age < 18 || age > 60)
+    isEducation && hasValidAge && (age < 0 || age > 15)
+      ? "An Sinh Giáo Dục áp dụng cho trẻ từ 0 đến 15 tuổi."
+      : isEducation && hasValidAge && (getEducationTerm(age) < 10 || getEducationTerm(age) > 20)
+        ? "Tuổi đáo hạn đã chọn cần tạo thời hạn hợp đồng từ 10 đến 20 năm."
+      : isLifeCare && hasValidAge && (age < 18 || age > 60)
       ? "Life Care 2.0 chỉ áp dụng cho tuổi bảo hiểm từ 18 đến 60"
       : isAthd && hasValidAge && (age < 0 || age > 65)
         ? "Người được bảo hiểm An Tâm Hoạch Định phải trong độ tuổi từ 0 đến 65."
@@ -3209,6 +3259,11 @@ function updateAthdTermAndAgeValidity(age = "-") {
   premiumPaymentYearsInput.readOnly = false;
   premiumPaymentYearsInput.placeholder = "";
   premiumPaymentYearsInput.title = "";
+  if (isEducation && hasValidAge) {
+    premiumPaymentYearsInput.value = String(getEducationTerm(age));
+    premiumPaymentYearsInput.readOnly = true;
+    premiumPaymentYearsInput.title = "An Sinh Giáo Dục mặc định đóng phí toàn bộ thời hạn hợp đồng.";
+  }
 }
 
 function updateDisabilitySumAssured() {
@@ -3216,6 +3271,12 @@ function updateDisabilitySumAssured() {
   const output = document.getElementById("disabilitySumAssured");
 
   if (isLifeCare20()) return;
+
+  if (isEducationProduct()) {
+    if (label) label.textContent = "STBH gốc";
+    output.value = "";
+    return;
+  }
 
   if (selectedMainProduct === "ATPN") {
     if (label) label.textContent = "Chu toàn hậu sự";
@@ -3307,6 +3368,11 @@ async function mainProductTermsPdfExists(pdfUrl) {
 async function openMainProductTerms() {
   const pdfUrl = getMainProductTermsPdf();
 
+  if (getSelectedMainProduct() === "ASGD") {
+    alert("Sản phẩm An Sinh Giáo Dục đang dùng mô hình minh họa nội bộ. Vui lòng đối chiếu quy tắc, điều khoản chính thức trước khi tư vấn.");
+    return;
+  }
+
   if (await mainProductTermsPdfExists(pdfUrl)) {
     openTermsModal({
       code: getSelectedMainProduct(),
@@ -3355,19 +3421,45 @@ function updateLifeCarePremium() {
 
 function updateLifeCareUI() {
   const active = isLifeCare20();
+  const education = isEducationProduct();
   document.body.classList.toggle("life-care-mode", active);
+  document.body.classList.toggle("education-mode", education);
+  ["disabilitySumAssured", "premiumPaymentYears", "illustrationYears"].forEach((id) => {
+    const row = document.getElementById(id)?.closest(".field-row");
+    if (!row) return;
+    if (education) row.style.setProperty("display", "none", "important");
+    else row.style.removeProperty("display");
+  });
+  const educationTermField = document.getElementById("educationTermField");
+  if (educationTermField) educationTermField.style.setProperty("display", "none", "important");
   document.querySelectorAll(".legacy-illustration-field").forEach((field) => {
     field.hidden = active;
   });
   document.querySelectorAll(".life-care-only").forEach((field) => {
     field.hidden = !active;
   });
+  document.querySelectorAll(".education-only").forEach((field) => {
+    field.hidden = !education;
+  });
+  document.getElementById("disabilitySumAssured")?.closest(".field-row")?.toggleAttribute("hidden", active || education);
+  document.getElementById("premiumPaymentYears")?.closest(".field-row")?.toggleAttribute("hidden", active || education);
+  document.getElementById("illustrationYears")?.closest(".field-row")?.toggleAttribute("hidden", active || education);
+  document.getElementById("educationTermField").hidden = true;
   document.getElementById("mainSumAssuredLabel").textContent = active ? "Số tiền bảo hiểm" : "STBH tử vong";
   const annualPremium = document.getElementById("annualPremium");
   annualPremium.readOnly = active;
   annualPremium.required = !active;
   if (!active && annualPremium.value === "-") annualPremium.value = "20.000.000";
   document.getElementById("lifeCarePaymentTerm").textContent = `${lifeCareTerm} năm`;
+  const educationAge = parseDateInput(document.getElementById("dateOfBirth").value)
+    ? calculateAge(document.getElementById("dateOfBirth").value) : null;
+  const educationTerm = getEducationTerm(educationAge);
+  document.getElementById("educationTermText").textContent = educationTerm ? `${educationTerm} năm` : "Nhập ngày sinh";
+  document.querySelectorAll("[data-education-maturity]").forEach((button) => {
+    const selected = Number(button.dataset.educationMaturity) === educationMaturityAge;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
   document.querySelectorAll("[data-life-care-term]").forEach((button) => {
     const selected = Number(button.dataset.lifeCareTerm) === lifeCareTerm;
     button.classList.toggle("active", selected);
@@ -3453,6 +3545,19 @@ function updateDeathSumAssuredRange() {
       deathSumAssuredInput.setCustomValidity("");
       rangeNote.classList.remove("is-error");
     }
+    normalizeMainIllustrationText();
+    return;
+  }
+
+  if (isEducationProduct()) {
+    const min = annualPremium * 10;
+    const max = annualPremium * 20;
+    const sumAssured = moneyValue("deathSumAssured");
+    const rangeText = `${formatVND(min)} - ${formatVND(max)}`;
+    rangeNote.textContent = annualPremium ? `Hợp lệ: ${rangeText}` : "Nhập phí năm để xem khoảng STBH hợp lệ.";
+    const invalid = annualPremium && sumAssured && (sumAssured < min || sumAssured > max);
+    deathSumAssuredInput.setCustomValidity(invalid ? `STBH gốc phải từ 10 đến 20 lần phí cơ bản năm (${rangeText}).` : "");
+    rangeNote.classList.toggle("is-error", Boolean(invalid));
     normalizeMainIllustrationText();
     return;
   }
@@ -3989,9 +4094,15 @@ function buildSummarySnapshot() {
   const totalRiderSumInsured = riders.reduce((sum, rider) => sum + rider.sumInsured, 0);
   const totalFirstYearPremium = input.annualPremium + input.additionalPremium + totalRiderAnnualPremium;
   const illustrationRows = buildComparableIllustration(input);
+  if (!illustrationRows.length) return { valid: false, message: "Chưa tạo được bảng minh họa An Sinh Giáo Dục." };
   const finalIllustrationRow = illustrationRows[illustrationRows.length - 1] || {};
-  const timelineYears = Array.from(new Set([5, 10, 15, input.illustrationYears]))
-    .filter((year) => year > 0 && year <= input.illustrationYears)
+  const policyTermYears = input.mainProduct === "ASGD"
+    ? getEducationTerm(context.age)
+    : input.illustrationYears;
+  const timelineYears = Array.from(new Set(input.mainProduct === "ASGD"
+    ? [5, 10, policyTermYears]
+    : [5, 10, 15, policyTermYears]))
+    .filter((year) => year > 0 && year <= policyTermYears)
     .sort((first, second) => first - second);
   const accountMilestones = timelineYears
     .map((year) => illustrationRows.find((row) => row.policyYear === year))
@@ -4001,6 +4112,7 @@ function buildSummarySnapshot() {
       age: row.age,
       cumulativePremium: row.cumulativePremium,
       accountValue: row.accountValue,
+      deathBenefit: row.deathBenefit,
       cashValue425: row.cashValue425,
       cashValue476: row.cashValue476
     }));
@@ -4027,11 +4139,11 @@ function buildSummarySnapshot() {
     disabilitySumInsured: input.disabilitySumAssured,
     deathBenefit: finalIllustrationRow.deathBenefit || input.deathSumAssured,
     funeralBenefit: finalIllustrationRow.funeralBenefit || Math.min(input.deathSumAssured * 0.1, 30000000),
-    maturityBenefit: finalIllustrationRow.maturityBenefit || finalIllustrationRow.accountValue || 0,
+    maturityBenefit: finalIllustrationRow.maturityBenefit || finalIllustrationRow.cashValue476 || finalIllustrationRow.cashValue || 0,
     mainPremium: input.annualPremium,
     additionalPremium: input.additionalPremium,
-    premiumPaymentYears: input.premiumPaymentYears,
-    policyTermYears: input.illustrationYears,
+    premiumPaymentYears: input.mainProduct === "ASGD" ? policyTermYears : input.premiumPaymentYears,
+    policyTermYears,
     paymentMode: PAYMENT_MODE_LABEL[context.paymentMode] || "Năm",
     riders,
     totals: {
@@ -4973,8 +5085,9 @@ function renderLifeCareSummaryCanvas(snapshot) {
 function renderDashboardSummaryCanvas(snapshot) {
   const canvas = document.createElement("canvas");
   canvas.width = SUMMARY_IMAGE_WIDTH;
+  const isAsgdSummary = snapshot.mainProduct === "ASGD";
   const riderRowsForHeight = snapshot.riders.length ? Math.ceil(Math.min(snapshot.riders.length, 12) / 2) : 0;
-  canvas.height = SUMMARY_IMAGE_HEIGHT + 220 + (riderRowsForHeight ? 130 + riderRowsForHeight * 190 : 0);
+  canvas.height = SUMMARY_IMAGE_HEIGHT + 220 + (riderRowsForHeight ? 130 + riderRowsForHeight * 190 : 0) + (isAsgdSummary ? 110 : 0);
   const ctx = canvas.getContext("2d");
   const colors = {
     navy: "#004b7a",
@@ -5177,12 +5290,12 @@ function renderDashboardSummaryCanvas(snapshot) {
   heading("Quyền lợi bảo vệ", y, "✓");
   y += 48;
   const protectionCards = [
-    ["QUYỀN LỢI TỬ VONG", snapshot.mainSumInsured, colors.blue, "#0046a5", "♚"],
-    [snapshot.mainProduct === "ATPN" ? "CHU TOÀN HẬU SỰ" : "QUYỀN LỢI THƯƠNG TẬT\nTOÀN BỘ VĨNH VIỄN", snapshot.disabilitySumInsured, colors.cyan, "#0ba89f", "+"]
+    [isAsgdSummary ? "SỐ TIỀN BẢO HIỂM" : "QUYỀN LỢI TỬ VONG", snapshot.mainSumInsured, colors.blue, "#0046a5", "♚"],
+    [isAsgdSummary ? "TỬ VONG DO TAI NẠN\nCHO BMBH" : snapshot.mainProduct === "ATPN" ? "CHU TOÀN HẬU SỰ" : "QUYỀN LỢI THƯƠNG TẬT\nTOÀN BỘ VĨNH VIỄN", isAsgdSummary ? Math.min(snapshot.mainSumInsured * .5, 200000000) : snapshot.disabilitySumInsured, colors.cyan, "#0ba89f", "+"]
   ];
   const cardGap = 20;
   const protectW = (contentW - cardGap) / 2;
-  const protectH = 178;
+  const protectH = isAsgdSummary ? 214 : 178;
   protectionCards.forEach((item, index) => {
     const x = margin + index * (protectW + cardGap);
     const grad = ctx.createLinearGradient(x, y, x + protectW, y + protectH);
@@ -5191,7 +5304,13 @@ function renderDashboardSummaryCanvas(snapshot) {
     card(x, y, protectW, protectH, 16, grad, "rgba(255,255,255,0.2)");
     icon(x + 70, y + 52, item[2], item[4], true);
     wrapText(ctx, item[0], x + 116, y + 34, protectW - 146, 22, { size: 20, weight: 900, color: "#fff" });
-    moneyStack(item[1], x + protectW / 2, y + 98, { size: 50, unitSize: 21, unitOffset: 54, fitWidth: protectW - 46 });
+    if (isAsgdSummary && index === 1) {
+      drawText(ctx, "50% STBH gia tăng", x + protectW / 2, y + 100, { size: 27, weight: 900, color: "#fff", align: "center" });
+      drawText(ctx, "Tối đa 200 triệu đồng", x + protectW / 2, y + 142, { size: 23, weight: 850, color: "#fff", align: "center" });
+    } else {
+      moneyStack(item[1], x + protectW / 2, y + 98, { size: 50, unitSize: 21, unitOffset: 54, fitWidth: protectW - 46 });
+      if (isAsgdSummary && index === 0) drawText(ctx, "Tự động gia tăng 5% STBH gốc mỗi năm", x + protectW / 2, y + 175, { size: 17, weight: 800, color: "#fff", align: "center" });
+    }
   });
 
   y += protectH + 42;
@@ -5205,12 +5324,14 @@ function renderDashboardSummaryCanvas(snapshot) {
     minSize: 16
   });
   y += 84;
-  const years = [5, 10, 15, 20];
+  const years = isAsgdSummary
+    ? snapshot.totals.accountMilestones.map((item) => item.year)
+    : [5, 10, 15, 20];
   const milestoneByYear = new Map(snapshot.totals.accountMilestones.map((item) => [item.year, item]));
   const milestoneGap = 18;
-  const milestoneCols = 4;
+  const milestoneCols = Math.max(1, years.length);
   const milestoneW = (contentW - milestoneGap * 3) / milestoneCols;
-  const milestoneH = 230;
+  const milestoneH = isAsgdSummary ? 263 : 230;
   years.forEach((year, index) => {
     const item = milestoneByYear.get(year);
     const x = margin + index * (milestoneW + milestoneGap);
@@ -5234,14 +5355,19 @@ function renderDashboardSummaryCanvas(snapshot) {
       fitWidth: milestoneW - 34,
       minSize: 21
     });
+    if (isAsgdSummary) {
+      drawText(ctx, "QUYỀN LỢI TỬ VONG", x + milestoneW / 2, cardY + 94, { size: 14, weight: 900, color: colors.blue, align: "center" });
+      drawText(ctx, formatVND(Math.round(item?.deathBenefit || 0)) + " đ", x + milestoneW / 2, cardY + 118, { size: 19, weight: 900, color: colors.blue, align: "center", fitWidth: milestoneW - 28, minSize: 15 });
+    }
 
     ctx.strokeStyle = colors.line;
     ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(x + 22, cardY + 104);
-    ctx.lineTo(x + milestoneW - 22, cardY + 104);
-    ctx.moveTo(x + milestoneW / 2, cardY + 120);
-    ctx.lineTo(x + milestoneW / 2, cardY + 198);
+    const dividerY = isAsgdSummary ? cardY + 156 : cardY + 104;
+    ctx.moveTo(x + 22, dividerY);
+    ctx.lineTo(x + milestoneW - 22, dividerY);
+    ctx.moveTo(x + milestoneW / 2, dividerY + 16);
+    ctx.lineTo(x + milestoneW / 2, dividerY + 94);
     ctx.stroke();
 
     [
@@ -5250,14 +5376,15 @@ function renderDashboardSummaryCanvas(snapshot) {
     ].forEach((rate, rateIndex) => {
       const cx = x + (rateIndex === 0 ? milestoneW * 0.25 : milestoneW * 0.75);
       const rateColor = rateIndex === 0 ? colors.gold : colors.blue;
-      drawText(ctx, rate[0], cx, cardY + 122, {
+      const money = compactMoney(rate[1], 2);
+      const rateY = isAsgdSummary ? cardY + 174 : cardY + 122;
+      drawText(ctx, rate[0], cx, rateY, {
         size: 18,
         weight: 900,
         color: rateColor,
         align: "center"
       });
-      const money = compactMoney(rate[1], 2);
-      drawText(ctx, money.value, cx, cardY + 150, {
+      drawText(ctx, money.value, cx, rateY + 28, {
         size: 25,
         weight: 900,
         color: rateColor,
@@ -5265,7 +5392,7 @@ function renderDashboardSummaryCanvas(snapshot) {
         fitWidth: milestoneW / 2 - 26,
         minSize: 18
       });
-      drawText(ctx, money.unit.toLowerCase(), cx, cardY + 181, {
+      drawText(ctx, money.unit.toLowerCase(), cx, rateY + 59, {
         size: 12,
         weight: 800,
         color: rateColor,
@@ -5348,7 +5475,7 @@ function renderDashboardSummaryCanvas(snapshot) {
 
   card(margin, y, contentW, 58, 14);
   icon(margin + 42, y + 29, colors.blue, "i");
-  drawText(ctx, "Tài liệu tham khảo nhanh", margin + 82, y + 18, { size: 21, weight: 900, color: colors.blue });
+  drawText(ctx, isAsgdSummary ? "Kết quả chỉ mang tính mô phỏng nội bộ, phục vụ tham khảo nhanh. Giá trị chính thức căn cứ theo bảng minh họa do hệ thống Bảo Việt Nhân thọ phát hành." : "Tài liệu tham khảo nhanh", margin + 82, y + 14, { size: isAsgdSummary ? 16 : 21, weight: 900, color: colors.blue, fitWidth: contentW - 118, minSize: 13 });
 
   const finalHeight = Math.min(canvas.height, Math.max(y + 82, 1120));
   if (finalHeight !== canvas.height) {
@@ -5934,6 +6061,14 @@ window.addEventListener("message", async (event) => {
   const mainSumAssured = Number(data.sumAssuredMillions || 0) * 1000000; setField("annualPremium", formatCommaNumber(Number(data.premiumMillions || 0) * 1000000)); setField("deathSumAssured", formatCommaNumber(mainSumAssured)); setField("premiumPaymentYears", String(Number(data.years || 0)));
   const selectedCodes = new Set(Array.isArray(data.riders) ? data.riders : []); VISIBLE_SPBK_PRODUCT_CODES.forEach((code) => { const selection = getRiderSelection(code); selection.selected = selectedCodes.has(code); selection.enabled = selection.selected; const riderProduct = SPBK_PRODUCTS[code]; if (selection.selected && riderProduct?.maxSumInsured) selection.sumInsured = code === "R29" ? normalizeRiderAmount(riderProduct, Math.min(mainSumAssured * 0.002, riderProduct.maxSumInsured)) : normalizeRiderAmount(riderProduct, mainSumAssured); });
   renderRiderUI(); if (!refreshIllustration()) { window.parent.postMessage({ type: "bvnt-smart-export-close" }, window.location.origin); return; } if (event.data.action === "advice") openAdviceExport(); else await openSummaryPreview({ currentTarget: { id: "exportSummaryButton" } }); window.parent.postMessage({ type: "bvnt-smart-export-ready" }, window.location.origin);
+});
+document.querySelectorAll("[data-education-maturity]").forEach((button) => {
+  button.addEventListener("click", () => {
+    educationMaturityAge = Number(button.dataset.educationMaturity) || 22;
+    updateAgePreview();
+    updateLifeCareUI();
+    if (!document.getElementById("resultsSection").hidden) refreshIllustration();
+  });
 });
 try { const pendingSmartExport = JSON.parse(sessionStorage.getItem("bvntSmartExport") || "null"); if (pendingSmartExport?.type === "bvnt-smart-export") { sessionStorage.removeItem("bvntSmartExport"); window.dispatchEvent(new MessageEvent("message", { origin: window.location.origin, data: pendingSmartExport })); } } catch { sessionStorage.removeItem("bvntSmartExport"); }
 setDefaultPolicyOwnerGender();

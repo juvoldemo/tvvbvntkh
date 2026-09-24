@@ -9,7 +9,7 @@
     <meta property="og:description" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:title" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
-    <link rel="stylesheet" href="styles.css?v=20260824-hide-bmbh-heading" />
+    <link rel="stylesheet" href="styles.css?v=20260924-education-maturity-grid" />
     <script>
       if (new URLSearchParams(window.location.search).get("embedded") === "1") {
         document.documentElement.classList.add("embedded");
@@ -65,7 +65,7 @@
             </div>
             <p id="policyOwnerValidationMessage" class="policy-owner-validation" role="status"></p>
           </section>
-          <section id="customerInfoPanel" class="panel">
+          <section class="panel">
             <h2><span class="section-badge customer-badge"></span><span>1. Thông tin khách hàng</span></h2>
             <div id="insuredPersonFields" class="fields person-fields active">
               <label class="field-row icon-user">
@@ -127,17 +127,17 @@
               </label>
 
               <label class="field-row icon-calendar">
-                <span class="required-label">Ngày tháng năm sinh</span>
+                <span>Ngày tháng năm sinh BMBH</span>
                 <input id="policyOwnerDateOfBirth" name="policyOwnerDateOfBirth" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" />
               </label>
 
               <label class="field-row icon-info">
-                <span>Tuổi bảo hiểm hiện tại</span>
+                <span>Tuổi BMBH</span>
                 <input id="policyOwnerAge" type="text" value="-" readonly />
               </label>
 
               <label class="field-row icon-user">
-                <span class="required-label">Giới tính</span>
+                <span>Giới tính BMBH</span>
                 <select id="policyOwnerGender" name="policyOwnerGender" class="gender-native-select" aria-hidden="true" tabindex="-1">
                   <option>Nam</option>
                   <option selected>Nữ</option>
@@ -197,6 +197,7 @@
                   <option value="ATHD">An Tâm Hoạch Định</option>
                   <option value="ATPN" selected>An Thịnh Phúc Niên</option>
                   <option value="LIFE_CARE_20">Life Care 2.0</option>
+                  <option value="ASGD">An Sinh Giáo Dục</option>
                 </select>
                 <div id="mainProductDropdown" class="main-product-dropdown" data-open="false">
                   <button id="mainProductDropdownButton" class="main-product-dropdown-button" type="button" aria-haspopup="listbox" aria-expanded="false">
@@ -207,6 +208,7 @@
                     <button class="main-product-option" type="button" role="option" data-product-value="ATHD" aria-selected="false">An Tâm Hoạch Định</button>
                     <button class="main-product-option selected" type="button" role="option" data-product-value="ATPN" aria-selected="true">An Thịnh Phúc Niên</button>
                     <button class="main-product-option" type="button" role="option" data-product-value="LIFE_CARE_20" aria-selected="false">Life Care 2.0</button>
+                    <button class="main-product-option" type="button" role="option" data-product-value="ASGD" aria-selected="false">An Sinh Giáo Dục</button>
                   </div>
                 </div>
               </label>
@@ -237,6 +239,19 @@
                 <span class="required-label">Số năm đóng phí dự kiến</span>
                 <input id="premiumPaymentYears" name="premiumPaymentYears" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="10" required />
               </label>
+
+              <div id="educationMaturityField" class="field-row icon-calendar education-only" hidden>
+                <span class="required-label">Tuổi đáo hạn</span>
+                <div class="life-care-term-buttons" role="group" aria-label="Chọn tuổi đáo hạn" style="display:flex !important; flex-wrap:nowrap !important; gap:5px !important; width:100% !important;">
+                  <button type="button" data-education-maturity="18" aria-pressed="false" style="flex:1 1 0 !important; min-width:0 !important;">18 tuổi</button>
+                  <button type="button" data-education-maturity="22" class="active" aria-pressed="true" style="flex:1 1 0 !important; min-width:0 !important;">22 tuổi</button>
+                  <button type="button" data-education-maturity="25" aria-pressed="false" style="flex:1 1 0 !important; min-width:0 !important;">25 tuổi</button>
+                </div>
+              </div>
+              <div id="educationTermField" class="field-row icon-calendar education-only life-care-readonly" hidden>
+                <span>Thời hạn hợp đồng</span>
+                <strong id="educationTermText">-</strong>
+              </div>
 
               <label class="field-row icon-calendar legacy-illustration-field">
                 <span>Số năm minh họa</span>
@@ -287,6 +302,7 @@
                 <tr>
                   <th class="year-age-col" rowspan="2">Năm / Tuổi</th>
                   <th class="premium-col" rowspan="2">Phí BH lũy kế</th>
+                  <th class="education-protection-col education-only" rowspan="2">Quyền lợi tử vong<br>(4,76%)</th>
                   <th class="cash-parent" colspan="2">Giá trị hoàn lại</th>
                 </tr>
                 <tr class="cash-rate-row">
@@ -430,7 +446,8 @@
     <script src="addonBenefitSummaryService.js?v=20260717-utf8-fix"></script>
     <script src="atpn-data-loader.js?v=20260616-atpn-funeral-ui"></script>
     <script src="lifeCare20Rates.js?v=20260625-life-care-cleanup-3"></script>
-    <script src="script.js?v=20260824-bmbh-exact-font"></script>
+    <script src="anSinhGiaoDuc.js?v=20260924-source-engine"></script>
+    <script src="script.js?v=20260924-education-summary-death-benefit"></script>
     <script src="supabaseConfig.js"></script>
     <script src="accessLogger.js"></script>
     <script>
