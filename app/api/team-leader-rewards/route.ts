@@ -7,6 +7,7 @@ import { applyTemporaryTeamLeaderPtkd } from "@/lib/temporary-team-leader-ptkd";
 import { userCodeFromRequest } from "@/lib/user-auth";
 import { calculateCompetitionReward, getBaseEligibleCompetitionContracts } from "@/src/lib/competition/competitionRuleEngine";
 import type { RevenueRecord } from "@/lib/types";
+import { cached } from "@/lib/server-cache";
 
 async function readAll(queryFactory: (from: number, to: number) => any) {
   const rows: any[] = [];
@@ -219,13 +220,22 @@ async function calculate(request: NextRequest, body: any = {}) {
   if (!groupName) return NextResponse.json({ error: "Tài khoản không phải Trưởng nhóm hoặc chưa được gán nhóm." }, { status: 403 });
 
   const year = month.slice(0, 4);
-  const [allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount] = await Promise.all([
-    readAll((from, to) => supabase.from("revenue_records").select("*").order("paid_date").range(from, to)),
-    readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,reward_source,agent_code,agent_name,group_name,ip,fyp,fyc,raw_data").gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
-    readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date,group_name,is_active").range(from, to)),
-    readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)),
-    readTeamRosterCount(supabase, groupName)
-  ]);
+  // Team rewards only need the current group's records in the selected year.
+  // Previously these four reads loaded every advisor and every historical
+  // contract, then discarded almost all rows in JavaScript.
+  const teamData = await cached(`team-reward:${groupName}:${year}`, 60_000, async () => {
+    const [allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount] = await Promise.all([
+      readAll((from, to) => supabase.from("revenue_records").select("*").eq("group_name", groupName)
+        .neq("data_month", "2099-01-01").gte("paid_date", `${year}-01-01`).lte("paid_date", `${year}-12-31`).order("paid_date").range(from, to)),
+      readAll((from, to) => supabase.from("tvv_reward_policy_records").select("data_month,reward_source,agent_code,agent_name,group_name,ip,fyp,fyc,raw_data")
+        .eq("group_name", groupName).gte("data_month", `${year}-01-01`).lte("data_month", `${year}-12-31`).range(from, to)),
+      readAll((from, to) => supabase.from("authorized_users").select("advisor_code,start_date,group_name,is_active").eq("group_name", groupName).range(from, to)),
+      cached("reward:programs", 60_000, () => readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to))),
+      readTeamRosterCount(supabase, groupName)
+    ]);
+    return { allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount };
+  });
+  const { allRevenue, fycRows, advisorProfiles, competitionPrograms, rosterCount } = teamData;
   const uniqueRevenue = deduplicateRevenue(allRevenue as RevenueRecord[]).sort((a, b) => String(a.paid_date).localeCompare(String(b.paid_date)));
   const latestGroupByAdvisor = new Map<string, string>();
   for (const row of uniqueRevenue) {

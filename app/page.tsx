@@ -4002,6 +4002,9 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
     const timer = window.setTimeout(() => {
       setError("");
       const cumulativeDrafts: DraftContract[] = [];
+      // Six forecast months previously started six full reward calculations at
+      // once. Run them as a short queue so this tool cannot flood the API.
+      let previousRequest: Promise<unknown> = Promise.resolve();
       const requests = simulationMonths.map((item, index) => {
         const contractCount = contractCountValues[index];
         const premiumPerContract = contractCount > 0 ? revenueValues[index] / contractCount : 0;
@@ -4015,7 +4018,7 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
             status: "Có hiệu lực"
           });
         }
-        return fetch("/api/tvv-reward-estimate", {
+        const request = previousRequest.then(() => fetch("/api/tvv-reward-estimate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           cache: "no-store",
@@ -4032,7 +4035,9 @@ function RecruitmentIncomeCalculator({ onBack, embedded = false }: { onBack: () 
           const payload = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(payload.error || "Không tính được thu nhập.");
           return payload;
-        });
+        }));
+        previousRequest = request.catch(() => undefined);
+        return request;
       });
       Promise.all(requests)
         .then(setEstimates)
@@ -4637,7 +4642,7 @@ function PasswordRecoveryDialog({ initialAdvisorCode, onClose }: { initialAdviso
       <header><div><h2 id="recovery-title">Lấy lại mật khẩu</h2><p>Nhập Mã TVV và mã số để xem mật khẩu hiện tại.</p></div><button type="button" onClick={onClose} aria-label="Đóng"><X size={21} /></button></header>
       {!password ? <form onSubmit={recover}>
         <label>Mã TVV<div className="tvv-login-input"><UserRound size={19} /><input autoFocus value={advisorCode} onChange={(event) => { setAdvisorCode(event.target.value); setError(""); }} placeholder="Ví dụ: D102123456" autoCapitalize="characters" required /></div></label>
-        <label>Mã số (4 số cuối GTTT)<div className="tvv-login-input"><LockKeyhole size={19} /><input value={identifier} onChange={(event) => { setIdentifier(event.target.value); setError(""); }} placeholder="Nhập 4 số cuối GTTT" inputMode="numeric" maxLength={4} pattern="[0-9]{4}" autoComplete="off" required /></div></label>
+        <label>Mã số (4 số cuối Giấy tờ tùy thân)<div className="tvv-login-input"><LockKeyhole size={19} /><input value={identifier} onChange={(event) => { setIdentifier(event.target.value); setError(""); }} placeholder="Nhập 4 số cuối Giấy tờ tùy thân" inputMode="numeric" maxLength={4} pattern="[0-9]{4}" autoComplete="off" required /></div></label>
         {error && <div className="tvv-user-error" role="alert">{error}</div>}
         <button className="tvv-login-submit" disabled={busy || !advisorCode.trim() || !identifier.trim()}>{busy && <LoaderCircle className="tvv-login-spinner" size={19} />}{busy ? "Đang kiểm tra…" : "Kiểm tra"}</button>
       </form> : <div className="tvv-recovered-password">

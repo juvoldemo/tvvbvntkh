@@ -8,6 +8,7 @@ import {
   type StarVietRecord
 } from "@/lib/star-viet";
 import type { RevenueRecord } from "@/lib/types";
+import { cached } from "@/lib/server-cache";
 
 const PAGE_SIZE = 1000;
 
@@ -57,6 +58,16 @@ export type StarVietData = {
 };
 
 export async function readStarVietData(
+  supabase: SupabaseClient,
+  selectedMonth: string
+): Promise<StarVietData> {
+  // This calculation reads a year of revenue and is identical for every user
+  // viewing the same month.  Coalescing the promise prevents a login spike
+  // from triggering one full-table read per visitor.
+  return cached(`star-viet:${selectedMonth}`, 60_000, () => loadStarVietData(supabase, selectedMonth));
+}
+
+async function loadStarVietData(
   supabase: SupabaseClient,
   selectedMonth: string
 ): Promise<StarVietData> {

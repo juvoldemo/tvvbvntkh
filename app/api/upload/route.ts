@@ -3,6 +3,7 @@ import { decodeRevenueCsv, parseRevenueCsv } from "@/lib/csv";
 import { toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getUploadUserName } from "@/lib/upload-users";
+import { clearCached } from "@/lib/server-cache";
 import { recalculateAllCompetitionProgramsAfterUpload, syncCompetitionContractSnapshotsAfterUpload } from "@/src/lib/competition/competitionService";
 
 function getUploadErrorMessage(error: unknown) {
@@ -224,6 +225,10 @@ export async function POST(request: NextRequest) {
       return { recalculatedPrograms: [{ ok: false, error: getUploadErrorMessage(error) }], skippedPrograms: [], programCount: 0 };
     });
     const competitionNotice = "Đã cập nhật dữ liệu tháng và tự động đồng bộ Chương trình thi đua.";
+    clearCached("star-viet:");
+    clearCached("tvv-leaderboard:");
+    clearCached("reward:");
+    clearCached("team-reward:");
     return NextResponse.json({
       ok: true,
       batchId: batch.id,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { parseSaoVietKPI05Group, parseSaoVietSnapshot, parseStarVietFile, type StarVietSnapshotSource, type StarVietSource } from "@/lib/star-viet";
 import { getUploadUserName } from "@/lib/upload-users";
+import { clearCached } from "@/lib/server-cache";
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
       if (insertError) throw new Error(getErrorMessage(insertError));
     }
 
+    clearCached("star-viet:");
     return NextResponse.json({
       ok: true,
       upload: {

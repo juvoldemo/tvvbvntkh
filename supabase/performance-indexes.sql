@@ -4,8 +4,16 @@ create index if not exists idx_revenue_records_month_paid
   on public.revenue_records(data_month, paid_date);
 create index if not exists idx_revenue_records_agent_month_paid
   on public.revenue_records(agent_code, data_month, paid_date);
+-- Covers the advisor's annual snapshot: it filters by advisor and paid date
+-- while spanning multiple monthly uploads.
+create index if not exists idx_revenue_records_agent_paid
+  on public.revenue_records(agent_code, paid_date);
 create index if not exists idx_revenue_records_group_month_paid
   on public.revenue_records(group_name, data_month, paid_date);
+create index if not exists idx_tvv_reward_policy_agent_month
+  on public.tvv_reward_policy_records(agent_code, data_month);
+create index if not exists idx_tvv_reward_policy_group_month
+  on public.tvv_reward_policy_records(group_name, data_month);
 create index if not exists idx_upload_batches_month_uploaded
   on public.upload_batches(data_month, uploaded_at desc);
 create index if not exists idx_admin_events_active_created

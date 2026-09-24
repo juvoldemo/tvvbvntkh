@@ -30,6 +30,7 @@ export default function AccessLogger() {
       const response = await fetch("/api/access-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        keepalive: true,
         body: JSON.stringify({
           page: window.location.pathname,
           device: getDevice(userAgent),
@@ -47,9 +48,15 @@ export default function AccessLogger() {
       }
     };
 
-    void logAccess().catch((error) => {
-      console.error("Supabase page view insert failed:", error);
-    });
+    // Page-view analytics must never compete with the dashboard's first data
+    // requests during a burst of logins.  It is non-critical and can be sent
+    // shortly after the interactive view is on screen.
+    const timer = window.setTimeout(() => {
+      void logAccess().catch((error) => {
+        console.error("Supabase page view insert failed:", error);
+      });
+    }, 2_000);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return null;

@@ -9,6 +9,7 @@ import { dedupeRevenueRecordsByContract } from "@/lib/reports";
 import { isPreTeamLeaderPosition, managedTeamName } from "@/lib/team-scope";
 import { competitionIsVisibleTo, competitionViewerAudience } from "@/lib/competition-audience";
 import { recruitmentOnlyCompetitionPrograms } from "@/lib/recruitment-competition-programs";
+import { cached } from "@/lib/server-cache";
 
 const ACQUISITION_COMMISSION_BREAKDOWN = [
   { label: "Năm 1", rate: 0.3 },
@@ -215,10 +216,18 @@ export async function POST(request: NextRequest) {
         if ((data ?? []).length < 1000) return rows;
       }
     };
+    // Reward calculations are personal.  Fetching the whole company's year of
+    // contracts here made every advisor login perform a full-table scan.
     const [{ data: programs, error: programError }, { data: policyRecords, error: policyError }, { data: yearContracts, error: yearContractsError }, { data: advisorProfiles, error: advisorProfilesError }] = await Promise.all([
-      readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to)).then((data) => ({ data, error: null })),
-      readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*").gte("data_month", policyDataStart).lte("data_month", `${year}-12-31`).range(from, to)).then((data) => ({ data, error: null })),
-      readAll((from, to) => supabase.from("revenue_records").select("*").neq("data_month", "2099-01-01").gte("paid_date", revenueDataStart).lte("paid_date", `${year}-12-31`).range(from, to)).then((data) => ({ data, error: null })),
+      cached("reward:programs", 60_000, () => readAll((from, to) => supabase.from("competition_programs").select("*").range(from, to))).then((data) => ({ data, error: null })),
+      recruitmentMode
+        ? Promise.resolve({ data: [], error: null })
+        : readAll((from, to) => supabase.from("tvv_reward_policy_records").select("*")
+          .eq("agent_code", advisor.code).gte("data_month", policyDataStart).lte("data_month", `${year}-12-31`).range(from, to)).then((data) => ({ data, error: null })),
+      recruitmentMode
+        ? Promise.resolve({ data: [], error: null })
+        : cached(`reward:advisor-year:${advisor.code}:${year}`, 60_000, () => readAll((from, to) => supabase.from("revenue_records").select("*")
+          .eq("agent_code", advisor.code).neq("data_month", "2099-01-01").gte("paid_date", revenueDataStart).lte("paid_date", `${year}-12-31`).range(from, to))).then((data) => ({ data, error: null })),
       readAll((from, to) => {
         const query = supabase.from("authorized_users").select("advisor_code,start_date").range(from, to);
         return advisor.code ? query.eq("advisor_code", advisor.code) : query;
@@ -253,8 +262,10 @@ export async function POST(request: NextRequest) {
     const ranges = calculablePrograms.map((program: any) => programDateRange(program, month));
     const start = ranges.map((range) => range.start).sort()[0] || monthBounds(month).start;
     const end = ranges.map((range) => range.end).sort().at(-1) || monthBounds(month).end;
-    const contracts = await readAll((from, to) => supabase.from("revenue_records").select("*")
-      .neq("data_month", "2099-01-01").gte("paid_date", start).lte("paid_date", end).range(from, to));
+    const contracts = recruitmentMode
+      ? []
+      : await cached(`reward:advisor-period:${advisor.code}:${start}:${end}`, 60_000, () => readAll((from, to) => supabase.from("revenue_records").select("*")
+        .eq("agent_code", advisor.code).neq("data_month", "2099-01-01").gte("paid_date", start).lte("paid_date", end).range(from, to)));
     const dedupedContracts = dedupeRevenueRecordsByContract((contracts ?? []) as any);
     const dedupedYearContracts = dedupeRevenueRecordsByContract((yearContracts ?? []) as any);
 

@@ -124,9 +124,9 @@ export async function GET(request: NextRequest) {
     const signedInAdvisorCode = userCodeFromRequest(request);
     const params = request.nextUrl.searchParams;
     const cacheKey = `${signedInAdvisorCode || "public"}:${params.toString()}`;
-    const cached = responseCache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
-      return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
+    const cachedResponse = responseCache.get(cacheKey);
+    if (cachedResponse && cachedResponse.expiresAt > Date.now()) {
+      return NextResponse.json(cachedResponse.payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "HIT" } });
     }
     const month = params.get("month") || new Date().toISOString().slice(0, 7);
     const filters: DashboardFilters = {
@@ -145,8 +145,10 @@ export async function GET(request: NextRequest) {
     const previousEnd = `${previousFilters.month}-${String(previousCutoffDay).padStart(2, "0")}`;
     const supabase = getSupabaseAdmin();
 
-    const advisorScope = <T extends { ilike: (column: string, pattern: string) => T }>(query: T) =>
-      signedInAdvisorCode ? query.ilike("agent_code", signedInAdvisorCode) : query;
+    // Exact matching lets Postgres use the advisor composite indexes; `ilike`
+    // previously forced a much more expensive scan for every signed-in user.
+    const advisorScope = (query: any) =>
+      signedInAdvisorCode ? query.eq("agent_code", signedInAdvisorCode) : query;
 
     // The home screen only needs a small advisor snapshot. The former initial
     // request built and serialized the complete reporting dataset (including
@@ -311,7 +313,7 @@ export async function GET(request: NextRequest) {
     };
     responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_TTL_MS, payload });
     if (responseCache.size > 500) {
-      for (const [key, value] of responseCache) if (value.expiresAt <= Date.now()) responseCache.delete(key);
+      for (const [entryKey, value] of responseCache) if (value.expiresAt <= Date.now()) responseCache.delete(entryKey);
     }
     return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
   } catch (error) {
