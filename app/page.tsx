@@ -9,6 +9,7 @@ import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
+import ClassVoteBanner from "@/app/ClassVoteBanner";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
@@ -1192,8 +1193,9 @@ export default function TvvMobilePage() {
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
+            {!isAdoMode && userProfile?.dashboard_role !== "advisor" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} />
+            ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} adoGroups={userProfile?.dashboard_role === "ado" ? userProfile?.managed_ado_groups ?? [] : []} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
@@ -1594,7 +1596,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month, onOpenReport }: any) {
+function AdoOverview({ data, month, onOpenReport, adoGroups = [] }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1606,6 +1608,7 @@ function AdoOverview({ data, month, onOpenReport }: any) {
       .sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")))
     : [];
   return <section className="tvv-content team-dashboard ado-dashboard">
+    {adoGroups.length > 0 && <ClassVoteBanner adoMode adoGroups={adoGroups} />}
     <button className="ado-conference-home-card ado-report-home-card" type="button" onClick={onOpenReport}>
       <span><BarChart3 size={25} /></span>
       <div><strong>Báo cáo thúc đẩy TVV</strong><small>Phân loại hoạt động, theo dõi hợp đồng và ghi chú phối hợp</small></div>
@@ -3150,6 +3153,7 @@ function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, 
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
+    <ClassVoteBanner />
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />

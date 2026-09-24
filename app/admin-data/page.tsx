@@ -8,7 +8,7 @@ type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access";
+type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -34,6 +34,7 @@ type ArchiveFaq = { id: string; question: string; answer: string };
 type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
 type AboutSection = { id: string; title: string; description: string; items: AboutItem[] };
 type AboutContent = { sections: AboutSection[] };
+type ClassVoteAdminItem = { id: string; advisor_code: string; advisor_name: string | null; group_name: string | null; vote_choice: "A" | "T" | "M"; change_count: number; updated_at: string };
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -445,6 +446,7 @@ export default function AdminDataPage() {
         <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
         <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />Cẩm nang tư vấn</button>
         <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
+        <button type="button" className={activeTab === "class_votes" ? "active" : ""} onClick={() => setActiveTab("class_votes")}><CheckCircle2 size={17} />Bình chọn</button>
       </nav>
 
       <section className="admin-panel-area">
@@ -552,15 +554,99 @@ export default function AdminDataPage() {
           setMessage={setMessage}
         />}
         {activeTab === "about" && <AboutAdminPanel content={aboutContent} setContent={setAboutContent} onSaved={loadData} setMessage={setMessage} />}
+        {activeTab === "class_votes" && <ClassVotesAdminPanel />}
       </section>
       <nav className="admin-bottom-nav" aria-label="Điều hướng nhanh">
         <button type="button" className={activeTab === "home" ? "active" : ""} onClick={() => setActiveTab("home")}><Home /><span>Tổng quan</span></button>
         <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => setActiveTab("analytics")}><BarChart3 /><span>Analytics</span></button>
         <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")}><Database /><span>Dữ liệu</span></button>
+        <button type="button" className={activeTab === "class_votes" ? "active" : ""} onClick={() => setActiveTab("class_votes")}><CheckCircle2 /><span>Bình chọn</span></button>
         <button type="button" className={!(["home", "analytics", "data"] as AdminTab[]).includes(activeTab) ? "active" : ""} onClick={() => setActiveTab("events")}><Grid2X2 /><span>Thêm</span></button>
       </nav>
     </main>
   );
+}
+
+function ClassVotesAdminPanel() {
+  const [votes, setVotes] = useState<ClassVoteAdminItem[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true); setError("");
+    try {
+      const response = await fetch("/api/admin/class-votes", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể tải danh sách bình chọn.");
+      setVotes(payload.votes ?? []); setIsLocked(Boolean(payload.isLocked)); setIsStarted(Boolean(payload.isStarted));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể tải danh sách bình chọn."); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function setLock(nextLocked: boolean) {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isLocked: nextLocked }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể cập nhật trạng thái khóa.");
+      setIsLocked(Boolean(payload.isLocked));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể cập nhật trạng thái khóa."); }
+    finally { setBusy(false); }
+  }
+
+  async function startVoting() {
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isStarted: true }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể bắt đầu bình chọn.");
+      setIsStarted(Boolean(payload.isStarted)); setIsLocked(Boolean(payload.isLocked));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể bắt đầu bình chọn."); }
+    finally { setBusy(false); }
+  }
+
+  async function hideBanner() {
+    if (!window.confirm("Ẩn banner Khẳng định đẳng cấp trên toàn bộ giao diện người dùng?")) return;
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isStarted: false }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể ẩn banner.");
+      setIsStarted(Boolean(payload.isStarted));
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể ẩn banner."); }
+    finally { setBusy(false); }
+  }
+
+  async function resetVotes() {
+    if (!window.confirm("Reset toàn bộ bình chọn? TVV sẽ có thể bình chọn lại từ đầu.")) return;
+    setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/admin/class-votes", { method: "DELETE" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể reset bình chọn.");
+      await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể reset bình chọn."); }
+    finally { setBusy(false); }
+  }
+
+  return <article className="admin-card class-votes-admin">
+    <div className="admin-card-title"><CheckCircle2 /><div><h2>Quản lý bình chọn</h2><p>Theo dõi phương án TVV đã chốt, khóa chốt bình chọn hoặc reset để bắt đầu lại.</p></div></div>
+    <div className="class-votes-admin-actions">
+      <div><strong>{!isStarted ? "Banner đang ẩn" : isLocked ? "Đã khóa bình chọn" : "Banner đang hiển thị"}</strong><small>{!isStarted ? "Banner hiện đang ẩn trên toàn bộ giao diện người dùng." : isLocked ? "Nút Chốt đã bị vô hiệu hóa trên giao diện người dùng." : "TVV có thể chọn và chốt bình chọn."}</small></div>
+      {!isStarted ? <button type="button" className="class-votes-start" disabled={busy || loading} onClick={() => void startVoting()}>Hiện</button> : <><button type="button" className={isLocked ? "locked" : ""} role="switch" aria-checked={isLocked} disabled={busy || loading} onClick={() => void setLock(!isLocked)}><i /><span>{isLocked ? "Mở khóa" : "Khóa chốt"}</span></button><button type="button" className="class-votes-reset" disabled={busy || loading || !votes.length} onClick={() => void resetVotes()}><RotateCcw size={17} />Reset toàn bộ</button><button type="button" className="class-votes-end" disabled={busy || loading} onClick={() => void hideBanner()}>Ẩn</button></>}
+    </div>
+    {error && <p className="admin-data-empty class-votes-error">{error}</p>}
+    <div className="admin-table-wrap"><table><thead><tr><th>Tên TVV</th><th>Nhóm</th><th>Phương án</th><th>Lần thay đổi</th><th>Chốt lúc</th></tr></thead><tbody>
+      {votes.map((vote) => <tr key={vote.id}><td><b>{vote.advisor_name || vote.advisor_code}</b></td><td>{vote.group_name || "—"}</td><td><span className={`class-vote-admin-choice choice-${vote.vote_choice}`}>{vote.vote_choice}</span></td><td>{vote.change_count}/1</td><td>{new Date(vote.updated_at).toLocaleString("vi-VN")}</td></tr>)}
+      {!loading && !votes.length && <tr><td colSpan={5}>Chưa có TVV chốt bình chọn.</td></tr>}
+      {loading && <tr><td colSpan={5}>Đang tải dữ liệu bình chọn…</td></tr>}
+    </tbody></table></div>
+  </article>;
 }
 
 function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
