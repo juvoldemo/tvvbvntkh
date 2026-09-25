@@ -1193,7 +1193,7 @@ export default function TvvMobilePage() {
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
-            {!isAdoMode && userProfile?.dashboard_role !== "advisor" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
+            {!isAdoMode && userProfile?.dashboard_role !== "advisor" && userProfile?.dashboard_role !== "team_leader" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
             {isAdoMode
             ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} adoGroups={userProfile?.dashboard_role === "ado" ? userProfile?.managed_ado_groups ?? [] : []} />
             : isBoardMode
@@ -2525,6 +2525,8 @@ function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth
         </CardTag>;
       })}
     </div>
+
+    <ClassVoteBanner />
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
 
