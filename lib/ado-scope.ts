@@ -63,6 +63,13 @@ export function managedAdoScope(advisorCode: unknown, fullName?: unknown) {
   ) ?? null;
 }
 
+export function admVoteGroups(advisorCode: unknown, fullName?: unknown) {
+  const scope = managedAdoScope(advisorCode, fullName);
+  if (scope?.username !== "nguyenthoc") return null;
+  const tranXuanThu = ADO_SCOPES.find((item) => item.username === "tranxuanthu");
+  return [...scope.groups, ...(tranXuanThu?.groups ?? [])];
+}
+
 export function isBossAccount(advisorCode: unknown) {
   return normalizeAdoText(advisorCode) === "boss";
 }

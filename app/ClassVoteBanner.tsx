@@ -23,7 +23,8 @@ export default function ClassVoteBanner({ adoMode = false, adoGroups = [] }: { a
   const [results, setResults] = useState<Record<string, Array<{ advisorName: string; advisorCode: string }>>>({ A: [], T: [], M: [] });
   const [registeredAdvisors, setRegisteredAdvisors] = useState<Array<{ advisorName: string; advisorCode: string }>>([]);
   const [companyRegisteredCount, setCompanyRegisteredCount] = useState(0);
-  const [resultScope, setResultScope] = useState<"company" | "region">("region");
+  const [canViewAdm, setCanViewAdm] = useState(false);
+  const [resultScope, setResultScope] = useState<"company" | "region" | "adm">("region");
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +87,8 @@ export default function ClassVoteBanner({ adoMode = false, adoGroups = [] }: { a
       setResults(payload.votes ?? { A: [], T: [], M: [] });
       setRegisteredAdvisors(payload.registeredAdvisors ?? []);
       setCompanyRegisteredCount(Number(payload.companyRegisteredCount) || 0);
-      setVotingLocked(Boolean(payload.isLocked)); setVotingStarted(Boolean(payload.isStarted)); setResultScope(payload.scope === "company" ? "company" : "region");
+      setCanViewAdm(Boolean(payload.canViewAdm));
+      setVotingLocked(Boolean(payload.isLocked)); setVotingStarted(Boolean(payload.isStarted)); setResultScope(payload.scope === "company" || payload.scope === "adm" ? payload.scope : "region");
     } catch (error) {
       setResultsError(error instanceof Error ? error.message : "Không thể tải bình chọn của đồng đội.");
     } finally {
@@ -123,7 +125,7 @@ export default function ClassVoteBanner({ adoMode = false, adoGroups = [] }: { a
     </div>}
     {resultsOpen && <div className="class-vote-results-backdrop" role="presentation">
       <section className="class-vote-results" role="dialog" aria-modal="true" aria-label="Ket qua binh chon">
-        <header><div>{adoMode ? <div className="class-vote-scope-buttons"><button type="button" className={resultScope === "company" ? "active" : ""} onClick={() => void openResults("company")} disabled={resultsLoading}>{"C\u00f4ng ty"}</button><button type="button" className={resultScope === "region" ? "active" : ""} onClick={() => void openResults("region")} disabled={resultsLoading}>{"Khu v\u1ef1c"}</button><span>{"T\u1ed5ng TVV \u0111\u00e3 \u0111\u0103ng k\u00fd: "}{companyRegisteredCount}</span></div> : <h2>{"\u0110\u1ed3ng \u0111\u1ed9i \u0111ang ch\u1ecdn g\u00ec?"}</h2>}</div><button type="button" onClick={() => setResultsOpen(false)} aria-label={"\u0110\u00f3ng"}><X size={24} /></button></header>
+        <header><div>{adoMode ? <div className="class-vote-scope-buttons"><button type="button" className={resultScope === "company" ? "active" : ""} onClick={() => void openResults("company")} disabled={resultsLoading}>{"C\u00f4ng ty"}</button><button type="button" className={resultScope === "region" ? "active" : ""} onClick={() => void openResults("region")} disabled={resultsLoading}>{"Khu v\u1ef1c"}</button>{canViewAdm && <button type="button" className={resultScope === "adm" ? "active" : ""} onClick={() => void openResults("adm")} disabled={resultsLoading}>ADM</button>}<span>{"T\u1ed5ng TVV \u0111\u00e3 \u0111\u0103ng k\u00fd: "}{companyRegisteredCount}</span></div> : <h2>{"\u0110\u1ed3ng \u0111\u1ed9i \u0111ang ch\u1ecdn g\u00ec?"}</h2>}</div><button type="button" onClick={() => setResultsOpen(false)} aria-label={"\u0110\u00f3ng"}><X size={24} /></button></header>
         {resultsLoading ? <div className="class-vote-results-state"><LoaderCircle className="class-vote-spin" />Dang tai...</div> : resultsError ? <div className="class-vote-results-state error">{resultsError}</div> : <div className={`class-vote-results-grid${adoMode ? " ado-results-grid" : ""}`}>{adoMode && <section className="class-vote-result-column registered-advisors"><header><strong>{"TVV \u0111\u00e3 \u0111\u0103ng k\u00fd"}</strong><span>{registeredAdvisors.length}</span></header><div>{registeredAdvisors.length ? registeredAdvisors.map((advisor) => <article key={advisor.advisorCode}><b>{advisor.advisorName}</b></article>) : <p>Chua co TVV dang ky</p>}</div></section>}{choices.map((choice) => <section key={choice} className={`class-vote-result-column choice-${choice}`}><header><strong>{choice}</strong><span>{results[choice]?.length || 0}</span></header><div>{results[choice]?.length ? results[choice].map((vote) => <article key={vote.advisorCode}><b>{vote.advisorName}</b></article>) : <p>Chua co binh chon</p>}</div></section>)}</div>}
       </section>
     </div>}

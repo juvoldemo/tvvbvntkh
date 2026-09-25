@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isBossAccount, managedAdoScope } from "@/lib/ado-scope";
+import { admVoteGroups, isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
@@ -16,9 +16,12 @@ export async function GET(request: NextRequest) {
   const groups = adoScope?.groups ?? (profile.group_name ? [profile.group_name] : []);
   if (!groups.length) return NextResponse.json({ error: "Tài khoản chưa có thông tin nhóm." }, { status: 400 });
   const showCompany = Boolean(adoScope && requestedScope === "company");
+  const admGroups = admVoteGroups(profile.advisor_code, profile.full_name);
+  const showAdm = Boolean(admGroups && requestedScope === "adm");
   const { data: setting } = await supabase.from("class_vote_settings").select("is_locked,is_started").eq("id", true).maybeSingle();
   let votesQuery = supabase.from("class_votes").select("advisor_code,advisor_name,vote_choice").order("advisor_name");
-  if (!showCompany) votesQuery = adoScope ? votesQuery.in("group_name", groups) : votesQuery.eq("group_name", groups[0]);
+  if (showAdm) votesQuery = votesQuery.in("group_name", admGroups ?? []);
+  else if (!showCompany) votesQuery = adoScope ? votesQuery.in("group_name", groups) : votesQuery.eq("group_name", groups[0]);
   const { data, error } = await votesQuery;
   if (error) {
     if (error.message.includes("class_votes")) return NextResponse.json({ error: "Chưa cấu hình bảng bình chọn trên Supabase. Vui lòng áp dụng file supabase/class-votes.sql." }, { status: 503 });
@@ -33,7 +36,7 @@ export async function GET(request: NextRequest) {
     registeredAdvisors.push({ advisorName: vote.advisor_name || vote.advisor_code, advisorCode: vote.advisor_code });
     if (vote.vote_choice in votes) votes[vote.vote_choice as "A" | "T" | "M"].push({ advisorName: vote.advisor_name || vote.advisor_code, advisorCode: vote.advisor_code });
   }
-  return NextResponse.json({ scope: showCompany ? "company" : "region", isAdo: Boolean(adoScope), votes, registeredAdvisors, companyRegisteredCount: companyRegisteredCount ?? 0, isLocked: Boolean(setting?.is_locked), isStarted: Boolean(setting?.is_started) });
+  return NextResponse.json({ scope: showCompany ? "company" : showAdm ? "adm" : "region", isAdo: Boolean(adoScope), canViewAdm: Boolean(admGroups), votes, registeredAdvisors, companyRegisteredCount: companyRegisteredCount ?? 0, isLocked: Boolean(setting?.is_locked), isStarted: Boolean(setting?.is_started) });
 }
 
 export async function POST(request: NextRequest) {
