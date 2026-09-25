@@ -220,8 +220,6 @@ export async function POST(request: NextRequest) {
         : { password_hash: visiblePasswordRecord(plainPassword) };
       return { ...user, ...passwordFields, updated_at: new Date().toISOString() };
     });
-    const { error: disableError } = await supabase.from("authorized_users").update({ is_active: false }).eq("is_active", true);
-    if (disableError) throw disableError;
     const { error } = await supabase.from("authorized_users").upsert(usersWithPasswords, { onConflict: "advisor_code" });
     if (error) throw error;
     return NextResponse.json({ ok: true, count: usersToUpsert.length });
