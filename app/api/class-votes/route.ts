@@ -24,11 +24,16 @@ export async function GET(request: NextRequest) {
     if (error.message.includes("class_votes")) return NextResponse.json({ error: "Chưa cấu hình bảng bình chọn trên Supabase. Vui lòng áp dụng file supabase/class-votes.sql." }, { status: 503 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  const { count: companyRegisteredCount } = await supabase
+    .from("class_votes")
+    .select("advisor_code", { count: "exact", head: true });
   const votes = { A: [] as Array<{ advisorName: string; advisorCode: string }>, T: [] as Array<{ advisorName: string; advisorCode: string }>, M: [] as Array<{ advisorName: string; advisorCode: string }> };
+  const registeredAdvisors: Array<{ advisorName: string; advisorCode: string }> = [];
   for (const vote of data ?? []) {
+    registeredAdvisors.push({ advisorName: vote.advisor_name || vote.advisor_code, advisorCode: vote.advisor_code });
     if (vote.vote_choice in votes) votes[vote.vote_choice as "A" | "T" | "M"].push({ advisorName: vote.advisor_name || vote.advisor_code, advisorCode: vote.advisor_code });
   }
-  return NextResponse.json({ scope: showCompany ? "company" : "region", isAdo: Boolean(adoScope), votes, isLocked: Boolean(setting?.is_locked), isStarted: Boolean(setting?.is_started) });
+  return NextResponse.json({ scope: showCompany ? "company" : "region", isAdo: Boolean(adoScope), votes, registeredAdvisors, companyRegisteredCount: companyRegisteredCount ?? 0, isLocked: Boolean(setting?.is_locked), isStarted: Boolean(setting?.is_started) });
 }
 
 export async function POST(request: NextRequest) {

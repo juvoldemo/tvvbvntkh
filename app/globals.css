@@ -16839,6 +16839,9 @@ body .tvv-app .class-vote-actions .class-vote-results-button:disabled { border-c
 .class-vote-results > header p { margin-top: 3px; opacity: .82; font-size: 13px; }
 .class-vote-results > header button { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
 .class-vote-results-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 20px; }
+.class-vote-results-grid.ado-results-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.class-vote-scope-buttons span { align-self: center; margin-left: 8px; color: #fff; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.class-vote-result-column.registered-advisors > header strong { font-size: 18px; }
 .class-vote-result-column { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid #cbddeb; border-radius: 18px; background: #fff; }
 .class-vote-result-column > header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #dbe7f0; background: #f7fbff; color: #005987; }
 .class-vote-result-column > header strong { font-size: 32px; }
@@ -16855,7 +16858,7 @@ body .tvv-app .class-vote-actions .class-vote-results-button:disabled { border-c
 .class-vote-result-column p { margin: 18px 0; color: #718397; text-align: center; font-size: 13px; }
 .class-vote-results-state { display: grid; flex: 1; place-content: center; gap: 12px; color: #005987; font-weight: 800; text-align: center; }
 .class-vote-results-state.error { color: #b42318; padding: 24px; }
-@media (max-width: 560px) { .class-vote-results > header { padding: 15px 16px; } .class-vote-results > header h2 { font-size: 18px; } .class-vote-results-grid { gap: 8px; padding: 10px 8px; } .class-vote-result-column { border-radius: 12px; } .class-vote-result-column > header { flex-direction: column; gap: 5px; padding: 11px 5px; } .class-vote-result-column > header strong { font-size: 28px; } .class-vote-result-column > header span { padding: 4px 6px; font-size: 10px; } .class-vote-result-column > div { gap: 6px; padding: 6px; } .class-vote-result-column article { padding: 9px 7px; font-size: 12px; overflow-wrap: anywhere; } .class-vote-result-column article small { font-size: 9px; } .class-vote-result-column p { margin: 14px 0; font-size: 10px; } }
+@media (max-width: 560px) { .class-vote-results > header { padding: 15px 16px; } .class-vote-results > header h2 { font-size: 18px; } .class-vote-results-grid { gap: 8px; padding: 10px 8px; } .class-vote-results-grid.ado-results-grid { grid-template-columns: repeat(4, minmax(138px, 1fr)); overflow-x: auto; } .class-vote-scope-buttons { flex-wrap: wrap; } .class-vote-scope-buttons span { width: 100%; margin-left: 0; } .class-vote-result-column { border-radius: 12px; } .class-vote-result-column > header { flex-direction: column; gap: 5px; padding: 11px 5px; } .class-vote-result-column > header strong { font-size: 28px; } .class-vote-result-column.registered-advisors > header strong { font-size: 15px; } .class-vote-result-column > header span { padding: 4px 6px; font-size: 10px; } .class-vote-result-column > div { gap: 6px; padding: 6px; } .class-vote-result-column article { padding: 9px 7px; font-size: 12px; overflow-wrap: anywhere; } .class-vote-result-column article small { font-size: 9px; } .class-vote-result-column p { margin: 14px 0; font-size: 10px; } }
 .class-vote-actions small { min-height: 18px; font-weight: 700; }
 .class-vote-actions small.success { color: #18794e; }
 .class-vote-actions small.error { color: #b42318; }
