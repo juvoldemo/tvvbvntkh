@@ -4,14 +4,14 @@ import { FormEvent, KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect,
 import { createPortal } from "react-dom";
 import { createClient } from "@supabase/supabase-js";
 import Image from "next/image";
-import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, Clipboard, ClipboardCheck, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
+import { ArrowUpDown, BarChart3, Bell, BookOpen, CalendarDays, Calculator, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, CircleDollarSign, Clipboard, ClipboardCheck, ClipboardList, Coins, Crown, Download, Eye, EyeOff, FileText, Filter, FolderOpen, GripVertical, Gift, Home, Hourglass, Info, Layers3, LoaderCircle, LockKeyhole, MapPin, Medal, RotateCcw, Search, Share2, ShieldCheck, Sparkles, Target, Trash2, Trophy, UploadCloud, UserPlus, UserRound, Users, WalletCards, X, XCircle } from "lucide-react";
 import { formatVnd } from "@/lib/format";
 import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import ClassVoteBanner from "@/app/ClassVoteBanner";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_report";
+type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -1189,13 +1189,13 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "ado_report" ? "Báo cáo thúc đẩy TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
+            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "ado_training" ? "Đăng ký đào tạo" : tab === "ado_report" ? "Báo cáo thúc đẩy TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
           {tab === "overview" && <>
             {!isAdoMode && userProfile?.dashboard_role !== "advisor" && userProfile?.dashboard_role !== "team_leader" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} onOpenReport={() => setTab("ado_report")} adoGroups={userProfile?.dashboard_role === "ado" ? userProfile?.managed_ado_groups ?? [] : []} />
+            ? <AdoOverview data={adoData} month={month} onOpenTraining={() => setTab("ado_training")} />
             : isBoardMode
             ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
@@ -1207,6 +1207,7 @@ export default function TvvMobilePage() {
           {tab === "ado_targets" && isAdoMode && <AdoTargetsPage data={adoData} month={month} />}
           {tab === "ado_accounts" && isAdoMode && <AdoAccountsPage data={adoData} />}
           {tab === "ado_conferences" && isAdoMode && <AdoConferencesPage />}
+          {tab === "ado_training" && isAdoMode && <AdoTrainingPage />}
           {tab === "ado_report" && isAdoMode && <AdvisorActivityReportPage initialMonth={month} monthOptions={monthOptions} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
           {tab === "archive" && <ArchiveView />}
@@ -1596,7 +1597,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month, onOpenReport, adoGroups = [] }: any) {
+function AdoOverview({ data, month, onOpenTraining }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1608,10 +1609,9 @@ function AdoOverview({ data, month, onOpenReport, adoGroups = [] }: any) {
       .sort((a: any, b: any) => String(b.paid_date || "").localeCompare(String(a.paid_date || "")))
     : [];
   return <section className="tvv-content team-dashboard ado-dashboard">
-    {adoGroups.length > 0 && <ClassVoteBanner adoMode adoGroups={adoGroups} />}
-    <button className="ado-conference-home-card ado-report-home-card" type="button" onClick={onOpenReport}>
-      <span><BarChart3 size={25} /></span>
-      <div><strong>Báo cáo thúc đẩy TVV</strong><small>Phân loại hoạt động, theo dõi hợp đồng và ghi chú phối hợp</small></div>
+    <button className="ado-conference-home-card ado-training-home-card" type="button" onClick={onOpenTraining}>
+      <span><BookOpen size={25} /></span>
+      <div><strong>Đăng ký đào tạo</strong></div>
       <ChevronRight size={23} />
     </button>
     <section className="ado-command-card">
@@ -1654,6 +1654,64 @@ function AdoOverview({ data, month, onOpenReport, adoGroups = [] }: any) {
       </div>,
       document.body
     )}
+  </section>;
+}
+
+function AdoTrainingPage() {
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [className, setClassName] = useState("");
+  const [location, setLocation] = useState("");
+  const [instructorName, setInstructorName] = useState("");
+  const [classes, setClasses] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const response = await fetch("/api/classes", { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không tải được lịch đào tạo.");
+      setClasses(payload.classes ?? []);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không tải được lịch đào tạo."); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!scheduledAt || !className.trim() || !location.trim() || !instructorName.trim()) return;
+    setBusy(true); setError(""); setMessage("");
+    try {
+      const response = await fetch("/api/classes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledAt, className: className.trim(), location: location.trim(), instructorName: instructorName.trim() })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Không thể lưu đăng ký đào tạo.");
+      setMessage("Đã lưu lịch đào tạo.");
+      setScheduledAt(""); setClassName(""); setLocation(""); setInstructorName("");
+      await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể lưu đăng ký đào tạo."); }
+    finally { setBusy(false); }
+  }
+
+  return <section className="tvv-content tvv-subpage tvv-after-sub-header ado-training-page">
+    <form className="ado-training-form" onSubmit={submit}>
+      <span className="ado-training-icon"><BookOpen size={32} /></span>
+      <div><h2>Thông tin lớp đào tạo</h2><p>Điền đầy đủ thông tin để tạo lịch lớp học.</p></div>
+      <label>Ngày đăng ký<input type="date" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} required /></label>
+      <label>Nội dung đăng ký<input value={className} onChange={(event) => setClassName(event.target.value)} placeholder="Ví dụ: Đào tạo kỹ năng tư vấn" required /></label>
+      <label>Địa chỉ<input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Ví dụ: Văn phòng Bảo Việt Nha Trang" required /></label>
+      <label>Giảng viên<input value={instructorName} onChange={(event) => setInstructorName(event.target.value)} placeholder="Nhập họ tên giảng viên" required /></label>
+      {error && <p className="ado-conference-alert error">{error}</p>}
+      {message && <p className="ado-conference-alert success">{message}</p>}
+      <button type="submit" disabled={busy}>{busy ? <LoaderCircle className="spin" size={19} /> : <CalendarDays size={19} />}{busy ? "Đang lưu…" : "Đăng ký đào tạo"}</button>
+    </form>
+    <section className="ado-training-list"><header><div><h2>Lịch đào tạo đã đăng ký</h2><p>Các lớp học được sắp theo ngày.</p></div></header>
+      {classes.map((item) => <article key={item.id}><span><CalendarDays size={20} /></span><div><strong>{item.class_name}</strong><small>{formatDateVi(item.scheduled_at)} · {item.instructor_name}</small><em><MapPin size={13} />{item.location}</em></div></article>)}
+      {!classes.length && <p className="tvv-empty">Chưa có lịch đào tạo nào.</p>}
+    </section>
   </section>;
 }
 
