@@ -1703,7 +1703,6 @@ function AdoTrainingPage() {
 
   return <section className="tvv-content tvv-subpage tvv-after-sub-header ado-training-page">
     <form className="ado-training-form" onSubmit={submit}>
-      <div><h2>Thông tin lớp đào tạo</h2><p>Điền đầy đủ thông tin để tạo lịch lớp học.</p></div>
       <label>Ngày đăng ký<input type="date" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} required /></label>
       <label>Chương trình đào tạo<select value={selectedProgram} onChange={(event) => { const value = event.target.value; setSelectedProgram(value); setClassName(value === otherProgramValue ? "" : value); }} required><option value="" disabled>Chọn chương trình đào tạo</option>{trainingPrograms.map((item) => <option key={item} value={item}>{item}</option>)}<option value={otherProgramValue}>Ngoài danh sách</option></select></label>
       {selectedProgram === otherProgramValue && <label>Chương trình đào tạo khác<input value={className} onChange={(event) => setClassName(event.target.value)} placeholder="Nhập chương trình đào tạo" required autoFocus /></label>}
