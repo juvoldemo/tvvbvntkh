@@ -1658,8 +1658,13 @@ function AdoOverview({ data, month, onOpenTraining }: any) {
 }
 
 function AdoTrainingPage() {
+  const otherProgramValue = "__other_program__";
+  const trainingPrograms = ["Bảo việt lập nghiệp", "Lifecare 2.0", "An Thịnh Phúc Niên", "An Lộc Vững Bền", "An Tâm Hoạch Định", "An Khang Như Ý", "An Sinh Giáo Dục", "Nhóm SP LCK UVL", "R26 - R29", "R21 - R25", "R24 - R27 - R28", "R22 - R23", "Kỹ năng tư vấn nền tảng"];
+  const locations = ["Trụ sở BVNT Khánh Hoà", "VPKV Cam Ranh", "VPKV Diên Khánh", "VPKV Ninh Hoà", "VPKV Vạn Ninh"];
+  const instructors = ["Đỗ Thị Khánh Ngọc", "Nguyễn Thóc", "Nguyễn Thị Mai Trang", "Nguyễn Thành Nhân", "Đinh Quốc Tiến", "Trần Xuân Thu", "Nguyễn Thị Trầm"];
   const [scheduledAt, setScheduledAt] = useState("");
   const [className, setClassName] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
   const [location, setLocation] = useState("");
   const [instructorName, setInstructorName] = useState("");
   const [classes, setClasses] = useState<any[]>([]);
@@ -1690,7 +1695,7 @@ function AdoTrainingPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Không thể lưu đăng ký đào tạo.");
       setMessage("Đã lưu lịch đào tạo.");
-      setScheduledAt(""); setClassName(""); setLocation(""); setInstructorName("");
+      setScheduledAt(""); setClassName(""); setSelectedProgram(""); setLocation(""); setInstructorName("");
       await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể lưu đăng ký đào tạo."); }
     finally { setBusy(false); }
@@ -1698,12 +1703,12 @@ function AdoTrainingPage() {
 
   return <section className="tvv-content tvv-subpage tvv-after-sub-header ado-training-page">
     <form className="ado-training-form" onSubmit={submit}>
-      <span className="ado-training-icon"><BookOpen size={32} /></span>
       <div><h2>Thông tin lớp đào tạo</h2><p>Điền đầy đủ thông tin để tạo lịch lớp học.</p></div>
       <label>Ngày đăng ký<input type="date" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} required /></label>
-      <label>Nội dung đăng ký<input value={className} onChange={(event) => setClassName(event.target.value)} placeholder="Ví dụ: Đào tạo kỹ năng tư vấn" required /></label>
-      <label>Địa chỉ<input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Ví dụ: Văn phòng Bảo Việt Nha Trang" required /></label>
-      <label>Giảng viên<input value={instructorName} onChange={(event) => setInstructorName(event.target.value)} placeholder="Nhập họ tên giảng viên" required /></label>
+      <label>Chương trình đào tạo<select value={selectedProgram} onChange={(event) => { const value = event.target.value; setSelectedProgram(value); setClassName(value === otherProgramValue ? "" : value); }} required><option value="" disabled>Chọn chương trình đào tạo</option>{trainingPrograms.map((item) => <option key={item} value={item}>{item}</option>)}<option value={otherProgramValue}>Ngoài danh sách</option></select></label>
+      {selectedProgram === otherProgramValue && <label>Chương trình đào tạo khác<input value={className} onChange={(event) => setClassName(event.target.value)} placeholder="Nhập chương trình đào tạo" required autoFocus /></label>}
+      <label>Địa chỉ<select value={location} onChange={(event) => setLocation(event.target.value)} required><option value="" disabled>Chọn địa chỉ</option>{locations.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+      <label>Giảng viên<select value={instructorName} onChange={(event) => setInstructorName(event.target.value)} required><option value="" disabled>Chọn giảng viên</option>{instructors.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
       {error && <p className="ado-conference-alert error">{error}</p>}
       {message && <p className="ado-conference-alert success">{message}</p>}
       <button type="submit" disabled={busy}>{busy ? <LoaderCircle className="spin" size={19} /> : <CalendarDays size={19} />}{busy ? "Đang lưu…" : "Đăng ký đào tạo"}</button>

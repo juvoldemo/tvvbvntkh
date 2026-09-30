@@ -3,6 +3,9 @@ import { isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { userCodeFromRequest } from "@/lib/user-auth";
 
+const TRAINING_LOCATIONS = new Set(["Trụ sở BVNT Khánh Hoà", "VPKV Cam Ranh", "VPKV Diên Khánh", "VPKV Ninh Hoà", "VPKV Vạn Ninh"]);
+const TRAINING_INSTRUCTORS = new Set(["Đỗ Thị Khánh Ngọc", "Nguyễn Thóc", "Nguyễn Thị Mai Trang", "Nguyễn Thành Nhân", "Đinh Quốc Tiến", "Trần Xuân Thu", "Nguyễn Thị Trầm"]);
+
 async function access(request: NextRequest) {
   const code = userCodeFromRequest(request);
   if (!code) return null;
@@ -37,6 +40,9 @@ export async function POST(request: NextRequest) {
   const scheduled_at = String(body?.scheduledAt || "");
   if (!class_name || !instructor_name || !location || !/^\d{4}-\d{2}-\d{2}$/.test(scheduled_at)) {
     return NextResponse.json({ error: "Vui lòng nhập đủ ngày đăng ký, nội dung, địa chỉ và giảng viên." }, { status: 400 });
+  }
+  if (!TRAINING_LOCATIONS.has(location) || !TRAINING_INSTRUCTORS.has(instructor_name)) {
+    return NextResponse.json({ error: "Vui lòng chọn địa chỉ và giảng viên trong danh sách." }, { status: 400 });
   }
   const { data, error } = await supabase.from("class_schedules").insert({ class_name, instructor_name, location, scheduled_at }).select("id,class_name,instructor_name,location,scheduled_at").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
