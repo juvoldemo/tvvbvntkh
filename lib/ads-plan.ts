@@ -80,6 +80,7 @@ export function resolveAdsName(value: unknown, banName?: unknown, groupName?: un
 }
 
 export function findAdsByBanGroup(banName: unknown, groupName: unknown) {
+  if (normalizeKey(groupName) === normalizeKey("Thiên Phúc")) return "Trần Xuân Thu";
   return NORMALIZED_GROUP_ASSIGNMENTS.get(assignmentKey(banName, groupName)) ?? "";
 }
 
