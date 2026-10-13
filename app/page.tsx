@@ -10,6 +10,7 @@ import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import ClassVoteBanner from "@/app/ClassVoteBanner";
+import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
@@ -1554,6 +1555,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
       <button className="team-kpi-card orange clickable" type="button" aria-label="Hợp đồng" onClick={onOpenContracts}><FileText size={20} /><strong>{summary.contracts || 0}</strong></button>
       <button className="team-kpi-card red clickable" type="button" aria-label="Cần theo dõi" onClick={onOpenContracts}><Hourglass size={20} /><strong>{summary.attention || 0}</strong></button>
     </div>
+    <GuestInvitationHomeCard template="galina" />
     <section className="team-overview-panel board-groups-panel">
       <div className="team-panel-header"><div><Users size={18} /><div><h2>Doanh thu từng nhóm</h2></div></div></div>
       <div className="board-group-list">
@@ -1618,6 +1620,7 @@ function AdoOverview({ data, month, onOpenTraining }: any) {
       <div><span>DOANH THU KHU VỰC</span><strong>{formatCompactVnd(summary.afyp)}</strong><small>{summary.contracts || 0} hợp đồng · {summary.activeAdvisors || 0} TVV hoạt động</small></div>
       <div className="ado-target-ring" style={{ "--ado-progress": `${Math.min(100, targetRate)}%` } as any}><b>{targetRate}%</b><span>mục tiêu</span></div>
     </section>
+    <GuestInvitationHomeCard template="galina" />
     <section className="team-overview-panel ado-groups-panel">
       <div className="team-panel-header"><div><Layers3 size={18} /><div><h2>Hiệu quả từng nhóm</h2><p>Xếp theo doanh thu tháng</p></div></div></div>
       <div className="ado-group-list">
@@ -2588,6 +2591,7 @@ function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth
       })}
     </div>
 
+    <GuestInvitationHomeCard template="galina" />
     <ClassVoteBanner />
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
@@ -3217,6 +3221,7 @@ function Overview({ advisorCode, showRecruitment, stats, leaderboard, estimate, 
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
+    <GuestInvitationHomeCard template="galina" />
     <ClassVoteBanner />
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />

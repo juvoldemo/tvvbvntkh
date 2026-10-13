@@ -6,6 +6,7 @@ export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-th
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
 export const SEPTEMBER_19_INVITATION_IMAGE_PATH = "/invitations/Thu moi 19.09.png";
 export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.png";
+export const GALINA_INVITATION_IMAGE_PATH = "/invitations/Thư mời Nét đẹp.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
@@ -183,6 +184,45 @@ export async function drawSeptember19Invitation(
   context.textBaseline = "alphabetic";
   context.fillStyle = textColor;
   context.fillText(displayName, centerX, nameY, areaWidth);
+}
+
+export async function drawGalinaInvitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#C52222"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  // Position the name in the blank row of the new 5064 × 4972 template.
+  const scale = (width / 1266) * renderScale;
+  const areaWidth = 466 * scale;
+  let fontSize = 26 * scale;
+  while (fontSize > 16 * scale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  const metrics = context.measureText(displayName);
+  context.textAlign = "center";
+  context.textBaseline = "alphabetic";
+  context.fillStyle = textColor;
+  // A light outline keeps white and yellow names legible on the pastel panel.
+  context.strokeStyle = textColor.toUpperCase() === "#C52222" ? "rgba(255,255,255,.9)" : "rgba(23,36,132,.8)";
+  context.lineWidth = 1.5 * scale;
+  const nameY = 234 * scale + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+  context.strokeText(displayName, 948 * scale, nameY, areaWidth);
+  context.fillText(displayName, 948 * scale, nameY, areaWidth);
 }
 
 export async function drawVipInvitation(

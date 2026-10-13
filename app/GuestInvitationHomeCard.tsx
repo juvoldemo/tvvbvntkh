@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { SEPTEMBER_19_INVITATION_IMAGE_PATH, VIP_INVITATION_IMAGE_PATH, drawVipInvitation, canvasToBlob, downloadInvitationFile, drawSeptember19Invitation } from "@/lib/invitation-canvas";
+import { GALINA_INVITATION_IMAGE_PATH, SEPTEMBER_19_INVITATION_IMAGE_PATH, VIP_INVITATION_IMAGE_PATH, drawGalinaInvitation, drawVipInvitation, canvasToBlob, downloadInvitationFile, drawSeptember19Invitation } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
 const TEMPLATES = {
+  galina: { banner: "/invitations/Banner Galina.png", image: GALINA_INVITATION_IMAGE_PATH, draw: drawGalinaInvitation, title: "Nét duyên tỏa sáng - Rạng rỡ xinh tươi", color: "#C52222" as const, width: 2165, height: 446 },
   cr: { banner: "/invitations/ThumoiCR.png", image: VIP_INVITATION_IMAGE_PATH, draw: drawVipInvitation, title: "Dấu ấn vinh quang", color: "#C52222" as const, width: 2168, height: 422 },
   september19: { banner: "/invitations/Banner 19.09.png", image: SEPTEMBER_19_INVITATION_IMAGE_PATH, draw: drawSeptember19Invitation, title: "Ra mắt An Sinh Giáo Dục", color: "#FFFFFF" as const, width: 2508, height: 627 }
 };
@@ -68,7 +69,8 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
   }, [open]);
 
   async function createFile() {
-    if (!valid || !canvasRef.current) throw new Error("Thông tin chưa hợp lệ.");
+    if (!valid || !canvasRef.current || !imageRef.current) throw new Error("Thông tin chưa hợp lệ.");
+    await config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor);
     const blob = await canvasToBlob(canvasRef.current);
     return new File([blob], outputName(displayName), { type: "image/png" });
   }
@@ -103,7 +105,7 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
   }
 
   return <>
-    <button className="tvv-card hnkh-home-card" type="button" onClick={() => setOpen(true)} aria-label={`Mở công cụ tạo thư mời ${config.title}`}>
+    <button className="tvv-card hnkh-home-card" style={{ aspectRatio: `${config.width} / ${config.height}` }} type="button" onClick={() => setOpen(true)} aria-label={`Mở công cụ tạo thư mời ${config.title}`}>
       <Image src={config.banner} alt={`Thư mời ${config.title}`} width={config.width} height={config.height} />
     </button>
     {open && <div className="hnkh-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
