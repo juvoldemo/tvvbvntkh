@@ -6,7 +6,7 @@ import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
-type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; displayAudience?: CompetitionAudience };
+type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; siteHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
 type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes";
 type AnalyticsPeriod = "day" | "week" | "month";
@@ -382,7 +382,7 @@ export default function AdminDataPage() {
     const response = await fetch("/api/competition", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ program_id: program.id, display_audience: nextAudience, is_hidden: isHidden })
+      body: JSON.stringify({ program_id: program.id, ...(isHidden ? {} : { display_audience: nextAudience }), site_hidden: isHidden })
     });
     const payload = await response.json().catch(() => ({}));
     setCompetitionAudienceBusy("");
@@ -390,7 +390,7 @@ export default function AdminDataPage() {
       setMessage(payload.error || "Không cập nhật được đối tượng hiển thị của chương trình.");
       return;
     }
-    setCompetitionPrograms((current) => current.map((item) => item.id === program.id ? { ...item, displayAudience: nextAudience, isHidden } : item));
+    setCompetitionPrograms((current) => current.map((item) => item.id === program.id ? { ...item, displayAudience: nextAudience, siteHidden: isHidden } : item));
     setMessage(isHidden ? `“${program.programName}” đã ẩn với mọi người.` : nextAudience === "team_leader"
       ? `“${program.programName}” hiện chỉ hiển thị cho trưởng nhóm.`
       : `“${program.programName}” hiện hiển thị cho tất cả mọi người.`);
@@ -521,11 +521,11 @@ export default function AdminDataPage() {
             {visibleCompetitionPrograms.map((program) => {
               const leadersOnly = program.displayAudience === "team_leader";
               return <section key={program.id} className={leadersOnly ? "leaders-only" : ""}>
-                <div><h3>{program.programName}</h3><p>{program.startDate || "—"} đến {program.endDate || "—"} · {program.isHidden ? "Đang ẩn" : program.status || "Chưa có trạng thái"}</p></div>
+                <div><h3>{program.programName}</h3><p>{program.startDate || "—"} đến {program.endDate || "—"} · {program.siteHidden ? "Đang ẩn" : program.status || "Chưa có trạng thái"}</p></div>
                 <div className="admin-competition-audience-control">
                   <small>Đối tượng hiển thị</small>
                   <div className="admin-audience-options" role="group" aria-label={`Đối tượng hiển thị của ${program.programName}`}>
-                    {([["all", "Mọi người"], ["team_leader", "Trưởng nhóm"], ["hidden", "Ẩn với mọi người"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={value === "hidden" ? Boolean(program.isHidden) : !program.isHidden && (program.displayAudience || "all") === value} disabled={competitionAudienceBusy !== ""} onClick={() => toggleCompetitionAudience(program, value)}>{label}</button>)}
+                    {([["all", "Mọi người"], ["team_leader", "Trưởng nhóm"], ["hidden", "Ẩn với mọi người"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={value === "hidden" ? Boolean(program.siteHidden) : !program.siteHidden && (program.displayAudience || "all") === value} disabled={competitionAudienceBusy !== ""} onClick={() => toggleCompetitionAudience(program, value)}>{label}</button>)}
                   </div>
                 </div>
               </section>;

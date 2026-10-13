@@ -1,3 +1,4 @@
+import { siteHiddenCompetitionIds } from "@/lib/competition-site-visibility";
 import { NextRequest, NextResponse } from "next/server";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -252,8 +253,9 @@ export async function POST(request: NextRequest) {
           }]
         : (advisorProfiles ?? []);
 
+    const siteHidden = await siteHiddenCompetitionIds();
     const visiblePrograms = (programs ?? []).filter((program: any) =>
-      program.is_hidden !== true
+      !siteHidden.has(program.id) && program.is_hidden !== true
       && program.is_hidden !== "true"
       && program.is_hidden !== 1
       && competitionIsVisibleTo(program, viewerAudience)

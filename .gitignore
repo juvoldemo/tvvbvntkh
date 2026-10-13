@@ -19,3 +19,5 @@ data/processed/*
 !data/processed/.gitkeep
 debug/*
 !debug/.gitkeep
+
+data/site-settings/

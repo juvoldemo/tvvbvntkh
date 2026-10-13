@@ -1,3 +1,4 @@
+import { siteHiddenCompetitionIds } from "@/lib/competition-site-visibility";
 import { toMonthStart } from "@/lib/format";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { competitionIsVisibleTo, normalizeCompetitionAudience, type CompetitionAudience } from "@/lib/competition-audience";
@@ -355,11 +356,13 @@ export async function listCompetitionPrograms(options: { includeHidden?: boolean
   if (programError) throw new Error(messageFromError(programError));
   if (resultError) throw new Error(messageFromError(resultError));
 
+  const siteHidden = await siteHiddenCompetitionIds();
   const latest = latestResultByProgram(results ?? []);
   return (programs ?? [])
+    .filter((program) => options.includeHidden || !siteHidden.has(program.id))
     .filter((program) => options.includeHidden || !(program.is_hidden === true || program.is_hidden === "true" || program.is_hidden === 1))
     .filter((program) => competitionIsVisibleTo(program, options.viewerAudience ?? "all"))
-    .map((program) => normalizeProgram(program, latest.get(program.id)));
+    .map((program) => ({ ...normalizeProgram(program, latest.get(program.id)), siteHidden: siteHidden.has(program.id) }));
 }
 
 export async function getCompetitionProgramDetail(programId: string) {

@@ -1,3 +1,4 @@
+import { siteHiddenCompetitionIds } from "@/lib/competition-site-visibility";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getVietnamToday } from "@/lib/format";
@@ -250,8 +251,9 @@ async function calculate(request: NextRequest, body: any = {}) {
   );
   const teamCompetitionContracts = uniqueRevenue.filter((row) => row.group_name === groupName);
   const today = getVietnamToday();
+  const siteHidden = await siteHiddenCompetitionIds();
   const competitionSummaries = competitionPrograms
-    .filter((program: any) => program.is_hidden !== true && program.confirmed_rule)
+    .filter((program: any) => !siteHidden.has(program.id) && program.is_hidden !== true && program.confirmed_rule)
     .map((program: any) => {
       try {
         return programSummary(program, teamCompetitionContracts);

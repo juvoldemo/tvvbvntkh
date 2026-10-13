@@ -1,3 +1,4 @@
+import { siteHiddenCompetitionIds } from "@/lib/competition-site-visibility";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { isBossAccount, managedAdoScope } from "@/lib/ado-scope";
@@ -212,7 +213,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=20", "X-Data-Cache": "MISS" } });
     }
 
-    const programRows = programError ? [] : (programs ?? []);
+    const siteHidden = await siteHiddenCompetitionIds();
+    const programRows = programError ? [] : (programs ?? []).filter((program: any) => !siteHidden.has(program.id));
     const teamLeaders = activeRoster.flatMap((row: any) => {
       const managedGroup = managedTeamName(row.advisor_code, row.advisor_position, row.full_name, row.group_name);
       return managedGroup && scope.groups.includes(managedGroup)

@@ -1,3 +1,4 @@
+import { siteHiddenCompetitionIds, setCompetitionSiteHidden } from "@/lib/competition-site-visibility";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCompetitionProgramDetail, listCompetitionPrograms } from "@/src/lib/competition/competitionService";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
     if (id) {
       const detail = await getCompetitionProgramDetail(id);
-      if (!admin && (detail.program.isHidden || !competitionIsVisibleTo(detail.program, viewerAudience))) return NextResponse.json({ error: "Không tìm thấy chương trình." }, { status: 404 });
+      if (!admin && (detail.program.isHidden || (await siteHiddenCompetitionIds()).has(id) || !competitionIsVisibleTo(detail.program, viewerAudience))) return NextResponse.json({ error: "Không tìm thấy chương trình." }, { status: 404 });
       return NextResponse.json(detail);
     }
     const includeHidden = admin && request.nextUrl.searchParams.get("includeHidden") === "1";
@@ -31,6 +32,14 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const programId = String(body.program_id || body.programId || "").trim();
     if (!programId) return NextResponse.json({ error: "Thiếu program_id." }, { status: 400 });
+    if ("site_hidden" in body) {
+      if (!isAdminRequest(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (typeof body.site_hidden !== "boolean") return NextResponse.json({ error: "Invalid site_hidden" }, { status: 400 });
+      if (!("display_audience" in body) && !("displayAudience" in body)) {
+        await setCompetitionSiteHidden(programId, body.site_hidden);
+        return NextResponse.json({ ok: true });
+      }
+    }
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("is_hidden" in body || "isHidden" in body) updates.is_hidden = Boolean(body.is_hidden ?? body.isHidden);
     if ("display_audience" in body || "displayAudience" in body) {
@@ -44,6 +53,7 @@ export async function PATCH(request: NextRequest) {
       .select("*")
       .single();
     if (error) throw error;
+    if ("site_hidden" in body) await setCompetitionSiteHidden(programId, body.site_hidden);
     return NextResponse.json({ program: data });
   } catch (error) {
     return NextResponse.json({ error: errorMessage(error) }, { status: 500 });
