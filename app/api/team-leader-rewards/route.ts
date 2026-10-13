@@ -298,3 +298,5 @@ export async function POST(request: NextRequest) {
   try { return await calculate(request, await request.json().catch(() => ({}))); }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Không tính được chính sách Trưởng nhóm." }, { status: 500 }); }
 }
+
+export const dynamic = "force-dynamic";

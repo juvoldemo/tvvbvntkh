@@ -343,3 +343,5 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return NextResponse.json({ error: "Mục tiêu doanh thu do Trưởng nhóm đăng ký." }, { status: 403 });
 }
+
+export const dynamic = "force-dynamic";
