@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getCompetitionProgramDetail, listCompetitionPrograms } from "@/src/lib/competition/competitionService";
-import { competitionViewerAudience, normalizeCompetitionAudience } from "@/lib/competition-audience";
+import { competitionIsVisibleTo, competitionViewerAudience, normalizeCompetitionAudience } from "@/lib/competition-audience";
 import { isAdminRequest } from "@/lib/admin-auth";
 
 function errorMessage(error: unknown) {
@@ -10,13 +10,15 @@ function errorMessage(error: unknown) {
 
 export async function GET(request: NextRequest) {
   try {
+    const admin = isAdminRequest(request);
+    const viewerAudience = admin ? "team_leader" : await competitionViewerAudience(request);
     const id = request.nextUrl.searchParams.get("id");
     if (id) {
       const detail = await getCompetitionProgramDetail(id);
+      if (!admin && (detail.program.isHidden || !competitionIsVisibleTo(detail.program, viewerAudience))) return NextResponse.json({ error: "Không tìm thấy chương trình." }, { status: 404 });
       return NextResponse.json(detail);
     }
-    const includeHidden = request.nextUrl.searchParams.get("includeHidden") === "1";
-    const viewerAudience = isAdminRequest(request) ? "team_leader" : await competitionViewerAudience(request);
+    const includeHidden = admin && request.nextUrl.searchParams.get("includeHidden") === "1";
     const programs = await listCompetitionPrograms({ includeHidden, viewerAudience });
     return NextResponse.json({ programs });
   } catch (error) {

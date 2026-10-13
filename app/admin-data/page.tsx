@@ -374,14 +374,15 @@ export default function AdminDataPage() {
     if (response.ok) loadData();
   }
 
-  async function toggleCompetitionAudience(program: CompetitionProgram) {
-    const nextAudience: CompetitionAudience = program.displayAudience === "team_leader" ? "all" : "team_leader";
+  async function toggleCompetitionAudience(program: CompetitionProgram, selection: CompetitionAudience | "hidden") {
+    const nextAudience: CompetitionAudience = selection === "hidden" ? program.displayAudience || "all" : selection;
+    const isHidden = selection === "hidden";
     setCompetitionAudienceBusy(program.id);
     setMessage("");
     const response = await fetch("/api/competition", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ program_id: program.id, display_audience: nextAudience })
+      body: JSON.stringify({ program_id: program.id, display_audience: nextAudience, is_hidden: isHidden })
     });
     const payload = await response.json().catch(() => ({}));
     setCompetitionAudienceBusy("");
@@ -389,8 +390,8 @@ export default function AdminDataPage() {
       setMessage(payload.error || "Không cập nhật được đối tượng hiển thị của chương trình.");
       return;
     }
-    setCompetitionPrograms((current) => current.map((item) => item.id === program.id ? { ...item, displayAudience: nextAudience } : item));
-    setMessage(nextAudience === "team_leader"
+    setCompetitionPrograms((current) => current.map((item) => item.id === program.id ? { ...item, displayAudience: nextAudience, isHidden } : item));
+    setMessage(isHidden ? `“${program.programName}” đã ẩn với mọi người.` : nextAudience === "team_leader"
       ? `“${program.programName}” hiện chỉ hiển thị cho trưởng nhóm.`
       : `“${program.programName}” hiện hiển thị cho tất cả mọi người.`);
   }
@@ -523,11 +524,9 @@ export default function AdminDataPage() {
                 <div><h3>{program.programName}</h3><p>{program.startDate || "—"} đến {program.endDate || "—"} · {program.isHidden ? "Đang ẩn" : program.status || "Chưa có trạng thái"}</p></div>
                 <div className="admin-competition-audience-control">
                   <small>Đối tượng hiển thị</small>
-                  <button type="button" role="switch" aria-checked={leadersOnly} aria-label={`Đối tượng hiển thị của ${program.programName}: ${leadersOnly ? "chỉ trưởng nhóm" : "tất cả mọi người"}`} className={`admin-audience-switch${leadersOnly ? " active" : ""}`} disabled={competitionAudienceBusy === program.id} onClick={() => toggleCompetitionAudience(program)}>
-                    <i aria-hidden="true" />
-                    <span className="all-option">Mọi người</span>
-                    <span className="leader-option">Trưởng nhóm</span>
-                  </button>
+                  <div className="admin-audience-options" role="group" aria-label={`Đối tượng hiển thị của ${program.programName}`}>
+                    {([["all", "Mọi người"], ["team_leader", "Trưởng nhóm"], ["hidden", "Ẩn với mọi người"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={value === "hidden" ? Boolean(program.isHidden) : !program.isHidden && (program.displayAudience || "all") === value} disabled={competitionAudienceBusy !== ""} onClick={() => toggleCompetitionAudience(program, value)}>{label}</button>)}
+                  </div>
                 </div>
               </section>;
             })}
