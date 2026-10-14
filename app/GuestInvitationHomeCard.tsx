@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
 import { GALINA_INVITATION_IMAGE_PATH, SEPTEMBER_19_INVITATION_IMAGE_PATH, VIP_INVITATION_IMAGE_PATH, drawGalinaInvitation, drawVipInvitation, canvasToBlob, downloadInvitationFile, drawSeptember19Invitation } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
+import { CR_16_INVITATION_IMAGE_PATH, drawCr16Invitation } from "@/lib/invitation-canvas";
 
 const TEMPLATES = {
+  cr16: { banner: "/invitations/Banner Galina.png", image: CR_16_INVITATION_IMAGE_PATH, draw: drawCr16Invitation, title: "CR 16 · Nét duyên tỏa sáng - Rạng rỡ xinh tươi", color: "#C52222" as const, width: 2165, height: 446 },
   galina: { banner: "/invitations/Banner Galina.png", image: GALINA_INVITATION_IMAGE_PATH, draw: drawGalinaInvitation, title: "Nét duyên tỏa sáng - Rạng rỡ xinh tươi", color: "#C52222" as const, width: 2165, height: 446 },
   cr: { banner: "/invitations/ThumoiCR.png", image: VIP_INVITATION_IMAGE_PATH, draw: drawVipInvitation, title: "Dấu ấn vinh quang", color: "#C52222" as const, width: 2168, height: 422 },
   september19: { banner: "/invitations/Banner 19.09.png", image: SEPTEMBER_19_INVITATION_IMAGE_PATH, draw: drawSeptember19Invitation, title: "Ra mắt An Sinh Giáo Dục", color: "#FFFFFF" as const, width: 2508, height: 627 }

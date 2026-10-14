@@ -6,6 +6,7 @@ export const HOMECOMING_INVITATION_IMAGE_PATH = "/invitations/thu-moi-hoi-ngo-th
 export const AUGUST_20_INVITATION_IMAGE_PATH = "/invitations/Thu moi 20.08.png";
 export const SEPTEMBER_19_INVITATION_IMAGE_PATH = "/invitations/Thu moi 19.09.png";
 export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.png";
+export const CR_16_INVITATION_IMAGE_PATH = "/invitations/Thư mời CR 16.png";
 export const GALINA_INVITATION_IMAGE_PATH = "/invitations/Thư mời Nét đẹp.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 const BASE_SIZE = 834;
@@ -223,6 +224,44 @@ export async function drawGalinaInvitation(
   const nameY = 234 * scale + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
   context.strokeText(displayName, 948 * scale, nameY, areaWidth);
   context.fillText(displayName, 948 * scale, nameY, areaWidth);
+}
+
+export async function drawCr16Invitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#C52222"
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  // Blank row between the greeting and program introduction on the right panel.
+  const scale = (width / 2780) * renderScale;
+  const areaWidth = 1160 * scale;
+  let fontSize = 54 * scale;
+  while (fontSize > 32 * scale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  const metrics = context.measureText(displayName);
+  const nameY = height * 0.172 * renderScale + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+  context.textAlign = "center";
+  context.textBaseline = "alphabetic";
+  context.strokeStyle = textColor.toUpperCase() === "#C52222" ? "rgba(255,255,255,.9)" : "rgba(23,36,132,.8)";
+  context.lineWidth = 3 * scale;
+  context.strokeText(displayName, width * 0.75 * renderScale, nameY, areaWidth);
+  context.fillStyle = textColor;
+  context.fillText(displayName, width * 0.75 * renderScale, nameY, areaWidth);
 }
 
 export async function drawVipInvitation(
