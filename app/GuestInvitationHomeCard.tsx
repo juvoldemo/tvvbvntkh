@@ -87,11 +87,16 @@ export default function GuestInvitationHomeCard({ template = "october23" }: { te
     return new File([blob], outputName(displayName), { type: "image/png" });
   }
 
+  function trackCreated() {
+    window.postMessage({ type: "bvnt-analytics", eventName: "invitation_created", content: config.title }, window.location.origin);
+  }
+
   async function download() {
     if (!valid || busy) return;
     setBusy(true); setMessage("");
     try {
       downloadInvitationFile(await createFile());
+      trackCreated();
       setMessage("Đã xuất thư mời thành công.");
     } catch { setMessage("Không thể xuất thư mời. Vui lòng thử lại."); }
     finally { setBusy(false); }
@@ -105,9 +110,11 @@ export default function GuestInvitationHomeCard({ template = "october23" }: { te
       const shareData: ShareData = { files: [file] };
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share(shareData);
+        trackCreated();
         setMessage("Đã mở danh sách ứng dụng chia sẻ. Hãy chọn Zalo.");
       } else {
         downloadInvitationFile(file);
+        trackCreated();
         window.open("https://chat.zalo.me/", "_blank", "noopener,noreferrer");
         setMessage("Ảnh đã được tải xuống và Zalo Web đã mở. Hãy chọn người nhận và gửi ảnh vừa tải.");
       }
@@ -132,7 +139,7 @@ export default function GuestInvitationHomeCard({ template = "october23" }: { te
               <span>Kích thước tên khách hàng: <output htmlFor="hnkh-name-size">{nameSize}%</output></span>
               <input id="hnkh-name-size" type="range" min={50} max={200} step={5} value={nameSize} onChange={(event) => setNameSize(Number(event.target.value))} />
             </label>
-            <div className="hnkh-actions"><button className="hnkh-download" type="submit" aria-label={`Xuất thư mời ${config.title}`} disabled={!valid || busy || sharing}>{busy ? <LoaderCircle className="hnkh-spin" /> : <Download size={18} />}{busy ? "Đang xuất ảnh…" : "Xuất thư mời PNG"}</button><button className="hnkh-share" type="button" aria-label={`Chia sẻ thư mời ${config.title}`} disabled={!valid || busy || sharing} onClick={() => void shareZalo()}>{sharing ? <LoaderCircle className="hnkh-spin" /> : <Share2 size={18} />}{sharing ? "Đang chia sẻ…" : "Chia sẻ qua Zalo"}</button></div>
+            <div className="hnkh-actions"><button data-analytics-success-only="true" className="hnkh-download" type="submit" aria-label={`Xuất thư mời ${config.title}`} disabled={!valid || busy || sharing}>{busy ? <LoaderCircle className="hnkh-spin" /> : <Download size={18} />}{busy ? "Đang xuất ảnh…" : "Xuất thư mời PNG"}</button><button data-analytics-success-only="true" className="hnkh-share" type="button" aria-label={`Chia sẻ thư mời ${config.title}`} disabled={!valid || busy || sharing} onClick={() => void shareZalo()}>{sharing ? <LoaderCircle className="hnkh-spin" /> : <Share2 size={18} />}{sharing ? "Đang chia sẻ…" : "Chia sẻ qua Zalo"}</button></div>
             {message && <p className="hnkh-message" aria-live="polite">{message}</p>}
           </form>
           <div className="hnkh-canvas-wrap">{!imageReady && <span><LoaderCircle className="hnkh-spin" />Đang tải ảnh…</span>}<canvas ref={canvasRef} aria-label={`Bản xem trước thư mời${displayName ? ` dành cho ${displayName}` : ""}`} /></div>

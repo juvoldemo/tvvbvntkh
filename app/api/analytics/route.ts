@@ -1,3 +1,4 @@
+import { invitationContentFromAction } from "@/lib/invitation-analytics";
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     device: /Android|iPhone|iPad|iPod|Mobile/i.test(request.headers.get("user-agent") || "") ? "Mobile" : "Desktop"
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  analyticsCache.clear();
   return NextResponse.json({ ok: true });
 }
 
@@ -70,13 +72,12 @@ export async function GET(request: NextRequest) {
     supabase.from("app_analytics_events").select("advisor_code,created_at").eq("event_name", "session_start").order("created_at", { ascending: false }).limit(10000)
   ]);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const invitationSince = "2026-09-06T00:00:00+07:00";
   let invitationActions: any[] = [];
   for (let from = 0; ; from += 1000) {
     const { data: page, error: invitationError } = await supabase.from("app_analytics_events")
       .select("advisor_code,action_name")
       .eq("event_name", "action")
-      .gte("created_at", invitationSince)
+      .order("id", { ascending: true })
       .range(from, from + 999);
     if (invitationError) return NextResponse.json({ error: invitationError.message }, { status: 500 });
     invitationActions = invitationActions.concat(page ?? []);
@@ -92,14 +93,7 @@ export async function GET(request: NextRequest) {
     "ado_accounts",
     "recruitment"
   ].includes(normalizeAction(value));
-  const invitationContent = (value: unknown) => {
-    const actionName = normalizeAction(value);
-    if (actionName === "xuat thu moi hnkh vip png" || actionName === "chia se thu moi hnkh vip qua zalo") return "Hội nghị khách hàng VIP";
-    if (actionName === "xuat thu moi ra mat an sinh giao duc" || actionName === "chia se thu moi ra mat an sinh giao duc") return "Ra mắt An Sinh Giáo Dục";
-    if (actionName === "xuat thu moi dau an vinh quang" || actionName === "chia se thu moi dau an vinh quang") return "Dấu ấn vinh quang";
-    return null;
-  };
-  const invitationEvents = invitationActions.map((event: any) => ({ ...event, content: invitationContent(event.action_name) }))
+  const invitationEvents = invitationActions.map((event: any) => ({ ...event, content: invitationContentFromAction(event.action_name) }))
     .filter((event: any) => event.content);
   const invitationsCreated = invitationEvents.length;
   const profiles = new Map((users ?? []).map((user: any) => [user.advisor_code, user]));

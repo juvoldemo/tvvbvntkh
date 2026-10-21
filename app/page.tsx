@@ -402,7 +402,7 @@ export default function TvvMobilePage() {
     if (isNewSession) void post("session_start", { tabName: tab });
     const clickHandler = (event: MouseEvent) => {
       const button = (event.target as Element | null)?.closest("button, a");
-      if (!button || !button.closest(".tvv-app")) return;
+      if (!button || !button.closest(".tvv-app") || button.hasAttribute("data-analytics-success-only")) return;
       const actionName = button.getAttribute("aria-label") || button.textContent || "Tương tác";
       void post("action", { tabName: tab, actionName });
     };
@@ -446,6 +446,12 @@ export default function TvvMobilePage() {
       const sessionId = analyticsSessionRef.current;
       if (!sessionId) return;
       let actionName = "";
+      if (event.data.eventName === "invitation_created") {
+        const content = String(event.data.content || "").replace(/\s+/g, " ").trim().slice(0, 90);
+        if (!content) return;
+        void fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true, body: JSON.stringify({ eventName: "action", sessionId, tabName: "invitation", actionName: `invitation_created: ${content}` }) }).catch(() => undefined);
+        return;
+      }
       if (event.data.eventName === "summary_export") {
         const source = event.data.source === "riders" ? "sản phẩm bổ trợ" : "minh họa chính";
         actionName = `Xuất tóm tắt - ${source}`;
