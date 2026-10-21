@@ -3,15 +3,24 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { GALINA_INVITATION_IMAGE_PATH, SEPTEMBER_19_INVITATION_IMAGE_PATH, VIP_INVITATION_IMAGE_PATH, drawGalinaInvitation, drawVipInvitation, canvasToBlob, downloadInvitationFile, drawSeptember19Invitation } from "@/lib/invitation-canvas";
+import { OCTOBER_23_INVITATION_IMAGE_PATH, drawOctober23Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
-import { CR_16_INVITATION_IMAGE_PATH, drawCr16Invitation } from "@/lib/invitation-canvas";
 
+const OCTOBER_23_TEMPLATE = {
+  banner: "/invitations/Banner 2310.png",
+  image: OCTOBER_23_INVITATION_IMAGE_PATH,
+  draw: drawOctober23Invitation,
+  title: "Trao Yêu Thương - Trọn An Tâm",
+  color: "#C52222" as const,
+  width: 2167,
+  height: 582
+};
 const TEMPLATES = {
-  cr16: { banner: "/invitations/Banner Galina.png", image: CR_16_INVITATION_IMAGE_PATH, draw: drawCr16Invitation, title: "CR 16 · Nét duyên tỏa sáng - Rạng rỡ xinh tươi", color: "#C52222" as const, width: 2165, height: 446 },
-  galina: { banner: "/invitations/Banner Galina.png", image: GALINA_INVITATION_IMAGE_PATH, draw: drawGalinaInvitation, title: "Nét duyên tỏa sáng - Rạng rỡ xinh tươi", color: "#C52222" as const, width: 2165, height: 446 },
-  cr: { banner: "/invitations/ThumoiCR.png", image: VIP_INVITATION_IMAGE_PATH, draw: drawVipInvitation, title: "Dấu ấn vinh quang", color: "#C52222" as const, width: 2168, height: 422 },
-  september19: { banner: "/invitations/Banner 19.09.png", image: SEPTEMBER_19_INVITATION_IMAGE_PATH, draw: drawSeptember19Invitation, title: "Ra mắt An Sinh Giáo Dục", color: "#FFFFFF" as const, width: 2508, height: 627 }
+  october23: OCTOBER_23_TEMPLATE,
+  cr16: OCTOBER_23_TEMPLATE,
+  galina: OCTOBER_23_TEMPLATE,
+  cr: OCTOBER_23_TEMPLATE,
+  september19: OCTOBER_23_TEMPLATE
 };
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
@@ -27,7 +36,7 @@ function outputName(displayName: string) {
   return `thu-moi-${slugifyGuestName(displayName)}-${stamp}.png`;
 }
 
-export default function GuestInvitationHomeCard({ template = "september19" }: { template?: keyof typeof TEMPLATES }) {
+export default function GuestInvitationHomeCard({ template = "october23" }: { template?: keyof typeof TEMPLATES }) {
   const config = TEMPLATES[template];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -37,6 +46,7 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
   const [busy, setBusy] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [textColor, setTextColor] = useState<(typeof TEXT_COLORS)[number]["value"]>(config.color);
+  const [nameSize, setNameSize] = useState(100);
   const [imageReady, setImageReady] = useState(false);
   const [message, setMessage] = useState("");
   const selectedTitle = salutation === "Không" ? "" : salutation;
@@ -60,8 +70,8 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
 
   useEffect(() => {
     if (!open || !imageReady || !canvasRef.current || !imageRef.current) return;
-    void config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor).catch(() => setMessage("Không thể tạo bản xem trước."));
-  }, [displayName, imageReady, open, textColor, config]);
+    void config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor, nameSize / 100).catch(() => setMessage("Không thể tạo bản xem trước."));
+  }, [displayName, imageReady, open, textColor, nameSize, config]);
 
   useEffect(() => {
     if (!open) return;
@@ -72,7 +82,7 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
 
   async function createFile() {
     if (!valid || !canvasRef.current || !imageRef.current) throw new Error("Thông tin chưa hợp lệ.");
-    await config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor);
+    await config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor, nameSize / 100);
     const blob = await canvasToBlob(canvasRef.current);
     return new File([blob], outputName(displayName), { type: "image/png" });
   }
@@ -118,6 +128,10 @@ export default function GuestInvitationHomeCard({ template = "september19" }: { 
             <div className="hnkh-salutations" role="group" aria-label="Chọn cách xưng hô">{SALUTATIONS.map((item) => <button type="button" key={item} className={salutation === item ? "active" : ""} aria-pressed={salutation === item} onClick={() => setSalutation(item)}>{item}</button>)}</div>
             <label htmlFor="hnkh-name">Họ và tên khách hàng<input id="hnkh-name" value={guestName} onChange={(event) => setGuestName(event.target.value.replace(/[\r\n]/g, " ").slice(0, 60))} onBlur={() => setGuestName(normalizeGuestName(guestName))} placeholder="Ví dụ: Nguyễn Văn An" maxLength={60} aria-invalid={Boolean(error)} required />{error && <span className="hnkh-field-error">{error}</span>}</label>
             <div className="hnkh-colors" role="group" aria-label="Chọn màu chữ">{TEXT_COLORS.map((color) => <button type="button" key={color.value} className={textColor === color.value ? "active" : ""} aria-pressed={textColor === color.value} onClick={() => setTextColor(color.value)}><i style={{ background: color.value }} />{color.label}</button>)}</div>
+            <label className="hnkh-name-size" htmlFor="hnkh-name-size">
+              <span>Kích thước tên khách hàng: <output htmlFor="hnkh-name-size">{nameSize}%</output></span>
+              <input id="hnkh-name-size" type="range" min={50} max={200} step={5} value={nameSize} onChange={(event) => setNameSize(Number(event.target.value))} />
+            </label>
             <div className="hnkh-actions"><button className="hnkh-download" type="submit" aria-label={`Xuất thư mời ${config.title}`} disabled={!valid || busy || sharing}>{busy ? <LoaderCircle className="hnkh-spin" /> : <Download size={18} />}{busy ? "Đang xuất ảnh…" : "Xuất thư mời PNG"}</button><button className="hnkh-share" type="button" aria-label={`Chia sẻ thư mời ${config.title}`} disabled={!valid || busy || sharing} onClick={() => void shareZalo()}>{sharing ? <LoaderCircle className="hnkh-spin" /> : <Share2 size={18} />}{sharing ? "Đang chia sẻ…" : "Chia sẻ qua Zalo"}</button></div>
             {message && <p className="hnkh-message" aria-live="polite">{message}</p>}
           </form>

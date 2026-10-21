@@ -9,6 +9,7 @@ export const VIP_INVITATION_IMAGE_PATH = "/invitations/Thumoi03.png";
 export const CR_16_INVITATION_IMAGE_PATH = "/invitations/Thư mời CR 16.png";
 export const GALINA_INVITATION_IMAGE_PATH = "/invitations/Thư mời Nét đẹp.png";
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
+export const OCTOBER_23_INVITATION_IMAGE_PATH = "/invitations/Thư mời 2310.png";
 const BASE_SIZE = 834;
 const NAME_AREA_WIDTH = 300;
 
@@ -185,6 +186,47 @@ export async function drawSeptember19Invitation(
   context.textBaseline = "alphabetic";
   context.fillStyle = textColor;
   context.fillText(displayName, centerX, nameY, areaWidth);
+}
+
+export async function drawOctober23Invitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#C52222",
+  nameSizeScale = 1
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  // Name sits above the dotted row on the right panel of the 23/10 artwork.
+  const scale = (width / 3016) * renderScale;
+  const areaWidth = 1160 * scale;
+  let fontSize = 62 * scale;
+  while (fontSize > 36 * scale) {
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+    if (context.measureText(displayName).width <= areaWidth) break;
+    fontSize -= scale;
+  }
+  fontSize *= Math.min(2, Math.max(0.5, nameSizeScale));
+  context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+  const metrics = context.measureText(displayName);
+  const nameY = height * (382 / 1632) * renderScale - 12 * scale - metrics.actualBoundingBoxDescent;
+  context.textAlign = "center";
+  context.textBaseline = "alphabetic";
+  context.strokeStyle = textColor.toUpperCase() === "#C52222" ? "rgba(255,255,255,.9)" : "rgba(23,36,132,.8)";
+  context.lineWidth = 3 * scale;
+  context.strokeText(displayName, width * 0.755 * renderScale, nameY, areaWidth);
+  context.fillStyle = textColor;
+  context.fillText(displayName, width * 0.755 * renderScale, nameY, areaWidth);
 }
 
 export async function drawGalinaInvitation(

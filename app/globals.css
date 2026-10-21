@@ -23828,3 +23828,7 @@ body .tvv-smart-illustration-page .smart-form-grid select{padding-left:26px!impo
 .admin-page .admin-competition-audience-card .admin-audience-options button { flex: 1; min-height: 36px; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent !important; color: #536d7f !important; font-size: 12px; font-weight: 800; white-space: nowrap; box-shadow: none; }
 .admin-page .admin-competition-audience-card .admin-audience-options button[aria-pressed="true"] { background: #00689d !important; color: #fff !important; }
 .admin-competition-audience-card .admin-audience-options button:disabled { opacity: .55; cursor: wait; }
+
+.hnkh-name-size { display: grid; gap: 8px; }
+.hnkh-name-size output { font-weight: 700; }
+.tvv-app .hnkh-modal .hnkh-name-size input[type="range"] { width: 100%; min-height: 32px; padding: 0; accent-color: #005987; cursor: pointer; box-shadow: none; }
