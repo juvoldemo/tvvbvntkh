@@ -1,0 +1,25 @@
+.admin-skills-survey-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.admin-skills-survey-toolbar label { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; padding: 0 12px; border: 1px solid #d7e2ed; border-radius: 10px; }
+.admin-skills-survey-toolbar input { min-width: 0; width: 100%; padding: 12px 0; border: 0; outline: none; background: transparent; }
+.admin-skills-survey-toolbar select { max-width: 100%; padding: 10px; border: 1px solid #d7e2ed; border-radius: 10px; background: #fff; }
+.admin-skills-survey-toolbar button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; }
+.admin-skills-survey-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+.admin-skills-survey-summary > div { display: flex; flex-direction: column; gap: 8px; background: #eff6fb; padding: 16px; border-radius: 12px; }
+.admin-skills-survey-summary span { font-size: 12px; color: #65788b; }
+.admin-skills-survey-summary strong { font-size: 24px; color: #075f87; }
+.admin-skills-survey-table { min-width: 1400px; }
+.admin-skills-survey-table th { min-width: 95px; }
+.admin-skills-survey-table th small { display: block; margin-top: 4px; font-weight: 400; }
+.admin-skills-survey-table td { font-variant-numeric: tabular-nums; }
+.admin-skills-survey-table tfoot { background: #eff6fb; font-weight: 700; }
+.admin-skills-survey-error { color: #bf3737; }
+.admin-page .admin-skills-survey-delete { background: #fff1ef !important; color: #bf3737 !important; border: 1px solid #f0c4bd; }
+.admin-skills-survey h3 { margin-top: 24px; }
+.admin-skills-survey-caption { font-size: 12px; color: #65788b; }
+.admin-page .admin-survey-entry { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 1240px; margin: 0 auto 16px; padding: 16px 18px; text-align: left; border: 1px solid #c8deed; border-radius: 14px; background: #fff !important; color: #075f87 !important; box-shadow: 0 4px 14px #075f870a !important; }
+.admin-survey-entry > svg { flex-shrink: 0; }
+.admin-survey-entry > span { flex: 1; min-width: 0; display: grid; gap: 5px; }
+.admin-survey-entry strong { font-size: 16px; }
+.admin-survey-entry small { color: #65788b; font-weight: 400; }
+.admin-survey-entry > b { font-size: 24px; }
+@media (max-width: 600px) { .admin-skills-survey-summary { gap: 8px; } .admin-skills-survey-summary > div { padding: 10px; } .admin-skills-survey-summary strong { font-size: 20px; } }

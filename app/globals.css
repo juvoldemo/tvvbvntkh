@@ -23832,3 +23832,21 @@ body .tvv-smart-illustration-page .smart-form-grid select{padding-left:26px!impo
 .hnkh-name-size { display: grid; gap: 8px; }
 .hnkh-name-size output { font-weight: 700; }
 .tvv-app .hnkh-modal .hnkh-name-size input[type="range"] { width: 100%; min-height: 32px; padding: 0; accent-color: #005987; cursor: pointer; box-shadow: none; }
+
+/* Skills survey banner shared by the overview dashboards. */
+.tvv-app .survey-home-banner {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.tvv-app .survey-home-banner > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

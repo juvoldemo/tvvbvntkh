@@ -10,10 +10,9 @@ import { normalizeStatusText } from "@/lib/reports";
 import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import ClassVoteBanner from "@/app/ClassVoteBanner";
-import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
-import { invitationTemplateForGroup } from "@/lib/invitation-template";
+import SurveyHomeBanner, { SkillsSurveyPage } from "@/app/SurveyHomeBanner";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
+type Tab = "survey" | "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -1138,8 +1137,8 @@ export default function TvvMobilePage() {
   if (!profileReady || !userProfile) return <main className="tvv-user-login"><p>Đang tải đúng giao diện tài khoản…</p></main>;
 
   return (
-    <main className={`tvv-app${isAdoMode ? " ado-app" : ""}`}>
-      {tab === "recruitment" ? (
+    <main className={`tvv-app${isAdoMode ? " ado-app" : ""}${tab === "survey" ? " skills-survey-active" : ""}`}>
+      {tab === "survey" ? null : tab === "recruitment" ? (
         <RecruitmentSimulator onBack={() => setTab("overview")} />
       ) : tab === "calculator" ? (
         userProfile?.dashboard_role === "team_leader"
@@ -1203,11 +1202,11 @@ export default function TvvMobilePage() {
           {tab === "overview" && <>
             {!isAdoMode && userProfile?.dashboard_role !== "advisor" && userProfile?.dashboard_role !== "team_leader" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
             {isAdoMode
-            ? <AdoOverview data={adoData} month={month} onOpenTraining={() => setTab("ado_training")} />
+            ? <AdoOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} onOpenSurvey={() => setTab("survey")} data={adoData} month={month} onOpenTraining={() => setTab("ado_training")} />
             : isBoardMode
-            ? <BoardLeaderOverview data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
+            ? <BoardLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} onOpenSurvey={() => setTab("survey")} data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : userProfile?.dashboard_role === "team_leader"
-            ? <TeamLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
+            ? <TeamLeaderOverview onOpenSurvey={() => setTab("survey")} advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
             : <Overview advisorCode={userProfile?.advisor_code} groupName={userProfile?.group_name || advisor?.group} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} starVietLoading={loading} onTab={setTab} />}
           </>}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
@@ -1234,7 +1233,8 @@ export default function TvvMobilePage() {
         ? <TeamTargetRegistrationModal key={targetRegistrationMonth} month={targetRegistrationMonth} reportMonth={month} teamData={teamData} registration={teamTarget} onSaved={(value) => setTeamTarget({ ...value, personal_advisor_targets: teamTarget?.personal_advisor_targets ?? [] })} onClose={closeTargetModal} />
         : <TvvTargetRegistrationModal key={targetRegistrationMonth} month={targetRegistrationMonth} registration={tvvTarget} onSaved={setTvvTarget} onClose={closeTargetModal} />)}
       {selectedContract && <ContractDetailModal row={selectedContract} showAdvisorName={userProfile?.dashboard_role === "team_leader" || isBoardMode || isAdoMode} hideCustomerNames={userProfile?.dashboard_role === "team_leader" || isBoardMode} onClose={() => setSelectedContract(null)} />}
-      <BottomNav tab={tab} setTab={setTab} boardMode={isBoardMode} adoMode={isAdoMode} />
+      <SkillsSurveyPage key={authenticatedAdvisorCode || userProfile?.advisor_code} advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code || ""} active={tab === "survey"} onBack={() => setTab("overview")} />
+      {tab !== "survey" && <BottomNav tab={tab} setTab={setTab} boardMode={isBoardMode} adoMode={isAdoMode} />}
     </main>
   );
 }
@@ -1544,7 +1544,7 @@ function TeamTargetRegistrationModal({ month, reportMonth, teamData, registratio
   );
 }
 
-function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenContracts }: any) {
+function BoardLeaderOverview({ advisorCode, onOpenSurvey, data, month, monthOptions, onMonthChange, onOpenContracts }: any) {
   const [selectedBoardGroup, setSelectedBoardGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm trong ban…</p></section>;
   const summary = data.summary ?? {};
@@ -1562,7 +1562,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
       <button className="team-kpi-card orange clickable" type="button" aria-label="Hợp đồng" onClick={onOpenContracts}><FileText size={20} /><strong>{summary.contracts || 0}</strong></button>
       <button className="team-kpi-card red clickable" type="button" aria-label="Cần theo dõi" onClick={onOpenContracts}><Hourglass size={20} /><strong>{summary.attention || 0}</strong></button>
     </div>
-    <GuestInvitationHomeCard template="galina" />
+    <SurveyHomeBanner advisorCode={advisorCode} onOpen={onOpenSurvey} />
     <section className="team-overview-panel board-groups-panel">
       <div className="team-panel-header"><div><Users size={18} /><div><h2>Doanh thu từng nhóm</h2></div></div></div>
       <div className="board-group-list">
@@ -1606,7 +1606,7 @@ function BoardLeaderOverview({ data, month, monthOptions, onMonthChange, onOpenC
   </section>;
 }
 
-function AdoOverview({ data, month, onOpenTraining }: any) {
+function AdoOverview({ advisorCode, onOpenSurvey, data, month, onOpenTraining }: any) {
   const [selectedAdoGroup, setSelectedAdoGroup] = useState<string | null>(null);
   if (!data) return <section className="tvv-content team-dashboard-loading"><p>Đang tổng hợp dữ liệu các nhóm ADO quản lý…</p></section>;
   const summary = data.summary ?? {};
@@ -1627,7 +1627,7 @@ function AdoOverview({ data, month, onOpenTraining }: any) {
       <div><span>DOANH THU KHU VỰC</span><strong>{formatCompactVnd(summary.afyp)}</strong><small>{summary.contracts || 0} hợp đồng · {summary.activeAdvisors || 0} TVV hoạt động</small></div>
       <div className="ado-target-ring" style={{ "--ado-progress": `${Math.min(100, targetRate)}%` } as any}><b>{targetRate}%</b><span>mục tiêu</span></div>
     </section>
-    <GuestInvitationHomeCard template="galina" />
+    <SurveyHomeBanner advisorCode={advisorCode} onOpen={onOpenSurvey} />
     <section className="team-overview-panel ado-groups-panel">
       <div className="team-panel-header"><div><Layers3 size={18} /><div><h2>Hiệu quả từng nhóm</h2><p>Xếp theo doanh thu tháng</p></div></div></div>
       <div className="ado-group-list">
@@ -2514,7 +2514,7 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
       </section>;
 }
 
-function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenSmart, onOpenAbout }: any) {
+function TeamLeaderOverview({ onOpenSurvey, advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenSmart, onOpenAbout }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showTeamAccess, setShowTeamAccess] = useState(false);
@@ -2598,7 +2598,7 @@ function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth
       })}
     </div>
 
-    <GuestInvitationHomeCard key={invitationTemplateForGroup(data.groupName)} template={invitationTemplateForGroup(data.groupName)} />
+    <SurveyHomeBanner advisorCode={advisorCode} onOpen={onOpenSurvey} />
     <ClassVoteBanner />
 
     <RecruitmentPreview onOpen={onOpenRecruitment} />
@@ -3228,7 +3228,7 @@ function Overview({ advisorCode, groupName, showRecruitment, stats, leaderboard,
   ];
   return <section className="tvv-content">
     <div className="tvv-stat-card">{statItems.map(([label, value, tone, target]: any) => <div className="tvv-stat" role="button" tabIndex={0} key={label} onClick={() => onTab(target)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onTab(target); } }} aria-label={`${label}: ${value}. Xem hợp đồng`}><strong className={`stat-${tone}`}>{value}</strong><p>{label}</p><i className={`stat-${tone}`} /></div>)}</div>
-    <GuestInvitationHomeCard key={invitationTemplateForGroup(groupName)} template={invitationTemplateForGroup(groupName)} />
+    <SurveyHomeBanner advisorCode={advisorCode} onOpen={() => onTab("survey")} />
     <ClassVoteBanner />
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />

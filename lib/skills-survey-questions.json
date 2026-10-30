@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "text": "Trong buổi gặp bạn bè, một người quen chia sẻ vừa sinh con và đang lo các khoản chi phí tương lai. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Giới thiệu ngay giải pháp tích lũy học vấn phù hợp với gia đình có con nhỏ.",
+      "Hỏi thăm dự định của gia đình, tìm hiểu nhu cầu và xin phép tiếp tục trao đổi vào dịp phù hợp.",
+      "Xin số điện thoại để gửi tài liệu về các giải pháp bảo hiểm cho trẻ.",
+      "Chia sẻ một câu chuyện khách hàng tương tự rồi quan sát mức độ quan tâm."
+    ]
+  },
+  {
+    "id": 2,
+    "text": "Anh/Chị có danh sách 30 người quen, nhưng đã lâu không trao đổi. Anh/Chị sẽ bắt đầu thế nào?",
+    "options": [
+      "Ưu tiên những người có khả năng tài chính tốt nhất để liên hệ.",
+      "Gửi tin nhắn hỏi thăm đồng loạt rồi chờ người phản hồi.",
+      "Rà soát thông tin, phân nhóm theo hoàn cảnh và mức độ quan hệ rồi lập kế hoạch tiếp cận.",
+      "Chọn những người thân thiết nhất để dễ bắt đầu cuộc trò chuyện."
+    ]
+  },
+  {
+    "id": 3,
+    "text": "Một người quen nói chưa có nhu cầu bảo hiểm vì đang tập trung phát triển kinh doanh. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Ghi nhận giai đoạn ưu tiên của họ, tìm hiểu thêm kế hoạch kinh doanh và duy trì kết nối phù hợp.",
+      "Đề xuất một giải pháp bảo vệ với mức phí thấp để họ cân nhắc.",
+      "Tạm đưa họ ra khỏi danh sách khách hàng tiềm năng.",
+      "Hỏi khi nào họ có thể cân nhắc việc bảo vệ tài chính gia đình."
+    ]
+  },
+  {
+    "id": 4,
+    "text": "Sau một tháng, danh sách khách hàng tiềm năng của Anh/Chị gần như không tăng. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Tập trung chăm sóc khách hàng cũ và chờ cơ hội giới thiệu.",
+      "Mở rộng hoạt động giao lưu để gặp thêm người mới.",
+      "Kiểm tra nguồn khách hàng, đặt mục tiêu bổ sung danh sách hằng tuần và theo dõi kết quả.",
+      "Nhờ Cấp quản lý giới thiệu một số khách hàng để bắt đầu."
+    ]
+  },
+  {
+    "id": 5,
+    "text": "Một khách hàng đã hai lần từ chối gặp vì bận. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Hỏi thời gian thuận tiện, đề xuất cuộc trao đổi ngắn và nêu rõ mục đích buổi gặp.",
+      "Tạm dừng liên hệ một thời gian để tránh gây áp lực.",
+      "Gửi trước một số thông tin để khách tìm hiểu.",
+      "Hỏi khách muốn trao đổi qua điện thoại hay trực tiếp trước khi thống nhất lịch."
+    ]
+  },
+  {
+    "id": 6,
+    "text": "Khi được mời hẹn, khách nói: 'Có gì em nói luôn qua điện thoại đi'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Trình bày ngắn toàn bộ sản phẩm để khách nắm thông tin.",
+      "Hỏi khách đang quan tâm điều gì, trao đổi ngắn và đề nghị một cuộc hẹn nếu cần tìm hiểu sâu.",
+      "Giải thích rằng tư vấn bảo hiểm cần gặp trực tiếp mới đầy đủ.",
+      "Gửi tài liệu và xin phép liên hệ lại sau khi khách xem."
+    ]
+  },
+  {
+    "id": 7,
+    "text": "Khách nói: 'Tuần sau chị rảnh thì gặp'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Đợi đến đầu tuần sau rồi gọi lại.",
+      "Gợi ý hai khung giờ cụ thể để khách lựa chọn và xác nhận lịch.",
+      "Nhắn tin cảm ơn, gửi trước nội dung dự kiến trao đổi.",
+      "Hỏi ngày nào khách thường ít bận rồi tiếp tục thống nhất giờ."
+    ]
+  },
+  {
+    "id": 8,
+    "text": "Trước cuộc hẹn 30 phút, khách nhắn có việc đột xuất và xin hủy. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Đồng ý và chờ khách chủ động đặt lại lịch.",
+      "Đề xuất chuyển sang trao đổi trực tuyến ngay trong ngày.",
+      "Thông cảm, hỏi thời điểm phù hợp khác và xác nhận lại khi khách thuận tiện.",
+      "Hỏi xem có thể rút ngắn cuộc gặp còn 10 phút không."
+    ]
+  },
+  {
+    "id": 9,
+    "text": "Vừa ngồi xuống, khách nói: 'Em giới thiệu sản phẩm tốt nhất đi'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Giới thiệu giải pháp phổ biến nhất rồi điều chỉnh theo phản hồi.",
+      "Hỏi ngay ngân sách khách dự kiến tham gia.",
+      "Xin phép tìm hiểu ngắn về gia đình, trách nhiệm và mục tiêu tài chính trước khi đề xuất.",
+      "Trình bày hai phương án để khách so sánh."
+    ]
+  },
+  {
+    "id": 10,
+    "text": "Khách nói đã tham gia bảo hiểm ở một công ty khác. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Hỏi khách đã được bảo vệ những rủi ro nào và còn mục tiêu nào chưa được đáp ứng.",
+      "Giới thiệu những điểm nổi bật của sản phẩm hiện tại.",
+      "Đề nghị khách cung cấp hợp đồng cũ để so sánh quyền lợi.",
+      "Hỏi khách có hài lòng với hợp đồng đang tham gia không rồi tìm hiểu thêm nếu khách đồng ý."
+    ]
+  },
+  {
+    "id": 11,
+    "text": "Trong buổi tư vấn, khách liên tục hỏi 'Mỗi năm đóng bao nhiêu?' dù chưa chia sẻ nhiều về nhu cầu. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Báo ngay mức phí thấp nhất có thể tham gia.",
+      "Hỏi mức ngân sách khách cảm thấy thoải mái rồi tiếp tục tìm hiểu nhu cầu bảo vệ.",
+      "Trình bày bảng phí của nhiều sản phẩm để khách chọn.",
+      "Giải thích rằng cần xác định quyền lợi bảo vệ trước rồi mới nói đến mức phí."
+    ]
+  },
+  {
+    "id": 12,
+    "text": "Sau khi nghe tư vấn, khách nói 'Chị vẫn chưa hình dung rõ hợp đồng này giúp gia đình chị như thế nào'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Trình bày lại đầy đủ các quyền lợi từ đầu.",
+      "Sử dụng một tình huống gắn với hoàn cảnh gia đình khách để minh họa, rồi kiểm tra mức độ hiểu.",
+      "Gửi bảng minh họa để khách đọc kỹ hơn.",
+      "Hỏi cụ thể phần khách chưa rõ trước khi giải thích bằng ví dụ phù hợp."
+    ]
+  },
+  {
+    "id": 13,
+    "text": "Sau khi tư vấn, khách nói: 'Chị thấy cũng tốt nhưng để chị suy nghĩ thêm'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Hỏi điều gì khách còn cân nhắc nhất để cùng làm rõ.",
+      "Đề xuất giảm mức phí để khách dễ quyết định.",
+      "Tôn trọng và hẹn trao đổi lại sau vài ngày.",
+      "Tóm tắt các quyền lợi chính rồi hỏi khách đã yên tâm hơn chưa."
+    ]
+  },
+  {
+    "id": 14,
+    "text": "Khách nói: 'Gia đình chị đang khỏe mạnh, chưa cần bảo hiểm đâu'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Đưa ra ví dụ về rủi ro sức khỏe có thể xảy ra bất ngờ.",
+      "Hỏi khách hiện đang có phương án nào để bảo vệ tài chính gia đình khi có biến cố.",
+      "Giải thích rằng tham gia khi khỏe mạnh thường thuận lợi hơn.",
+      "Ghi nhận quan điểm rồi hỏi điều gì khiến khách chưa thấy cần thiết."
+    ]
+  },
+  {
+    "id": 15,
+    "text": "Khách nói: 'Để chị hỏi ý kiến chồng rồi quyết định'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Hỏi khách dự kiến trao đổi khi nào và xin phép liên hệ lại.",
+      "Đề nghị sắp xếp buổi trao đổi có cả hai vợ chồng để cùng làm rõ thông tin.",
+      "Cung cấp tài liệu tóm tắt để khách mang về trao đổi.",
+      "Hỏi người chồng thường quan tâm điều gì khi gia đình đưa ra quyết định tài chính."
+    ]
+  },
+  {
+    "id": 16,
+    "text": "Khách nói: 'Chị sợ vài năm nữa thu nhập giảm thì không đóng nổi'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Giải thích các lựa chọn liên quan đến phí theo điều khoản sản phẩm.",
+      "Hỏi thêm về tính ổn định thu nhập và mức phí khách có thể duy trì dài hạn rồi rà soát phương án.",
+      "Khuyên khách chọn mức phí thấp nhất.",
+      "Chia sẻ trường hợp khách hàng khác vẫn duy trì được hợp đồng khi khó khăn."
+    ]
+  },
+  {
+    "id": 17,
+    "text": "Sau khi được giải đáp đầy đủ, khách hỏi: 'Nếu tham gia thì khi nào hợp đồng có hiệu lực?'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Giải thích đúng điều kiện hiệu lực và đề nghị tiến hành hồ sơ nếu khách đã sẵn sàng.",
+      "Tiếp tục trình bày thêm quyền lợi để khách chắc chắn.",
+      "Gửi tài liệu để khách nghiên cứu trước.",
+      "Hỏi khách còn băn khoăn gì trước khi tiến hành hồ sơ."
+    ]
+  },
+  {
+    "id": 18,
+    "text": "Khách nói: 'Chị thấy phương án này phù hợp đấy' nhưng chưa đề cập việc tham gia. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Chờ khách chủ động đề nghị tham gia.",
+      "Hỏi khách đã sẵn sàng thực hiện hồ sơ hay còn điểm nào cần làm rõ.",
+      "Nhắc lại các lợi ích chính và tiếp tục thuyết phục.",
+      "Đề nghị khách chọn thời điểm thuận tiện để hoàn tất thủ tục nếu đã quyết định."
+    ]
+  },
+  {
+    "id": 19,
+    "text": "Khách đã hiểu hai phương án và hỏi: 'Theo em chị nên chọn mức phí nào?'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Đề xuất phương án phí cao hơn để quyền lợi bảo vệ tốt hơn.",
+      "Đề xuất phương án phù hợp nhất với nhu cầu, khả năng duy trì và xác nhận lựa chọn của khách.",
+      "Để khách tự chọn vì đây là quyết định tài chính cá nhân.",
+      "So sánh lại sự khác biệt về quyền lợi, nghĩa vụ và khả năng duy trì trước khi đề nghị khách chọn."
+    ]
+  },
+  {
+    "id": 20,
+    "text": "Khách nói muốn tham gia nhưng đợi sang tháng vì đang sắp xếp tài chính. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Đề nghị khách tham gia ngay để tránh bỏ lỡ quyền lợi.",
+      "Tìm hiểu lý do về dòng tiền, rà soát khả năng duy trì và thống nhất thời điểm quyết định phù hợp.",
+      "Đồng ý và hẹn gọi lại đầu tháng sau.",
+      "Đề xuất giảm phí để khách có thể tham gia ngay."
+    ]
+  },
+  {
+    "id": 21,
+    "text": "Khi bàn giao hợp đồng, khách nói: 'Chị tin em, không cần đọc đâu'. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Cảm ơn sự tin tưởng và bàn giao hợp đồng.",
+      "Hướng dẫn khách các quyền lợi, loại trừ, nghĩa vụ, thời hạn cần lưu ý và khuyến khích khách đọc, kiểm tra hợp đồng.",
+      "Đánh dấu những trang quan trọng để khách xem sau.",
+      "Tóm tắt các quyền lợi chính và nhắc khách liên hệ khi có thắc mắc."
+    ]
+  },
+  {
+    "id": 22,
+    "text": "Sau khi nhận hợp đồng, khách ít phản hồi tin nhắn chăm sóc. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Tiếp tục nhắn tin thường xuyên để duy trì quan hệ.",
+      "Tôn trọng tần suất tương tác của khách, hỏi kênh liên hệ phù hợp và duy trì chăm sóc có giá trị.",
+      "Chỉ liên hệ vào dịp sinh nhật hoặc ngày kỷ niệm.",
+      "Gọi điện để hỏi lý do khách không trả lời."
+    ]
+  },
+  {
+    "id": 23,
+    "text": "Sau một năm, khách gọi hỏi vì sao một quyền lợi không được chi trả như họ từng nghĩ. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Giải thích ngay theo những gì mình nhớ về sản phẩm.",
+      "Lắng nghe, kiểm tra hồ sơ và điều khoản, phối hợp bộ phận liên quan để phản hồi chính xác.",
+      "Đề nghị khách gọi trực tiếp tổng đài.",
+      "Xin lỗi khách và hứa sẽ tìm cách giải quyết theo mong muốn của khách."
+    ]
+  },
+  {
+    "id": 24,
+    "text": "Một khách hàng vừa chuyển công việc và thu nhập thay đổi. Anh/Chị sẽ làm gì?",
+    "options": [
+      "Chúc mừng và tiếp tục chăm sóc vào các dịp định kỳ.",
+      "Đề nghị khách tăng thêm quyền lợi bảo hiểm.",
+      "Hỏi thăm thay đổi, rà soát nhu cầu và khả năng duy trì hợp đồng hiện tại trước khi đề xuất điều chỉnh nếu cần.",
+      "Gửi thông tin về những sản phẩm mới phù hợp với người đi làm."
+    ]
+  }
+]

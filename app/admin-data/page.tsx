@@ -2,13 +2,14 @@
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, Grid2X2, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
+import SkillsSurveyAdminPanel from "./SkillsSurveyAdminPanel";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; siteHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes";
+type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes" | "skills_survey";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -436,8 +437,14 @@ export default function AdminDataPage() {
         </div>
       </header>
       {message && <div className="admin-message">{message}</div>}
+      {activeTab === "home" && <button type="button" className="admin-survey-entry" onClick={() => setActiveTab("skills_survey")}>
+        <BarChart3 size={24} />
+        <span><strong>Khảo sát kỹ năng</strong><small>Xem kết quả từng TVV, điểm kỹ năng và tổng điểm</small></span>
+        <b aria-hidden="true">→</b>
+      </button>}
 
       <nav className="admin-main-tabs" aria-label="Quản trị dữ liệu">
+        <button type="button" className={activeTab === "skills_survey" ? "active" : ""} onClick={() => setActiveTab("skills_survey")}><BarChart3 size={17} />Khảo sát kỹ năng</button>
         <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
         <button type="button" className={activeTab === "competitions" ? "active" : ""} onClick={() => { setActiveTab("competitions"); setAccessError(""); }}><Trophy size={17} />Chương trình thi đua</button>
         <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
@@ -451,6 +458,7 @@ export default function AdminDataPage() {
       </nav>
 
       <section className="admin-panel-area">
+        {activeTab === "skills_survey" && <SkillsSurveyAdminPanel />}
         {activeTab === "home" && <AdminHomeDashboard data={analyticsData} period={analyticsPeriod} setPeriod={setAnalyticsPeriod} onNavigate={setActiveTab} />}
         {activeTab === "access" && <article className="admin-card">
           <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
@@ -664,7 +672,8 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
     { tab: "events", label: "Thông báo", icon: Bell }, { tab: "competitions", label: "Thi đua", icon: Trophy },
     { tab: "data", label: "Dữ liệu", icon: BarChart3 }, { tab: "targets", label: "Mục tiêu", icon: Target },
     { tab: "activities", label: "Hoạt động", icon: CheckCircle2 }, { tab: "archive", label: "Tài liệu", icon: BookOpen },
-    { tab: "about", label: "Cẩm nang", icon: ShieldCheck }, { tab: "access", label: "Truy cập", icon: UserCircle }
+    { tab: "about", label: "Cẩm nang", icon: ShieldCheck }, { tab: "access", label: "Truy cập", icon: UserCircle },
+    { tab: "skills_survey", label: "Khảo sát kỹ năng", icon: BarChart3 }
   ];
   const rawTrends = data?.trends ?? [];
   const trends = period === "day"
