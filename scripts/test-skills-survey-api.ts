@@ -40,7 +40,6 @@ async function main() {
   const token = createUserToken("ADMIN");
   const answers = Object.fromEntries(SKILLS_SURVEY_POINTS.map((row, index) => [index + 1, row.indexOf(4)]));
   const request = (body: unknown, cookie = `${USER_COOKIE}=${token}`) => new NextRequest("http://localhost/api/skills-survey", { method: "POST", headers: { "Content-Type": "application/json", cookie }, body: JSON.stringify(body) });
-  assert.equal((await POST(request({ advisorCode: 'REGULAR', answers }, USER_COOKIE + '=' + createUserToken('REGULAR')))).status, 403);
   const payload = { advisorCode: "ADMIN", answers, total: 0, skillScores: [0, 0, 0, 0, 0, 0], advisorName: "Spoofed name" };
   assert.equal((await POST(request(payload, ""))).status, 401);
   assert.equal((await POST(request({ ...payload, advisorCode: "OTHER" }))).status, 409);
@@ -75,6 +74,8 @@ async function main() {
   assert.equal(objects.size, 0);
   assert.equal(removalCalls, 2);
   assert.equal((await DELETE(deletion({ confirm: "delete-all-survey-results" }))).status, 200);
+  assert.equal((await POST(request({ advisorCode: "REGULAR", answers }, `${USER_COOKIE}=${createUserToken("REGULAR")}`))).status, 200);
+  assert.equal(JSON.parse(objects.get("results/REGULAR.json")!).advisorCode, "REGULAR");
   console.log("PASS: authenticated identity, active user, validation, server scoring, update without duplicates, storage failure, admin authorization and pagination");
 }
 

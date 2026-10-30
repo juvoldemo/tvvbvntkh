@@ -1,3 +1,3 @@
 export function canAccessSkillsSurvey(advisorCode: unknown) {
-  return String(advisorCode ?? "").trim().toUpperCase() === "ADMIN";
+  return typeof advisorCode === "string" && advisorCode.trim().length > 0;
 }

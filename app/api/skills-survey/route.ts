@@ -3,12 +3,10 @@ import { userCodeFromRequest } from "@/lib/user-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { evaluateSkillsSurvey } from "@/lib/skills-survey-scoring";
 import { saveSkillsSurveyReport } from "@/lib/skills-survey-reports";
-import { canAccessSkillsSurvey } from "@/lib/skills-survey-access";
 
 export async function POST(request: NextRequest) {
   const advisorCode = userCodeFromRequest(request);
   if (!advisorCode) return NextResponse.json({ error: "Bạn chưa đăng nhập." }, { status: 401 });
-  if (!canAccessSkillsSurvey(advisorCode)) return NextResponse.json({ error: "Khảo sát hiện chỉ dành cho tài khoản admin." }, { status: 403 });
   const payload = await request.json().catch(() => null);
   if (payload?.advisorCode !== advisorCode) return NextResponse.json({ error: "Phiên đăng nhập đã thay đổi. Vui lòng mở lại khảo sát." }, { status: 409 });
   const answers = payload?.answers;
