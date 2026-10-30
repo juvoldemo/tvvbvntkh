@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Download, RotateCcw, Search, Trash2 } from "lucide-react";
 import type { SkillsSurveyReport } from "@/lib/skills-survey-reports";
 import { formatSurveyScore, SURVEY_SKILLS } from "@/lib/skills-survey-scoring";
-import { summarizeSurveyGroups } from "@/lib/skills-survey-summary";
+import { summarizeSkillDistribution, summarizeSurveyGroups, SURVEY_SCORE_BANDS } from "@/lib/skills-survey-summary";
 import "./skills-survey-admin.css";
 
 export default function SkillsSurveyAdminPanel() {
@@ -48,6 +48,7 @@ export default function SkillsSurveyAdminPanel() {
   const mean = rows.length ? rows.reduce((sum, row) => sum + row.average, 0) / rows.length : null;
   const skillMeans = SURVEY_SKILLS.map((_, index) => rows.length ? rows.reduce((sum, row) => sum + row.skillScores[index], 0) / rows.length : null);
   const groupSummaries = useMemo(() => summarizeSurveyGroups(rows), [rows]);
+  const distribution = useMemo(() => summarizeSkillDistribution(rows), [rows]);
 
   async function deleteAll() {
     if (!window.confirm("Xoá TẤT CẢ kết quả khảo sát của mọi TVV, bao gồm các nhóm ngoài bộ lọc hiện tại? Thao tác này không thể hoàn tác.")) return;
@@ -91,6 +92,13 @@ export default function SkillsSurveyAdminPanel() {
       for (const [address, cell] of Object.entries(target)) if (!address.startsWith("!") && cell.t === "n") cell.z = Number.isInteger(cell.v) ? "0" : "0.0";
     }
     XLSX.utils.book_append_sheet(book, groupedSheet, "Theo nhom");
+    const distributionSheet = XLSX.utils.json_to_sheet(distribution.map((skill) => ({
+      "Kỹ năng": skill.name,
+      ...Object.fromEntries(SURVEY_SCORE_BANDS.map((band) => [`${band.label} (${band.range})`, skill.counts[band.tone]])),
+      "TVV hoàn tất": skill.total
+    })));
+    distributionSheet["!cols"] = [{ wch: 28 }, ...SURVEY_SCORE_BANDS.map(() => ({ wch: 32 })), { wch: 18 }];
+    XLSX.utils.book_append_sheet(book, distributionSheet, "Phan bo ky nang");
     XLSX.writeFile(book, "tong-hop-khao-sat-ky-nang.xlsx");
     } catch { setError("Không thể tải XLSX. Vui lòng thử lại."); }
     finally { setExporting(false); }
@@ -108,6 +116,18 @@ export default function SkillsSurveyAdminPanel() {
     {error && <p role="alert" className="admin-skills-survey-error">{error}</p>}
     {message && <p role="status">{message}</p>}
     <div className="admin-skills-survey-summary"><div><span>TVV hoàn tất</span><strong>{rows.length}</strong></div><div><span>Điểm trung bình</span><strong>{mean === null ? "—" : formatSurveyScore(mean)}</strong></div><div><span>Tổng điểm trung bình</span><strong>{rows.length ? formatSurveyScore(rows.reduce((sum, row) => sum + row.total, 0) / rows.length) : "—"}</strong></div></div>
+    <section className="admin-skill-distribution" aria-labelledby="admin-skill-distribution-title">
+      <div className="admin-skill-distribution-heading"><div><h3 id="admin-skill-distribution-title">Số lượng TVV theo mức điểm từng kỹ năng</h3><p>{rows.length} TVV{group ? ` · ${group}` : " · Tất cả nhóm"} · Theo bộ lọc hiện tại</p></div></div>
+      <div className="admin-skill-distribution-legend">{SURVEY_SCORE_BANDS.map((band) => <span key={band.tone} className={`band-${band.tone}`}><i />{band.label}<small>{band.range}</small></span>)}</div>
+      <div className="admin-skill-distribution-grid">{distribution.map((skill, index) => <article className="admin-skill-distribution-card" key={skill.name}>
+        <div className="admin-skill-distribution-card-title"><h4><span>{String(index + 1).padStart(2, "0")}</span>{skill.name}</h4><small>{skill.total} TVV</small></div>
+        <div className="admin-skill-distribution-bar" role="img" aria-label={`${skill.name}: ${SURVEY_SCORE_BANDS.map((band) => `${band.label} ${skill.counts[band.tone]} TVV`).join(", ")}`}>
+          {SURVEY_SCORE_BANDS.map((band) => skill.counts[band.tone] > 0 && <span key={band.tone} className={`band-${band.tone}`} style={{ width: `${skill.total ? skill.counts[band.tone] / skill.total * 100 : 0}%` }} title={`${band.label}: ${skill.counts[band.tone]} TVV`} />)}
+        </div>
+        <dl>{SURVEY_SCORE_BANDS.map((band) => <div key={band.tone} className={`band-${band.tone}`}><dt><i />{band.label}</dt><dd>{skill.counts[band.tone]}<small>TVV</small></dd></div>)}</dl>
+      </article>)}</div>
+      {!rows.length && <p className="admin-skills-survey-caption">{loading ? "Đang tải dữ liệu khảo sát…" : "Chưa có kết quả phù hợp để thống kê."}</p>}
+    </section>
     <h3>Tổng hợp theo nhóm</h3>
     <p className="admin-skills-survey-caption">Tổng hợp các TVV đang hiển thị theo bộ lọc. Điểm kỹ năng là trung bình của nhóm; tổng điểm nhóm là tổng điểm của các TVV.</p>
     <div className="admin-table-wrap"><table className="admin-skills-survey-table admin-skills-survey-groups"><thead><tr><th>Ban/Nhóm</th><th>TVV hoàn tất</th>{SURVEY_SKILLS.map((skill) => <th key={skill.name}>{skill.name}</th>)}<th>Tổng điểm nhóm</th><th>Điểm tổng TB</th><th>Điểm TB</th><th>Phân loại</th></tr></thead><tbody>

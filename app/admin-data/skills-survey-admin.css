@@ -16,6 +16,32 @@
 .admin-page .admin-skills-survey-delete { background: #fff1ef !important; color: #bf3737 !important; border: 1px solid #f0c4bd; }
 .admin-skills-survey h3 { margin-top: 24px; }
 .admin-skills-survey-caption { font-size: 12px; color: #65788b; }
+.admin-skill-distribution { margin: 24px 0; padding: 22px; border: 1px solid #e0e8ef; border-radius: 16px; background: #f8fbfd; }
+.admin-skill-distribution-heading h3 { margin: 0 !important; font-size: 18px; color: #143c58; }
+.admin-skill-distribution-heading p { margin: 6px 0 18px; font-size: 12px; color: #708598; }
+.admin-skill-distribution .band-good { --band-color: #198d78; }
+.admin-skill-distribution .band-fair { --band-color: #c39a35; }
+.admin-skill-distribution .band-reinforce { --band-color: #d96c57; }
+.admin-skill-distribution .band-priority { --band-color: #b83f52; }
+.admin-skill-distribution-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 20px; }
+.admin-skill-distribution-legend > span { display: flex; align-items: center; gap: 6px; color: #3c5567; font-size: 12px; }
+.admin-skill-distribution i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--band-color); flex-shrink: 0; }
+.admin-skill-distribution-legend small { color: #8595a1; font-size: 11px; }
+.admin-skill-distribution-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.admin-skill-distribution-card { min-width: 0; padding: 18px; border: 1px solid #e1e9ef; border-radius: 12px; background: #fff; }
+.admin-skill-distribution-card-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.admin-skill-distribution-card-title h4 { margin: 0; font-size: 14px; color: #1e3e55; }
+.admin-skill-distribution-card-title h4 > span { display: block; margin-bottom: 6px; font-size: 10px; color: #91a4b3; }
+.admin-skill-distribution-card-title > small { color: #708598; white-space: nowrap; }
+.admin-skill-distribution-bar { display: flex; height: 10px; overflow: hidden; border-radius: 10px; background: #edf1f4; margin: 18px 0; }
+.admin-skill-distribution-bar > span { height: 100%; background: var(--band-color); }
+.admin-skill-distribution-card dl { display: grid; gap: 11px; margin: 0; }
+.admin-skill-distribution-card dl > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.admin-skill-distribution-card dt { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #586e7e; }
+.admin-skill-distribution-card dd { display: flex; align-items: baseline; gap: 5px; margin: 0; font-size: 18px; font-weight: 700; color: #173d58; font-variant-numeric: tabular-nums; }
+.admin-skill-distribution-card dd small { color: #8b9ba6; font-size: 10px; font-weight: 400; }
+@media (max-width: 1100px) { .admin-skill-distribution-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .admin-skill-distribution { padding: 14px; } .admin-skill-distribution-grid { grid-template-columns: 1fr; } .admin-skill-distribution-legend { display: grid; grid-template-columns: 1fr; gap: 8px; } .admin-skill-distribution-card { padding: 16px; } }
 .admin-page .admin-survey-entry { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 1240px; margin: 0 auto 16px; padding: 16px 18px; text-align: left; border: 1px solid #c8deed; border-radius: 14px; background: #fff !important; color: #075f87 !important; box-shadow: 0 4px 14px #075f870a !important; }
 .admin-survey-entry > svg { flex-shrink: 0; }
 .admin-survey-entry > span { flex: 1; min-width: 0; display: grid; gap: 5px; }
