@@ -1,0 +1,53 @@
+.page { min-height: 100dvh; background: #f5f7fa; color: #263744; font-family: var(--font-family-app, "Segoe UI", sans-serif); padding: 32px 24px 64px; }
+.container { max-width: 960px; margin: auto; }
+.page a { text-decoration: none; color: var(--ds-blue-900, #004b7a); }
+.back { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; min-height: 40px; }
+.header { margin: 16px 0 20px; }
+.eyebrow, .step { color: #596a77; font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+.header h1 { margin: 10px 0 12px; font-size: clamp(26px, 4vw, 36px); line-height: 1.25; color: var(--ds-blue-900, #004b7a); }
+.header p:last-child { font-size: 16px; line-height: 1.6; color: #596a77; margin: 0; }
+.overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 28px; border-radius: 12px; background: white; margin-bottom: 40px; }
+.overview h2 { font-size: 14px; margin: 12px 0 8px; }
+.overview p { font-size: 14px; line-height: 1.65; margin: 0; }
+.sectionHeading { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+.sectionHeading h2 { font-size: 20px; margin: 0; }
+.sectionHeading > span, .note { color: #596a77; font-size: 14px; line-height: 1.6; }
+.groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.group { background: white; border: 1px solid #e4e7eb; border-radius: 12px; padding: 24px; }
+.groupLink { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0 24px; }
+.groupLink h3 { margin: 0; font-size: 20px; line-height: 1.4; }
+.groupFooter { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px solid #e7ebef; padding-top: 12px; font-size: 14px; }
+.groupFooter a { font-weight: 600; padding: 8px 0; }
+.page button { font: inherit; cursor: pointer; background-image: none !important; box-shadow: none !important; }
+.groupFooter button { display: inline-flex; gap: 6px; align-items: center; background: transparent; border: 0; color: #536573; font-size: 14px; padding: 10px 0; }
+.form { background: white; border-radius: 12px; padding: 24px; }
+.solutionsForm .question textarea { min-height: max(320px, 45dvh); }
+.question { margin: 20px 0; }
+.question label { display: block; }
+.question label .step { color: #004b7a; font-weight: 800; }
+.questionText { display: block; margin: 6px 0 10px; font-size: 18px; line-height: 1.55; font-weight: 600; }
+.question textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; min-height: 112px; border: 1px solid #b9c5cf; border-radius: 8px; padding: 12px 14px !important; color: #263744; background: white; font: inherit; font-size: 16px; line-height: 1.65; }
+.question textarea::placeholder { color: #657581; }
+.page :is(a, button, textarea):focus-visible { outline: 3px solid #2a87b4; outline-offset: 3px; }
+.page button:disabled { opacity: .6; cursor: wait; }
+.submitRow { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-top: 20px; border-top: 1px solid #e7ebef; }
+.submitRow p { font-size: 13px; line-height: 1.6; color: #596a77; margin: 0; }
+.page .submit { display: inline-flex; justify-content: center; align-items: center; flex-shrink: 0; gap: 8px; background-color: #004b7a !important; color: white; border: 0; border-radius: 8px; padding: 14px 20px; font-weight: 600; font-size: 14px; }
+.page .submit:hover { background-color: #003b61 !important; }
+.page p, .questionText { text-wrap: pretty; }
+.error, .success { padding: 14px 16px; border-radius: 8px; font-size: 14px; line-height: 1.6; }
+.error { background: #fff0f1; color: #a51f2a; }
+.success { background: #eaf8f1; color: #087a49; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.homeEntry { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 16px; border-radius: 12px; background: #fff; color: #004b7a; text-decoration: none; font-size: 14px; font-weight: 600; }
+.homeEntry:focus-visible { outline: 3px solid #2a87b4; outline-offset: 3px; }
+@media (max-width: 640px) {
+  .page { padding: 16px 16px 40px; }
+  .header { margin: 12px 0 16px; }
+  .overview, .groups { grid-template-columns: 1fr; }
+  .overview { padding: 24px; gap: 24px; margin-bottom: 28px; }
+  .sectionHeading { flex-direction: column; gap: 6px; }
+  .group { padding: 20px; }
+  .form { padding: 16px; }
+  .submitRow { flex-direction: column; align-items: stretch; gap: 16px; }
+}

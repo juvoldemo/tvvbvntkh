@@ -6,8 +6,10 @@ import type { SkillsSurveyReport } from "@/lib/skills-survey-reports";
 import { formatSurveyScore, SURVEY_SKILLS } from "@/lib/skills-survey-scoring";
 import { summarizeSkillDistribution, summarizeSurveyGroups, SURVEY_SCORE_BANDS } from "@/lib/skills-survey-summary";
 import "./skills-survey-admin.css";
+import DiscussionPadlet from "./DiscussionPadlet";
 
 export default function SkillsSurveyAdminPanel() {
+  const [showPadlet, setShowPadlet] = useState(false);
   const [reports, setReports] = useState<SkillsSurveyReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,12 +34,13 @@ export default function SkillsSurveyAdminPanel() {
   }, []);
 
   useEffect(() => {
+    if (showPadlet) return;
     void load();
     const refresh = () => { if (document.visibilityState === "visible") void load(); };
     const timer = window.setInterval(refresh, 30_000);
     window.addEventListener("focus", refresh);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
-  }, [load]);
+  }, [load, showPadlet]);
 
   const groups = useMemo(() => Array.from(new Set(reports.map((row) => row.groupName))).sort((a, b) => a.localeCompare(b, "vi")), [reports]);
   const rows = useMemo(() => {
@@ -104,9 +107,12 @@ export default function SkillsSurveyAdminPanel() {
     finally { setExporting(false); }
   }
 
+  if (showPadlet) return <DiscussionPadlet onBack={() => setShowPadlet(false)} />;
+
   return <article className="admin-card admin-skills-survey">
     <div className="admin-card-title"><BarChart3 /><div><h2>Khảo sát kỹ năng bán hàng</h2><p>Kết quả mới nhất của mỗi TVV · Tự cập nhật sau 30 giây.</p></div></div>
     <div className="admin-skills-survey-toolbar">
+      <button type="button" onClick={() => setShowPadlet(true)}>Padlet</button>
       <label><Search size={16} /><input aria-label="Tìm kết quả khảo sát" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tên, mã TVV hoặc nhóm" /></label>
       <select aria-label="Lọc nhóm khảo sát" value={group} onChange={(event) => setGroup(event.target.value)}><option value="">Tất cả nhóm</option>{groups.filter(Boolean).map((name) => <option key={name}>{name}</option>)}</select>
       <button type="button" onClick={() => void load()} disabled={loading || deleting}><RotateCcw size={15} />Làm mới</button>
