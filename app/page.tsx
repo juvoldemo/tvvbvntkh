@@ -11,7 +11,6 @@ import { isPreTeamLeaderPosition } from "@/lib/team-scope";
 import CloseIconButton from "@/app/CloseIconButton";
 import ClassVoteBanner from "@/app/ClassVoteBanner";
 import SurveyHomeBanner, { SkillsSurveyPage } from "@/app/SurveyHomeBanner";
-import hoidapStyles from "@/app/hoidap/hoidap.module.css";
 
 type Tab = "survey" | "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
@@ -1139,7 +1138,6 @@ export default function TvvMobilePage() {
 
   return (
     <main className={`tvv-app${isAdoMode ? " ado-app" : ""}${tab === "survey" ? " skills-survey-active" : ""}`}>
-      {tab === "overview" && <a className={hoidapStyles.homeEntry} href="/hoidap"><BookOpen size={20} />Hỏi đáp · Thảo luận tình huống chị Lan<ChevronRight size={18} /></a>}
       {tab === "survey" ? null : tab === "recruitment" ? (
         <RecruitmentSimulator onBack={() => setTab("overview")} />
       ) : tab === "calculator" ? (

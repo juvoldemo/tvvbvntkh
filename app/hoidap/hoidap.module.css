@@ -39,8 +39,6 @@
 .error { background: #fff0f1; color: #a51f2a; }
 .success { background: #eaf8f1; color: #087a49; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.homeEntry { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 16px; border-radius: 12px; background: #fff; color: #004b7a; text-decoration: none; font-size: 14px; font-weight: 600; }
-.homeEntry:focus-visible { outline: 3px solid #2a87b4; outline-offset: 3px; }
 @media (max-width: 640px) {
   .page { padding: 16px 16px 40px; }
   .header { margin: 12px 0 16px; }

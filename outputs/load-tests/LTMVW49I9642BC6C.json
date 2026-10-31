@@ -1,0 +1,55 @@
+{
+  "runId": "LTMVW49I9642BC6C",
+  "origin": "https://www.bandothunhap.com",
+  "users": 100,
+  "verified": 101,
+  "stages": {
+    "login": {
+      "requests": 101,
+      "successful": 101,
+      "p50ms": 614,
+      "p95ms": 1330,
+      "maxMs": 1574,
+      "statuses": {
+        "200": 101
+      }
+    },
+    "session": {
+      "requests": 101,
+      "successful": 101,
+      "p50ms": 559,
+      "p95ms": 1107,
+      "maxMs": 1247,
+      "statuses": {
+        "200": 101
+      }
+    },
+    "page": {
+      "requests": 101,
+      "successful": 101,
+      "p50ms": 70,
+      "p95ms": 93,
+      "maxMs": 174,
+      "statuses": {
+        "200": 101
+      }
+    },
+    "submit": {
+      "requests": 101,
+      "successful": 101,
+      "p50ms": 3167,
+      "p95ms": 3566,
+      "maxMs": 3613,
+      "statuses": {
+        "200": 101
+      }
+    }
+  },
+  "failures": [],
+  "verifiedLoadUsers": 100,
+  "pilotVerified": true,
+  "cleanupOk": true,
+  "runError": "",
+  "cleanupCodes": [],
+  "scope": "HTTP login/session/page + 24-answer API submit; not browser rendering or timed survey interaction"
+}
