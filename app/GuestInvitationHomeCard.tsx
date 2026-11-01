@@ -3,24 +3,25 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { OCTOBER_23_INVITATION_IMAGE_PATH, drawOctober23Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
+import { NOVEMBER_4_INVITATION_IMAGE_PATH, drawNovember4Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const OCTOBER_23_TEMPLATE = {
-  banner: "/invitations/Banner 2310.png",
-  image: OCTOBER_23_INVITATION_IMAGE_PATH,
-  draw: drawOctober23Invitation,
+const NOVEMBER_4_TEMPLATE = {
+  banner: "/invitations/Banner 4.11.png",
+  image: NOVEMBER_4_INVITATION_IMAGE_PATH,
+  draw: drawNovember4Invitation,
   title: "Trao Yêu Thương - Trọn An Tâm",
   color: "#C52222" as const,
   width: 2167,
   height: 582
 };
 const TEMPLATES = {
-  october23: OCTOBER_23_TEMPLATE,
-  cr16: OCTOBER_23_TEMPLATE,
-  galina: OCTOBER_23_TEMPLATE,
-  cr: OCTOBER_23_TEMPLATE,
-  september19: OCTOBER_23_TEMPLATE
+  november4: NOVEMBER_4_TEMPLATE,
+  october23: NOVEMBER_4_TEMPLATE,
+  cr16: NOVEMBER_4_TEMPLATE,
+  galina: NOVEMBER_4_TEMPLATE,
+  cr: NOVEMBER_4_TEMPLATE,
+  september19: NOVEMBER_4_TEMPLATE
 };
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
@@ -36,7 +37,7 @@ function outputName(displayName: string) {
   return `thu-moi-${slugifyGuestName(displayName)}-${stamp}.png`;
 }
 
-export default function GuestInvitationHomeCard({ template = "october23" }: { template?: keyof typeof TEMPLATES }) {
+export default function GuestInvitationHomeCard({ template = "november4" }: { template?: keyof typeof TEMPLATES }) {
   const config = TEMPLATES[template];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);

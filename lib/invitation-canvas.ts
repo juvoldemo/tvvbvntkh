@@ -11,6 +11,46 @@ export const GALINA_INVITATION_IMAGE_PATH = "/invitations/Thư mời Nét đẹp
 export const INVITATION_IMAGE_MISSING_MESSAGE = "Chưa tìm thấy ảnh mẫu thư mời tại /public/invitations/thu-moi-30-nam-bao-viet.png";
 export const OCTOBER_23_INVITATION_IMAGE_PATH = "/invitations/Thư mời 2310.png";
 const BASE_SIZE = 834;
+export const NOVEMBER_4_INVITATION_IMAGE_PATH = "/invitations/thu moi 4.11.jpg";
+
+export async function drawNovember4Invitation(
+  canvas: HTMLCanvasElement,
+  image: HTMLImageElement,
+  displayName: string,
+  outputScale = 1,
+  textColor = "#C52222",
+  nameSizeScale = 1
+) {
+  if (document.fonts?.ready) await document.fonts.ready;
+  const width = image.naturalWidth || image.width;
+  const height = image.naturalHeight || image.height;
+  const renderScale = Math.min(outputScale, 3200 / Math.max(width, height));
+  canvas.width = Math.round(width * renderScale);
+  canvas.height = Math.round(height * renderScale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Trình duyệt không thể khởi tạo vùng vẽ thư mời.");
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  if (!displayName) return;
+
+  // Coordinates follow the blank guest-name box in the 1044 × 1080 artwork.
+  const scale = canvas.width / 1044;
+  const areaWidth = 410 * scale;
+  let fontSize = 28 * scale * Math.min(2, Math.max(0.5, nameSizeScale));
+  context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+  while (fontSize > 10 * scale && context.measureText(displayName).width > areaWidth) {
+    fontSize -= scale;
+    context.font = `italic 700 ${fontSize}px "Times New Roman", Georgia, serif`;
+  }
+  const metrics = context.measureText(displayName);
+  const nameY = 266 * scale + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+  context.textAlign = "center";
+  context.textBaseline = "alphabetic";
+  context.strokeStyle = textColor.toUpperCase() === "#C52222" ? "rgba(255,255,255,.9)" : "rgba(23,36,132,.8)";
+  context.lineWidth = 1.5 * scale;
+  context.strokeText(displayName, 786 * scale, nameY, areaWidth);
+  context.fillStyle = textColor;
+  context.fillText(displayName, 786 * scale, nameY, areaWidth);
+}
 const NAME_AREA_WIDTH = 300;
 
 export function loadInvitationImage(src = INVITATION_IMAGE_PATH) {
