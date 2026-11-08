@@ -1,3 +1,4 @@
+import { getAdvisorAvatars, applyAdvisorAvatars } from "@/lib/advisor-avatars";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { getVietnamToday, monthBounds, toMonthStart } from "@/lib/format";
@@ -5,7 +6,7 @@ import { dedupeRevenueRecordsByContract, isCountedRevenueRecord, normalizeStatus
 import { buildStarVietGroupReport, buildStarVietReport, normalizeText } from "@/lib/star-viet";
 import { readStarVietData } from "@/lib/star-viet-data";
 import { managedTeamName } from "@/lib/team-scope";
-import { userCodeFromRequest } from "@/lib/user-auth";
+import { normalizeAdvisorCode, userCodeFromRequest } from "@/lib/user-auth";
 import type { RevenueRecord } from "@/lib/types";
 
 const MONTHLY_MILESTONES = [12_000_000, 24_000_000, 50_000_000];
@@ -170,11 +171,12 @@ export async function GET(request: NextRequest) {
     const { data: advisorProfiles } = advisorCodes.length
       ? await supabase.from("authorized_users").select("advisor_code,full_name,start_date,avatar_url").in("advisor_code", advisorCodes)
       : { data: [] as Array<{ advisor_code: string; full_name: string | null; start_date: string | null; avatar_url: string | null }> };
-    const avatarByCode = new Map((advisorProfiles ?? []).map((row) => [row.advisor_code, row.avatar_url]));
+    const avatarByCode = await getAdvisorAvatars();
+    applyAdvisorAvatars(advisorProfiles ?? [], avatarByCode);
     const profileByCode = new Map((advisorProfiles ?? []).map((row) => [row.advisor_code, row]));
 
     const ranking = [...agents.values()]
-      .map((row) => ({ ...row, agentName: profileByCode.get(row.agentCode)?.full_name || row.agentName, startDate: profileByCode.get(row.agentCode)?.start_date ?? null, isNewAdvisor: isNewAdvisor(profileByCode.get(row.agentCode)?.start_date, month), avatarUrl: avatarByCode.get(row.agentCode) ?? null }))
+      .map((row) => ({ ...row, agentName: profileByCode.get(row.agentCode)?.full_name || row.agentName, startDate: profileByCode.get(row.agentCode)?.start_date ?? null, isNewAdvisor: isNewAdvisor(profileByCode.get(row.agentCode)?.start_date, month), avatarUrl: avatarByCode.get(normalizeAdvisorCode(row.agentCode)) ?? null }))
       .map((row) => ({ ...row, nextMilestone: nextMilestone(row.ip) }))
       .sort((a, b) => b.ip - a.ip)
       .map((row, index) => ({ ...row, rank: index + 1 }));
@@ -199,7 +201,7 @@ export async function GET(request: NextRequest) {
           pending: 0,
           dgrr: 0,
           invalid: 0,
-          avatarUrl: profile?.avatar_url ?? null,
+          avatarUrl: avatarByCode.get(normalizeAdvisorCode(agentCode)) ?? null,
           startDate: profile?.start_date ?? null,
           isNewAdvisor: isNewAdvisor(profile?.start_date, month),
           lastContractDate: lastContractDate || null,

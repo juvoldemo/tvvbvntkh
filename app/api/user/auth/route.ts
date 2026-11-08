@@ -1,3 +1,4 @@
+import { getAdvisorAvatars, applyAdvisorAvatars } from "@/lib/advisor-avatars";
 import { NextRequest, NextResponse } from "next/server";
 import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS, isBossAccount, managedAdoScope } from "@/lib/ado-scope";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
     .select("advisor_code,full_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,avatar_url,group_name")
     .eq("advisor_code", code).single();
   if (error) return NextResponse.json({ authenticated: true, advisorCode: code, profile: null });
+  applyAdvisorAvatars([data], await getAdvisorAvatars());
   const boardScope = managedBoardScope(data.full_name);
   const adoScope = managedAdoScope(data.advisor_code, data.full_name);
   const bossAccount = isBossAccount(data.advisor_code);

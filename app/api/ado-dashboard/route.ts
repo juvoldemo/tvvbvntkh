@@ -1,3 +1,4 @@
+import { getAdvisorAvatars, applyAdvisorAvatars } from "@/lib/advisor-avatars";
 import { siteHiddenCompetitionIds } from "@/lib/competition-site-visibility";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
@@ -141,6 +142,7 @@ export async function GET(request: NextRequest) {
     if (unassignedRosterError) throw unassignedRosterError;
     if (scopeMembershipError) throw scopeMembershipError;
 
+    applyAdvisorAvatars([...(roster ?? []), ...(unassignedRoster ?? [])], await getAdvisorAvatars());
     const membershipByAdvisor = new Map<string, string>();
     for (const row of scopeMembershipRows ?? []) {
       const advisorCode = String(row.agent_code || "").trim().toUpperCase();

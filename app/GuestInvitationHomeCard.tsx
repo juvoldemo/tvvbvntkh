@@ -3,28 +3,30 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { NOVEMBER_4_INVITATION_IMAGE_PATH, drawNovember4Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
+import { NOVEMBER_14_INVITATION_IMAGE_PATH, drawNovember14Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const NOVEMBER_4_TEMPLATE = {
-  banner: "/invitations/Banner 4.11.png",
-  image: NOVEMBER_4_INVITATION_IMAGE_PATH,
-  draw: drawNovember4Invitation,
-  title: "Trao Yêu Thương - Trọn An Tâm",
-  color: "#C52222" as const,
-  width: 2167,
-  height: 582
+const NOVEMBER_14_TEMPLATE = {
+  banner: "/invitations/Banner 14.11.26.png",
+  image: NOVEMBER_14_INVITATION_IMAGE_PATH,
+  draw: drawNovember14Invitation,
+  title: "Chủ động sống khỏe cùng bác sĩ gia đình",
+  color: "#17448F" as const,
+  width: 2172,
+  height: 724
 };
 const TEMPLATES = {
-  november4: NOVEMBER_4_TEMPLATE,
-  october23: NOVEMBER_4_TEMPLATE,
-  cr16: NOVEMBER_4_TEMPLATE,
-  galina: NOVEMBER_4_TEMPLATE,
-  cr: NOVEMBER_4_TEMPLATE,
-  september19: NOVEMBER_4_TEMPLATE
+  november14: NOVEMBER_14_TEMPLATE,
+  november4: NOVEMBER_14_TEMPLATE,
+  october23: NOVEMBER_14_TEMPLATE,
+  cr16: NOVEMBER_14_TEMPLATE,
+  galina: NOVEMBER_14_TEMPLATE,
+  cr: NOVEMBER_14_TEMPLATE,
+  september19: NOVEMBER_14_TEMPLATE
 };
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
+  { label: "Xanh", value: "#17448F" },
   { label: "Trắng", value: "#FFFFFF" },
   { label: "Đỏ", value: "#C52222" },
   { label: "Vàng", value: "#FFD400" }
@@ -37,7 +39,7 @@ function outputName(displayName: string) {
   return `thu-moi-${slugifyGuestName(displayName)}-${stamp}.png`;
 }
 
-export default function GuestInvitationHomeCard({ template = "november4" }: { template?: keyof typeof TEMPLATES }) {
+export default function GuestInvitationHomeCard({ template = "november14" }: { template?: keyof typeof TEMPLATES }) {
   const config = TEMPLATES[template];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);

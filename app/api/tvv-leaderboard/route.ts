@@ -1,3 +1,4 @@
+import { getAdvisorAvatars, applyAdvisorAvatars } from "@/lib/advisor-avatars";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { monthBounds, toMonthStart } from "@/lib/format";
@@ -34,13 +35,7 @@ async function getLeaderboardBase(month: string): Promise<LeaderboardBase> {
     const countedRecords = ((records ?? []) as RevenueRecord[]).filter(isCountedRevenueRecord);
     const agentRanking = buildAgentRanking(countedRecords);
     const topAgents = agentRanking.slice(0, 10);
-    const topAgentCodes = topAgents.map((row) => String(row.agentCode).trim().toUpperCase()).filter(Boolean);
-    const { data: profiles } = topAgentCodes.length
-      ? await supabase.from("authorized_users").select("advisor_code,avatar_url").in("advisor_code", topAgentCodes)
-      : { data: [] };
-    const avatarByCode = new Map((profiles ?? []).map((profile: any) => [
-      String(profile.advisor_code ?? "").trim().toUpperCase(), profile.avatar_url || null
-    ]));
+    const avatarByCode = await getAdvisorAvatars();
     const agents = topAgents.map((row) => ({
       ...row,
       avatarUrl: avatarByCode.get(String(row.agentCode).trim().toUpperCase()) ?? null
@@ -50,8 +45,8 @@ async function getLeaderboardBase(month: string): Promise<LeaderboardBase> {
     const { data: leaders } = await supabase
       .from("authorized_users")
       .select("advisor_code,full_name,advisor_position,group_name,avatar_url")
-      .eq("is_active", true)
-      .not("avatar_url", "is", null);
+      .eq("is_active", true);
+    applyAdvisorAvatars(leaders ?? [], avatarByCode);
     const leaderAvatarByGroup = new Map<string, string>();
     (leaders ?? []).forEach((leader: any) => {
       const groupName = managedTeamName(leader.advisor_code, leader.advisor_position, leader.full_name, leader.group_name);
