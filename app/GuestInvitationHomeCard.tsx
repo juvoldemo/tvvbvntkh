@@ -3,26 +3,27 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { NOVEMBER_14_INVITATION_IMAGE_PATH, drawNovember14Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
+import { NOVEMBER_16_INVITATION_IMAGE_PATH, drawNovember16Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const NOVEMBER_14_TEMPLATE = {
-  banner: "/invitations/Banner 14.11.26.png",
-  image: NOVEMBER_14_INVITATION_IMAGE_PATH,
-  draw: drawNovember14Invitation,
-  title: "Chủ động sống khỏe cùng bác sĩ gia đình",
+const NOVEMBER_16_TEMPLATE = {
+  banner: "/invitations/Banner 1611.png",
+  image: NOVEMBER_16_INVITATION_IMAGE_PATH,
+  draw: drawNovember16Invitation,
+  title: "Hội nghị khách hàng đáo hạn 16/11/2026",
   color: "#17448F" as const,
   width: 2172,
   height: 724
 };
 const TEMPLATES = {
-  november14: NOVEMBER_14_TEMPLATE,
-  november4: NOVEMBER_14_TEMPLATE,
-  october23: NOVEMBER_14_TEMPLATE,
-  cr16: NOVEMBER_14_TEMPLATE,
-  galina: NOVEMBER_14_TEMPLATE,
-  cr: NOVEMBER_14_TEMPLATE,
-  september19: NOVEMBER_14_TEMPLATE
+  november16: NOVEMBER_16_TEMPLATE,
+  november14: NOVEMBER_16_TEMPLATE,
+  november4: NOVEMBER_16_TEMPLATE,
+  october23: NOVEMBER_16_TEMPLATE,
+  cr16: NOVEMBER_16_TEMPLATE,
+  galina: NOVEMBER_16_TEMPLATE,
+  cr: NOVEMBER_16_TEMPLATE,
+  september19: NOVEMBER_16_TEMPLATE
 };
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
@@ -39,7 +40,7 @@ function outputName(displayName: string) {
   return `thu-moi-${slugifyGuestName(displayName)}-${stamp}.png`;
 }
 
-export default function GuestInvitationHomeCard({ template = "november14" }: { template?: keyof typeof TEMPLATES }) {
+export default function GuestInvitationHomeCard({ template = "november16" }: { template?: keyof typeof TEMPLATES }) {
   const config = TEMPLATES[template];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
