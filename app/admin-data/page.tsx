@@ -311,14 +311,13 @@ export default function AdminDataPage() {
   }
 
   async function randomizeAccessPasswords() {
-    if (!window.confirm("Tạo mật khẩu random mới cho tất cả TVV đang được cấp quyền? Mật khẩu cũ sẽ không dùng để đăng nhập nữa.")) return;
     setBusy(true);
     setMessage("");
     const response = await fetch("/api/admin/access-list", { method: "PUT" });
     const payload = await response.json().catch(() => ({}));
     setBusy(false);
     if (!response.ok) return setMessage(payload.error || "Không tạo được mật khẩu random.");
-    setMessage(`Đã tạo mật khẩu random mới cho ${payload.count} TVV.`);
+    setMessage(`Đã bổ sung mật khẩu cho ${payload.count} tài khoản.`);
     await loadUsers();
   }
 
@@ -467,7 +466,7 @@ export default function AdminDataPage() {
             <button disabled={busy}>Upload danh sách</button>
           </form>
           <div className="admin-access-actions">
-            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu random cho tất cả TVV</button>
+            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu cho tài khoản chưa tạo</button>
             <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
           </div>
           <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
