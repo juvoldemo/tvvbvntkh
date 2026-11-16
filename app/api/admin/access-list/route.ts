@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fillMissingPasswords } from "@/lib/access-list-passwords";
 import * as XLSX from "xlsx";
 import { parseAccessListDate } from "@/lib/access-list-dates";
 import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS } from "@/lib/ado-scope";
@@ -50,103 +51,22 @@ function scoreUserRow(row: Record<string, unknown>) {
   ].reduce((score: number, value: unknown) => score + (value ? 1 : 0), 0);
 }
 
-async function restoreManagementAccounts(supabase: ReturnType<typeof getSupabaseAdmin>) {
-  const codes = MANAGEMENT_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code));
-  const adoCodes = new Set(ADO_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code)));
-  let { data: existing, error } = await supabase
-    .from("authorized_users")
-    .select("advisor_code,password_hash,password_plain")
-    .in("advisor_code", codes);
-  let hasPasswordPlainColumn = true;
-  if (error && missingPasswordPlainColumn(error)) {
-    const fallback = await supabase
-      .from("authorized_users")
-      .select("advisor_code,password_hash")
-      .in("advisor_code", codes);
-    existing = fallback.data?.map((item) => ({ ...item, password_plain: null })) ?? [];
-    error = fallback.error;
-    hasPasswordPlainColumn = false;
-  }
-  if (error) throw error;
-
-  const accounts = new Map((existing ?? []).map((item) => [normalizeAdvisorCode(item.advisor_code), item]));
-  const restored = MANAGEMENT_ACCOUNT_SEEDS.map((seed) => {
-    const advisorCode = normalizeAdvisorCode(seed.advisor_code);
-    const current = accounts.get(advisorCode);
-    const fixedAdoPassword = adoCodes.has(advisorCode);
-    const passwordHash = fixedAdoPassword ? visiblePasswordRecord("0000") : current?.password_hash || visiblePasswordRecord("0000");
-    return {
-      ...seed,
-      advisor_code: advisorCode,
-      password_hash: passwordHash,
-      ...(hasPasswordPlainColumn ? {
-        password_plain: fixedAdoPassword
-          ? "0000"
-          : current
-          ? current.password_plain || revealVisiblePassword(String(passwordHash)) || null
-          : "0000"
-      } : {}),
-      is_active: true,
-      updated_at: new Date().toISOString()
-    };
-  });
-  const restoredResult = await supabase.from("authorized_users").upsert(restored, { onConflict: "advisor_code" });
-  if (restoredResult.error) throw restoredResult.error;
-}
-
-async function fillMissingPasswords(supabase: ReturnType<typeof getSupabaseAdmin>, users: Record<string, unknown>[], hasPlain: boolean) {
-  let count = 0;
-  for (const user of users) {
-    if (revealVisiblePassword(String(user.password_hash || "")) || user.password_plain) continue;
-    const password = randomStrongPassword();
-    // Compare the original credentials to avoid overwriting a concurrent change.
-    let query = supabase.from("authorized_users").update({
-      password_hash: visiblePasswordRecord(password),
-      ...(hasPlain ? { password_plain: password } : {}),
-      updated_at: new Date().toISOString()
-    }).eq("id", user.id);
-    query = user.password_hash == null ? query.is("password_hash", null) : query.eq("password_hash", user.password_hash);
-    if (hasPlain) query = user.password_plain == null ? query.is("password_plain", null) : query.eq("password_plain", user.password_plain);
-    const { data, error } = await query.select("id");
-    if (error) throw error;
-    if (data?.length) {
-      user.password_hash = visiblePasswordRecord(password);
-      user.password_plain = password;
-      count += 1;
-    } else {
-      const { data: current, error: readError } = await supabase.from("authorized_users")
-        .select(hasPlain ? "password_hash,password_plain" : "password_hash").eq("id", user.id).single();
-      if (readError) throw readError;
-      Object.assign(user, current);
-      user.password_plain = revealVisiblePassword(String(user.password_hash || "")) || user.password_plain || null;
-    }
-  }
-  return count;
-}
-
 export async function GET(request: NextRequest) {
   if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
   const supabase = getSupabaseAdmin();
-  try {
-    await restoreManagementAccounts(supabase);
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Cannot restore management accounts." }, { status: 500 });
-  }
   const users: Record<string, unknown>[] = [];
-  let hasPasswordPlainColumn = true;
   const pageSize = 1000;
   for (let from = 0; ; from += pageSize) {
     let { data, error } = await supabase
       .from("authorized_users")
       .select(accessListFields)
-      .order("full_name")
+      .order("full_name").order("id")
       .range(from, from + pageSize - 1);
     if (error && missingPasswordPlainColumn(error)) {
-      hasPasswordPlainColumn = false;
       const fallback = await supabase
         .from("authorized_users")
         .select(accessListFallbackFields)
-        .order("full_name")
+        .order("full_name").order("id")
         .range(from, from + pageSize - 1);
       data = fallback.data?.map((user) => ({ ...user, password_plain: revealVisiblePassword(String(user.password_hash || "")) || null })) ?? [];
       error = fallback.error;
@@ -159,12 +79,8 @@ export async function GET(request: NextRequest) {
     users.push(...(data ?? []));
     if ((data ?? []).length < pageSize) break;
   }
-  try {
-    await fillMissingPasswords(supabase, users, hasPasswordPlainColumn);
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Cannot create missing passwords." }, { status: 500 });
-  }
-  return NextResponse.json({ users }, { headers: { "Cache-Control": "no-store" } });
+  const publicUsers = users.map(({ password_hash, ...user }) => user);
+  return NextResponse.json({ users: publicUsers }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: NextRequest) {
@@ -286,8 +202,12 @@ export async function PUT(request: NextRequest) {
       rows.push(...(data ?? []));
       if ((data ?? []).length < pageSize) break;
     }
-    const count = await fillMissingPasswords(supabase, rows, hasPasswordPlainColumn);
-    return NextResponse.json({ ok: true, count });
+    const pending = rows.filter((user) => !revealVisiblePassword(String(user.password_hash || "")) && !user.password_plain);
+    const batch = pending.slice(0, 40);
+    const count = await fillMissingPasswords(supabase, batch, hasPasswordPlainColumn);
+    return NextResponse.json({ ok: true, count, remaining: pending.length > batch.length,
+      users: batch.map((user) => ({ id: user.id, password_plain: user.password_plain }))
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Không tạo được mật khẩu random." }, { status: 500 });
   }

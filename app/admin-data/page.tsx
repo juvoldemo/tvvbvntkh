@@ -46,6 +46,8 @@ export default function AdminDataPage() {
   const [accessError, setAccessError] = useState("");
   const [accessSearch, setAccessSearch] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
+  const [passwordsLoading, setPasswordsLoading] = useState(false);
+  const passwordJob = useRef(false);
   const [copiedAccessCell, setCopiedAccessCell] = useState("");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [competitionPrograms, setCompetitionPrograms] = useState<CompetitionProgram[]>([]);
@@ -103,17 +105,47 @@ export default function AdminDataPage() {
     if (aboutResponse.ok) setAboutContent(aboutPayload ?? { sections: [] });
   }, []);
 
+  const fillAccessPasswords = useCallback(async () => {
+    if (passwordJob.current) return;
+    passwordJob.current = true;
+    setPasswordsLoading(true);
+    try {
+      let remaining = true;
+      while (remaining) {
+        const response = await fetch("/api/admin/access-list", {
+          method: "PUT", cache: "no-store", signal: AbortSignal.timeout(25000)
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "Cannot create missing passwords.");
+        const changes = new Map<string, string | null>((payload.users ?? []).map((user: Pick<UserItem, "id" | "password_plain">) => [user.id, user.password_plain]));
+        setUsers((current) => current.map((user) => changes.has(user.id) ? { ...user, password_plain: changes.get(user.id) ?? null } : user));
+        remaining = Boolean(payload.remaining);
+      }
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Cannot create missing passwords.");
+    } finally {
+      passwordJob.current = false;
+      setPasswordsLoading(false);
+    }
+  }, []);
+
   const loadUsers = useCallback(async () => {
     setAccessLoading(true);
+    setAccessError("");
     try {
-      const response = await fetch("/api/admin/access-list", { cache: "no-store" });
+      const response = await fetch("/api/admin/access-list", { cache: "no-store", signal: AbortSignal.timeout(15000) });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "Không tải được danh sách truy cập.");
       setUsers(payload.users ?? []);
+      if ((payload.users ?? []).some((user: UserItem) => !user.password_plain)) void fillAccessPasswords();
+    } catch (error) {
+      setAccessError(error instanceof Error && error.name === "TimeoutError"
+        ? "Tải danh sách quá lâu. Vui lòng bấm Thử lại."
+        : error instanceof Error ? error.message : "Cannot load access list.");
     } finally {
       setAccessLoading(false);
     }
-  }, []);
+  }, [fillAccessPasswords]);
 
   async function copyAccessValue(value: string, cellKey: string) {
     try {
@@ -311,14 +343,8 @@ export default function AdminDataPage() {
   }
 
   async function randomizeAccessPasswords() {
-    setBusy(true);
-    setMessage("");
-    const response = await fetch("/api/admin/access-list", { method: "PUT" });
-    const payload = await response.json().catch(() => ({}));
-    setBusy(false);
-    if (!response.ok) return setMessage(payload.error || "Không tạo được mật khẩu random.");
-    setMessage(`Đã bổ sung mật khẩu cho ${payload.count} tài khoản.`);
-    await loadUsers();
+    setAccessError("");
+    await fillAccessPasswords();
   }
 
   async function exportAccessList() {
@@ -466,11 +492,12 @@ export default function AdminDataPage() {
             <button disabled={busy}>Upload danh sách</button>
           </form>
           <div className="admin-access-actions">
-            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu cho tài khoản chưa tạo</button>
+            <button type="button" className="admin-secondary" disabled={busy || passwordsLoading || accessLoading || users.length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu cho tài khoản chưa tạo</button>
             <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
           </div>
           <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
-          {accessError && <div className="admin-message error">{accessError}</div>}
+          {accessError && <div className="admin-message error">{accessError} <button type="button" disabled={accessLoading} onClick={() => void loadUsers()}>Thử lại</button></div>}
+          {passwordsLoading && <div className="admin-count">Đang bổ sung mật khẩu cho tài khoản chưa tạo...</div>}
           <div className="admin-count">{accessLoading ? "Đang tải danh sách..." : `${activeAccessUsers.length} người đang được cấp quyền${accessSearch ? ` · Tìm thấy ${filteredAccessUsers.length}` : ""}`}</div>
           <div className="admin-table-wrap admin-access-table"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Nhóm</th><th>Chức vụ</th></tr></thead><tbody>
             {filteredAccessUsers.map((user) => {
