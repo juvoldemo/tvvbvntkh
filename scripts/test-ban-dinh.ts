@@ -10,6 +10,7 @@ import { GET as adminReports } from "../app/api/admin/ban-dinh-reports/route";
 import { ADMIN_COOKIE, adminSessionToken } from "../lib/admin-auth";
 import { PUT as changeSession } from "../app/api/admin/ban-dinh-session/route";
 import { POST as resetStatistics } from "../app/api/admin/ban-dinh-reset/route";
+import { GET as publicSettings } from "../app/api/ban-dinh-settings/route";
 
 async function main() {
   assert.ok(validBanDinhCounts({ consultations: 0, contracts: 0 }));
@@ -22,12 +23,13 @@ async function main() {
   const originalCreate = client.storage.createBucket;
   const objects = new Map<string, string>();
   let visible = true;
+  let adminOnly = false;
   client.from = () => ({ select: () => ({ eq: (_: string, code: string) => ({ single: async () => ({ data: { advisor_code: code, is_active: true }, error: null }) }), in: async (_: string, codes: string[]) => ({ data: codes.map(code => ({ advisor_code: code, full_name: `Name ${code}` })), error: null }) }) });
   client.storage.createBucket = async (_name: string, options: any) => { assert.equal(options.public, false); return { error: null }; };
   client.storage.from = (bucket: string) => ({
     list: async (prefix: string, options: { offset: number; limit: number }) => ({ data: [...objects.keys()].filter(key => key.startsWith(`${bucket}/${prefix}/`)).sort().slice(options.offset, options.offset + options.limit).map(key => ({ name: key.split('/').at(-1) })), error: null }),
     download: async (path: string) => {
-      if (path === "data/ban-dinh-settings.json") return { data: new Blob([JSON.stringify({ banner: "/api/archive/file?path=uploads%2Finvitations%2Ftest.png", visible })]), error: null };
+      if (path === "data/ban-dinh-settings.json") return { data: new Blob([JSON.stringify({ banner: "/api/archive/file?path=uploads%2Finvitations%2Ftest.png", visible, adminOnly })]), error: null };
       const text = objects.get(`${bucket}/${path}`);
       return text ? { data: new Blob([text]), error: null } : { data: null, error: { statusCode: "404", message: "Object not found" } };
     },
@@ -81,6 +83,15 @@ async function main() {
     await changeSession(sessionRequest("start"));
     assert.equal((await PUT(request("PUT", "TEST_A", { consultations: 3, contracts: 2 }))).status, 200);
     assert.deepEqual((await (await adminReports(adminRequest())).json()).totals, { users: 1, consultations: 3, contracts: 2 });
+    adminOnly = true;
+    assert.equal((await (await publicSettings(request("GET", "TEST_A"))).json()).visible, false);
+    assert.equal((await (await publicSettings(request("GET"))).json()).banner, "");
+    assert.equal((await (await publicSettings(request("GET", "ADMIN"))).json()).visible, true);
+    assert.equal((await GET(request("GET", "TEST_A"))).status, 403);
+    assert.equal((await PUT(request("PUT", "TEST_B", { consultations: 1, contracts: 1 }))).status, 403);
+    assert.equal((await GET(request("GET", "ADMIN"))).status, 200);
+    adminOnly = false;
+    assert.equal((await GET(request("GET", "TEST_A"))).status, 200);
     visible = false;
     assert.equal((await PUT(request("PUT", "TEST_A", { consultations: 1, contracts: 1 }))).status, 403);
     console.log("Bán đỉnh: validation, authentication, private storage, latest overwrite, per-user isolation and hidden-state checks passed (mock storage).");
