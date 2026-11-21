@@ -17,6 +17,7 @@
     "import:recruitment": "tsx scripts/import-recruitment-candidates.ts"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.2.3",
     "@supabase/supabase-js": "^2.45.4",
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",

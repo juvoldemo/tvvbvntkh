@@ -18426,35 +18426,51 @@ body .tvv-app .tvv-contest-detail {
 
 /* Revenue leaderboard */
 .tvv-leaderboard-preview {
+  position: relative;
+  display: block;
   width: 100%;
-  min-height: 88px;
-  display: grid;
-  grid-template-columns: 58px minmax(0, 1fr) 22px;
-  align-items: center;
-  gap: 11px;
-  padding: 14px 16px !important;
+  min-width: 0;
+  aspect-ratio: 1840 / 565;
+  overflow: hidden;
+  border-radius: 5% / 16%;
+  padding: 0;
   border: 0;
-  background: #fffbea !important;
-  color: #004b7a;
-  text-align: left;
+  background: transparent;
   cursor: pointer;
 }
 
-.tvv-leaderboard-preview-icon {
-  width: 54px;
-  height: 54px;
-  display: grid;
-  place-items: center;
-  overflow: visible;
-  background: transparent;
+.tvv-leaderboard-preview > img {
+  position: absolute;
+  left: -3.26%;
+  top: -19.47%;
+  display: block;
+  width: 106.58%;
+  max-width: none;
+  height: 141.95%;
 }
 
-.tvv-leaderboard-preview-icon img {
-  width: 62px;
-  height: 62px;
-  display: block;
-  object-fit: contain;
-  filter: drop-shadow(0 7px 8px rgba(189, 118, 0, .2));
+.tvv-leaderboard-top-avatars {
+  position: absolute;
+  left: 30%;
+  top: 57%;
+  width: 58%;
+  display: flex;
+  align-items: center;
+  gap: 3%;
+}
+
+.tvv-leaderboard-top-avatars .tvv-ranking-avatar {
+  width: 12%;
+  height: auto;
+  aspect-ratio: 1;
+  flex: 0 0 12%;
+  border: 1px solid #fff;
+  font-size: clamp(9px, 2.5vw, 14px);
+}
+
+.tvv-leaderboard-preview:focus-visible {
+  outline: 2px solid var(--primary, #004b7a);
+  outline-offset: 3px;
 }
 
 .tvv-leaderboard-preview-copy {
@@ -18467,16 +18483,43 @@ body .tvv-app .tvv-contest-detail {
 .tvv-leaderboard-preview-copy > small { color: #004b7a; font-size: var(--typo-10); }
 
 .tvv-archive-preview {
-  display: grid !important;
-  grid-template-columns: 54px minmax(0, 1fr) 22px !important;
-  align-items: center !important;
-  gap: 12px !important;
-  min-height: 86px !important;
-  border: 1px solid #dce8f8 !important;
-  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 58%, #fff7df 100%) !important;
-  color: #004b7a !important;
-  cursor: pointer !important;
-  text-align: left !important;
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1974 / 452;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4.5% / 19%;
+  clip-path: inset(0 round 4.5% / 19%);
+  isolation: isolate;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tvv-archive-preview > img {
+  position: absolute;
+  left: -5.16%;
+  top: -31.47%;
+  display: block;
+  width: 110.43%;
+  max-width: none;
+  height: 161.18%;
+}
+
+.tvv-archive-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid #c5e5f7;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.tvv-archive-preview:focus-visible {
+  outline: 2px solid var(--primary, #004b7a);
+  outline-offset: 3px;
 }
 
 .tvv-archive-preview-icon {
@@ -18532,7 +18575,9 @@ body .tvv-app .tvv-contest-detail {
 }
 
 .tvv-app .tvv-ranking-tabs button {
-  height: 43px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;

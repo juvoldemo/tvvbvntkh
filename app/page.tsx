@@ -12,6 +12,8 @@ import CloseIconButton from "@/app/CloseIconButton";
 import ClassVoteBanner from "@/app/ClassVoteBanner";
 import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 import BanDinhHomeCard from "@/app/BanDinhHomeCard";
+import HeroAvatar from "@/app/HeroAvatar";
+import StarJourneyArtwork from "@/app/StarJourneyArtwork";
 
 type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
@@ -1150,7 +1152,7 @@ export default function TvvMobilePage() {
           {tab === "overview" ? (
           <header className={`tvv-hero${isBoardMode ? " board-mode" : ""}${isAdoMode ? " ado-mode" : ""}`}>
             <div className="tvv-hero-main">
-              <button className="tvv-avatar tvv-avatar-button" type="button" onClick={() => setTab("profile")} aria-label="Mở trang cá nhân">{userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" /> : <UserRound size={40} />}</button>
+              <button className="tvv-avatar tvv-avatar-button" type="button" onClick={() => setTab("profile")} aria-label="Mở trang cá nhân"><HeroAvatar src={userProfile?.avatar_url} /><img className="tvv-avatar-ribbon" src="/images/ruy%20b%C4%83ng.png" alt="" aria-hidden="true" /></button>
               <div className="tvv-hero-copy">
                 <h1 className="tvv-hero-greeting" title={`Xin chào, ${userProfile?.full_name || advisor?.name || "TVV"}`}>Xin chào, {userProfile?.full_name || advisor?.name || "TVV"}</h1>
                 <p>{isBossMode ? "BOSS · Toàn công ty" : isAdoMode ? "ADO" : isBoardMode ? `Trưởng ban ${boardData?.boardName || userProfile?.managed_board_name || ""}` : userProfile?.dashboard_role === "team_leader" ? `Trưởng nhóm ${teamData?.groupName || userProfile?.managed_group_name || ""}` : `TVV - ${advisor?.code || "Chưa có mã"}`}</p>
@@ -1160,7 +1162,7 @@ export default function TvvMobilePage() {
                   ? <strong className="tvv-current-rank"><Users size={13} />{boardData ? `${boardData.summary.activeGroups}/${boardData.groups.length} nhóm có doanh thu` : "Đang tải dữ liệu ban"}</strong>
                   : userProfile?.dashboard_role === "team_leader"
                   ? <strong className="tvv-current-rank"><Users size={13} />{teamData ? `${teamData.summary.activeAgents}/${Number(teamRewards?.currentTeamAdvisorCount) || teamData.summary.agents} TVV có doanh thu` : "Đang tải hoạt động nhóm"}</strong>
-                  : <strong className="tvv-current-rank"><Trophy size={13} />{currentAdvisorRank ? `Hạng ${currentAdvisorRank} tháng này` : "Chưa có xếp hạng tháng này"}</strong>}
+                  : currentAdvisorRank ? <strong className="tvv-current-rank"><Trophy size={13} />{`Hạng ${currentAdvisorRank}`}</strong> : null}
               </div>
               <div className="tvv-hero-role-target">
               {!isAdoMode && !isBoardMode && userProfile?.dashboard_role !== "team_leader" && <button className="tvv-icon-button tvv-target-button" type="button" aria-label="Đăng ký mục tiêu" onClick={() => { setTargetReturnToTeamGoal(false); setTargetModalOpen(true); }}>
@@ -2880,13 +2882,7 @@ function TeamLeaderPolicyDetailModal({ type, rewards, onClose }: { type: "monthl
 function TeamLeaderStarJourney({ row, warning }: { row?: any; warning?: string | null }) {
   if (warning) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>{warning}</p></section>;
   if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của nhóm trong tháng này.</p></section>;
-  const totalFyp = Number(row.totalAfyp || 0);
-  const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
-  return <section className="tvv-card tvv-star-journey">
-    <div className="tvv-star-title"><span><Sparkles size={17} /> Hành trình Sao Việt</span><em>{row.currentTickets > 0 ? `${row.currentTickets} vé` : row.currentRank}</em></div>
-    <div className="tvv-star-main"><div><small>FYP KTM Nhóm</small><strong>{formatVnd(totalFyp)}</strong></div><img className="tvv-star-achievement-icon" src="/images/star-viet-achievement.png" alt="" /></div>
-    <div className="tvv-star-progress"><div><span>Mốc tiếp theo</span><b>{row.remainingToNext > 0 ? row.nextRank : "Đã đạt mốc cao nhất"}</b></div><i><u style={{ width: `${progress}%` }} /></i><div><span>{progress.toFixed(1).replace(".0", "")}%</span>{row.remainingToNext > 0 && <b>Còn {formatVnd(row.remainingToNext)}</b>}</div></div>
-  </section>;
+  return <StarJourneyArtwork row={row} />;
 }
 
 function TeamLeaderContestPage({ rewards, estimate }: { rewards: any; estimate: any }) {
@@ -3336,29 +3332,18 @@ function RankingAvatar({ name, src, group = false }: { name: string; src?: strin
 }
 
 function LeaderboardPreview({ leaderboard, onOpen }: any) {
-  const leaders = (leaderboard?.agents ?? []).slice(0, 3);
-  return <button className="tvv-card tvv-leaderboard-preview" type="button" onClick={onOpen}>
-    <span className="tvv-leaderboard-preview-icon"><img src="/images/leaderboard-trophy.png" alt="" /></span>
-    <span className="tvv-leaderboard-preview-copy">
-      <strong>Bảng xếp hạng doanh thu</strong>
-      <small>Tôn vinh những gương mặt dẫn đầu tháng</small>
-      <span className="tvv-preview-avatars">
-        {leaders.map((row: any) => <RankingAvatar key={row.agentCode || row.agentName} name={row.agentName} src={row.avatarUrl} />)}
-      </span>
+  const leaders = (leaderboard?.agents ?? []).slice(0, 5);
+  return <button className="tvv-leaderboard-preview" type="button" onClick={onOpen} aria-label="Mở bảng xếp hạng">
+    <img src="/images/BG%20BXH.png" width={1961} height={802} alt="Bảng xếp hạng — Tôn vinh những gương mặt dẫn đầu" />
+    <span className="tvv-leaderboard-top-avatars">
+      {leaders.map((row: any) => <RankingAvatar key={row.agentCode || row.agentName} name={row.agentName} src={row.avatarUrl} />)}
     </span>
-    <ChevronRight size={22} />
   </button>;
 }
 
 function ArchivePreview({ onOpen }: { onOpen: () => void }) {
-  return <button className="tvv-card tvv-archive-preview" type="button" onClick={onOpen}>
-    <span className="tvv-archive-preview-icon"><FolderOpen size={30} /></span>
-    <span className="tvv-leaderboard-preview-copy">
-      <strong>Kho tài liệu</strong>
-      <small>Mẫu biểu, hướng dẫn và tài liệu nghiệp vụ</small>
-      <span className="tvv-archive-tags"><b>Mẫu biểu</b><b>Hướng dẫn</b><b>FAQ</b></span>
-    </span>
-    <ChevronRight size={22} />
+  return <button className="tvv-archive-preview" type="button" onClick={onOpen} aria-label="Mở kho tài liệu">
+    <img src="/images/BG%20KTL.png" width={2172} height={724} alt="Kho tài liệu — Mẫu biểu, hướng dẫn và tài liệu nghiệp vụ" />
   </button>;
 }
 
@@ -3398,12 +3383,7 @@ function PersonalStarJourney({ row, warning, loading = false }: { row?: any; war
   if (loading && !row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Đang tải dữ liệu Sao Việt…</p></section>;
   if (warning) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa tải được dữ liệu Sao Việt.</p></section>;
   if (!row) return <section className="tvv-card tvv-star-journey tvv-star-empty"><div className="tvv-section-head"><h2>Hành trình Sao Việt</h2></div><p>Chưa có dữ liệu Sao Việt của bạn trong tháng này.</p></section>;
-  const progress = Math.max(0, Math.min(100, Number(row.progress ?? 0)));
-  return <section className="tvv-card tvv-star-journey">
-    <div className="tvv-star-title"><span><Sparkles size={17} /> Hành trình Sao Việt</span><em>{row.currentTickets > 0 ? `${row.currentTickets} vé` : row.currentRank}</em></div>
-    <div className="tvv-star-main"><div><small>Tổng AFYP Sao Việt</small><strong>{formatVnd(row.totalAfyp)}</strong></div><img className="tvv-star-achievement-icon" src="/images/star-viet-achievement.png" alt="" /></div>
-    <div className="tvv-star-progress"><div><span>Mốc tiếp theo</span><b>{row.remainingToNext > 0 ? row.nextRank : "Đã đạt mốc cao nhất"}</b></div><i><u style={{ width: `${progress}%` }} /></i><div><span>{progress.toFixed(1).replace(".0", "")}%</span>{row.remainingToNext > 0 && <b>Còn {formatVnd(row.remainingToNext)}</b>}</div></div>
-  </section>;
+  return <StarJourneyArtwork row={row} />;
 }
 
 function ContestPreview({ estimate, onAll }: any) {
