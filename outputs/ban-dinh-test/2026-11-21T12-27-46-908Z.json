@@ -1,0 +1,90 @@
+{
+  "runId": "2026-11-21T12-27-46-908Z",
+  "before": {
+    "users": 33,
+    "consultations": 1345,
+    "contracts": 278
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D248516533",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:27:47.029Z",
+      "advisorName": "Nguyễn Thụy Bích Trâm"
+    },
+    {
+      "advisorCode": "D1021A35MQ",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:27:48.052Z",
+      "advisorName": "Đoàn Thị Kha"
+    },
+    {
+      "advisorCode": "D1021A3D6K",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:27:49.047Z",
+      "advisorName": "Ung Thị Ngọc Lý"
+    },
+    {
+      "advisorCode": "D248584621",
+      "consultations": 20,
+      "contracts": 4,
+      "updatedAt": "2026-11-21T12:27:50.056Z",
+      "advisorName": "Nguyễn Anh Phụng"
+    },
+    {
+      "advisorCode": "D251542165",
+      "consultations": 25,
+      "contracts": 5,
+      "updatedAt": "2026-11-21T12:27:51.066Z",
+      "advisorName": "Nguyễn Minh Châu"
+    },
+    {
+      "advisorCode": "D1021A3G16",
+      "consultations": 30,
+      "contracts": 6,
+      "updatedAt": "2026-11-21T12:27:52.077Z",
+      "advisorName": "Nguyễn Văn Tùng"
+    },
+    {
+      "advisorCode": "D248589838",
+      "consultations": 35,
+      "contracts": 7,
+      "updatedAt": "2026-11-21T12:27:53.075Z",
+      "advisorName": "Nguyễn Ngọc Đan Phượng"
+    },
+    {
+      "advisorCode": "D1021A3RSL",
+      "consultations": 40,
+      "contracts": 8,
+      "updatedAt": "2026-11-21T12:27:54.144Z",
+      "advisorName": "Hà Lê Minh"
+    },
+    {
+      "advisorCode": "D1021A3CCI",
+      "consultations": 45,
+      "contracts": 9,
+      "updatedAt": "2026-11-21T12:27:55.120Z",
+      "advisorName": "Nguyễn Thị Mai"
+    },
+    {
+      "advisorCode": "D251466239",
+      "consultations": 50,
+      "contracts": 10,
+      "updatedAt": "2026-11-21T12:27:56.240Z",
+      "advisorName": "Nguyễn Nhật Tinh Tú"
+    }
+  ],
+  "after": {
+    "users": 43,
+    "consultations": 1620,
+    "contracts": 333
+  }
+}

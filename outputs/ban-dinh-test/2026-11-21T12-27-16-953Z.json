@@ -1,0 +1,160 @@
+{
+  "runId": "2026-11-21T12-27-16-953Z",
+  "before": {
+    "users": 13,
+    "consultations": 295,
+    "contracts": 68
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D1021A24MP",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:27:17.072Z",
+      "advisorName": "Hồ Thị Minh Đan"
+    },
+    {
+      "advisorCode": "D251294771",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:27:17.250Z",
+      "advisorName": "Phạm Thị Thanh Phương"
+    },
+    {
+      "advisorCode": "D248680511",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:27:17.454Z",
+      "advisorName": "Phạm Thị Hà"
+    },
+    {
+      "advisorCode": "D251357459",
+      "consultations": 20,
+      "contracts": 4,
+      "updatedAt": "2026-11-21T12:27:17.644Z",
+      "advisorName": "Nguyễn Quốc Trí"
+    },
+    {
+      "advisorCode": "D1021A3A30",
+      "consultations": 25,
+      "contracts": 5,
+      "updatedAt": "2026-11-21T12:27:17.857Z",
+      "advisorName": "Trần Phúc Đoan Dung"
+    },
+    {
+      "advisorCode": "D251588005",
+      "consultations": 30,
+      "contracts": 6,
+      "updatedAt": "2026-11-21T12:27:18.034Z",
+      "advisorName": "Lê Thị Giáng Nữ"
+    },
+    {
+      "advisorCode": "D251310579",
+      "consultations": 35,
+      "contracts": 7,
+      "updatedAt": "2026-11-21T12:27:18.395Z",
+      "advisorName": "Lê Vũ Ngọc Hân"
+    },
+    {
+      "advisorCode": "D1021A1GF4",
+      "consultations": 40,
+      "contracts": 8,
+      "updatedAt": "2026-11-21T12:27:18.580Z",
+      "advisorName": "Thiều Thị Giang"
+    },
+    {
+      "advisorCode": "D251310715",
+      "consultations": 45,
+      "contracts": 9,
+      "updatedAt": "2026-11-21T12:27:18.759Z",
+      "advisorName": "Trần Cao Thiên Phước"
+    },
+    {
+      "advisorCode": "D269951714",
+      "consultations": 50,
+      "contracts": 10,
+      "updatedAt": "2026-11-21T12:27:18.958Z",
+      "advisorName": "Nguyễn Ngọc Khánh Chi"
+    },
+    {
+      "advisorCode": "D1021A3DTC",
+      "consultations": 55,
+      "contracts": 11,
+      "updatedAt": "2026-11-21T12:27:19.124Z",
+      "advisorName": "Phạm Thị Thanh Nhàn"
+    },
+    {
+      "advisorCode": "D269903788",
+      "consultations": 60,
+      "contracts": 12,
+      "updatedAt": "2026-11-21T12:27:19.319Z",
+      "advisorName": "Nguyễn Huy"
+    },
+    {
+      "advisorCode": "D1021A3RSJ",
+      "consultations": 65,
+      "contracts": 13,
+      "updatedAt": "2026-11-21T12:27:19.530Z",
+      "advisorName": "Cao Minh Trí"
+    },
+    {
+      "advisorCode": "D1021A31LH",
+      "consultations": 70,
+      "contracts": 14,
+      "updatedAt": "2026-11-21T12:27:19.714Z",
+      "advisorName": "Nguyễn Nữ Quỳnh Nhi"
+    },
+    {
+      "advisorCode": "D269945638",
+      "consultations": 75,
+      "contracts": 15,
+      "updatedAt": "2026-11-21T12:27:19.893Z",
+      "advisorName": "Lê Đoàn Mai Trâm"
+    },
+    {
+      "advisorCode": "D102105573",
+      "consultations": 80,
+      "contracts": 16,
+      "updatedAt": "2026-11-21T12:27:20.065Z",
+      "advisorName": "Nguyễn Thị Tuyết Sương"
+    },
+    {
+      "advisorCode": "D1021A2L2G",
+      "consultations": 85,
+      "contracts": 17,
+      "updatedAt": "2026-11-21T12:27:20.458Z",
+      "advisorName": "Nguyễn Thị Mỹ Yên"
+    },
+    {
+      "advisorCode": "D102143139",
+      "consultations": 90,
+      "contracts": 18,
+      "updatedAt": "2026-11-21T12:27:20.640Z",
+      "advisorName": "Lưu Văn Nam"
+    },
+    {
+      "advisorCode": "D251576218",
+      "consultations": 95,
+      "contracts": 19,
+      "updatedAt": "2026-11-21T12:27:20.872Z",
+      "advisorName": "Lê Thị Thúy Hạnh"
+    },
+    {
+      "advisorCode": "D251372382",
+      "consultations": 100,
+      "contracts": 20,
+      "updatedAt": "2026-11-21T12:27:21.099Z",
+      "advisorName": "Nguyễn Văn Thắng"
+    }
+  ],
+  "after": {
+    "users": 33,
+    "consultations": 1345,
+    "contracts": 278
+  }
+}

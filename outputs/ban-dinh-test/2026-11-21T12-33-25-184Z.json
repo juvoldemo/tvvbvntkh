@@ -1,0 +1,44 @@
+{
+  "runId": "2026-11-21T12-33-25-184Z",
+  "before": {
+    "users": 53,
+    "consultations": 1895,
+    "contracts": 388
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D102143449",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:33:25.466Z",
+      "advisorName": "Thới Bình An",
+      "requestStartedAt": "2026-11-21T12:33:25.186Z"
+    },
+    {
+      "advisorCode": "D102101841",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:33:26.997Z",
+      "advisorName": "Đặng Trần Khoa",
+      "requestStartedAt": "2026-11-21T12:33:26.885Z"
+    },
+    {
+      "advisorCode": "D261249985",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:33:28.349Z",
+      "advisorName": "Phan Đại Hải",
+      "requestStartedAt": "2026-11-21T12:33:28.219Z"
+    }
+  ],
+  "after": {
+    "users": 56,
+    "consultations": 1925,
+    "contracts": 394
+  }
+}

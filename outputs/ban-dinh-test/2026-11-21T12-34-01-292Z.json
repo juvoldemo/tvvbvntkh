@@ -1,0 +1,100 @@
+{
+  "runId": "2026-11-21T12-34-01-292Z",
+  "before": {
+    "users": 56,
+    "consultations": 1925,
+    "contracts": 394
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D248713337",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:34:01.444Z",
+      "advisorName": "Nguyễn Hồng Ngọc",
+      "requestStartedAt": "2026-11-21T12:34:01.294Z"
+    },
+    {
+      "advisorCode": "D267699733",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:34:03.453Z",
+      "advisorName": "Phạm Đình Phúc",
+      "requestStartedAt": "2026-11-21T12:34:03.334Z"
+    },
+    {
+      "advisorCode": "D248623127",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:34:06.169Z",
+      "advisorName": "Nguyễn Thị Lương",
+      "requestStartedAt": "2026-11-21T12:34:06.033Z"
+    },
+    {
+      "advisorCode": "D1021A3AV0",
+      "consultations": 20,
+      "contracts": 4,
+      "updatedAt": "2026-11-21T12:34:09.075Z",
+      "advisorName": "Nguyễn Đình Hậu",
+      "requestStartedAt": "2026-11-21T12:34:08.918Z"
+    },
+    {
+      "advisorCode": "D102126761",
+      "consultations": 25,
+      "contracts": 5,
+      "updatedAt": "2026-11-21T12:34:11.373Z",
+      "advisorName": "Nguyễn Thị Thanh Thủy",
+      "requestStartedAt": "2026-11-21T12:34:11.256Z"
+    },
+    {
+      "advisorCode": "D251361486",
+      "consultations": 30,
+      "contracts": 6,
+      "updatedAt": "2026-11-21T12:34:13.473Z",
+      "advisorName": "Đinh Tiến Anh",
+      "requestStartedAt": "2026-11-21T12:34:13.355Z"
+    },
+    {
+      "advisorCode": "D251577011",
+      "consultations": 35,
+      "contracts": 7,
+      "updatedAt": "2026-11-21T12:34:16.412Z",
+      "advisorName": "Trần Nữ Minh Châu",
+      "requestStartedAt": "2026-11-21T12:34:16.289Z"
+    },
+    {
+      "advisorCode": "D1021A36Q6",
+      "consultations": 40,
+      "contracts": 8,
+      "updatedAt": "2026-11-21T12:34:18.688Z",
+      "advisorName": "Phan Thị Tuyết Vân",
+      "requestStartedAt": "2026-11-21T12:34:18.565Z"
+    },
+    {
+      "advisorCode": "D1021A3FES",
+      "consultations": 45,
+      "contracts": 9,
+      "updatedAt": "2026-11-21T12:34:21.679Z",
+      "advisorName": "Lê Thị Nhã Quyên",
+      "requestStartedAt": "2026-11-21T12:34:21.450Z"
+    },
+    {
+      "advisorCode": "D248663114",
+      "consultations": 50,
+      "contracts": 10,
+      "updatedAt": "2026-11-21T12:34:23.965Z",
+      "advisorName": "Nguyễn Cao Linh Uyên",
+      "requestStartedAt": "2026-11-21T12:34:23.722Z"
+    }
+  ],
+  "after": {
+    "users": 66,
+    "consultations": 2200,
+    "contracts": 449
+  }
+}

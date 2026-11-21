@@ -1,0 +1,61 @@
+{
+  "origin": "https://www.bandothunhap.com",
+  "startedAt": "2026-11-21T08:59:11.908Z",
+  "users": 100,
+  "elapsedSeconds": 12.0054192,
+  "scope": "100 simultaneous anonymous HTTP journeys: HTML, same-origin JS/CSS, anonymous session. No JS execution, rendering, login, dashboard data, images or sustained traffic. Assets fetched without a local browser cache. Timings include load-generator queuing.",
+  "assetsPerVisitor": 12,
+  "total": {
+    "requests": 1400,
+    "successful": 1400,
+    "failed": 0,
+    "p50ms": 787,
+    "p95ms": 8273,
+    "maxMs": 9612,
+    "statuses": {
+      "200": 1400
+    }
+  },
+  "stages": {
+    "html": {
+      "requests": 100,
+      "successful": 100,
+      "failed": 0,
+      "p50ms": 2747,
+      "p95ms": 4318,
+      "maxMs": 4470,
+      "statuses": {
+        "200": 100
+      }
+    },
+    "asset": {
+      "requests": 1200,
+      "successful": 1200,
+      "failed": 0,
+      "p50ms": 664,
+      "p95ms": 8294,
+      "maxMs": 9612,
+      "statuses": {
+        "200": 1200
+      }
+    },
+    "session": {
+      "requests": 100,
+      "successful": 100,
+      "failed": 0,
+      "p50ms": 176,
+      "p95ms": 8085,
+      "maxMs": 8176,
+      "statuses": {
+        "200": 100
+      }
+    }
+  },
+  "visitorJourney": {
+    "p50ms": 11259,
+    "p95ms": 11887,
+    "maxMs": 11955
+  },
+  "failures": [],
+  "decodedBytes": 165180400
+}

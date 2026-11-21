@@ -1,0 +1,91 @@
+{
+  "runId": "2026-11-21T12-03-47-975Z",
+  "before": {
+    "users": 1,
+    "consultations": 5,
+    "contracts": 10
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D248521233",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:03:48.235Z",
+      "advisorName": "Nguyễn Thị Thanh Hòa"
+    },
+    {
+      "advisorCode": "D248575595",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:03:48.454Z",
+      "advisorName": "Nguyễn Thị Trà My"
+    },
+    {
+      "advisorCode": "ADMIN",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:03:48.664Z",
+      "advisorName": "admin"
+    },
+    {
+      "advisorCode": "D102100763",
+      "consultations": 20,
+      "contracts": 4,
+      "updatedAt": "2026-11-21T12:03:48.820Z",
+      "advisorName": "Võ Thị Anh Thư"
+    },
+    {
+      "advisorCode": "D102101443",
+      "consultations": 25,
+      "contracts": 5,
+      "updatedAt": "2026-11-21T12:03:49.001Z",
+      "advisorName": "Nguyễn Thị Tuyết Nga"
+    },
+    {
+      "advisorCode": "D251468834",
+      "consultations": 30,
+      "contracts": 6,
+      "updatedAt": "2026-11-21T12:03:49.168Z",
+      "advisorName": "Ngô Quốc Lĩnh"
+    },
+    {
+      "advisorCode": "D1021A2XBK",
+      "consultations": 35,
+      "contracts": 7,
+      "updatedAt": "2026-11-21T12:03:49.351Z",
+      "advisorName": "Nguyễn Minh Châu"
+    },
+    {
+      "advisorCode": "D102143032",
+      "consultations": 40,
+      "contracts": 8,
+      "updatedAt": "2026-11-21T12:03:49.511Z",
+      "advisorName": "Lưu Thanh Sơn"
+    },
+    {
+      "advisorCode": "D102110511",
+      "consultations": 45,
+      "contracts": 9,
+      "updatedAt": "2026-11-21T12:03:49.711Z",
+      "advisorName": "Đỗ Thị Trần Khoan"
+    },
+    {
+      "advisorCode": "D1021A3FEQ",
+      "consultations": 50,
+      "contracts": 10,
+      "updatedAt": "2026-11-21T12:03:49.881Z",
+      "advisorName": "Đặng Quốc Hùng"
+    }
+  ],
+  "after": {
+    "users": 11,
+    "consultations": 280,
+    "contracts": 65
+  },
+  "verified": true
+}

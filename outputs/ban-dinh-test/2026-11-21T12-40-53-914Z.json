@@ -1,0 +1,100 @@
+{
+  "runId": "2026-11-21T12-40-53-914Z",
+  "before": {
+    "users": 86,
+    "consultations": 3250,
+    "contracts": 659
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D265665797",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:40:54.266Z",
+      "advisorName": "Võ Thị Mỹ Chung",
+      "requestStartedAt": "2026-11-21T12:40:53.916Z"
+    },
+    {
+      "advisorCode": "D251190008",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:40:56.317Z",
+      "advisorName": "Đặng Ngọc Huy",
+      "requestStartedAt": "2026-11-21T12:40:56.088Z"
+    },
+    {
+      "advisorCode": "D251479815",
+      "consultations": 15,
+      "contracts": 3,
+      "updatedAt": "2026-11-21T12:40:58.451Z",
+      "advisorName": "Nguyễn Xuân Quyền",
+      "requestStartedAt": "2026-11-21T12:40:58.153Z"
+    },
+    {
+      "advisorCode": "D248679542",
+      "consultations": 20,
+      "contracts": 4,
+      "updatedAt": "2026-11-21T12:41:00.897Z",
+      "advisorName": "Cao Thị Thanh Mai",
+      "requestStartedAt": "2026-11-21T12:41:00.750Z"
+    },
+    {
+      "advisorCode": "D251542857",
+      "consultations": 25,
+      "contracts": 5,
+      "updatedAt": "2026-11-21T12:41:03.627Z",
+      "advisorName": "Trần Thị Kim Thư",
+      "requestStartedAt": "2026-11-21T12:41:03.435Z"
+    },
+    {
+      "advisorCode": "D248513406",
+      "consultations": 30,
+      "contracts": 6,
+      "updatedAt": "2026-11-21T12:41:06.228Z",
+      "advisorName": "Đào Thị Thảo Nguyên",
+      "requestStartedAt": "2026-11-21T12:41:05.960Z"
+    },
+    {
+      "advisorCode": "D1021A3RST",
+      "consultations": 35,
+      "contracts": 7,
+      "updatedAt": "2026-11-21T12:41:08.266Z",
+      "advisorName": "Nguyễn Thùy Uyên",
+      "requestStartedAt": "2026-11-21T12:41:08.090Z"
+    },
+    {
+      "advisorCode": "D248638999",
+      "consultations": 40,
+      "contracts": 8,
+      "updatedAt": "2026-11-21T12:41:10.991Z",
+      "advisorName": "Trần Thị Hồng Chuyên",
+      "requestStartedAt": "2026-11-21T12:41:10.871Z"
+    },
+    {
+      "advisorCode": "D248662609",
+      "consultations": 45,
+      "contracts": 9,
+      "updatedAt": "2026-11-21T12:41:13.153Z",
+      "advisorName": "Trương Lê Cẩm Tú",
+      "requestStartedAt": "2026-11-21T12:41:13.019Z"
+    },
+    {
+      "advisorCode": "D1021A3NFQ",
+      "consultations": 50,
+      "contracts": 10,
+      "updatedAt": "2026-11-21T12:41:15.344Z",
+      "advisorName": "Vương Nữ Thục Oanh",
+      "requestStartedAt": "2026-11-21T12:41:15.230Z"
+    }
+  ],
+  "after": {
+    "users": 96,
+    "consultations": 3525,
+    "contracts": 714
+  }
+}

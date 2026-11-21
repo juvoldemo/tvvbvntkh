@@ -1,0 +1,17 @@
+﻿body .ban-dinh-page > header { display: grid; grid-template-columns: 28px minmax(0, 1fr) 28px; gap: 8px; }
+body .ban-dinh-page > header h1 { text-align: center; }
+body .ban-dinh-form-card label { display: grid; grid-template-columns: minmax(0, 1fr) 84px; align-items: center; gap: 16px; }
+body .ban-dinh-form-card label span { font-size: 14px; line-height: 1.5; }
+body .ban-dinh-form-card input { width: 84px; height: 44px; padding: 8px; text-align: center; border-radius: 10px; }
+body .ban-dinh-form-card input::-webkit-inner-spin-button, body .ban-dinh-form-card input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+body .ban-dinh-page .ban-dinh-form-card input[type=number] { appearance: textfield; -moz-appearance: textfield; text-align: center !important; text-align-last: center !important; text-indent: 0 !important; padding: 0 !important; line-height: 44px; }
+body .ban-dinh-form-card fieldset:disabled { opacity: 1; }
+body .ban-dinh-form-card input:disabled { background: #f4f8fc; color: #51677d; }
+body .ban-dinh-form-card button:disabled { cursor: default; }
+.ban-dinh-form-title { margin: 0 0 24px; color: #005987; font-size: 18px; font-weight: 700; line-height: 1.5; text-align: center; }
+.ban-dinh-form-subtitle { display: block; white-space: nowrap; font-size: clamp(12px, 3.5vw, 16px); }
+body .ban-dinh-page .ban-dinh-form-card input[type=number] { font-size: 22px !important; font-weight: 700 !important; }
+body .ban-dinh-page .ban-dinh-form-card { border: 1px solid #e8cf85; box-shadow: 0 0 0 1px rgb(246 220 147 / 18%), 0 0 18px rgb(227 181 63 / 14%); }
+body .ban-dinh-page .ban-dinh-form-card input[type=number] { border: 1px solid #cddccb; box-shadow: -2px 0 9px rgb(234 198 94 / 17%), 2px 0 9px rgb(77 174 203 / 16%); background: linear-gradient(120deg, #fffdf6, #f5fbff) !important; }
+body .ban-dinh-page .ban-dinh-form-title { white-space: nowrap; font-size: clamp(11px, 3.45vw, 16px) !important; }
+body .ban-dinh-page .ban-dinh-form-title, body .ban-dinh-page .ban-dinh-form-subtitle { font-size: clamp(13px, 4vw, 18px) !important; }

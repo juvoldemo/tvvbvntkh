@@ -3,13 +3,14 @@
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, Grid2X2, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
 import SkillsSurveyAdminPanel from "./SkillsSurveyAdminPanel";
+import CreationToolsPanel from "./CreationToolsPanel";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; siteHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes" | "skills_survey";
+type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes" | "skills_survey" | "invitations";
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -327,21 +328,6 @@ export default function AdminDataPage() {
     loadData();
   }
 
-  async function uploadList(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    setBusy(true);
-    setMessage("");
-    const response = await fetch("/api/admin/access-list", { method: "POST", body: new FormData(form) });
-    const payload = await response.json();
-    setBusy(false);
-    setMessage(response.ok ? `Đã cập nhật ${payload.count} người được phép truy cập.` : payload.error);
-    if (response.ok) {
-      form.reset();
-      await loadUsers();
-    }
-  }
-
   async function randomizeAccessPasswords() {
     setAccessError("");
     await fillAccessPasswords();
@@ -452,7 +438,7 @@ export default function AdminDataPage() {
   const visibleCompetitionPrograms = competitionStatusView === "ongoing" ? ongoingCompetitionPrograms : endedCompetitionPrograms;
 
   return (
-    <main className="admin-page">
+    <main className={`admin-page${activeTab === "access" ? " admin-access-page" : ""}`}>
       <header className="admin-header">
         <div><span>BVNT Khánh Hòa</span><h1>Quản trị dữ liệu</h1></div>
         <div className="admin-header-actions">
@@ -462,6 +448,9 @@ export default function AdminDataPage() {
         </div>
       </header>
       {message && <div className="admin-message">{message}</div>}
+      {activeTab === "home" && <button type="button" className="admin-survey-entry" onClick={() => setActiveTab("invitations")}>
+        <ImageIcon size={24} /><span><strong>Tạo thư</strong><small>Quản lý banner, mẫu thư và vị trí tên khách hàng</small></span><b aria-hidden="true">→</b>
+      </button>}
       {activeTab === "home" && <button type="button" className="admin-survey-entry" onClick={() => setActiveTab("skills_survey")}>
         <BarChart3 size={24} />
         <span><strong>Khảo sát kỹ năng</strong><small>Xem kết quả từng TVV, điểm kỹ năng và tổng điểm</small></span>
@@ -469,6 +458,7 @@ export default function AdminDataPage() {
       </button>}
 
       <nav className="admin-main-tabs" aria-label="Quản trị dữ liệu">
+        <button type="button" className={activeTab === "invitations" ? "active" : ""} onClick={() => setActiveTab("invitations")}><ImageIcon size={17} />Tạo thư</button>
         <button type="button" className={activeTab === "skills_survey" ? "active" : ""} onClick={() => setActiveTab("skills_survey")}><BarChart3 size={17} />Khảo sát kỹ năng</button>
         <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
         <button type="button" className={activeTab === "competitions" ? "active" : ""} onClick={() => { setActiveTab("competitions"); setAccessError(""); }}><Trophy size={17} />Chương trình thi đua</button>
@@ -483,17 +473,16 @@ export default function AdminDataPage() {
       </nav>
 
       <section className="admin-panel-area">
+        {activeTab === "invitations" && <CreationToolsPanel />}
         {activeTab === "skills_survey" && <SkillsSurveyAdminPanel />}
         {activeTab === "home" && <AdminHomeDashboard data={analyticsData} period={analyticsPeriod} setPeriod={setAnalyticsPeriod} onNavigate={setActiveTab} />}
-        {activeTab === "access" && <article className="admin-card">
-          <div className="admin-card-title"><Users /><div><h2>Danh sách được truy cập</h2><p>Upload Excel hoặc CSV; tài khoản mới có mật khẩu random gồm chữ hoa, chữ thường, số và ký tự đặc biệt.</p></div></div>
-          <form onSubmit={uploadList}>
-            <label className="admin-file"><Upload /><span>Chọn file dữ liệu TVV theo định dạng APM01</span><input name="file" type="file" accept=".xlsx,.xls,.csv" required /></label>
-            <button disabled={busy}>Upload danh sách</button>
-          </form>
+        {activeTab === "access" && <article className="admin-card admin-access-card">
+          <div className="admin-access-heading">
+          <div className="admin-card-title"><Users /><h2>Danh sách được truy cập</h2></div>
           <div className="admin-access-actions">
             <button type="button" className="admin-secondary" disabled={busy || passwordsLoading || accessLoading || users.length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu cho tài khoản chưa tạo</button>
             <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
+          </div>
           </div>
           <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
           {accessError && <div className="admin-message error">{accessError} <button type="button" disabled={accessLoading} onClick={() => void loadUsers()}>Thử lại</button></div>}
@@ -530,6 +519,7 @@ export default function AdminDataPage() {
         </article>}
 
         {activeTab === "events" && <article className="admin-card">
+          <button type="button" className="admin-secondary" onClick={() => setActiveTab("invitations")}><ImageIcon size={18} />Tạo thư</button>
           <div className="admin-card-title"><CalendarPlus /><div><h2>Tạo thông báo</h2><p>Bỏ trống thời gian để gửi ngay, hoặc chọn thời gian để hẹn lịch gửi.</p></div></div>
           <form className="admin-event-form" onSubmit={createEvent}>
             <label>Tiêu đề<input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={120} /></label>
@@ -695,6 +685,7 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
     { label: "Tổng thời gian truy cập", value: formatAdminDuration(summary.totalSeconds), icon: Clock3 }
   ];
   const shortcuts: Array<{ tab: AdminTab; label: string; icon: typeof Bell }> = [
+    { tab: "invitations", label: "Tạo thư", icon: ImageIcon },
     { tab: "events", label: "Thông báo", icon: Bell }, { tab: "competitions", label: "Thi đua", icon: Trophy },
     { tab: "data", label: "Dữ liệu", icon: BarChart3 }, { tab: "targets", label: "Mục tiêu", icon: Target },
     { tab: "activities", label: "Hoạt động", icon: CheckCircle2 }, { tab: "archive", label: "Tài liệu", icon: BookOpen },

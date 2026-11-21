@@ -1,0 +1,11 @@
+import {chromium} from 'playwright';import assert from 'node:assert/strict';import {mkdir} from 'node:fs/promises';
+const browser=await chromium.launch({headless:true});try{const page=await browser.newPage({viewport:{width:375,height:812}});let entry=null;let writes=0;let round='rounds/one';
+await page.route('**/api/**',async route=>{const path=new URL(route.request().url()).pathname;const session={running:true,startedAt:'2026-11-21T12:00:00Z',endedAt:null,reportPrefix:round};if(path==='/api/ban-dinh-session')return route.fulfill({json:{session}});if(path==='/api/ban-dinh'){if(route.request().method()==='PUT'){writes++;entry={...route.request().postDataJSON(),updatedAt:new Date().toISOString()};}return route.fulfill({json:{entry,session}});}return route.fulfill({json:{authenticated:true}});});
+await page.goto('http://localhost:3000/ban-dinh-3');const c=page.getByLabel('Số cuộc tư vấn cá nhân',{exact:true}),h=page.getByLabel('Số hợp đồng khai thác mới',{exact:true});await c.fill('5');await h.fill('2');
+const cb=await c.boundingBox(),lb=await page.locator('label').first().boundingBox();assert.ok(cb.x>lb.x+lb.width/2);
+const title=await page.getByRole('heading',{name:'Bán đỉnh 3.0'}).boundingBox();const header=await page.locator('.ban-dinh-page > header').boundingBox();console.log({title,header});assert.ok(Math.abs(title.x+title.width/2-header.x-header.width/2)<2);
+await page.getByRole('button',{name:'Xác nhận',exact:true}).click();const thanks=page.getByRole('button',{name:'Cảm ơn bạn !',exact:true});await thanks.waitFor();assert.ok(await thanks.isDisabled());assert.ok(await c.isDisabled());assert.equal(writes,1);assert.equal(await page.getByText('Cập nhật:',{exact:false}).count(),0);
+await page.reload();await thanks.waitFor();assert.ok(await thanks.isDisabled());assert.equal(await c.inputValue(),'5');
+await mkdir('outputs/ban-dinh-ui',{recursive:true});await page.screenshot({path:'outputs/ban-dinh-ui/confirmed-form-375.png',fullPage:true});
+entry=null;round='rounds/two';await page.getByRole('button',{name:'Xác nhận',exact:true}).waitFor();assert.equal(await c.inputValue(),'');assert.equal(await c.isEnabled(),true);
+console.log('PASS: centered title, inline inputs, one confirmation, locked on reload, no timestamp, reset unlocks next round. Mock API only.');}finally{await browser.close();}

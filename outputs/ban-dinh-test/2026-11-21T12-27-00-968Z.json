@@ -1,0 +1,34 @@
+{
+  "runId": "2026-11-21T12-27-00-968Z",
+  "before": {
+    "users": 11,
+    "consultations": 280,
+    "contracts": 65
+  },
+  "originalSession": {
+    "running": true,
+    "startedAt": "2026-11-21T12:03:27.990Z",
+    "endedAt": null
+  },
+  "entries": [
+    {
+      "advisorCode": "D267639233",
+      "consultations": 5,
+      "contracts": 1,
+      "updatedAt": "2026-11-21T12:27:01.263Z",
+      "advisorName": "Nguyễn Quốc Kiệt"
+    },
+    {
+      "advisorCode": "D248622978",
+      "consultations": 10,
+      "contracts": 2,
+      "updatedAt": "2026-11-21T12:27:01.463Z",
+      "advisorName": "Hồ Ngọc Minh"
+    }
+  ],
+  "after": {
+    "users": 13,
+    "consultations": 295,
+    "contracts": 68
+  }
+}

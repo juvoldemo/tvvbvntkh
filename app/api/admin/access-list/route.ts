@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fillMissingPasswords } from "@/lib/access-list-passwords";
-import * as XLSX from "xlsx";
-import { parseAccessListDate } from "@/lib/access-list-dates";
-import { ADO_ACCOUNT_SEEDS, MANAGEMENT_ACCOUNT_SEEDS } from "@/lib/ado-scope";
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
-import { normalizeAdvisorCode, randomStrongPassword, revealVisiblePassword, visiblePasswordRecord } from "@/lib/user-auth";
+import { revealVisiblePassword } from "@/lib/user-auth";
 
 const accessListFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,password_plain,is_active,created_at";
 const accessListFallbackFields = "id,advisor_code,full_name,group_name,start_date,advisor_status,advisor_position,position_effective_date,birth_day,birth_month,password_hash,is_active,created_at";
@@ -14,41 +11,6 @@ const canAccess = (request: NextRequest) => isAdminRequest(request);
 
 function missingPasswordPlainColumn(error: unknown) {
   return Boolean(error && typeof error === "object" && "message" in error && String((error as { message?: string }).message || "").includes("password_plain"));
-}
-
-function normalizeHeader(value: string) {
-  return value
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\u0111/g, "d")
-    .replace(/\u0110/g, "D")
-    .toLowerCase();
-}
-
-function text(row: Record<string, unknown>, names: string[]) {
-  const normalizedNames = names.map(normalizeHeader);
-  const key = Object.keys(row).find((item) => normalizedNames.includes(normalizeHeader(item)));
-  return key ? String(row[key] ?? "").trim() : "";
-}
-
-function dateValue(row: Record<string, unknown>, names: string[]) {
-  const normalizedNames = names.map(normalizeHeader);
-  const key = Object.keys(row).find((item) => normalizedNames.includes(normalizeHeader(item)));
-  return key ? parseAccessListDate(row[key]) : null;
-}
-
-function scoreUserRow(row: Record<string, unknown>) {
-  return [
-    row.full_name,
-    row.group_name,
-    row.start_date,
-    row.advisor_status,
-    row.advisor_position,
-    row.position_effective_date,
-    row.birth_day,
-    row.birth_month
-  ].reduce((score: number, value: unknown) => score + (value ? 1 : 0), 0);
 }
 
 export async function GET(request: NextRequest) {
@@ -81,104 +43,6 @@ export async function GET(request: NextRequest) {
   }
   const publicUsers = users.map(({ password_hash, ...user }) => user);
   return NextResponse.json({ users: publicUsers }, { headers: { "Cache-Control": "no-store" } });
-}
-
-export async function POST(request: NextRequest) {
-  if (!canAccess(request)) return NextResponse.json({ error: "Chưa xác thực quyền xem danh sách truy cập." }, { status: 401 });
-  const formData = await request.formData();
-  const file = formData.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ error: "Vui lòng chọn file Excel hoặc CSV." }, { status: 400 });
-
-  try {
-    const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-    const users = rows.map((row) => ({
-      advisor_code: normalizeAdvisorCode(text(row, ["ma tvv", "advisor_code", "code"])),
-      full_name: text(row, ["ten tvv", "full_name", "name"]),
-      group_name: text(row, ["nhom", "group_name", "group"]) || null,
-      start_date: dateValue(row, ["ngay bat dau lam viec"]),
-      advisor_status: text(row, ["trang thai tvv"]) || null,
-      advisor_position: text(row, ["chuc vu tvv"]) || null,
-      position_effective_date: dateValue(row, ["ngay hieu luc chuc vu"]),
-      birth_day: Number(text(row, ["ngay sinh ( ngay )", "ngay sinh (ngay)"])) || null,
-      birth_month: Number(text(row, ["ngay sinh ( thang )", "ngay sinh (thang)"])) || null,
-      is_active: true
-    })).filter((row) =>
-      row.advisor_code &&
-      row.full_name &&
-      String(row.advisor_status || "").trim().toUpperCase() !== "PA"
-    );
-    const uniqueUsers = [...users.reduce((map, row) => {
-      const current = map.get(row.advisor_code);
-      if (!current || scoreUserRow(row) >= scoreUserRow(current)) map.set(row.advisor_code, row);
-      return map;
-    }, new Map<string, typeof users[number]>()).values()];
-    if (!uniqueUsers.length) {
-      return NextResponse.json({ error: "Không tìm thấy dữ liệu. File cần có cột “Mã TVV” và “Tên TVV”." }, { status: 422 });
-    }
-
-    const supabase = getSupabaseAdmin();
-    let { data: existing, error: existingError } = await supabase.from("authorized_users").select("advisor_code,password_hash,password_plain");
-    let hasPasswordPlainColumn = true;
-    if (existingError && missingPasswordPlainColumn(existingError)) {
-      const fallback = await supabase.from("authorized_users").select("advisor_code,password_hash");
-      existing = fallback.data?.map((item) => ({ ...item, password_plain: revealVisiblePassword(String(item.password_hash || "")) || null })) ?? [];
-      existingError = fallback.error;
-      hasPasswordPlainColumn = false;
-    }
-    if (existingError) throw existingError;
-    const passwords = new Map((existing ?? []).map((item) => [item.advisor_code, { hash: item.password_hash, plain: item.password_plain }]));
-    const adoCodes = new Set(ADO_ACCOUNT_SEEDS.map((seed) => normalizeAdvisorCode(seed.advisor_code)));
-    // ADO accounts are application management accounts and are not guaranteed to
-    // be present in the TVV access-list workbook. Keep them active whenever that
-    // workbook is re-imported; otherwise the blanket disable below hides them and
-    // prevents them from signing in.
-    const importedUsers = new Map(uniqueUsers.map((user) => [user.advisor_code, user]));
-    for (const seed of MANAGEMENT_ACCOUNT_SEEDS) {
-      const advisorCode = normalizeAdvisorCode(seed.advisor_code);
-      const imported = importedUsers.get(advisorCode);
-      importedUsers.set(advisorCode, {
-        advisor_code: advisorCode,
-        full_name: seed.full_name,
-        group_name: seed.group_name,
-        start_date: imported?.start_date ?? null,
-        advisor_status: imported?.advisor_status ?? null,
-        advisor_position: seed.advisor_position,
-        position_effective_date: imported?.position_effective_date ?? null,
-        birth_day: imported?.birth_day ?? null,
-        birth_month: imported?.birth_month ?? null,
-        is_active: true
-      });
-    }
-    const usersToUpsert = [...importedUsers.values()];
-    const usersWithPasswords = usersToUpsert.map((user) => {
-      if (adoCodes.has(user.advisor_code)) {
-        return {
-          ...user,
-          password_hash: visiblePasswordRecord("0000"),
-          ...(hasPasswordPlainColumn ? { password_plain: "0000" } : {}),
-          updated_at: new Date().toISOString()
-        };
-      }
-      const current = passwords.get(user.advisor_code);
-      if (current?.hash) {
-        const preservedFields = hasPasswordPlainColumn
-          ? { password_hash: current.hash, password_plain: current.plain ?? null }
-          : { password_hash: current.hash };
-        return { ...user, ...preservedFields, updated_at: new Date().toISOString() };
-      }
-      const plainPassword = current?.plain || randomStrongPassword();
-      const passwordFields = hasPasswordPlainColumn
-        ? { password_hash: visiblePasswordRecord(plainPassword), password_plain: plainPassword }
-        : { password_hash: visiblePasswordRecord(plainPassword) };
-      return { ...user, ...passwordFields, updated_at: new Date().toISOString() };
-    });
-    const { error } = await supabase.from("authorized_users").upsert(usersWithPasswords, { onConflict: "advisor_code" });
-    if (error) throw error;
-    return NextResponse.json({ ok: true, count: usersToUpsert.length });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Không đọc được file." }, { status: 500 });
-  }
 }
 
 export async function PUT(request: NextRequest) {

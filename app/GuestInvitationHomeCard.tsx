@@ -1,30 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
-import { NOVEMBER_16_INVITATION_IMAGE_PATH, drawNovember16Invitation, canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
+import { canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { normalizeGuestName, slugifyGuestName, validateGuestName } from "@/lib/invitation-validation";
 
-const NOVEMBER_16_TEMPLATE = {
-  banner: "/invitations/Banner 1611.png",
-  image: NOVEMBER_16_INVITATION_IMAGE_PATH,
-  draw: drawNovember16Invitation,
-  title: "Hội nghị khách hàng đáo hạn 16/11/2026",
-  color: "#17448F" as const,
-  width: 2172,
-  height: 724
-};
-const TEMPLATES = {
-  november16: NOVEMBER_16_TEMPLATE,
-  november14: NOVEMBER_16_TEMPLATE,
-  november4: NOVEMBER_16_TEMPLATE,
-  october23: NOVEMBER_16_TEMPLATE,
-  cr16: NOVEMBER_16_TEMPLATE,
-  galina: NOVEMBER_16_TEMPLATE,
-  cr: NOVEMBER_16_TEMPLATE,
-  september19: NOVEMBER_16_TEMPLATE
-};
+import { InvitationSettings, validateInvitationSettings } from "@/lib/invitation-settings";
+import { drawConfiguredInvitation } from "@/lib/invitation-renderer";
+
 const SALUTATIONS = ["Anh", "Chị", "Em", "Cô", "Chú", "Không"] as const;
 const TEXT_COLORS = [
   { label: "Xanh", value: "#17448F" },
@@ -40,8 +23,8 @@ function outputName(displayName: string) {
   return `thu-moi-${slugifyGuestName(displayName)}-${stamp}.png`;
 }
 
-export default function GuestInvitationHomeCard({ template = "november16" }: { template?: keyof typeof TEMPLATES }) {
-  const config = TEMPLATES[template];
+export default function GuestInvitationHomeCard() {
+  const [config, setConfig] = useState<InvitationSettings | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -49,7 +32,7 @@ export default function GuestInvitationHomeCard({ template = "november16" }: { t
   const [guestName, setGuestName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [textColor, setTextColor] = useState<(typeof TEXT_COLORS)[number]["value"]>(config.color);
+  const [textColor, setTextColor] = useState<string>("#17448F");
   const [nameSize, setNameSize] = useState(100);
   const [imageReady, setImageReady] = useState(false);
   const [message, setMessage] = useState("");
@@ -62,7 +45,27 @@ export default function GuestInvitationHomeCard({ template = "november16" }: { t
   const valid = Boolean(!validateGuestName(guestName) && imageReady);
 
   useEffect(() => {
-    if (!open) return;
+    let active = true;
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/invitation-settings", { cache: "no-store" });
+        const value: unknown = await response.json();
+        if (active && response.ok && validateInvitationSettings(value)) {
+          setConfig(current => JSON.stringify(current) === JSON.stringify(value) ? current : value);
+          if (!value.visible) setOpen(false);
+        }
+      } catch { /* Keep the last loaded configuration during temporary network errors. */ }
+    };
+    void refresh();
+    const timer = window.setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, []);
+
+  useEffect(() => { if (config) setTextColor(config.text.color); }, [config]);
+
+  useEffect(() => {
+    if (!open || !config) return;
     setImageReady(false);
     imageRef.current = null;
     const image = new window.Image();
@@ -73,8 +76,8 @@ export default function GuestInvitationHomeCard({ template = "november16" }: { t
   }, [open, config]);
 
   useEffect(() => {
-    if (!open || !imageReady || !canvasRef.current || !imageRef.current) return;
-    void config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor, nameSize / 100).catch(() => setMessage("Không thể tạo bản xem trước."));
+    if (!config || !open || !imageReady || !canvasRef.current || !imageRef.current) return;
+    void drawConfiguredInvitation(canvasRef.current, imageRef.current, displayName, config, textColor, nameSize / 100).catch(() => setMessage("Không thể tạo bản xem trước."));
   }, [displayName, imageReady, open, textColor, nameSize, config]);
 
   useEffect(() => {
@@ -85,14 +88,14 @@ export default function GuestInvitationHomeCard({ template = "november16" }: { t
   }, [open]);
 
   async function createFile() {
-    if (!valid || !canvasRef.current || !imageRef.current) throw new Error("Thông tin chưa hợp lệ.");
-    await config.draw(canvasRef.current, imageRef.current, displayName, 1, textColor, nameSize / 100);
+    if (!config || !valid || !canvasRef.current || !imageRef.current) throw new Error("Thông tin chưa hợp lệ.");
+    await drawConfiguredInvitation(canvasRef.current, imageRef.current, displayName, config, textColor, nameSize / 100);
     const blob = await canvasToBlob(canvasRef.current);
     return new File([blob], outputName(displayName), { type: "image/png" });
   }
 
   function trackCreated() {
-    window.postMessage({ type: "bvnt-analytics", eventName: "invitation_created", content: config.title }, window.location.origin);
+    window.postMessage({ type: "bvnt-analytics", eventName: "invitation_created", content: config?.title }, window.location.origin);
   }
 
   async function download() {
@@ -127,9 +130,11 @@ export default function GuestInvitationHomeCard({ template = "november16" }: { t
     } finally { setSharing(false); }
   }
 
+  if (!config?.visible) return null;
+
   return <>
-    <button className="tvv-card hnkh-home-card" style={{ aspectRatio: `${config.width} / ${config.height}` }} type="button" onClick={() => setOpen(true)} aria-label={`Mở công cụ tạo thư mời ${config.title}`}>
-      <Image src={config.banner} alt={`Thư mời ${config.title}`} width={config.width} height={config.height} />
+    <button className="tvv-card hnkh-home-card" style={{ aspectRatio: "auto" }} type="button" onClick={() => setOpen(true)} aria-label={`Mở công cụ tạo thư mời ${config.title}`}>
+      <img src={config.banner} alt={`Thư mời ${config.title}`} style={{ display: "block", width: "100%", height: "auto" }} />
     </button>
     {open && <div className="hnkh-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
       <section className="hnkh-modal" role="dialog" aria-modal="true" aria-label="Tạo thư mời có tên khách hàng">
