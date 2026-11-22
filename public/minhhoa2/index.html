@@ -9,7 +9,7 @@
     <meta property="og:description" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:title" content="Minh họa quyền lợi bảo hiểm" />
     <meta name="twitter:description" content="Minh họa quyền lợi bảo hiểm" />
-    <link rel="stylesheet" href="styles.css?v=20260924-education-maturity-grid" />
+    <link rel="stylesheet" href="styles.css?v=20261122-wrap-person-names" />
     <script>
       if (new URLSearchParams(window.location.search).get("embedded") === "1") {
         document.documentElement.classList.add("embedded");
@@ -70,7 +70,7 @@
             <div id="insuredPersonFields" class="fields person-fields active">
               <label class="field-row icon-user">
                 <span>Họ và tên NĐBH</span>
-                <input id="fullName" name="fullName" type="text" required value="Nguyễn Hoàng Vũ" placeholder="Nguyễn Hoàng Vũ" />
+                <textarea id="fullName" name="fullName" required  placeholder="Nguyễn Hoàng Vũ"  rows="1" class="person-name-input">Nguyễn Hoàng Vũ</textarea>
               </label>
 
               <label class="field-row icon-calendar">
@@ -123,7 +123,7 @@
             <div id="policyOwnerFields" class="fields person-fields" hidden>
               <label class="field-row icon-user">
                 <span>Họ và tên BMBH</span>
-                <input id="policyOwnerName" name="policyOwnerName" type="text" value="Lê Thị Hòa" placeholder="Lê Thị Hòa" />
+                <textarea id="policyOwnerName" name="policyOwnerName"  placeholder="Lê Thị Hòa"  rows="1" class="person-name-input">Lê Thị Hòa</textarea>
               </label>
 
               <label class="field-row icon-calendar">

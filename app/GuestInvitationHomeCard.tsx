@@ -1,4 +1,5 @@
 "use client";
+import { fetchOverviewSettings } from "@/lib/overview-assets";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, LoaderCircle, Share2, X } from "lucide-react";
@@ -48,7 +49,7 @@ export default function GuestInvitationHomeCard() {
     let active = true;
     const refresh = async () => {
       try {
-        const response = await fetch("/api/invitation-settings", { cache: "no-store" });
+        const response = await fetchOverviewSettings("/api/invitation-settings");
         const value: unknown = await response.json();
         if (active && response.ok && validateInvitationSettings(value)) {
           setConfig(current => JSON.stringify(current) === JSON.stringify(value) ? current : value);

@@ -2,7 +2,7 @@ import type { ImageSegmenter } from "@mediapipe/tasks-vision";
 
 let segmenterPromise: Promise<ImageSegmenter> | undefined;
 const pending = new Map<string, Promise<Blob>>();
-const cacheName = "tvv-avatar-cutout-v1";
+const cacheName = "tvv-avatar-cutout-v2";
 
 // A small, GPU-independent fallback for studio portraits with a white backdrop.
 // Only white pixels connected to the image edges are removed, keeping enclosed
@@ -11,7 +11,7 @@ export async function getAvatarWhiteCutout(src: string): Promise<Blob> {
   const image = new Image();
   image.crossOrigin = "anonymous";
   image.src = src;
-  await image.decode();
+  await Promise.race([image.decode(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Portrait image timed out")), 15000))]);
   const canvas = document.createElement("canvas");
   const scale = Math.min(1, 768 / Math.max(image.naturalWidth, image.naturalHeight));
   canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -75,7 +75,7 @@ async function createCutout(src: string): Promise<Blob> {
   const image = new Image();
   image.crossOrigin = "anonymous";
   image.src = src;
-  await image.decode();
+  await Promise.race([image.decode(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Portrait image timed out")), 15000))]);
   const segmenter = await getSegmenter();
   const canvas = document.createElement("canvas");
   const scale = Math.min(1, 768 / Math.max(image.naturalWidth, image.naturalHeight));

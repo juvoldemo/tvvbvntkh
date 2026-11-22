@@ -13,7 +13,8 @@ async function currentAvatar(code: string) {
   const sourceUrl = originalPath
     ? supabase.storage.from(ADVISOR_IMAGE_BUCKET).getPublicUrl(originalPath).data.publicUrl
     : String(data?.image_url ?? "");
-  const name = createHash("sha256").update(sourceUrl).digest("hex") + ".png";
+  // Invalidate old outputs that may still contain the original background.
+  const name = "v2-" + createHash("sha256").update(sourceUrl).digest("hex") + ".png";
   const folder = `${code}/cutouts`;
   return { supabase, sourceUrl, name, folder, path: `${folder}/${name}` };
 }

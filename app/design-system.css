@@ -421,9 +421,10 @@ body .tvv-app.ado-app .team-dashboard-toolbar .tvv-month-trigger span {
 }
 
 body .tvv-app.ado-app .ado-command-card {
-  min-height: 132px !important;
-  margin-top: 20px !important;
-  padding: 22px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  padding: 8px 16px !important;
   border: 0 !important;
   border-radius: 22px !important;
   background: linear-gradient(135deg, #064f7b 0%, #087f8f 100%) !important;
@@ -433,41 +434,41 @@ body .tvv-app.ado-app .ado-command-card {
 
 body .tvv-app.ado-app .ado-command-card span {
   color: rgba(255,255,255,.82) !important;
-  font-size: 11px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
-  line-height: 16px !important;
+  line-height: 12px !important;
 }
 
 body .tvv-app.ado-app .ado-command-card strong {
   color: #fff !important;
-  font-size: 30px !important;
+  font-size: 20px !important;
   font-weight: 750 !important;
   line-height: 1.2 !important;
 }
 
 body .tvv-app.ado-app .ado-command-card small {
   color: rgba(255,255,255,.9) !important;
-  font-size: 12px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
-  line-height: 18px !important;
+  line-height: 14px !important;
 }
 
 body .tvv-app.ado-app .ado-target-ring {
-  width: 78px !important;
-  height: 78px !important;
-  flex-basis: 78px !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex-basis: 42px !important;
 }
 
 body .tvv-app.ado-app .ado-target-ring b {
   color: #fff !important;
-  font-size: 18px !important;
-  line-height: 22px !important;
+  font-size: 13px !important;
+  line-height: 16px !important;
 }
 
 body .tvv-app.ado-app .ado-target-ring span {
   color: rgba(255,255,255,.86) !important;
-  font-size: 10px !important;
-  line-height: 13px !important;
+  font-size: 7px !important;
+  line-height: 10px !important;
 }
 
 body .tvv-app.ado-app .ado-quick-grid {
@@ -829,6 +830,30 @@ body .tvv-app.ado-app .ado-primary-button {
   font-weight: 700 !important;
 }
 
+body .tvv-app.ado-app .ado-accounts-page .ado-group-chips {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr)) !important;
+  grid-auto-rows: 1fr;
+  overflow: visible !important;
+  max-height: none !important;
+  gap: 6px !important;
+  padding: 2px 0 !important;
+}
+
+body .tvv-app.ado-app .ado-accounts-page .ado-group-chips > button {
+  min-height: 28px !important;
+  padding: 4px 6px !important;
+  font-size: 10px !important;
+  line-height: 14px !important;
+  flex: 1 1 100px !important;
+  min-width: 0 !important;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  white-space: normal !important;
+  text-align: center;
+}
+
 body .tvv-app.ado-app .ado-group-chips {
   gap: 8px !important;
   padding: 2px 0 6px !important;
@@ -855,12 +880,12 @@ body .tvv-app.ado-app .ado-group-chips > button.active {
 
 body .tvv-app.ado-app .ado-account-list {
   grid-template-columns: minmax(0, 1fr) !important;
-  gap: 12px !important;
+  gap: 8px !important;
 }
 
 body .tvv-app.ado-app .ado-account-list > article {
-  gap: 14px !important;
-  padding: 16px !important;
+  gap: 8px !important;
+  padding: 12px !important;
   border: 1px solid var(--ado-line) !important;
   border-radius: 17px !important;
   background: #fff !important;
@@ -869,33 +894,37 @@ body .tvv-app.ado-app .ado-account-list > article {
 
 body .tvv-app.ado-app .ado-account-person > img,
 body .tvv-app.ado-app .ado-account-person > span {
-  width: 48px !important;
-  height: 48px !important;
-  flex-basis: 48px !important;
+  width: 36px !important;
+  height: 36px !important;
+  flex-basis: 36px !important;
   border-radius: 14px !important;
 }
 
 body .tvv-app.ado-app .ado-account-person strong {
   color: var(--ado-ink) !important;
-  font-size: 15px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
-  line-height: 20px !important;
+  line-height: 18px !important;
 }
 
 body .tvv-app.ado-app .ado-account-person small {
   color: var(--ado-muted) !important;
-  font-size: 12px !important;
-  line-height: 17px !important;
+  font-size: 11px !important;
+  line-height: 15px !important;
 }
 
 body .tvv-app.ado-app .ado-account-list dl {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 10px !important;
+  gap: 8px !important;
+}
+body .tvv-app.ado-app .ado-accounts-page .ado-account-list dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
 
 body .tvv-app.ado-app .ado-account-list dl > div {
-  min-height: 70px !important;
-  padding: 11px 12px !important;
+  min-height: 0 !important;
+  padding: 6px 9px !important;
+  position: relative;
   border-radius: 12px !important;
   background: var(--ado-soft) !important;
 }
@@ -908,14 +937,22 @@ body .tvv-app.ado-app .ado-account-list dt {
 }
 
 body .tvv-app.ado-app .ado-account-list dd {
-  margin-top: 5px !important;
+  margin-top: 2px !important;
   color: var(--ado-ink) !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   line-height: 18px !important;
 }
+body .tvv-app.ado-app .ado-account-list .ado-copy-field:last-child dd {
+  padding-right: 36px;
+  min-height: 0;
+}
 
 body .tvv-app.ado-app .ado-account-list dd > button {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%) !important;
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
@@ -929,7 +966,7 @@ body .tvv-app.ado-app .ado-account-list dd > button {
 }
 
 body .tvv-app.ado-app .ado-copy-button {
-  min-height: 44px !important;
+  min-height: 34px !important;
   padding: 0 14px !important;
   border: 1px solid #bcd4df !important;
   border-radius: 11px !important;

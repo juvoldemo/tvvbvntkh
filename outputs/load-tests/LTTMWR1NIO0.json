@@ -1,0 +1,1847 @@
+{
+  "runId": "LTTMWR1NIO0",
+  "origin": "https://www.bandothunhap.com",
+  "users": 100,
+  "scope": "100 distinct real authenticated HTTP sessions; simultaneous login; two sequential-per-user rounds of browser-discovered GET endpoints and reward calculation POSTs, with per-user identity. One real browser pilots five advisor main navigation tabs, leaderboard, archive and profile. Not 100 concurrent rendering browsers; no business-data writes; synthetic accounts have no revenue records; excludes management-only tabs and unvisited secondary tools. Browser step durations include fixed observation waits and are not latency measurements.",
+  "browserTabs": [
+    {
+      "label": "Tổng quan",
+      "active": "Tổng quan",
+      "ms": 2555,
+      "bodyCharacters": 339
+    },
+    {
+      "label": "Hợp đồng",
+      "active": "Hợp đồng",
+      "ms": 2557,
+      "bodyCharacters": 231
+    },
+    {
+      "label": "Thu nhập",
+      "active": "Thu nhập",
+      "ms": 2564,
+      "bodyCharacters": 687
+    },
+    {
+      "label": "Thi đua",
+      "active": "Thi đua",
+      "ms": 2547,
+      "bodyCharacters": 426
+    },
+    {
+      "label": "Minh hoạ",
+      "active": "Minh hoạ",
+      "ms": 2548,
+      "bodyCharacters": 53
+    },
+    {
+      "label": ".tvv-leaderboard-preview",
+      "bodyCharacters": 668
+    },
+    {
+      "label": ".tvv-archive-preview",
+      "bodyCharacters": 164
+    },
+    {
+      "label": ".tvv-avatar-button",
+      "bodyCharacters": 336
+    }
+  ],
+  "browserErrors": [],
+  "calculationVariants": 2,
+  "endpoints": [
+    "/api/user/auth",
+    "/api/events",
+    "/api/user/profile",
+    "/api/tvv-leaderboard?month=2026-11&advisorCode=LTTMWR1NIO0_0",
+    "/api/invitation-settings",
+    "/api/ban-dinh-settings",
+    "/api/class-votes",
+    "/api/tvv-target-registration?month=2026-11",
+    "/api/target-registration-cycle",
+    "/api/dashboard?month=2026-11&view=initial",
+    "/api/dashboard?month=2026-11",
+    "/api/archive/content"
+  ],
+  "total": {
+    "requests": 2900,
+    "failed": 200,
+    "p50ms": 490,
+    "p95ms": 4654,
+    "maxMs": 13364
+  },
+  "stages": {
+    "login": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 5842,
+      "p95ms": 10301,
+      "maxMs": 10708
+    },
+    "session": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 923,
+      "p95ms": 5633,
+      "maxMs": 13364
+    },
+    "round1:/api/events": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 292,
+      "p95ms": 4806,
+      "maxMs": 6825
+    },
+    "round1:/api/user/profile": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 540,
+      "p95ms": 1355,
+      "maxMs": 6971
+    },
+    "round1:/api/tvv-leaderboard": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 319,
+      "p95ms": 826,
+      "maxMs": 11765
+    },
+    "round1:/api/invitation-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 131,
+      "p95ms": 239,
+      "maxMs": 490
+    },
+    "round1:/api/ban-dinh-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 374,
+      "p95ms": 1318,
+      "maxMs": 6139
+    },
+    "round1:/api/class-votes": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 1207,
+      "p95ms": 5851,
+      "maxMs": 7739
+    },
+    "round1:/api/tvv-target-registration": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 416,
+      "p95ms": 849,
+      "maxMs": 6234
+    },
+    "round1:/api/target-registration-cycle": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 169,
+      "p95ms": 373,
+      "maxMs": 530
+    },
+    "round1:/api/dashboard": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 1260,
+      "p95ms": 6160,
+      "maxMs": 7163
+    },
+    "round1:/api/archive/content": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 1525,
+      "p95ms": 1820,
+      "maxMs": 6413
+    },
+    "round1:reward-estimate": {
+      "requests": 200,
+      "failed": 100,
+      "p50ms": 852,
+      "p95ms": 1671,
+      "maxMs": 4578
+    },
+    "round2:/api/events": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 90,
+      "p95ms": 3472,
+      "maxMs": 7083
+    },
+    "round2:/api/user/profile": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 436,
+      "p95ms": 4692,
+      "maxMs": 7498
+    },
+    "round2:/api/tvv-leaderboard": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 334,
+      "p95ms": 958,
+      "maxMs": 7332
+    },
+    "round2:/api/invitation-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 128,
+      "p95ms": 288,
+      "maxMs": 308
+    },
+    "round2:/api/ban-dinh-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 335,
+      "p95ms": 768,
+      "maxMs": 982
+    },
+    "round2:/api/class-votes": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 960,
+      "p95ms": 1971,
+      "maxMs": 2259
+    },
+    "round2:/api/tvv-target-registration": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 353,
+      "p95ms": 811,
+      "maxMs": 1060
+    },
+    "round2:/api/target-registration-cycle": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 142,
+      "p95ms": 247,
+      "maxMs": 356
+    },
+    "round2:/api/dashboard": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 153,
+      "p95ms": 279,
+      "maxMs": 330
+    },
+    "round2:/api/archive/content": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 1373,
+      "p95ms": 1714,
+      "maxMs": 1864
+    },
+    "round2:reward-estimate": {
+      "requests": 200,
+      "failed": 100,
+      "p50ms": 702,
+      "p95ms": 1681,
+      "maxMs": 1999
+    }
+  },
+  "failures": [
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 603,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 709,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 676,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 503,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 526,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 653,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 667,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 523,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 626,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 631,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 540,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 559,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 614,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 635,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 596,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 844,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 854,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 765,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 751,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 818,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 733,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 943,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 951,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 970,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 882,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 852,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 688,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 853,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 888,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 825,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 978,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 780,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 798,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 818,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 777,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 940,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 806,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 830,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 735,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 771,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 4474,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 4578,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 716,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 725,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 740,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 729,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 809,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 821,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 3513,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 907,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1012,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 956,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 965,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1066,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 967,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 933,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 923,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 709,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 732,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 768,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 783,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1606,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 671,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1614,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 708,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 705,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 761,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 764,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 786,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 833,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 870,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 845,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 991,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 874,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 904,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 632,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 686,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 565,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 546,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 576,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 475,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 568,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 434,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 355,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 353,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 366,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 265,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 239,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 255,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 320,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 314,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 419,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 304,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 266,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 283,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 174,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 209,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 114,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 52,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round1:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 52,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 814,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 772,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 889,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1051,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1202,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 732,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 834,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 765,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1188,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 741,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 828,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 723,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 676,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 682,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1093,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 702,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 720,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 732,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 727,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1276,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 757,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1297,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1430,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1097,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1127,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1142,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 747,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 776,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1232,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 790,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1179,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1198,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1396,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 928,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 911,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1513,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 895,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 901,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 912,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 915,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1396,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 922,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1597,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 911,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 807,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1413,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 977,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 915,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1260,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 921,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 1172,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 678,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 609,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 452,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 459,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 549,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 487,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 422,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 519,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 366,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 328,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 425,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 422,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 691,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 474,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 395,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 517,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 434,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 535,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 420,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 355,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 434,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 396,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 584,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 606,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 552,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 391,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 373,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 409,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 387,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 445,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 420,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 377,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 400,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 357,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 389,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 355,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 176,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 221,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 231,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 277,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 293,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 356,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 303,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 385,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 390,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 256,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 223,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 275,
+      "error": "HTTP 500"
+    },
+    {
+      "stage": "round2:reward-estimate",
+      "path": "/api/tvv-reward-estimate",
+      "status": 500,
+      "ok": false,
+      "ms": 298,
+      "error": "HTTP 500"
+    }
+  ],
+  "cleanupOk": true,
+  "runError": ""
+}

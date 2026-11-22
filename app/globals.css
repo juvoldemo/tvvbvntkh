@@ -17840,7 +17840,7 @@ body.tvv-modal-open { overflow: hidden; }
 }
 .tvv-user-error { border-radius: 9px; background: #fff0f0; color: #bd252a; padding: 10px; font-size: var(--typo-12); }
 .tvv-profile-card { display: grid; gap: 17px; }
-.tvv-profile-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; border: 3px solid #e5efff; }
+.tvv-profile-avatar { width: 76px; height: 76px; border-radius: 50%; object-fit: contain; object-position: center bottom; border: 3px solid #e5efff; }
 .tvv-avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
 .tvv-profile-details { display: grid; gap: 1px; overflow: hidden; border: 1px solid #e5eaf1; border-radius: 12px; background: #e5eaf1; }
 .tvv-profile-details > div { display: flex; justify-content: space-between; gap: 14px; background: #fff; padding: 11px 13px; font-size: var(--typo-12); }
@@ -18487,35 +18487,29 @@ body .tvv-app .tvv-contest-detail {
   display: block;
   width: 100%;
   min-width: 0;
-  aspect-ratio: 1974 / 452;
+  aspect-ratio: 1992 / 474;
   padding: 0;
   overflow: hidden;
   border: 0;
-  border-radius: 4.5% / 19%;
-  clip-path: inset(0 round 4.5% / 19%);
+  border-radius: 4.6% / 19%;
+  clip-path: inset(0 round 4.6% / 19%);
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none;
   isolation: isolate;
   background: transparent;
   cursor: pointer;
 }
 
 .tvv-archive-preview > img {
-  position: absolute;
-  left: -5.16%;
-  top: -31.47%;
   display: block;
-  width: 110.43%;
-  max-width: none;
-  height: 161.18%;
+  width: 100%;
+  height: auto;
 }
 
-.tvv-archive-preview::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid #c5e5f7;
-  border-radius: inherit;
-  pointer-events: none;
-}
+
+
+
 
 .tvv-archive-preview:focus-visible {
   outline: 2px solid var(--primary, #004b7a);
@@ -20206,6 +20200,9 @@ body .tvv-app .tvv-archive-file > .tvv-archive-share svg {
 }
 .tvv-app .team-dashboard > .team-kpi-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.tvv-app .board-dashboard > .board-kpi-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tvv-app .team-kpi-grid .team-kpi-card {
@@ -23344,12 +23341,9 @@ body .tvv-app .tvv-bottom-nav button.income-nav {
   border: 0 !important;
   border-radius: 999px !important;
   background:
-    radial-gradient(circle at 40% 36%, rgba(255, 255, 255, .96) 0%, rgba(255, 238, 169, .72) 34%, rgba(255, 213, 82, .34) 66%, rgba(255, 213, 82, .10) 100%) !important;
+    radial-gradient(circle at center, rgba(255, 218, 91, .70) 0%, rgba(255, 225, 119, .48) 38%, rgba(255, 230, 140, .22) 62%, rgba(255, 230, 140, .06) 80%, rgba(255, 230, 140, 0) 100%) !important;
   color: #fff !important;
-  box-shadow:
-    0 4px 10px rgba(176, 125, 0, .10),
-    0 0 0 4px rgba(255, 232, 132, .18),
-    0 0 12px 5px rgba(255, 222, 92, .09) !important;
+  box-shadow: none !important;
   z-index: 2 !important;
 }
 
@@ -23660,12 +23654,51 @@ body .tvv-app .tvv-bottom-nav.board-bottom-nav {
 }
 
 /* ADO workspace */
+.tvv-app .tvv-hero.ado-mode .tvv-hero-greeting {
+  font-size: calc(var(--typo-16) * 0.6) !important;
+}
 .tvv-hero.ado-mode {
   background:
     radial-gradient(circle at 90% 12%, rgba(255,255,255,.2), transparent 26%),
     linear-gradient(135deg, #063d68 0%, #006e91 58%, #03a0a0 100%);
 }
 .ado-dashboard { gap: 14px !important; }
+.tvv-app .ado-dashboard > .ado-training-home-card {
+  min-height: 0;
+  padding: 12px 18px;
+  border-radius: 18px;
+  gap: 12px;
+}
+.tvv-app .ado-dashboard > .ado-training-home-card > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+.tvv-app .ado-dashboard > .ado-training-home-card > span svg { width: 21px; height: 21px; }
+.tvv-app .ado-dashboard > .ado-training-home-card strong { font-size: 16px; }
+.tvv-app .ado-dashboard > .ado-command-card {
+  box-sizing: border-box;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 6px 16px !important;
+  align-self: start;
+  align-items: center;
+  border-radius: 18px;
+  gap: 12px;
+}
+.tvv-app .ado-dashboard > .ado-command-card > div:first-child { gap: 2px; line-height: 1.2; }
+.tvv-app .ado-dashboard > .ado-command-card strong { font-size: 20px !important; line-height: 1.1; }
+.tvv-app .ado-dashboard > .ado-command-card > div:first-child > span { font-size: 9px !important; }
+.tvv-app .ado-dashboard > .ado-command-card small { font-size: 10px !important; }
+.tvv-app .ado-dashboard .ado-target-ring {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+}
+.tvv-app .ado-dashboard .ado-target-ring::after { inset: 5px; }
+.tvv-app .ado-dashboard .ado-target-ring b { font-size: 13px !important; }
+.tvv-app .ado-dashboard .ado-target-ring span { font-size: 7px !important; }
 .ado-dashboard > .class-vote-banner { width: 100% !important; max-width: none !important; min-width: 0 !important; margin: 14px 0 0 !important; justify-self: stretch !important; box-sizing: border-box !important; }
 .ado-dashboard > .class-vote-banner + .ado-report-home-card { margin: 0 auto !important; }
 .ado-dashboard .team-dashboard-toolbar > span { color: #577185; font-size: 12px; font-weight: 800; }
@@ -23753,6 +23786,8 @@ body .tvv-app .tvv-bottom-nav.board-bottom-nav {
 .ado-account-person strong { color: #17384d; font-size: 13px; }
 .ado-account-person small { color: #748592; font-size: 10px; }
 .ado-account-list dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 0; }
+.ado-copy-field { cursor: pointer; }
+.ado-copy-field:focus-visible { outline: 2px solid #007d91; outline-offset: 2px; }
 .ado-account-list dl > div { min-width: 0; padding: 9px 10px; border-radius: 10px; background: #f4f8fa; }
 .ado-account-list dt { color: #7a8a95; font-size: 8px; font-weight: 800; text-transform: uppercase; }
 .ado-account-list dd { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; margin: 3px 0 0; color: #173d54; font-size: 11px; font-weight: 800; overflow-wrap: anywhere; }
@@ -23986,3 +24021,84 @@ body .ban-dinh-page > header h1 { color: #ffffff !important; }
 .ban-dinh-session-controls > div { display: flex; gap: 8px; }
 .admin-page .ban-dinh-session-controls button { min-height: 32px; padding: 6px 14px; font-size: 12px; }
 .ban-dinh-form-card fieldset:disabled { opacity: .6; }
+
+.tvv-contest-preview .tvv-section-head .tvv-contest-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tvv-contest-heading > img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+body .tvv-app .tvv-contest-row > div > small:not(.tvv-progress-text) {
+  font-weight: 500 !important;
+}
+
+/* Compact feature navigation on the team overview. */
+.tvv-app .overview-feature-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  margin-block: -6px;
+}
+.tvv-app .overview-feature-shortcuts > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 4px 2px;
+  border: 0 !important;
+  border-radius: 12px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #005580 !important;
+  font: 500 var(--typo-11)/1.4 var(--font-family-app);
+  cursor: pointer;
+}
+.tvv-app .overview-feature-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.tvv-app .overview-feature-shortcuts > button:nth-child(2) .overview-feature-icon {
+  color: #e53935;
+}
+.tvv-app .overview-feature-shortcuts > button:nth-child(3) .overview-feature-icon {
+  color: #1976d2;
+}
+.tvv-app .overview-feature-shortcuts > button:hover {
+  background: #eaf3fa;
+}
+.tvv-app .overview-feature-shortcuts > button:focus-visible {
+  outline: 2px solid #005580;
+  outline-offset: 2px;
+}
+
+body .tvv-app .overview-feature-shortcuts > button,
+body .tvv-app .overview-feature-shortcuts > button > span:last-child {
+  font-size: var(--typo-11) !important;
+  font-weight: 500 !important;
+}
+
+
+/* Role selection shares the hero's existing right-side controls. */
+.tvv-app .tvv-hero .tvv-hero-role-target.has-role-picker { width: 104px; flex: 0 0 104px; gap: 4px; }
+.tvv-role-picker { display: flex; flex-direction: column; gap: 4px; width: 100%; color: #fff; font-size: 11px; font-weight: 600; }
+.tvv-role-control { width: 100%; border-radius: 8px; }
+.tvv-app .tvv-role-control .tvv-month-trigger { grid-template-columns: minmax(0, 1fr) 14px !important; gap: 4px; min-height: 30px !important; padding: 4px 6px !important; border: 1px solid rgba(255,255,255,.6) !important; background: rgba(0,0,0,.45) !important; color: #fff !important; }
+.tvv-app .tvv-role-control .tvv-month-trigger span { font-size: 12px !important; }
+.tvv-app .tvv-role-control .tvv-month-trigger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.tvv-month-menu.tvv-role-menu { border-radius: 8px; padding: 4px; gap: 4px; }
+.tvv-month-menu.tvv-role-menu button { min-height: 32px !important; padding: 4px 8px !important; gap: 4px; font-size: 12px !important; border-radius: 6px !important; }
+.tvv-role-menu button svg { width: 14px; height: 14px; }

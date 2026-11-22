@@ -1,0 +1,204 @@
+{
+  "runId": "LTTMWR1MBMK",
+  "origin": "https://www.bandothunhap.com",
+  "users": 100,
+  "scope": "100 distinct real authenticated HTTP sessions; simultaneous login; two sequential-per-user rounds of browser-discovered GET endpoints. One real browser pilots all five advisor main navigation tabs. Not 100 concurrent rendering browsers; no business-data writes; synthetic accounts have no revenue records; excludes management-only tabs and unvisited secondary tools.",
+  "browserTabs": [
+    {
+      "label": "Tổng quan",
+      "active": "Tổng quan",
+      "ms": 2548,
+      "bodyCharacters": 339
+    },
+    {
+      "label": "Hợp đồng",
+      "active": "Hợp đồng",
+      "ms": 2587,
+      "bodyCharacters": 231
+    },
+    {
+      "label": "Thu nhập",
+      "active": "Thu nhập",
+      "ms": 2557,
+      "bodyCharacters": 687
+    },
+    {
+      "label": "Thi đua",
+      "active": "Thi đua",
+      "ms": 2533,
+      "bodyCharacters": 426
+    },
+    {
+      "label": "Minh hoạ",
+      "active": "Minh hoạ",
+      "ms": 2544,
+      "bodyCharacters": 53
+    }
+  ],
+  "browserErrors": [],
+  "endpoints": [
+    "/api/user/auth",
+    "/api/events",
+    "/api/user/profile",
+    "/api/tvv-leaderboard?month=2026-11&advisorCode=LTTMWR1MBMK_0",
+    "/api/invitation-settings",
+    "/api/ban-dinh-settings",
+    "/api/class-votes",
+    "/api/tvv-target-registration?month=2026-11",
+    "/api/target-registration-cycle",
+    "/api/dashboard?month=2026-11&view=initial",
+    "/api/dashboard?month=2026-11"
+  ],
+  "total": {
+    "requests": 2300,
+    "failed": 0,
+    "p50ms": 389,
+    "p95ms": 4124,
+    "maxMs": 10812
+  },
+  "stages": {
+    "login": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 6093,
+      "p95ms": 10417,
+      "maxMs": 10812
+    },
+    "session": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 977,
+      "p95ms": 5906,
+      "maxMs": 9944
+    },
+    "round1:/api/events": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 415,
+      "p95ms": 5947,
+      "maxMs": 8858
+    },
+    "round1:/api/user/profile": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 746,
+      "p95ms": 1359,
+      "maxMs": 7921
+    },
+    "round1:/api/tvv-leaderboard": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 432,
+      "p95ms": 1209,
+      "maxMs": 7994
+    },
+    "round1:/api/invitation-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 183,
+      "p95ms": 316,
+      "maxMs": 463
+    },
+    "round1:/api/ban-dinh-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 492,
+      "p95ms": 909,
+      "maxMs": 1270
+    },
+    "round1:/api/class-votes": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 1666,
+      "p95ms": 3029,
+      "maxMs": 3602
+    },
+    "round1:/api/tvv-target-registration": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 558,
+      "p95ms": 1289,
+      "maxMs": 1707
+    },
+    "round1:/api/target-registration-cycle": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 222,
+      "p95ms": 468,
+      "maxMs": 553
+    },
+    "round1:/api/dashboard": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 1057,
+      "p95ms": 2379,
+      "maxMs": 3215
+    },
+    "round2:/api/events": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 109,
+      "p95ms": 4417,
+      "maxMs": 4816
+    },
+    "round2:/api/user/profile": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 411,
+      "p95ms": 930,
+      "maxMs": 1258
+    },
+    "round2:/api/tvv-leaderboard": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 262,
+      "p95ms": 401,
+      "maxMs": 519
+    },
+    "round2:/api/invitation-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 108,
+      "p95ms": 190,
+      "maxMs": 282
+    },
+    "round2:/api/ban-dinh-settings": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 311,
+      "p95ms": 591,
+      "maxMs": 713
+    },
+    "round2:/api/class-votes": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 689,
+      "p95ms": 1507,
+      "maxMs": 1825
+    },
+    "round2:/api/tvv-target-registration": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 277,
+      "p95ms": 778,
+      "maxMs": 883
+    },
+    "round2:/api/target-registration-cycle": {
+      "requests": 100,
+      "failed": 0,
+      "p50ms": 102,
+      "p95ms": 266,
+      "maxMs": 338
+    },
+    "round2:/api/dashboard": {
+      "requests": 200,
+      "failed": 0,
+      "p50ms": 125,
+      "p95ms": 282,
+      "maxMs": 413
+    }
+  },
+  "failures": [],
+  "cleanupOk": true,
+  "runError": ""
+}

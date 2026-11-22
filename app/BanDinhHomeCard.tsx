@@ -1,4 +1,5 @@
 "use client";
+import { fetchOverviewSettings } from "@/lib/overview-assets";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BanDinhSettings, validBanDinhSettings } from "@/lib/ban-dinh";
@@ -8,7 +9,7 @@ export default function BanDinhHomeCard() {
     let active = true;
     async function refresh() {
       try {
-        const r = await fetch("/api/ban-dinh-settings", { cache: "no-store" });
+        const r = await fetchOverviewSettings("/api/ban-dinh-settings");
         const data: unknown = await r.json();
         if (active && r.ok && validBanDinhSettings(data)) setSettings(data);
       } catch { /* Retain the last successfully loaded banner. */ }
