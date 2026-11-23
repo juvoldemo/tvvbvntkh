@@ -1,0 +1,19 @@
+# Build dependencies and generated Next.js output are recreated by Railpack.
+**/node_modules
+.next
+.next-stale-*
+out
+*.tsbuildinfo
+
+# Repository metadata and local configuration are not runtime assets.
+.git
+.env
+.env.*
+!.env.example
+*.log
+
+# Local previews, diagnostic captures, and generated reports.
+outputs
+debug
+.tmp-journey-check
+.codex-*.png
