@@ -13,10 +13,11 @@ import ClassVoteBanner from "@/app/ClassVoteBanner";
 import GuestInvitationHomeCard from "@/app/GuestInvitationHomeCard";
 import BanDinhHomeCard from "@/app/BanDinhHomeCard";
 import HeroAvatar from "@/app/HeroAvatar";
+import Forum, { ForumShortcut } from "@/app/Forum";
 import StarJourneyArtwork from "@/app/StarJourneyArtwork";
 import { prepareImage, prepareOverviewImages, prepareOverviewBanners } from "@/lib/overview-assets";
 
-type Tab = "overview" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
+type Tab = "overview" | "forum" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
 type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
@@ -1140,7 +1141,7 @@ export default function TvvMobilePage() {
 
   const draftRewards = new Map((estimate?.rewardByDraftContract ?? []).map((item: any) => [item.draftId, item]));
 
-  if (showSplash) {
+  if (showSplash || !authReady || (signedIn && (!profileReady || !userProfile || !overviewImagesReady))) {
     return (
       <main className="tvv-splash-screen" aria-label="Đang mở ứng dụng">
         <Image className="tvv-splash-image" src="/Hi.png" alt="" fill priority sizes="100vw" />
@@ -1148,7 +1149,6 @@ export default function TvvMobilePage() {
     );
   }
 
-  if (!authReady) return <main className="tvv-user-login"><p>Đang kiểm tra đăng nhập…</p></main>;
   if (!signedIn) return <UserLoginScreen onSuccess={(advisorCode) => {
     setTab("overview");
     setActiveRole("default");
@@ -1157,9 +1157,6 @@ export default function TvvMobilePage() {
     setAuthenticatedAdvisorCode(String(advisorCode || "").trim().toUpperCase());
     setSignedIn(true);
   }} />;
-  if (!profileReady || !userProfile) return <main className="tvv-user-login"><p>Đang tải đúng giao diện tài khoản…</p></main>;
-
-  if (!overviewImagesReady) return <main className="tvv-user-login" role="status"><p>?ang chu?n b? trang t?ng quan?</p></main>;
 
   return (
     <main className={`tvv-app${isAdoMode ? " ado-app" : ""}`}>
@@ -1232,17 +1229,17 @@ export default function TvvMobilePage() {
             </div>
           </header>
           ) : (
-            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "ado_training" ? "Đăng ký đào tạo" : tab === "ado_report" ? "Báo cáo thúc đẩy TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
+            <>{tab !== "smart_illustration" && <TvvSubHeader title={tab === "forum" ? "Diễn đàn" : tab === "contracts" ? "Hợp đồng" : tab === "contests" ? "Thi đua" : tab === "ado_targets" ? "Mục tiêu nhóm" : tab === "ado_accounts" ? "Tài khoản TVV" : tab === "ado_conferences" ? "Hội nghị khách hàng" : tab === "ado_training" ? "Đăng ký đào tạo" : tab === "ado_report" ? "Báo cáo thúc đẩy TVV" : tab === "leaderboard" ? "Bảng xếp hạng" : tab === "illustration" ? "Minh hoạ" : "Kho tài liệu"} onBack={() => setTab("overview")} />}</>
           )}
           {tab === "smart_illustration" && <SmartIllustrationPage onBack={() => setTab("overview")} onExport={(action, data) => { const message = { type: "bvnt-smart-export", action, data }; sessionStorage.setItem("bvntSmartExport", JSON.stringify(message)); setIllustrationLoaded(true); window.setTimeout(() => { const embed = document.querySelector<HTMLElement>(".tvv-illustration-embed"); const frame = embed?.querySelector<HTMLIFrameElement>("iframe"); embed?.classList.add("active", "smart-export-overlay"); embed?.setAttribute("aria-hidden", "false"); frame?.contentWindow?.postMessage(message, window.location.origin); }, 350); }} />}
-          {tab === "overview" && <>
+          {tab === "overview" && <>{(isBoardMode || (dashboardRole !== "advisor" && dashboardRole !== "team_leader")) && <ForumShortcut onOpen={() => setTab("forum")} />}
             {!isAdoMode && dashboardRole !== "advisor" && dashboardRole !== "team_leader" && <section className="tvv-content invitation-role-section"><ClassVoteBanner /></section>}
             {isAdoMode
             ? <AdoOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={adoData} month={month} onOpenTraining={() => setTab("ado_training")} />
             : isBoardMode
             ? <BoardLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={boardData} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenContracts={() => setTab("contracts")} />
             : dashboardRole === "team_leader"
-            ? <TeamLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenArchive={() => setTab("archive")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} />
+            ? <TeamLeaderOverview advisorCode={authenticatedAdvisorCode || userProfile?.advisor_code} data={teamData} targetRegistration={teamTarget} targetMonth={targetRegistrationMonth} targetRegistrationClosed={targetRegistrationClosed} teamGoalDetailSignal={teamGoalDetailSignal} onOpenTarget={() => { setTargetReturnToTeamGoal(true); setTargetModalOpen(true); }} contestEstimate={teamRewards} currentTeamAdvisorCount={teamRewards?.currentTeamAdvisorCount} leaderboard={leaderboard} month={month} monthOptions={monthOptions} onMonthChange={setMonth} onOpenLeaderboard={() => setTab("leaderboard")} onOpenContests={() => setTab("contests")} onOpenRecruitment={() => setTab("recruitment")} onOpenArchive={() => setTab("archive")} onOpenSmart={() => setTab("smart_illustration")} onOpenAbout={() => setTab("about")} onOpenForum={() => setTab("forum")} />
             : <Overview advisorCode={userProfile?.advisor_code} groupName={userProfile?.group_name || advisor?.group} showRecruitment={String(userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" || isPreTeamLeaderPosition(userProfile?.advisor_position)} stats={leaderboard?.advisorStats ?? stats} leaderboard={leaderboard} estimate={estimate ?? emptyEstimate} starViet={data?.currentStarViet} starVietWarning={data?.starVietWarning} starVietLoading={loading} onTab={setTab} />}
           </>}
           {tab === "contracts" && <ContractsListV2 contracts={selectedPeriodContracts} month={contractMonth} monthOptions={monthOptions} periodMode={periodMode} onPeriodModeChange={setPeriodMode} onMonthChange={setContractMonth} onOpenContract={setSelectedContract} showAdvisorFilter={dashboardRole === "team_leader" || isBoardMode || isAdoMode} showGroupFilter={isBoardMode || isAdoMode} />}
@@ -1253,6 +1250,7 @@ export default function TvvMobilePage() {
           {tab === "ado_training" && isAdoMode && <AdoTrainingPage />}
           {tab === "ado_report" && isAdoMode && <AdvisorActivityReportPage initialMonth={month} monthOptions={monthOptions} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
+          {tab === "forum" && <Forum />}
           {tab === "archive" && <ArchiveView />}
           {tab === "about" && String(authenticatedAdvisorCode || userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPage />}
           {tab === "profile" && <Profile advisor={advisor} contracts={isAdoMode ? (adoData?.contracts ?? []) : myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => {
@@ -2547,7 +2545,7 @@ function TeamActivityManager({ month, activities, error, onReload }: any) {
       </section>;
 }
 
-function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenArchive, onOpenSmart, onOpenAbout }: any) {
+function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth, targetRegistrationClosed, teamGoalDetailSignal, onOpenTarget, contestEstimate, currentTeamAdvisorCount, leaderboard, month, monthOptions, onMonthChange, onOpenLeaderboard, onOpenContests, onOpenRecruitment, onOpenArchive, onOpenSmart, onOpenAbout, onOpenForum }: any) {
   const [showAllTeamContracts, setShowAllTeamContracts] = useState(false);
   const [showTeamActivity, setShowTeamActivity] = useState(false);
   const [showTeamAccess, setShowTeamAccess] = useState(false);
@@ -2636,6 +2634,7 @@ function TeamLeaderOverview({ advisorCode, data, targetRegistration, targetMonth
 
     <OverviewFeatureShortcuts onOpenRecruitment={onOpenRecruitment} onOpenTarget={() => setGoalPageOpen(true)} onOpenArchive={onOpenArchive} />
 
+    <ForumShortcut embedded onOpen={onOpenForum} />
     <ContestPreview estimate={contestEstimate} onAll={onOpenContests} />
 
     {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <SmartIllustrationPreview onOpen={onOpenSmart} />}
@@ -3257,6 +3256,7 @@ function Overview({ advisorCode, groupName, showRecruitment, stats, leaderboard,
     <ClassVoteBanner />
     {showRecruitment && <RecruitmentPreview onOpen={() => onTab("recruitment")} />}
     <LeaderboardPreview leaderboard={leaderboard} onOpen={() => onTab("leaderboard")} />
+    <ForumShortcut embedded onOpen={() => onTab("forum")} />
     <ContestPreview estimate={estimate} onAll={() => onTab("contests")} />
     {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <SmartIllustrationPreview onOpen={() => onTab("smart_illustration")} />}
     {String(advisorCode || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPreview onOpen={() => onTab("about")} />}

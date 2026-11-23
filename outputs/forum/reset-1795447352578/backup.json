@@ -1,0 +1,347 @@
+{
+  "topics": [
+    {
+      "id": "da37f24e-1dbe-4c7c-9a75-8fe83f5f7146",
+      "author_code": "D102104583",
+      "anonymous": false,
+      "title": "xdsdsbgfdhbfd",
+      "content": "fdhfdhfdhfdhfdh",
+      "attachments": [
+        {
+          "id": "1ff41d22-b604-462e-95af-60d1ece92149",
+          "mime": "image/png",
+          "name": "Banner.png",
+          "path": "1ff41d22-b604-462e-95af-60d1ece92149",
+          "size": 1947090
+        }
+      ],
+      "created_at": "2026-11-23T14:35:26.137231+00:00",
+      "last_activity_at": "2026-11-23T14:35:26.137231+00:00",
+      "comment_count": 0
+    },
+    {
+      "id": "f0de0000-0000-4000-8000-000000000001",
+      "author_code": "FORUM_DEMO_EDITOR",
+      "anonymous": false,
+      "title": "[Bài mẫu] Cùng chia sẻ cách duy trì hoạt động tư vấn mỗi ngày",
+      "content": "Lưu ý: các phản hồi là nội dung mẫu minh họa giao diện, được gán cho tài khoản có sẵn trong hệ thống; không phải nội dung do các thành viên tự đăng.\n\nĐây là bài đăng mẫu để minh họa chức năng diễn đàn. \n\nMình mở chủ đề để mọi người chia sẻ cách sắp xếp hoạt động tư vấn hằng ngày: tìm kiếm khách hàng, chuẩn bị cuộc hẹn và theo dõi sau tư vấn.\n\nBạn thường dành thời gian cho từng việc như thế nào? Điều gì giúp bạn giữ nhịp làm việc đều đặn? Ảnh đính kèm là tài liệu đang có trên website để minh họa cuộc thảo luận.",
+      "attachments": [
+        {
+          "id": "f0de0002-0000-4000-8000-000000000001",
+          "mime": "image/png",
+          "name": "Thưởng năng suất tháng.png",
+          "path": "f0de0002-0000-4000-8000-000000000001",
+          "size": 1025609
+        }
+      ],
+      "created_at": "2026-11-23T13:39:07.376+00:00",
+      "last_activity_at": "2026-11-23T13:47:07.376+00:00",
+      "comment_count": 8
+    },
+    {
+      "id": "f0de0000-0000-4000-8000-000000000002",
+      "author_code": "FORUM_DEMO_EDITOR",
+      "anonymous": false,
+      "title": "[Bài mẫu] Kinh nghiệm đồng hành và hỗ trợ thành viên mới trong nhóm",
+      "content": "Lưu ý: các phản hồi là nội dung mẫu minh họa giao diện, được gán cho tài khoản có sẵn trong hệ thống; không phải nội dung do các thành viên tự đăng.\n\nNội dung thảo luận mẫu; \n\nKhi một thành viên mới tham gia, điều gì giúp bạn ấy nhanh chóng làm quen với công việc và cảm thấy được hỗ trợ?\n\nMời mọi người chia sẻ cách hướng dẫn tuần đầu, tổ chức thực hành và duy trì trao đổi trong nhóm. Ảnh đính kèm là tài liệu minh họa từ website, không thay thế nội dung chính sách chính thức.",
+      "attachments": [
+        {
+          "id": "f0de0002-0000-4000-8000-000000000002",
+          "mime": "image/png",
+          "name": "Thưởng phát triển hệ thống.png",
+          "path": "f0de0002-0000-4000-8000-000000000002",
+          "size": 1335556
+        }
+      ],
+      "created_at": "2026-11-23T13:51:07.376+00:00",
+      "last_activity_at": "2026-11-23T13:59:07.376+00:00",
+      "comment_count": 8
+    },
+    {
+      "id": "f0de0000-0000-4000-8000-000000000003",
+      "author_code": "FORUM_DEMO_EDITOR",
+      "anonymous": false,
+      "title": "[Bài mẫu] Lập kế hoạch quý: làm sao chia mục tiêu thành việc cụ thể?",
+      "content": "Lưu ý: các phản hồi là nội dung mẫu minh họa giao diện, được gán cho tài khoản có sẵn trong hệ thống; không phải nội dung do các thành viên tự đăng.\n\nThay vì chỉ nhìn mục tiêu cuối quý, mình muốn chia kế hoạch thành từng tuần với những việc có thể theo dõi được.\n\nBạn đang theo dõi hoạt động bằng sổ, bảng tính hay lịch điện thoại? Khi kế hoạch thay đổi, bạn thường điều chỉnh ra sao? Cùng chia sẻ cách làm và ví dụ thực tế nhé. Tài liệu ảnh đi kèm chỉ dùng minh họa.",
+      "attachments": [
+        {
+          "id": "f0de0002-0000-4000-8000-000000000003",
+          "mime": "image/png",
+          "name": "Thưởng Quý.png",
+          "path": "f0de0002-0000-4000-8000-000000000003",
+          "size": 1321848
+        }
+      ],
+      "created_at": "2026-11-23T14:03:07.376+00:00",
+      "last_activity_at": "2026-11-23T14:11:07.376+00:00",
+      "comment_count": 8
+    }
+  ],
+  "comments": [
+    {
+      "id": "f0de0001-0000-4000-8000-000000000001",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "BOSS",
+      "anonymous": false,
+      "content": "Mình thường lên danh sách công việc từ tối hôm trước. Buổi sáng ưu tiên liên hệ khách hàng, buổi chiều dành cho các cuộc hẹn đã xác nhận.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:40:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000002",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102100541",
+      "anonymous": false,
+      "content": "Mình chia việc thành ba nhóm: cần làm hôm nay, đang chờ khách hàng và cần theo dõi thêm. Nhờ vậy mình ít bỏ sót lịch hẹn.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:41:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000003",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102100763",
+      "anonymous": false,
+      "content": "Trước mỗi cuộc gặp, mình chuẩn bị vài câu hỏi về nhu cầu và mục tiêu của khách hàng. Mọi người có thể chia sẻ thêm cách chuẩn bị không?",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:42:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000004",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102100790",
+      "anonymous": false,
+      "content": "Mình ghi lại điều đã trao đổi ngay sau cuộc hẹn và hẹn thời điểm liên hệ tiếp theo. Cách này giúp cuộc trò chuyện sau liền mạch hơn.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:43:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000005",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102101179",
+      "anonymous": false,
+      "content": "Nhóm mình dành một khoảng ngắn cuối tuần để cùng nhìn lại hoạt động, chia sẻ cách làm hiệu quả và hỗ trợ các trường hợp còn vướng.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-23T13:44:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000006",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102101443",
+      "anonymous": true,
+      "content": "Mình từng lập lịch quá dày nên khó theo sát. Hiện tại mình để thêm khoảng trống giữa các cuộc hẹn để chuẩn bị và ghi chú.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:45:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000007",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102101753",
+      "anonymous": true,
+      "content": "Mình còn ngại bắt đầu cuộc gọi đầu tiên trong ngày. Có bạn nào có cách khởi động để tự tin hơn không?",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:46:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000008",
+      "topic_id": "f0de0000-0000-4000-8000-000000000001",
+      "parent_id": null,
+      "author_code": "D102101814",
+      "anonymous": true,
+      "content": "Mình thấy ghi nhận những việc nhỏ đã hoàn thành cũng giúp giữ động lực. Mọi người có thể chia sẻ thêm cách duy trì thói quen này không?",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:47:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000009",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "BOSS",
+      "anonymous": false,
+      "content": "Mình thường bắt đầu bằng một buổi làm quen ngắn, giới thiệu người có thể hỗ trợ từng nội dung để thành viên mới biết nên hỏi ai.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:52:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000010",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102100541",
+      "anonymous": false,
+      "content": "Nhóm mình có danh sách việc cần làm trong tuần đầu và tài liệu tham khảo. Mỗi ngày chỉ tập trung một vài nội dung để dễ tiếp thu.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:53:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000011",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102100763",
+      "anonymous": false,
+      "content": "Mình thấy thực hành theo tình huống rất hữu ích. Một người đóng vai khách hàng, một người tư vấn rồi cả nhóm góp ý cụ thể.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:54:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000012",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102100790",
+      "anonymous": false,
+      "content": "Thành viên mới nên có một người đồng hành để trao đổi khi cần. Mình ưu tiên phản hồi sớm các câu hỏi nhỏ thay vì chờ đến buổi họp.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:55:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000013",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102101179",
+      "anonymous": false,
+      "content": "Nhóm mình tổng hợp những câu hỏi thường gặp vào một chỗ. Mỗi người có thể bổ sung ví dụ để tài liệu sát với công việc hơn.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-23T13:56:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000014",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102101443",
+      "anonymous": true,
+      "content": "Lúc mới vào mình từng ngại hỏi vì sợ làm phiền. Nếu nhóm có một khoảng trao đổi cố định mỗi ngày thì mình sẽ dễ mở lời hơn.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:57:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000015",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102101753",
+      "anonymous": true,
+      "content": "Mình muốn có thêm ví dụ về cách giới thiệu bản thân trong cuộc hẹn đầu. Mọi người có thể chia sẻ khung nói chuyện tham khảo không?",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:58:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000016",
+      "topic_id": "f0de0000-0000-4000-8000-000000000002",
+      "parent_id": null,
+      "author_code": "D102101814",
+      "anonymous": true,
+      "content": "Mình nghĩ nên hỏi thành viên mới đang vướng ở bước nào rồi cùng xử lý từng việc. Theo sát từng bước sẽ giúp bạn ấy tự tin hơn.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:59:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000017",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "BOSS",
+      "anonymous": false,
+      "content": "Mình bắt đầu từ lịch làm việc thực tế trong quý rồi chia kế hoạch theo tuần. Mình dành thêm thời gian cho các việc phát sinh.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:04:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000018",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102100541",
+      "anonymous": false,
+      "content": "Mình dùng lịch điện thoại cho cuộc hẹn và bảng tính cho các việc cần theo dõi. Cuối ngày mình cập nhật để hôm sau biết nên ưu tiên việc nào.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:05:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000019",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102100763",
+      "anonymous": false,
+      "content": "Mình tách kết quả mong muốn khỏi hoạt động cần thực hiện. Khi nhìn lại, mình dễ thấy bước nào đang cần hỗ trợ hơn.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:06:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000020",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102100790",
+      "anonymous": false,
+      "content": "Mỗi tuần mình chỉ chọn vài ưu tiên chính. Nếu có thay đổi, mình sắp xếp lại lịch và báo sớm cho người liên quan.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:07:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000021",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102101179",
+      "anonymous": false,
+      "content": "Nhóm mình xem lại kế hoạch vào đầu tuần, trao đổi các vướng mắc và thống nhất việc cần phối hợp thay vì chỉ nhắc đến con số cuối kỳ.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-23T14:08:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000022",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102101443",
+      "anonymous": true,
+      "content": "Mình từng đặt kế hoạch quá lạc quan nên dễ nản khi lệch tiến độ. Bây giờ mình rà lại dựa trên thời gian và nguồn lực thực tế.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:09:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000023",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102101753",
+      "anonymous": true,
+      "content": "Mình muốn tìm một mẫu bảng theo dõi đơn giản trên điện thoại. Chỉ cần các cột việc cần làm, ngày hẹn và trạng thái là đủ.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:10:07.376+00:00"
+    },
+    {
+      "id": "f0de0001-0000-4000-8000-000000000024",
+      "topic_id": "f0de0000-0000-4000-8000-000000000003",
+      "parent_id": null,
+      "author_code": "D102101814",
+      "anonymous": true,
+      "content": "Mình thấy việc nhìn lại điều đã học được trong tuần cũng quan trọng. Mỗi tuần nhóm có thể ghi lại một điều muốn cải thiện cho tuần tiếp theo.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T14:11:07.376+00:00"
+    }
+  ],
+  "reactions": []
+}
