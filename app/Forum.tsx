@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useId, useRef, useState } from "react";
+import { Check, ChevronDown, Eye } from "lucide-react";
 import { ArrowLeft, ChevronRight, FileText, ImagePlus, LoaderCircle, MessageCircle, MoreHorizontal, Pencil, Paperclip, Plus, Reply, Search, ShieldCheck, Trash2, ThumbsUp, ThumbsDown, UserRound, X } from "lucide-react";
 import HeroAvatar from "@/app/HeroAvatar";
 import { FORUM_FILE_LIMIT, FORUM_MAX_FILES, forumTime, type ForumAttachment, type ForumAuthor, type ForumComment, type ForumTopic } from "@/lib/forum";
@@ -13,8 +14,18 @@ async function readResponse(response: Response) {
   if (!response.ok) throw new Error(data.error || "Không thể thực hiện yêu cầu.");
   return data;
 }
-function Author({ author }: { author: ForumAuthor }) {
-  return <div className={styles.author}><span className={styles.avatar}>{author.anonymous ? <UserRound size={20} /> : <HeroAvatar src={author.avatar} />}</span><div><b>{author.name}</b>{author.group && <small>{author.group}</small>}</div>{author.anonymous && <ShieldCheck size={16} aria-label="Đăng ẩn danh" />}</div>;
+function Author({ author, revealUrl }: { author: ForumAuthor; revealUrl?: string }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [profile, setProfile] = useState<{ code: string; name: string; group: string } | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function reveal() {
+    setProfile(null); setError(""); setBusy(true); dialog.current?.showModal();
+    try { setProfile(await readResponse(await fetch(revealUrl!, { cache: "no-store" }))); }
+    catch (error) { setError(error instanceof Error ? error.message : "Không thể xem thông tin."); }
+    finally { setBusy(false); }
+  }
+  return <div className={styles.author}><span className={styles.avatar}>{author.anonymous ? <UserRound size={20} /> : <HeroAvatar src={author.avatar} />}</span><div><b>{author.name}</b>{author.group && <small>{author.group}</small>}</div>{author.anonymous && <ShieldCheck size={16} aria-label="Đăng ẩn danh" />}{author.anonymous && revealUrl && <><button type="button" className={styles.revealAuthor} aria-label={`Xem thông tin ${author.name}`} onClick={reveal}><Eye size={16} /></button><dialog ref={dialog} className={styles.authorDialog} aria-label="Thông tin người đăng ẩn danh" onClose={() => { setProfile(null); setError(""); }} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}><div className={styles.authorDialogHeading}><h3>Thông tin người đăng</h3><button type="button" aria-label="Đóng thông tin người đăng" onClick={() => dialog.current?.close()}><X size={18} /></button></div>{busy && <p role="status">Đang tải thông tin…</p>}{error && <p role="alert">{error}</p>}{profile && <dl><dt>Họ tên</dt><dd>{profile.name}</dd><dt>Mã tài khoản</dt><dd>{profile.code}</dd><dt>Đơn vị / nhóm</dt><dd>{profile.group || "Chưa cập nhật"}</dd></dl>}</dialog></>}</div>;
 }
 async function uploadAttachments(files: File[]) {
   const receipts: string[] = [];
@@ -71,7 +82,7 @@ function PostManagement({ topic, onChanged, onDeleted }: { topic: ForumTopic; on
   return <div ref={container} className={styles.management}>
     <button ref={trigger} type="button" aria-label="Tùy chọn bài đăng" aria-expanded={open} onClick={() => setOpen(value => !value)}><MoreHorizontal size={22} /></button>
     {open && <div className={styles.postMenu}>
-      <button type="button" onClick={() => { setTitle(topic.title); setContent(topic.content); setRetained(topic.attachments); setFiles([]); setError(""); setMode("edit"); setOpen(false); }}><Pencil size={16} />Chỉnh sửa</button>
+      {topic.can_manage && <button type="button" onClick={() => { setTitle(topic.title); setContent(topic.content); setRetained(topic.attachments); setFiles([]); setError(""); setMode("edit"); setOpen(false); }}><Pencil size={16} />Chỉnh sửa</button>}
       <button type="button" className={styles.deleteAction} onClick={() => { setError(""); setMode("delete"); setOpen(false); }}><Trash2 size={16} />Xóa bài đăng</button>
     </div>}
     {mode && <dialog ref={dialog} className={styles.manageDialog} aria-labelledby="forum-manage-title" onCancel={event => { event.preventDefault(); if (!busy) close(); }}>
@@ -190,15 +201,59 @@ function Composer({ topic, replyTo, onCancelReply, onSubmit, onCancel }: {
   </form>;
 }
 
-export default function Forum() {
+const discussionSortOptions = [
+  { value: "newest", label: "Bình luận mới nhất" },
+  { value: "popular", label: "Bài đăng nổi bật" },
+  { value: "oldest", label: "Bài đăng cũ nhất" },
+];
+function DiscussionSort({ value, disabled, onChange }: { value: string; disabled: boolean; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+  const selected = Math.max(0, discussionSortOptions.findIndex(option => option.value === value));
+  function focusOption(index: number) {
+    container.current?.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')[index]?.focus();
+  }
+  useEffect(() => {
+    if (!open) return;
+    focusOption(selected);
+    const outside = (event: PointerEvent) => { if (!container.current?.contains(event.target as Node)) setOpen(false); };
+    const focusOutside = (event: FocusEvent) => { if (!container.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("focusin", focusOutside);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("focusin", focusOutside); };
+  }, [open, selected]);
+  return <div ref={container} className={styles.sortDropdown} onKeyDown={event => {
+    if (event.key === "Escape") { event.preventDefault(); setOpen(false); trigger.current?.focus(); }
+  }}>
+    <button ref={trigger} type="button" className={styles.sortTrigger} aria-label={`Sắp xếp thảo luận: ${discussionSortOptions[selected].label}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined} disabled={disabled} onClick={() => setOpen(current => !current)} onKeyDown={event => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); if (open) focusOption(selected); else setOpen(true); }
+    }}><span>{discussionSortOptions[selected].label}</span><ChevronDown size={14} /></button>
+    {open && <div id={menuId} className={styles.sortMenu} role="menu" aria-label="Sắp xếp thảo luận">
+      {discussionSortOptions.map((option, index) => <button key={option.value} type="button" role="menuitemradio" aria-checked={value === option.value} tabIndex={-1} onKeyDown={event => {
+        let target = index;
+        if (event.key === "ArrowDown") target = (index + 1) % discussionSortOptions.length;
+        else if (event.key === "ArrowUp") target = (index + discussionSortOptions.length - 1) % discussionSortOptions.length;
+        else if (event.key === "Home") target = 0;
+        else if (event.key === "End") target = discussionSortOptions.length - 1;
+        else return;
+        event.preventDefault(); focusOption(target);
+      }} onClick={() => { setOpen(false); trigger.current?.focus(); if (value !== option.value) onChange(option.value); }}><span>{option.label}</span>{value === option.value && <Check size={14} />}</button>)}
+    </div>}
+  </div>;
+}
+
+export default function Forum({ initialTopicId = null }: { initialTopicId?: string | null }) {
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [topics, setTopics] = useState<ForumTopic[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  const [topicId, setTopicId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<{ topic: ForumTopic; comments: ForumComment[]; hasMore: boolean; totalPages?: number; page?: number } | null>(null);
+  const [topicId, setTopicId] = useState<string | null>(initialTopicId);
+  const [detail, setDetail] = useState<{ topic: ForumTopic; comments: ForumComment[]; hasMore: boolean; totalPages?: number; page?: number; canRevealAuthors?: boolean } | null>(null);
   const [commentPage, setCommentPage] = useState(0);
+  const [commentSort, setCommentSort] = useState("newest");
   const [creating, setCreating] = useState(false);
   const [replyTo, setReplyTo] = useState<ForumComment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -221,25 +276,25 @@ export default function Forum() {
   useEffect(() => {
     if (!topicId) return;
     const controller = new AbortController();
-    setDetail(null); setLoading(true); setError(""); setReplyTo(null); setCommentPage(0);
-    fetch(`/api/forum/${topicId}`, { signal: controller.signal, cache: "no-store" }).then(readResponse).then(setDetail)
+    setDetail(null); setLoading(true); setError(""); setReplyTo(null); setCommentPage(0); setCommentSort("newest");
+    fetch(`/api/forum/${topicId}?sort=newest`, { signal: controller.signal, cache: "no-store" }).then(readResponse).then(setDetail)
       .catch(error => { if (!controller.signal.aborted) setError(error.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [topicId, retry]);
   const back = useCallback(() => { setTopicId(null); setDetail(null); setCreating(false); setReplyTo(null); setPage(0); setError(""); }, []);
-  async function changeCommentPage(target: number | "last") {
+  async function changeCommentPage(target: number | "last", sort = commentSort) {
     if (!topicId || moreLoading) return;
     setMoreLoading(true); setError("");
     try {
-      const data = await readResponse(await fetch(`/api/forum/${topicId}?page=${target}`, { cache: "no-store" }));
-      setDetail(data); setCommentPage(data.page || 0); setReplyTo(null);
+      const data = await readResponse(await fetch(`/api/forum/${topicId}?page=${target}&sort=${sort}`, { cache: "no-store" }));
+      setDetail(data); setCommentPage(data.page || 0); setCommentSort(sort); setReplyTo(null);
     } catch (error) { setError(error instanceof Error ? error.message : "Không thể tải bình luận."); }
     finally { setMoreLoading(false); }
   }
   async function sendComment(form: FormData) {
     const data = await readResponse(await fetch(`/api/forum/${topicId}`, { method: "POST", body: form }));
     setDetail(current => current ? { ...current, topic: { ...current.topic, comment_count: current.topic.comment_count + 1 }, comments: [...current.comments, data.comment] } : current);
-    if (!form.get("parentId")) await changeCommentPage("last");
+    if (!form.get("parentId")) await changeCommentPage(commentSort === "oldest" ? "last" : 0);
   }
   function startReply(comment: ForumComment) {
     setReplyTo(comment);
@@ -266,7 +321,7 @@ export default function Forum() {
   function renderComment(comment: ForumComment, depth = 0): React.ReactNode {
     const parent = comment.parent_id ? comments.find(item => item.id === comment.parent_id) : null;
     return <article className={`${styles.comment} ${depth ? styles.nested : ""}`} key={comment.id}>
-      <Author author={comment.author} />
+      <Author author={comment.author} revealUrl={detail?.canRevealAuthors ? `/api/forum/${topicId}/author?comment=${comment.id}` : undefined} />
       {depth >= 2 && parent && <small className={styles.replyLabel}>Trả lời {parent.author.name}</small>}
       <div className={styles.commentBody}>{comment.content && <p>{comment.content}</p>}{comment.sticker && <span className={styles.sticker} role="img" aria-label={`Sticker ${comment.sticker}`}>{comment.sticker}</span>}<Attachments files={comment.attachments} /><div className={styles.commentFooter}><time dateTime={comment.created_at}>{forumTime(comment.created_at)}</time><button type="button" aria-label={`Thích: ${comment.likes || 0}`} aria-pressed={comment.my_reaction === "like"} disabled={reactionBusy.has(comment.id)} onClick={() => reactToComment(comment, "like")}><ThumbsUp size={14} /><span>{comment.likes || 0}</span></button><button type="button" aria-label={`Không thích: ${comment.dislikes || 0}`} aria-pressed={comment.my_reaction === "dislike"} disabled={reactionBusy.has(comment.id)} onClick={() => reactToComment(comment, "dislike")}><ThumbsDown size={14} /><span>{comment.dislikes || 0}</span></button><button type="button" onClick={() => startReply(comment)}><Reply size={14} />Trả lời</button></div></div>
       {replyTo?.id === comment.id && <div ref={composer} className={styles.inlineReply}><Composer key={comment.id} replyTo={replyTo} onCancelReply={() => setReplyTo(null)} onSubmit={sendComment} /></div>}
@@ -290,9 +345,9 @@ export default function Forum() {
     </> : <>
       {loading && <div className={styles.loading} role="status"><LoaderCircle className={styles.spinning} size={20} />Đang tải bài thảo luận…</div>}
       {error && <div className={styles.error} role="alert">{error}<button type="button" onClick={() => setRetry(value => value + 1)}>Thử lại</button></div>}
-      {detail && <><article className={styles.panel}><div className={styles.postHeading}><Author author={detail.topic.author} />{detail.topic.can_manage && <PostManagement topic={detail.topic} onChanged={(title, content, attachments) => setDetail(current => current ? { ...current, topic: { ...current.topic, title, content, attachments } } : current)} onDeleted={() => { back(); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Tìm kiếm chủ đề thảo luận"]')?.focus()); }} />}</div><h1>{detail.topic.title}</h1><div className={styles.postContent}><ForumContent value={detail.topic.content} /></div><Attachments files={detail.topic.attachments} /><time className={styles.hint} dateTime={detail.topic.created_at}>Đăng lúc {forumTime(detail.topic.created_at)}</time></article>
+      {detail && <><article className={styles.panel}><div className={styles.postHeading}><Author author={detail.topic.author} revealUrl={detail.canRevealAuthors ? `/api/forum/${topicId}/author` : undefined} />{(detail.topic.can_manage || detail.topic.can_delete) && <PostManagement topic={detail.topic} onChanged={(title, content, attachments) => setDetail(current => current ? { ...current, topic: { ...current.topic, title, content, attachments } } : current)} onDeleted={() => { back(); requestAnimationFrame(() => document.querySelector<HTMLInputElement>('input[aria-label="Tìm kiếm chủ đề thảo luận"]')?.focus()); }} />}</div><h1>{detail.topic.title}</h1><div className={styles.postContent}><ForumContent value={detail.topic.content} /></div><Attachments files={detail.topic.attachments} /><time className={styles.hint} dateTime={detail.topic.created_at}>Đăng lúc {forumTime(detail.topic.created_at)}</time></article>
         <div className={`${styles.panel} ${styles.commentPanel}`}><Composer key={topicId} onSubmit={sendComment} /></div>
-        <div className={styles.discussion}><h2>Thảo luận <span>{detail.topic.comment_count}</span></h2>{!comments.length && <p className={styles.hint}>Chưa có bình luận. Hãy chia sẻ ý kiến đầu tiên.</p>}{(children.get(null) || []).map(comment => renderComment(comment))}
+        <div className={styles.discussion} aria-busy={moreLoading}><div className={styles.discussionHeading}><h2>Thảo luận <span>{detail.topic.comment_count}</span></h2><DiscussionSort value={commentSort} disabled={moreLoading} onChange={sort => changeCommentPage(0, sort)} /></div>{!comments.length && <p className={styles.hint}>Chưa có bình luận. Hãy chia sẻ ý kiến đầu tiên.</p>}{(children.get(null) || []).map(comment => renderComment(comment))}
           {(detail.totalPages || 1) > 1 && <nav className={styles.commentPagination} aria-label="Trang thảo luận"><button type="button" disabled={moreLoading || commentPage === 0} onClick={() => changeCommentPage(commentPage - 1)}>‹</button>{Array.from(new Set([0, commentPage - 1, commentPage, commentPage + 1, (detail.totalPages || 1) - 1])).filter(value => value >= 0 && value < (detail.totalPages || 1)).sort((a, b) => a - b).map((value, index, pages) => <span key={value}>{index > 0 && value - pages[index - 1] > 1 && <span className={styles.pageEllipsis}>…</span>}<button type="button" aria-label={`Trang ${value + 1}`} aria-current={commentPage === value ? "page" : undefined} disabled={moreLoading} onClick={() => changeCommentPage(value)}>{value + 1}</button></span>)}<button type="button" disabled={moreLoading || commentPage + 1 >= (detail.totalPages || 1)} onClick={() => changeCommentPage(commentPage + 1)}>›</button></nav>}
         </div></>}
     </>}

@@ -22,4 +22,23 @@ language sql stable set search_path = public as $$
 $$;
 revoke all on function public.forum_reaction_counts(uuid[], text) from public, anon, authenticated;
 grant execute on function public.forum_reaction_counts(uuid[], text) to service_role;
+-- Rank all root comments before pagination; keep replies attached to their root.
+create or replace function public.forum_popular_comments(target_topic uuid, page_offset integer default 0)
+returns setof public.forum_comments
+language sql stable set search_path = public as $$
+  select c.*
+  from public.forum_comments c
+  left join (
+    select r.comment_id, count(*) as likes
+    from public.forum_comment_reactions r
+    join public.forum_comments target on target.id = r.comment_id
+    where target.topic_id = target_topic and target.parent_id is null and r.reaction = 'like'
+    group by r.comment_id
+  ) reactions on reactions.comment_id = c.id
+  where c.topic_id = target_topic and c.parent_id is null
+  order by coalesce(reactions.likes, 0) desc, c.created_at desc, c.id desc
+  limit 10 offset greatest(page_offset, 0);
+$$;
+revoke all on function public.forum_popular_comments(uuid, integer) from public, anon, authenticated;
+grant execute on function public.forum_popular_comments(uuid, integer) to service_role;
 commit;

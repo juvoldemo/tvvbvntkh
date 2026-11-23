@@ -15,6 +15,7 @@ topic.can_manage = true;
 topic.attachments = [{ id: "old-image", name: "anh-cu.png", mime: "image/png", size: 68, url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jFckAAAAASUVORK5CYII=" }];
 let mode = "data";
 let lastPost = "";
+let canRevealAuthors = false;
 const browser = await chromium.launch({ headless: true });
 try {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -50,7 +51,8 @@ try {
       comments.push(comment);
       return route.fulfill({ status: 201, json: { id: comment.id, comment } });
     }
-    if (url.pathname === `/api/forum/${topicId}`) return route.fulfill({ json: { topic, comments, hasMore: false } });
+    if (url.pathname === `/api/forum/${topicId}/author`) return route.fulfill({ json: { name: "Người gửi thử nghiệm", code: "TEST_AUTHOR", group: "Nhóm thử nghiệm" } });
+    if (url.pathname === `/api/forum/${topicId}`) return route.fulfill({ json: { topic, comments, hasMore: false, canRevealAuthors } });
     if (url.pathname === "/api/user/auth") return route.fulfill({ json: { authenticated: true, advisorCode: "TEST", profile: { advisor_code: "TEST", full_name: author.name, dashboard_role: "advisor" } } });
     if (url.pathname === "/api/user/profile") return route.fulfill({ json: { profile: { advisor_code: "TEST", full_name: author.name, group_name: author.group, dashboard_role: "advisor" } } });
     if (url.pathname === "/api/dashboard") return route.fulfill({ status: 503, json: { error: "Test fixture" } });
@@ -76,6 +78,38 @@ try {
   await page.getByRole("button", { name: "Xóa tìm kiếm" }).click();
   await page.getByRole("button", { name: /Chia sẻ kinh nghiệm/ }).click();
   await page.getByRole("heading", { name: topic.title }).waitFor();
+  const discussionSort = page.getByRole("button", { name: /^Sắp xếp thảo luận:/ });
+  assert.equal(await page.getByRole("button", { name: /^Xem thông tin Ẩn danh/ }).count(), 0);
+  assert.match(await discussionSort.getAttribute("aria-label"), /Bình luận mới nhất/);
+  await discussionSort.click();
+  await page.getByRole("menuitemradio", { name: "Bình luận mới nhất" }).waitFor();
+  await page.keyboard.press("ArrowDown");
+  assert.equal(await page.getByRole("menuitemradio", { name: "Bài đăng nổi bật" }).evaluate(el => el === document.activeElement), true);
+  await page.keyboard.press("Escape");
+  assert.equal(await discussionSort.getAttribute("aria-expanded"), "false");
+  await discussionSort.click();
+  await page.getByRole("heading", { name: "Thảo luận 2" }).click();
+  assert.equal(await discussionSort.getAttribute("aria-expanded"), "false");
+  for (const sort of ["popular", "oldest", "newest"]) {
+    canRevealAuthors = sort !== "newest";
+    const response = page.waitForResponse(response => response.url().includes(`/api/forum/${topicId}?page=0&sort=${sort}`));
+    const label = { popular: "Bài đăng nổi bật", oldest: "Bài đăng cũ nhất", newest: "Bình luận mới nhất" }[sort];
+    await discussionSort.click();
+    await page.getByRole("menuitemradio", { name: label }).click();
+    await response;
+    await discussionSort.waitFor();
+    await page.waitForFunction(() => !document.querySelector('button[aria-haspopup="menu"][aria-label^="Sắp xếp thảo luận:"]').disabled);
+    assert.match(await discussionSort.getAttribute("aria-label"), new RegExp(label));
+    if (canRevealAuthors) {
+      await page.getByRole("button", { name: "Xem thông tin Ẩn danh 4157" }).click();
+      const authorDialog = page.getByRole("dialog", { name: "Thông tin người đăng ẩn danh" });
+      await authorDialog.getByText("TEST_AUTHOR", { exact: true }).waitFor();
+      await authorDialog.getByText("Người gửi thử nghiệm", { exact: true }).waitFor();
+      await authorDialog.getByRole("button", { name: "Đóng thông tin người đăng" }).click();
+      await authorDialog.waitFor({ state: "hidden" });
+    }
+  }
+  assert.equal(await page.getByRole("button", { name: /^Xem thông tin Ẩn danh/ }).count(), 0);
   assert.ok(await page.getByText("20:35 23/11/2026", { exact: true }).count());
   assert.ok(await page.getByText("Ẩn danh 4157", { exact: true }).count());
   const thumbnail = page.getByRole("button", { name: "Xem ảnh anh-cu.png", exact: true });
@@ -89,6 +123,11 @@ try {
   for (const width of [1280, 768, 375]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Detail overflow at ${width}`);
+    await discussionSort.click();
+    const menuBounds = await page.getByRole("menu", { name: "Sắp xếp thảo luận" }).boundingBox();
+    assert.ok(menuBounds.x >= 0 && menuBounds.x + menuBounds.width <= width);
+    await page.screenshot({ path: `outputs/forum/sort-${width}.png`, fullPage: true });
+    await page.keyboard.press("Escape");
     await page.screenshot({ path: `outputs/forum/detail-${width}.png`, fullPage: true });
   }
   await page.getByRole("button", { name: "Thích: 0", exact: true }).first().click();

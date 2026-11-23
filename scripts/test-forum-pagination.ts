@@ -16,17 +16,29 @@ globalThis.fetch = async (input, init) => {
   if (url.pathname.endsWith("authorized_users")) return Response.json({ advisor_code: "MEMBER" });
   if (url.pathname.endsWith("forum_topics")) return Response.json({ id, author_code: "MEMBER", anonymous: true, attachments: [] });
   if (url.pathname.endsWith("forum_reaction_counts")) return Response.json([]);
+  if (url.pathname.endsWith("forum_popular_comments")) {
+    const body = JSON.parse(String(init?.body));
+    assert.equal(body.target_topic, id);
+    // Fixture ranking puts a popular root outside the oldest first page first.
+    const ranked = [roots[20], ...roots.slice(0, 20)];
+    return Response.json(ranked.slice(body.page_offset, body.page_offset + 10));
+  }
   if (url.pathname.endsWith("forum_comments")) {
     let rows = url.searchParams.get("parent_id") === "is.null" ? data.filter(row => !row.parent_id) : data.filter(row => (url.searchParams.get("parent_id") || "").includes(`"${row.parent_id}"`) || (url.searchParams.get("parent_id") || "").slice(4, -1).split(",").includes(row.parent_id || ""));
     const count = rows.length;
+    if (init?.method !== "HEAD" && url.searchParams.get("parent_id") === "is.null") {
+      const order = url.searchParams.get("order");
+      assert.ok(order === "created_at.asc,id.asc" || order === "created_at.desc,id.desc");
+      if (order === "created_at.desc,id.desc") rows.reverse();
+    }
     const start = Number(url.searchParams.get("offset") || 0);
     rows = rows.slice(start, start + Number(url.searchParams.get("limit") || 1000));
     return new Response(init?.method === "HEAD" ? null : JSON.stringify(rows), { headers: { "Content-Type": "application/json", "Content-Range": `0-${Math.max(0, count - 1)}/${count}` } });
   }
   throw new Error(`Unexpected fixture request ${url.pathname}`);
 };
-async function page(value: string) {
-  const response = await GET(new NextRequest(`http://localhost/api/forum/${id}?page=${value}`, { headers: { cookie: `${USER_COOKIE}=${createUserToken("MEMBER")}` } }), { params: { id } });
+async function page(value: string, sort = "oldest") {
+  const response = await GET(new NextRequest(`http://localhost/api/forum/${id}?page=${value}&sort=${sort}`, { headers: { cookie: `${USER_COOKIE}=${createUserToken("MEMBER")}` } }), { params: { id } });
   assert.equal(response.status, 200);
   return response.json();
 }
@@ -42,10 +54,17 @@ async function main() {
   const last = await page("last");
   assert.equal(last.page, 2); assert.equal(last.comments.length, 1);
   assert.equal((await page("999")).page, 2);
+  const newest = await page("0", "newest");
+  assert.equal(newest.comments[0].id, "root-20");
+  assert.equal((await page("1", "newest")).comments[0].id, "root-10");
+  const popular = await page("0", "popular");
+  assert.equal(popular.comments[0].id, "root-20");
+  assert.equal(popular.comments.length, 22, "Popular pagination retains nested replies");
+  assert.equal((await page("1", "popular")).comments[0].id, "root-9");
   data = roots.slice(0, 10);
   assert.equal((await page("0")).totalPages, 1);
   data = [];
   assert.equal((await page("0")).totalPages, 1);
-  console.log("PASS: 10 root comments per page, nested descendants, last page, clamping, ten roots, empty topic.");
+  console.log("PASS: oldest/newest/popular pagination, nested descendants, last page, clamping, ten roots, empty topic.");
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

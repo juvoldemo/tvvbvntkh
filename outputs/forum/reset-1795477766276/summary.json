@@ -1,0 +1,179 @@
+{
+  "topics": 20,
+  "rootComments": 228,
+  "nestedReplies": 434,
+  "topicsWithImages": 12,
+  "commentsWithImages": 324,
+  "deletedTopics": 38,
+  "deletedComments": 1224,
+  "realAccountsVerified": true,
+  "avatarsAndGroupsVerified": true,
+  "eligibleAccounts": 121,
+  "anonymousComments": 354,
+  "participantCounts": [
+    9,
+    8,
+    4,
+    12,
+    5,
+    3,
+    11,
+    4,
+    12,
+    8,
+    4,
+    9,
+    9,
+    10,
+    8,
+    3,
+    8,
+    8,
+    7,
+    8
+  ],
+  "paginationTestTopics": 12,
+  "backup": "outputs/forum/reset-1795477766276",
+  "manifest": [
+    {
+      "id": "bc2e860d-15ca-4eb2-ba96-cb51d89ecd4c",
+      "roots": 14,
+      "replies": 30,
+      "participants": 9,
+      "anonymous": 14
+    },
+    {
+      "id": "f880b660-1206-44c8-b7ef-0aa920090803",
+      "roots": 11,
+      "replies": 26,
+      "participants": 8,
+      "anonymous": 31
+    },
+    {
+      "id": "634a2735-723f-4e5c-afa1-da19df70473f",
+      "roots": 13,
+      "replies": 19,
+      "participants": 4,
+      "anonymous": 11
+    },
+    {
+      "id": "039f7bbc-edad-4b97-9c1f-2bbeed14d8b6",
+      "roots": 15,
+      "replies": 34,
+      "participants": 12,
+      "anonymous": 38
+    },
+    {
+      "id": "df9fd67f-20cb-4b72-ad00-bd38cfffcac0",
+      "roots": 16,
+      "replies": 35,
+      "participants": 5,
+      "anonymous": 39
+    },
+    {
+      "id": "96503b61-d1b0-4e0d-bfb4-41d844575891",
+      "roots": 7,
+      "replies": 15,
+      "participants": 3,
+      "anonymous": 6
+    },
+    {
+      "id": "c04310a3-a35a-4ea4-8ab5-7690bc8de146",
+      "roots": 14,
+      "replies": 22,
+      "participants": 11,
+      "anonymous": 7
+    },
+    {
+      "id": "d673ff0e-63ca-49f8-bf75-0b9938771eb3",
+      "roots": 7,
+      "replies": 7,
+      "participants": 4,
+      "anonymous": 9
+    },
+    {
+      "id": "3b3bde22-0803-4cd8-ba38-25b14e61b510",
+      "roots": 12,
+      "replies": 18,
+      "participants": 12,
+      "anonymous": 14
+    },
+    {
+      "id": "ade3ea27-2cd4-42f3-af7b-053e43dc5293",
+      "roots": 9,
+      "replies": 19,
+      "participants": 8,
+      "anonymous": 18
+    },
+    {
+      "id": "5b9612ee-9d03-4309-9d0d-aed526a53991",
+      "roots": 7,
+      "replies": 20,
+      "participants": 4,
+      "anonymous": 10
+    },
+    {
+      "id": "dec70ba0-5deb-4615-8048-b155c6201a95",
+      "roots": 10,
+      "replies": 14,
+      "participants": 9,
+      "anonymous": 4
+    },
+    {
+      "id": "dd21cffa-b023-43ba-803e-625a8db85034",
+      "roots": 12,
+      "replies": 23,
+      "participants": 9,
+      "anonymous": 24
+    },
+    {
+      "id": "c3f3da38-6704-4cdc-8237-206a5f21b815",
+      "roots": 16,
+      "replies": 37,
+      "participants": 10,
+      "anonymous": 28
+    },
+    {
+      "id": "c4c3a472-ba32-41a1-89ba-e867c84d0cff",
+      "roots": 13,
+      "replies": 27,
+      "participants": 8,
+      "anonymous": 31
+    },
+    {
+      "id": "9d276912-0f7e-42c8-a3e0-92986a4885ad",
+      "roots": 16,
+      "replies": 27,
+      "participants": 3,
+      "anonymous": 17
+    },
+    {
+      "id": "c10ed12b-6440-46bc-a89b-b7ac0b32d0fc",
+      "roots": 9,
+      "replies": 20,
+      "participants": 8,
+      "anonymous": 6
+    },
+    {
+      "id": "9cd8cd8b-8860-455b-879d-58894da24dbe",
+      "roots": 9,
+      "replies": 12,
+      "participants": 8,
+      "anonymous": 12
+    },
+    {
+      "id": "42374cfa-e6c8-4ce0-a3f8-f3dfd6b9613c",
+      "roots": 7,
+      "replies": 6,
+      "participants": 7,
+      "anonymous": 9
+    },
+    {
+      "id": "49396399-f899-4db3-9476-0516cf47d272",
+      "roots": 11,
+      "replies": 23,
+      "participants": 8,
+      "anonymous": 26
+    }
+  ]
+}

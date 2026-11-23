@@ -18,10 +18,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (countError) throw countError;
     const totalPages = Math.max(1, Math.ceil((count || 0) / 10));
     const currentPage = request.nextUrl.searchParams.get("page") === "last" ? totalPages - 1 : Math.min(page, totalPages - 1);
-    const { data: comments, error: commentsError } = await db.from("forum_comments").select("*").eq("topic_id", params.id).is("parent_id", null)
-      .order("created_at").order("id").range(currentPage * 10, currentPage * 10 + 9);
-    if (commentsError) throw commentsError;
-    let parents = (comments || []).map(comment => comment.id);
+    const sort = request.nextUrl.searchParams.get("sort") || "oldest";
+    if (!["newest", "popular", "oldest"].includes(sort)) throw new ForumError("Bộ lọc thảo luận không hợp lệ.");
+    const { data: comments, error: commentsError } = sort === "popular"
+      ? await db.rpc("forum_popular_comments", { target_topic: params.id, page_offset: currentPage * 10 })
+      : await db.from("forum_comments").select("*").eq("topic_id", params.id).is("parent_id", null)
+        .order("created_at", { ascending: sort === "oldest" }).order("id", { ascending: sort === "oldest" }).range(currentPage * 10, currentPage * 10 + 9);
+    if (commentsError) {
+      if (sort === "popular" && ["PGRST202", "42883"].includes(commentsError.code)) throw new ForumError("Vui lòng chạy lại supabase/forum-reactions.sql trên Supabase để bật bộ lọc bài đăng nổi bật.", 503);
+      throw commentsError;
+    }
+    let parents = (comments || []).map((comment: { id: string }) => comment.id);
     const seen = new Set(parents);
     while (parents.length) {
       const next: string[] = [];
@@ -41,17 +48,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       : { data: [], error: null };
     if (reactionsError && !["PGRST202", "42883", "42P01", "PGRST205"].includes(reactionsError.code)) throw reactionsError;
     const counts = new Map<string, { likes: number; dislikes: number; my_reaction: string | null }>((reactions || []).map((row: { comment_id: string; likes: number; dislikes: number; my_reaction: string | null }) => [row.comment_id, row]));
-    return NextResponse.json({ topic: { ...topics[0], can_manage: topic.author_code === account.advisor_code }, comments: replies.map(comment => ({ ...comment, likes: counts.get(comment.id)?.likes || 0, dislikes: counts.get(comment.id)?.dislikes || 0, my_reaction: counts.get(comment.id)?.my_reaction || null })), page: currentPage, totalPages, rootCount: count || 0, hasMore: currentPage + 1 < totalPages }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ canRevealAuthors: account.advisor_code === "ADMIN", topic: { ...topics[0], can_manage: topic.author_code === account.advisor_code, can_delete: topic.author_code === account.advisor_code || account.advisor_code === "ADMIN" }, comments: replies.map(comment => ({ ...comment, likes: counts.get(comment.id)?.likes || 0, dislikes: counts.get(comment.id)?.dislikes || 0, my_reaction: counts.get(comment.id)?.my_reaction || null })), page: currentPage, totalPages, rootCount: count || 0, hasMore: currentPage + 1 < totalPages }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return forumFailure(error); }
 }
-async function ownedTopic(request: NextRequest, id: string) {
+async function ownedTopic(request: NextRequest, id: string, allowAdminDelete = false) {
   checkForumOrigin(request);
   const account = await forumAccount(request);
   if (!uuidPattern.test(id)) throw new ForumError("Chủ đề không hợp lệ.", 404);
   const { data, error } = await getSupabaseAdmin().from("forum_topics").select("id,author_code").eq("id", id).maybeSingle();
   if (error) throw error;
   if (!data) throw new ForumError("Không tìm thấy bài đăng.", 404);
-  if (data.author_code !== account.advisor_code) throw new ForumError("Bạn chỉ có thể chỉnh sửa hoặc xóa bài do mình đăng.", 403);
+  if (data.author_code !== account.advisor_code && !(allowAdminDelete && account.advisor_code === "ADMIN")) throw new ForumError("Bạn chỉ có thể chỉnh sửa hoặc xóa bài do mình đăng.", 403);
   return account;
 }
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
@@ -83,9 +90,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const account = await ownedTopic(request, params.id);
-    const { data, error } = await getSupabaseAdmin().from("forum_topics").delete()
-      .eq("id", params.id).eq("author_code", account.advisor_code).select("id").maybeSingle();
+    const account = await ownedTopic(request, params.id, true);
+    let query = getSupabaseAdmin().from("forum_topics").delete().eq("id", params.id);
+    if (account.advisor_code !== "ADMIN") query = query.eq("author_code", account.advisor_code);
+    const { data, error } = await query.select("id").maybeSingle();
     if (error) throw error;
     if (!data) throw new ForumError("Không tìm thấy bài đăng.", 404);
     return NextResponse.json({ ok: true });

@@ -20,7 +20,7 @@ import { prepareImage, prepareOverviewImages, prepareOverviewBanners } from "@/l
 type Tab = "overview" | "forum" | "contracts" | "calculator" | "recruitment" | "contests" | "leaderboard" | "illustration" | "smart_illustration" | "profile" | "archive" | "about" | "ado_targets" | "ado_accounts" | "ado_conferences" | "ado_training" | "ado_report";
 type PeriodMode = "month" | "quarter" | "year";
 type DraftContract = { id: string; productName: string; productCode?: string; premium: number; expectedPaidDate: string; expectedIssueDate?: string; status?: string };
-type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string };
+type AdminEvent = { id: string; title: string; content: string; event_date: string | null; created_at: string; topic_id?: string; read_at?: string | null };
 
 const fallbackAdvisor = {
   key: "D1021A1YNG__Lê Thị Mỹ Châu",
@@ -358,6 +358,8 @@ export default function TvvMobilePage() {
   const completedRewardRequestKeyRef = useRef("");
   const [selectedContract, setSelectedContract] = useState<any>(null);
   const [adminEvents, setAdminEvents] = useState<AdminEvent[]>([]);
+  const [forumEvents, setForumEvents] = useState<AdminEvent[]>([]);
+  const [notificationTopic, setNotificationTopic] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationButtonRef = useRef<HTMLButtonElement>(null);
   const notificationPanelRef = useRef<HTMLDivElement>(null);
@@ -769,6 +771,30 @@ export default function TvvMobilePage() {
   }, []);
 
   useEffect(() => {
+    setForumEvents([]);
+    setNotificationTopic(null);
+    if (!signedIn || !userProfile?.advisor_code) return;
+    let active = true;
+    let loading = false;
+    async function refresh() {
+      if (loading || document.visibilityState !== "visible") return;
+      loading = true;
+      try {
+        const response = await fetch("/api/forum/notifications", { cache: "no-store" });
+        if (!response.ok) { if (active) setForumEvents([]); return; }
+        const payload = await response.json();
+        if (active) setForumEvents(payload.events || []);
+      } catch { /* Keep existing notifications during temporary network failures. */ }
+      finally { loading = false; }
+    }
+    void refresh();
+    const timer = window.setInterval(refresh, 30_000);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("focus", refresh); };
+  }, [signedIn, userProfile?.advisor_code]);
+
+  useEffect(() => {
     if (!notificationsOpen) return;
     const positionPanel = () => {
       const rect = notificationButtonRef.current?.getBoundingClientRect();
@@ -1064,7 +1090,8 @@ export default function TvvMobilePage() {
     const invalid = myContracts.filter((row: any) => ["het hieu luc", "tu choi", "tri hoan", "hoan phi", "ycbh het hieu luc"].includes(normalizeStatusText(row.policy_status))).length;
     return { total, issued, pending: Math.max(total - issued - invalid, 0), invalid };
   }, [myContracts]);
-  const unreadNotifications = useMemo(() => adminEvents.filter((item) => !readEventIds.includes(item.id)), [adminEvents, readEventIds]);
+  const allNotifications = useMemo(() => [...adminEvents, ...forumEvents].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)), [adminEvents, forumEvents]);
+  const unreadNotifications = useMemo(() => allNotifications.filter((item) => !item.read_at && (item.topic_id || !readEventIds.includes(item.id))), [allNotifications, readEventIds]);
   const unreadNotificationKey = unreadNotifications.map((item) => item.id).join("|");
   const notificationCount = Math.min(99, unreadNotifications.length);
   const targetRegistration = dashboardRole === "team_leader" ? teamTarget : tvvTarget;
@@ -1076,8 +1103,8 @@ export default function TvvMobilePage() {
   const targetProgress = Math.min(100, Math.max(0, targetCompletion));
   const targetCircleLength = 125.66;
   const displayedNotifications = notificationView === "unread"
-    ? adminEvents.filter((item) => openedNotificationIds.includes(item.id))
-    : adminEvents.filter((item) => readEventIds.includes(item.id));
+    ? allNotifications.filter((item) => openedNotificationIds.includes(item.id))
+    : allNotifications.filter((item) => item.read_at || (!item.topic_id && readEventIds.includes(item.id)));
 
   useEffect(() => {
     if (!signedIn || !readEventsReady || !userProfile?.advisor_code || !unreadNotificationKey) return;
@@ -1104,6 +1131,8 @@ export default function TvvMobilePage() {
     };
   }, [readEventsReady, signedIn, unreadNotificationKey, userProfile?.advisor_code]);
 
+  useEffect(() => { if (tab !== "forum") setNotificationTopic(null); }, [tab]);
+
   function toggleNotifications() {
     const willOpen = !notificationsOpen;
     setNotificationsOpen(willOpen);
@@ -1111,8 +1140,14 @@ export default function TvvMobilePage() {
     setNotificationView("unread");
     const newlyOpenedIds = unreadNotifications.map((item) => item.id);
     setOpenedNotificationIds(newlyOpenedIds);
+    const forumIds = unreadNotifications.filter(item => item.topic_id).map(item => item.id.slice("forum:".length));
+    if (forumIds.length) {
+      void fetch("/api/forum/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: forumIds }) })
+        .then(response => { if (response.ok) setForumEvents(current => current.map(item => newlyOpenedIds.includes(item.id) ? { ...item, read_at: new Date().toISOString() } : item)); })
+        .catch(() => {});
+    }
     if (newlyOpenedIds.length === 0) return;
-    const ids = Array.from(new Set([...readEventIds, ...newlyOpenedIds]));
+    const ids = Array.from(new Set([...readEventIds, ...newlyOpenedIds.filter(id => !id.startsWith("forum:"))]));
     setReadEventIds(ids);
     if (userProfile?.advisor_code) {
       window.localStorage.setItem(`bvnt.readEvents.${userProfile.advisor_code}`, JSON.stringify(ids));
@@ -1217,7 +1252,7 @@ export default function TvvMobilePage() {
                     <button type="button" role="tab" aria-selected={notificationView === "read"} className={notificationView === "read" ? "active" : ""} onClick={() => setNotificationView("read")}>Đã xem</button>
                   </div>
                   {displayedNotifications.length === 0 ? <p className="tvv-notification-empty">{notificationView === "unread" ? "Không có thông báo mới." : "Chưa có thông báo đã xem."}</p> : displayedNotifications.map((item) => (
-                    <article key={item.id}>
+                    <article key={item.id} role={item.topic_id ? "button" : undefined} tabIndex={item.topic_id ? 0 : undefined} onClick={item.topic_id ? () => { setNotificationTopic(item.topic_id!); setTab("forum"); setNotificationsOpen(false); } : undefined} onKeyDown={item.topic_id ? event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setNotificationTopic(item.topic_id!); setTab("forum"); setNotificationsOpen(false); } } : undefined}>
                       <strong>{item.title}</strong>
                       <p>{item.content}</p>
                       <small>{item.event_date ? new Date(item.event_date).toLocaleString("vi-VN") : new Date(item.created_at).toLocaleString("vi-VN")}</small>
@@ -1250,7 +1285,7 @@ export default function TvvMobilePage() {
           {tab === "ado_training" && isAdoMode && <AdoTrainingPage />}
           {tab === "ado_report" && isAdoMode && <AdvisorActivityReportPage initialMonth={month} monthOptions={monthOptions} />}
           {tab === "leaderboard" && <LeaderboardPage leaderboard={leaderboard} month={month} />}
-          {tab === "forum" && <Forum />}
+          {tab === "forum" && <Forum initialTopicId={notificationTopic} />}
           {tab === "archive" && <ArchiveView />}
           {tab === "about" && String(authenticatedAdvisorCode || userProfile?.advisor_code || "").trim().toUpperCase() === "ADMINTN" && <AboutBaoVietPage />}
           {tab === "profile" && <Profile advisor={advisor} contracts={isAdoMode ? (adoData?.contracts ?? []) : myContracts} onAvatarChange={(avatarUrl: string) => setUserProfile((value: any) => ({ ...value, avatar_url: avatarUrl }))} onLogout={() => {

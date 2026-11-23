@@ -145,5 +145,19 @@ export async function removeForumFiles(files: StoredAttachment[]) {
 }
 export function checkForumOrigin(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) throw new ForumError("Yêu cầu không hợp lệ.", 403);
+  if (!origin) return;
+  // Behind a reverse proxy, nextUrl may contain the internal server address.
+  // Use the public host/protocol forwarded by the deployment proxy instead.
+  const host = request.headers.get("x-forwarded-host")?.split(",")[0].trim()
+    || request.headers.get("host") || request.nextUrl.host;
+  const protocol = request.headers.get("x-forwarded-proto")?.split(",")[0].trim()
+    || request.nextUrl.protocol.replace(/:$/, "");
+  let valid = false;
+  try {
+    const expected = new URL(`${protocol}://${host}`);
+    valid = ["http:", "https:"].includes(expected.protocol)
+      && !expected.username && !expected.password && expected.pathname === "/"
+      && !expected.search && !expected.hash && origin === expected.origin;
+  } catch { /* Reject malformed proxy headers and origins. */ }
+  if (!valid) throw new ForumError("Yêu cầu không hợp lệ.", 403);
 }
