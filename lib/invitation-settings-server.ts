@@ -1,9 +1,14 @@
 import { getSupabaseAdmin } from "./supabase";
-import { uploadArchiveFile } from "./archive-content";
 import { defaultInvitationSettings, InvitationSettings, validateInvitationSettings } from "./invitation-settings";
 
 export async function readInvitationSettings(): Promise<InvitationSettings> {
-  const { data, error } = await getSupabaseAdmin().storage.from("archive").download("data/invitation-settings.json");
+  // This mutable JSON controls visibility. Bypass both the Next fetch cache
+  // and Storage's cached object URL so users see the same settings as admins.
+  const { data, error } = await getSupabaseAdmin().storage.from("archive").download(
+    "data/invitation-settings.json",
+    { cacheNonce: String(Date.now()) },
+    { cache: "no-store", signal: AbortSignal.timeout(15000) }
+  );
   if (error) {
     if (["404", "400"].includes(String((error as { statusCode?: string }).statusCode)) && /not found|does not exist/i.test(error.message)) return defaultInvitationSettings;
     throw error;
@@ -15,5 +20,12 @@ export async function readInvitationSettings(): Promise<InvitationSettings> {
 
 export async function saveInvitationSettings(value: InvitationSettings) {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
-  await uploadArchiveFile("data/invitation-settings.json", bytes.buffer, "application/json");
+  // Reading the configuration already requires this bucket. Do not recreate or
+  // update its permissions on every save.
+  const { error } = await getSupabaseAdmin().storage.from("archive").upload("data/invitation-settings.json", bytes.buffer, {
+    contentType: "application/json",
+    cacheControl: "0",
+    upsert: true
+  });
+  if (error) throw error;
 }

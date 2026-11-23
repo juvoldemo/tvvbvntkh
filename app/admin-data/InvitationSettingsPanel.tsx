@@ -5,6 +5,7 @@ import { Download, LoaderCircle, Save, Upload } from "lucide-react";
 import { InvitationSettings, validateInvitationSettings } from "@/lib/invitation-settings";
 import { drawConfiguredInvitation } from "@/lib/invitation-renderer";
 import { canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
+import { requestInvitationSettings } from "@/lib/invitation-settings-request";
 
 export default function InvitationSettingsPanel() {
   const [settings, setSettings] = useState<InvitationSettings | null>(null);
@@ -26,9 +27,8 @@ export default function InvitationSettingsPanel() {
   async function load() {
     setLoading(true); setNotice("");
     try {
-      const response = await fetch("/api/admin/invitation-settings", { cache: "no-store" });
-      const data: unknown = await response.json();
-      if (!response.ok || !validateInvitationSettings(data)) throw new Error("Không tải được cấu hình thư mời.");
+      const data = await requestInvitationSettings({ cache: "no-store" });
+      if (!validateInvitationSettings(data)) throw new Error("Không tải được cấu hình thư mời.");
       setSettings(data); setDirty(false);
     } catch (e) { setNotice((e as Error).message); }
     finally { setLoading(false); }
@@ -72,9 +72,8 @@ export default function InvitationSettingsPanel() {
       decoded.close();
       if (pixels > 40000000) throw new Error("Ảnh quá lớn. Vui lòng chọn ảnh dưới 40 triệu điểm ảnh.");
       const form = new FormData(); form.set("file", file);
-      const response = await fetch("/api/admin/invitation-settings", { method: "POST", body: form });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Không tải ảnh lên được.");
+      const result = await requestInvitationSettings({ method: "POST", body: form }) as { url?: string; error?: string };
+      if (!result.url) throw new Error(result.error || "Không tải ảnh lên được.");
       update({ [kind]: result.url });
       setUploadNames(current => ({ ...current, [kind]: file.name }));
       setNotice("Đã tải ảnh lên. Bấm Lưu thay đổi để áp dụng cho user.");
@@ -86,9 +85,7 @@ export default function InvitationSettingsPanel() {
     if (!validateInvitationSettings(settings)) { setNotice("Vui lòng kiểm tra tiêu đề và các thông số chữ."); return; }
     setBusy(true); setNotice("");
     try {
-      const response = await fetch("/api/admin/invitation-settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Không lưu được cấu hình.");
+      await requestInvitationSettings({ method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
       setDirty(false); setNotice("Đã lưu. Giao diện user sẽ cập nhật trong tối đa 30 giây hoặc khi tải lại trang.");
     } catch (e) { setNotice((e as Error).message); }
     finally { setBusy(false); }
