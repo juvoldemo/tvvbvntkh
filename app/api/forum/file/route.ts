@@ -5,15 +5,16 @@ import { FORUM_BUCKET, forumAccount, ForumError, forumFailure, uuidPattern } fro
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
-    await forumAccount(request);
+    const account = await forumAccount(request);
     const topic = request.nextUrl.searchParams.get("topic") || "";
     const comment = request.nextUrl.searchParams.get("comment");
     const attachment = request.nextUrl.searchParams.get("attachment") || "";
     if (![topic, attachment, ...(comment ? [comment] : [])].every(id => uuidPattern.test(id))) throw new ForumError("Tệp không hợp lệ.", 404);
-    let query = getSupabaseAdmin().from(comment ? "forum_comments" : "forum_topics").select("attachments").eq("id", comment || topic);
+    let query = getSupabaseAdmin().from(comment ? "forum_comments" : "forum_topics").select("*").eq("id", comment || topic);
     if (comment) query = query.eq("topic_id", topic);
     const { data: row, error } = await query.maybeSingle();
     if (error) throw error;
+    if (comment && row?.hidden_at && account.advisor_code !== "ADMIN") throw new ForumError("Không tìm thấy tệp.", 404);
     const file = (row?.attachments || []).find((item: { id: string }) => item.id === attachment);
     if (!file) throw new ForumError("Không tìm thấy tệp.", 404);
     const { data, error: downloadError } = await getSupabaseAdmin().storage.from(FORUM_BUCKET).download(file.path);

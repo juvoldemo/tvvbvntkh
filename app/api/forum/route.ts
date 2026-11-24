@@ -10,12 +10,18 @@ export async function GET(request: NextRequest) {
     const search = (request.nextUrl.searchParams.get("q") || "").trim().slice(0, 200);
     const rawPage = Number(request.nextUrl.searchParams.get("page") || 0);
     const page = Number.isInteger(rawPage) && rawPage >= 0 ? Math.min(rawPage, 10000) : 0;
-    let query = getSupabaseAdmin().from("forum_topics").select("*", { count: "exact" })
-      .order("last_activity_at", { ascending: false }).order("id", { ascending: false }).range(page * 30, page * 30 + 29);
-    if (search) query = query.ilike("title", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
-    const { data, count, error } = await query;
+    function topicQuery(withPins: boolean) {
+      let query = getSupabaseAdmin().from("forum_topics").select("*", { count: "exact" });
+      if (withPins) query = query.order("pinned_at", { ascending: false, nullsFirst: false });
+      query = query.order("last_activity_at", { ascending: false }).order("id", { ascending: false }).range(page * 10, page * 10 + 9);
+      if (search) query = query.ilike("title", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
+      return query;
+    }
+    let { data, count, error } = await topicQuery(true);
+    // Keep the existing forum available until the additive migration is applied.
+    if (error?.code === "42703" || error?.code === "PGRST204") ({ data, count, error } = await topicQuery(false));
     if (error) throw error;
-    return NextResponse.json({ topics: await presentForumRows(data || []), hasMore: (page + 1) * 30 < (count || 0) }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ topics: await presentForumRows(data || []), hasMore: (page + 1) * 10 < (count || 0), totalPages: Math.max(1, Math.ceil((count || 0) / 10)) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return forumFailure(error); }
 }
 export async function POST(request: NextRequest) {

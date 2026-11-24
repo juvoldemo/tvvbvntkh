@@ -1,0 +1,220 @@
+{
+  "topics": 25,
+  "reactions": 2747,
+  "rootComments": 319,
+  "nestedReplies": 617,
+  "topicsWithImages": 11,
+  "commentsWithImages": 497,
+  "deletedTopics": 25,
+  "deletedComments": 143,
+  "realAccountsVerified": true,
+  "avatarsAndGroupsVerified": true,
+  "eligibleAccounts": 122,
+  "anonymousComments": 559,
+  "participantCounts": [
+    7,
+    5,
+    4,
+    9,
+    5,
+    3,
+    4,
+    8,
+    5,
+    8,
+    7,
+    5,
+    11,
+    11,
+    9,
+    4,
+    11,
+    10,
+    8,
+    8,
+    9,
+    12,
+    5,
+    4,
+    12
+  ],
+  "paginationTestTopics": 19,
+  "backup": "outputs/forum/reset-1795515119955",
+  "manifest": [
+    {
+      "id": "0dfdddaf-a5f3-43ca-b48e-2bfff93712db",
+      "roots": 10,
+      "replies": 17,
+      "participants": 7,
+      "anonymous": 8
+    },
+    {
+      "id": "b9abbcfb-c169-4b7e-8ab1-ca09343d7259",
+      "roots": 10,
+      "replies": 17,
+      "participants": 5,
+      "anonymous": 20
+    },
+    {
+      "id": "9eb85e66-73dc-4f3b-ac1a-a5aafe22bbb5",
+      "roots": 16,
+      "replies": 27,
+      "participants": 4,
+      "anonymous": 30
+    },
+    {
+      "id": "c55f4fc4-84c3-4ae5-8084-7cd5e3552748",
+      "roots": 13,
+      "replies": 16,
+      "participants": 9,
+      "anonymous": 26
+    },
+    {
+      "id": "8a028e92-89d6-4038-b16d-2651eac3af5b",
+      "roots": 5,
+      "replies": 8,
+      "participants": 5,
+      "anonymous": 3
+    },
+    {
+      "id": "21bfe234-4a08-4020-879c-b1f53ad898e7",
+      "roots": 16,
+      "replies": 25,
+      "participants": 3,
+      "anonymous": 12
+    },
+    {
+      "id": "863f2c85-e193-4be1-b26f-a55960cfc4b5",
+      "roots": 6,
+      "replies": 18,
+      "participants": 4,
+      "anonymous": 17
+    },
+    {
+      "id": "a2143174-2302-4d31-a713-8e206539a59f",
+      "roots": 9,
+      "replies": 25,
+      "participants": 8,
+      "anonymous": 26
+    },
+    {
+      "id": "6d93f12e-b728-410d-a5f4-ab1989b2647a",
+      "roots": 15,
+      "replies": 32,
+      "participants": 5,
+      "anonymous": 40
+    },
+    {
+      "id": "0245b9fc-65a0-4555-83fe-cea23cb6c02b",
+      "roots": 16,
+      "replies": 27,
+      "participants": 8,
+      "anonymous": 31
+    },
+    {
+      "id": "813d5a63-5a87-4b8f-90d0-de3a536f74e1",
+      "roots": 16,
+      "replies": 33,
+      "participants": 7,
+      "anonymous": 42
+    },
+    {
+      "id": "42078e53-63b1-4a67-bf3d-0ccc6c422c71",
+      "roots": 12,
+      "replies": 20,
+      "participants": 5,
+      "anonymous": 12
+    },
+    {
+      "id": "803b0b75-5a42-46ed-a2d9-8f4482a1062c",
+      "roots": 14,
+      "replies": 30,
+      "participants": 11,
+      "anonymous": 16
+    },
+    {
+      "id": "c809c736-fddf-4c1e-ab29-1384dadb1b1a",
+      "roots": 11,
+      "replies": 23,
+      "participants": 11,
+      "anonymous": 8
+    },
+    {
+      "id": "1492e6e1-3d55-4eef-a1b0-c7120535d11f",
+      "roots": 16,
+      "replies": 27,
+      "participants": 9,
+      "anonymous": 41
+    },
+    {
+      "id": "449efa05-4f37-40d0-aeb6-2186cfb77e3c",
+      "roots": 9,
+      "replies": 17,
+      "participants": 4,
+      "anonymous": 21
+    },
+    {
+      "id": "e6de0bfb-3742-4bd9-8525-382639dbb1dc",
+      "roots": 16,
+      "replies": 40,
+      "participants": 11,
+      "anonymous": 48
+    },
+    {
+      "id": "48c8d0f0-534b-415c-9f35-cef738be870a",
+      "roots": 14,
+      "replies": 23,
+      "participants": 10,
+      "anonymous": 10
+    },
+    {
+      "id": "6d4b513e-3bdf-4e10-9fb4-fef7ce2d488f",
+      "roots": 15,
+      "replies": 37,
+      "participants": 8,
+      "anonymous": 6
+    },
+    {
+      "id": "ca6e5f96-b22e-4765-a40d-65f88eb9375c",
+      "roots": 16,
+      "replies": 23,
+      "participants": 8,
+      "anonymous": 36
+    },
+    {
+      "id": "fe41a807-b82d-430a-95bc-8f70f3334b5b",
+      "roots": 11,
+      "replies": 16,
+      "participants": 9,
+      "anonymous": 18
+    },
+    {
+      "id": "aa0b6491-615e-42cc-b6ca-16623bdf487a",
+      "roots": 13,
+      "replies": 29,
+      "participants": 12,
+      "anonymous": 19
+    },
+    {
+      "id": "6acfc601-1b9b-455d-b45b-672647a05832",
+      "roots": 15,
+      "replies": 38,
+      "participants": 5,
+      "anonymous": 13
+    },
+    {
+      "id": "8dc1a7ae-83b6-4880-aa81-e13ecc15df42",
+      "roots": 11,
+      "replies": 21,
+      "participants": 4,
+      "anonymous": 17
+    },
+    {
+      "id": "7cf523f3-82ac-455c-9499-5db1e61c5629",
+      "roots": 14,
+      "replies": 28,
+      "participants": 12,
+      "anonymous": 39
+    }
+  ]
+}

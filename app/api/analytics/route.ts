@@ -57,8 +57,23 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: "Chưa đăng nhập admin." }, { status: 401 });
   const period = request.nextUrl.searchParams.get("period") || "day";
-  const cached = analyticsCache.get(period);
-  if (cached && cached.expiresAt > Date.now()) return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "HIT" } });
+  const invitationsToday = request.nextUrl.searchParams.get("invitations") === "today";
+  const invitationsRange = request.nextUrl.searchParams.get("invitations") === "range";
+  const fromDate = request.nextUrl.searchParams.get("from") || "";
+  const toDate = request.nextUrl.searchParams.get("to") || "";
+  const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+    && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+  if (invitationsRange && (!validDate(fromDate) || !validDate(toDate) || fromDate > toDate)) {
+    return NextResponse.json({ error: "Khoảng ngày không hợp lệ." }, { status: 400 });
+  }
+  const todayParts = analyticsTimeParts(new Date());
+  const todayStart = new Date(`${todayParts.year}-${todayParts.month}-${todayParts.day}T00:00:00+07:00`).toISOString();
+  const todayEnd = new Date(new Date(todayStart).getTime() + 86400000).toISOString();
+  const invitationStart = invitationsRange ? new Date(`${fromDate}T00:00:00+07:00`).toISOString() : todayStart;
+  const invitationEnd = invitationsRange ? new Date(Date.parse(`${toDate}T00:00:00+07:00`) + 86400000).toISOString() : todayEnd;
+  const cacheKey = `${period}:${invitationsToday ? todayStart : "all"}`;
+  const cached = analyticsCache.get(cacheKey);
+  if (!invitationsRange && cached && cached.expiresAt > Date.now()) return NextResponse.json(cached.payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "HIT" } });
   const days = period === "month" ? 30 : period === "week" ? 7 : 1;
   const nowDate = new Date();
   const { year, month, day } = analyticsTimeParts(nowDate);
@@ -74,9 +89,11 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   let invitationActions: any[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data: page, error: invitationError } = await supabase.from("app_analytics_events")
+    let invitationQuery = supabase.from("app_analytics_events")
       .select("advisor_code,action_name")
-      .eq("event_name", "action")
+      .eq("event_name", "action");
+    if (invitationsToday || invitationsRange) invitationQuery = invitationQuery.gte("created_at", invitationStart).lt("created_at", invitationEnd);
+    const { data: page, error: invitationError } = await invitationQuery
       .order("id", { ascending: true })
       .range(from, from + 999);
     if (invitationError) return NextResponse.json({ error: invitationError.message }, { status: 500 });
@@ -195,6 +212,6 @@ export async function GET(request: NextRequest) {
     shortSessions: result.filter((row) => row.totalSeconds > 0 && row.totalSeconds < 15).length
   };
   const payload = { period, since, rows: result, summary, invitationRanking, invitationContents, trends, tabStats, groups, neverAccessed, inactive7Days, inactive30Days };
-  analyticsCache.set(period, { expiresAt: Date.now() + 20_000, payload });
-  return NextResponse.json(payload, { headers: { "Cache-Control": "private, max-age=15", "X-Data-Cache": "MISS" } });
+  if (!invitationsRange) analyticsCache.set(cacheKey, { expiresAt: Date.now() + 20_000, payload });
+  return NextResponse.json(payload, { headers: { "Cache-Control": invitationsRange ? "no-store" : "private, max-age=15", "X-Data-Cache": "MISS" } });
 }

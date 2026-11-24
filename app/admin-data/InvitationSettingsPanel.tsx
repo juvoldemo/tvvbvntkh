@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { PointerEvent, useEffect, useRef, useState } from "react";
 import { Download, LoaderCircle, Save, Upload } from "lucide-react";
@@ -7,7 +7,14 @@ import { drawConfiguredInvitation } from "@/lib/invitation-renderer";
 import { canvasToBlob, downloadInvitationFile } from "@/lib/invitation-canvas";
 import { requestInvitationSettings } from "@/lib/invitation-settings-request";
 
+import InvitationCreationStats from "./InvitationCreationStats";
+import styles from "./InvitationSettingsPanel.module.css";
+
 export default function InvitationSettingsPanel() {
+  return <div className={styles.layout}><div className={styles.editor}><InvitationSettingsEditor /></div><aside className={styles.statistics}><InvitationCreationStats /></aside></div>;
+}
+
+function InvitationSettingsEditor() {
   const [settings, setSettings] = useState<InvitationSettings | null>(null);
   const [sample, setSample] = useState("Nguyễn Văn An");
   const [notice, setNotice] = useState("");
@@ -154,3 +161,4 @@ export function InvitationUpload({ title, fileName, uploading, disabled, onSelec
     </label>
   </div>;
 }
+

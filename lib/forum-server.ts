@@ -21,6 +21,9 @@ export async function forumAccount(request: NextRequest) {
   return data;
 }
 export function forumFailure(error: unknown) {
+  const message = (error as { message?: string })?.message;
+  if (message === "FORUM_TOPIC_LOCKED") return NextResponse.json({ error: "Bài viết đã khóa, không thể thêm hoặc sửa bình luận." }, { status: 403 });
+  if (message === "FORUM_COMMENT_HIDDEN") return NextResponse.json({ error: "Bình luận đã bị ẩn, không thể trả lời hoặc chỉnh sửa." }, { status: 403 });
   if (error instanceof ForumError) return NextResponse.json({ error: error.message }, { status: error.status });
   const code = (error as { code?: string })?.code;
   if (code === "PGRST202" || code === "42883") return NextResponse.json({ error: "Vui lòng chạy supabase/forum-reactions.sql trên Supabase để bật thích/không thích." }, { status: 503 });
@@ -104,8 +107,8 @@ export async function presentForumRows(rows: StoredRow[], topicId?: string) {
     const attachments = (row.attachments || []).map(file => ({ id: file.id, name: file.name, size: file.size, mime: file.mime,
       url: `/api/forum/file?topic=${topicId || row.id}${topicId ? `&comment=${row.id}` : ""}&attachment=${file.id}` }));
     return topicId
-      ? { id: row.id, topic_id: row.topic_id, parent_id: row.parent_id, content: row.content, sticker: row.sticker, created_at: row.created_at, author, attachments }
-      : { id: row.id, title: row.title, content: row.content, created_at: row.created_at, last_activity_at: row.last_activity_at, comment_count: row.comment_count, author, attachments };
+      ? { id: row.id, topic_id: row.topic_id, parent_id: row.parent_id, hidden_at: row.hidden_at || null, content: row.content, sticker: row.sticker, created_at: row.created_at, author, attachments }
+      : { id: row.id, title: row.title, content: row.content, created_at: row.created_at, last_activity_at: row.last_activity_at, pinned_at: row.pinned_at, locked_at: row.locked_at || null, comment_count: row.comment_count, author, attachments };
   });
 }
 export async function forumForm(request: NextRequest) {

@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { FORUM_STICKERS, FORUM_MAX_FILES } from "@/lib/forum";
 import { checkForumOrigin, forumAccount, ForumError, forumFailure, forumForm, presentForumRows, removeForumFiles, uploadForumFiles, uuidPattern, preparedForumFiles } from "@/lib/forum-server";
 
+import { canModerateForum, redactHiddenComment } from "@/lib/forum-moderation";
+
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       : { data: [], error: null };
     if (reactionsError && !["PGRST202", "42883", "42P01", "PGRST205"].includes(reactionsError.code)) throw reactionsError;
     const counts = new Map<string, { likes: number; dislikes: number; my_reaction: string | null }>((reactions || []).map((row: { comment_id: string; likes: number; dislikes: number; my_reaction: string | null }) => [row.comment_id, row]));
-    return NextResponse.json({ canRevealAuthors: account.advisor_code === "ADMIN", topic: { ...topics[0], can_manage: topic.author_code === account.advisor_code, can_delete: topic.author_code === account.advisor_code || account.advisor_code === "ADMIN" }, comments: replies.map(comment => ({ ...comment, likes: counts.get(comment.id)?.likes || 0, dislikes: counts.get(comment.id)?.dislikes || 0, my_reaction: counts.get(comment.id)?.my_reaction || null })), page: currentPage, totalPages, rootCount: count || 0, hasMore: currentPage + 1 < totalPages }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ canRevealAuthors: account.advisor_code === "ADMIN", topic: { ...topics[0], can_pin: account.advisor_code === "ADMIN", can_lock: canModerateForum(account.advisor_code), can_manage: topic.author_code === account.advisor_code, can_delete: topic.author_code === account.advisor_code || account.advisor_code === "ADMIN" }, comments: replies.map(comment => ({ ...redactHiddenComment(comment, canModerateForum(account.advisor_code)), can_moderate: canModerateForum(account.advisor_code), can_edit: !topic.locked_at && !comment.hidden_at && comments?.some((row: { id: string; author_code: string }) => row.id === comment.id && row.author_code === account.advisor_code) || false, likes: counts.get(comment.id)?.likes || 0, dislikes: counts.get(comment.id)?.dislikes || 0, my_reaction: counts.get(comment.id)?.my_reaction || null })), page: currentPage, totalPages, rootCount: count || 0, hasMore: currentPage + 1 < totalPages }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return forumFailure(error); }
 }
 async function ownedTopic(request: NextRequest, id: string, allowAdminDelete = false) {
@@ -114,14 +116,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (prepared.length + files.length > FORUM_MAX_FILES) throw new ForumError("Tối đa 4 ảnh đính kèm.");
     if (!content && !sticker && !files.length && !prepared.length) throw new ForumError("Vui lòng nhập nội dung, chọn sticker hoặc gửi ảnh.");
     const db = getSupabaseAdmin();
-    const { data: topic, error: topicError } = await db.from("forum_topics").select("id").eq("id", params.id).maybeSingle();
+    const { data: topic, error: topicError } = await db.from("forum_topics").select("*").eq("id", params.id).maybeSingle();
     if (topicError) throw topicError;
     if (!topic) throw new ForumError("Không tìm thấy chủ đề.", 404);
+    if (topic.locked_at) throw new ForumError("Bài viết đã khóa, không thể thêm bình luận.", 403);
     if (parentId) {
       if (!uuidPattern.test(parentId)) throw new ForumError("Bình luận được trả lời không hợp lệ.");
-      const { data: parent, error } = await db.from("forum_comments").select("id").eq("id", parentId).eq("topic_id", params.id).maybeSingle();
+      const { data: parent, error } = await db.from("forum_comments").select("*").eq("id", parentId).eq("topic_id", params.id).maybeSingle();
       if (error) throw error;
       if (!parent) throw new ForumError("Không tìm thấy bình luận cần trả lời.");
+      if (parent.hidden_at) throw new ForumError("Bình luận đã bị ẩn, không thể trả lời.", 403);
     }
     const uploaded = await uploadForumFiles(files, true);
     const attachments = [...prepared, ...uploaded];

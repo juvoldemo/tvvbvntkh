@@ -1,0 +1,2927 @@
+{
+  "topics": [
+    {
+      "id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "title": "Lịch làm việc đầu tuần: mọi người ưu tiên việc gì?",
+      "content": "Sáng thứ Hai mình thường mất khá lâu để sắp lại lịch. Mọi người chọn việc cần làm trước theo mức độ gấp hay theo lịch hẹn đã xác nhận?",
+      "attachments": [],
+      "created_at": "2026-11-12T09:47:51.713Z",
+      "last_activity_at": "2026-11-12T09:47:51.713Z"
+    },
+    {
+      "id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Khách đổi lịch sát giờ, nên phản hồi thế nào?",
+      "content": "Chiều nay mình chuẩn bị xong thì khách xin dời cuộc hẹn. Mình muốn giữ sự thoải mái cho khách nhưng vẫn chủ động lịch của mình. Có cách trả lời nào gọn và lịch sự không?",
+      "attachments": [],
+      "created_at": "2026-11-12T20:52:51.713Z",
+      "last_activity_at": "2026-11-12T20:52:51.713Z"
+    },
+    {
+      "id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "title": "Một câu hỏi mở giúp cuộc gặp bớt căng thẳng",
+      "content": "Mình đang tập mở đầu cuộc gặp bằng câu hỏi dễ trả lời, không đi ngay vào sản phẩm. Các bạn hay bắt đầu câu chuyện như thế nào?",
+      "attachments": [],
+      "created_at": "2026-11-13T09:22:51.713Z",
+      "last_activity_at": "2026-11-13T09:22:51.713Z"
+    },
+    {
+      "id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "title": "Ghi chú sau cuộc gặp bằng sổ hay điện thoại?",
+      "content": "Mình thích viết sổ nhưng tìm lại thông tin hơi chậm. Ai có cách ghi chú đơn giản, dễ xem lại mà không ghi quá nhiều thông tin riêng tư của khách không?",
+      "attachments": [],
+      "created_at": "2026-11-13T19:34:51.713Z",
+      "last_activity_at": "2026-11-13T19:34:51.713Z"
+    },
+    {
+      "id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Làm sao để họp nhóm 30 phút mà vẫn đủ ý?",
+      "content": "Buổi họp gần đây hay kéo dài vì trao đổi nhiều việc phát sinh. Mình định gửi nội dung trước và giới hạn từng phần. Nhóm bạn làm cách nào?",
+      "attachments": [],
+      "created_at": "2026-11-14T05:33:51.713Z",
+      "last_activity_at": "2026-11-14T05:33:51.713Z"
+    },
+    {
+      "id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "title": "Tuần đầu của thành viên mới nên học những gì?",
+      "content": "Nếu chỉ chọn ba việc cho tuần đầu, mọi người sẽ chọn gì? Mình sợ đưa quá nhiều tài liệu khiến bạn mới thấy quá tải.",
+      "attachments": [],
+      "created_at": "2026-11-14T18:13:51.713Z",
+      "last_activity_at": "2026-11-14T18:13:51.713Z"
+    },
+    {
+      "id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "title": "Có ai cùng luyện cách lắng nghe không?",
+      "content": "Mình nhận ra đôi khi mình nghĩ câu trả lời khi khách còn đang nói. Muốn luyện thói quen nghe hết rồi mới phản hồi, mọi người có bài tập nào không?",
+      "attachments": [],
+      "created_at": "2026-11-15T04:10:51.713Z",
+      "last_activity_at": "2026-11-15T04:10:51.713Z"
+    },
+    {
+      "id": "898932ac-d7df-40f5-9df4-75320c0fa94b",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Chia mục tiêu tháng thành kế hoạch tuần",
+      "content": "Nhìn mục tiêu cả tháng mình hơi áp lực. Mình muốn chuyển thành những việc cụ thể có thể theo dõi mỗi tuần. Mọi người thường chia như thế nào?",
+      "attachments": [],
+      "created_at": "2026-11-15T14:25:51.713Z",
+      "last_activity_at": "2026-11-15T14:25:51.713Z"
+    },
+    {
+      "id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Nhắc lịch hẹn trước bao lâu thì hợp lý?",
+      "content": "Mình thường nhắn xác nhận trước một ngày và nhắc nhẹ trước giờ gặp. Có khi khách thấy hơi nhiều tin nhắn. Các bạn đang làm thế nào?",
+      "attachments": [],
+      "created_at": "2026-11-16T03:05:51.713Z",
+      "last_activity_at": "2026-11-16T03:05:51.713Z"
+    },
+    {
+      "id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Cách giữ nhịp làm việc khi một tuần chưa thuận lợi",
+      "content": "Tuần này mình có vài cuộc hẹn chưa đi tới đâu nên hơi xuống tinh thần. Mình muốn nghe những cách nhỏ giúp mọi người lấy lại nhịp làm việc.",
+      "attachments": [],
+      "created_at": "2026-11-16T14:15:51.713Z",
+      "last_activity_at": "2026-11-16T14:15:51.713Z"
+    },
+    {
+      "id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "title": "Tài liệu nhóm đang nằm rải rác, sắp lại từ đâu?",
+      "content": "Nhóm có nhiều phiên bản tài liệu trong các đoạn chat. Mình muốn gom về một chỗ để bạn mới tìm dễ hơn. Mọi người đặt tên và phân thư mục thế nào?",
+      "attachments": [],
+      "created_at": "2026-11-16T23:34:51.713Z",
+      "last_activity_at": "2026-11-16T23:34:51.713Z"
+    },
+    {
+      "id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Chuẩn bị trước hội nghị khách hàng: hay sót việc gì?",
+      "content": "Mình đang lên danh sách chuẩn bị cho một buổi gặp mặt nhỏ. Ngoài xác nhận khách và kiểm tra địa điểm, mọi người thường kiểm tra thêm những gì?",
+      "attachments": [],
+      "created_at": "2026-11-17T12:44:51.713Z",
+      "last_activity_at": "2026-11-17T12:44:51.713Z"
+    },
+    {
+      "id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "title": "Mỗi ngày dành bao lâu để học lại kiến thức?",
+      "content": "Mình muốn duy trì việc học nhưng nếu đặt một tiếng mỗi ngày thì khó theo lâu. Ai đang có lịch học ngắn mà hiệu quả chia sẻ giúp mình với.",
+      "attachments": [],
+      "created_at": "2026-11-17T22:54:51.713Z",
+      "last_activity_at": "2026-11-17T22:54:51.713Z"
+    },
+    {
+      "id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "title": "Nhờ góp ý một cách giới thiệu bản thân ngắn gọn",
+      "content": "Mình đang tập giới thiệu trong khoảng 30 giây: mình là ai, có thể hỗ trợ gì và mong muốn hiểu nhu cầu của người đối diện. Nên bỏ bớt phần nào cho tự nhiên?",
+      "attachments": [],
+      "created_at": "2026-11-18T09:17:51.713Z",
+      "last_activity_at": "2026-11-18T09:17:51.713Z"
+    },
+    {
+      "id": "934250b6-c7f8-4ba3-b150-be1bfd8bce11",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Sau buổi tư vấn, theo dõi thế nào để không làm phiền?",
+      "content": "Mình muốn chủ động hỗ trợ nhưng không muốn khách cảm thấy bị thúc giục. Mọi người có thống nhất lịch liên hệ tiếp ngay trong cuộc gặp không?",
+      "attachments": [],
+      "created_at": "2026-11-18T20:54:51.713Z",
+      "last_activity_at": "2026-11-18T20:54:51.713Z"
+    },
+    {
+      "id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Một thay đổi nhỏ giúp làm việc trên điện thoại tiện hơn",
+      "content": "Dạo này mình hay xử lý công việc khi di chuyển. Mọi người có mẹo nào để tìm lịch, tài liệu và ghi chú nhanh hơn mà không mở quá nhiều ứng dụng?",
+      "attachments": [],
+      "created_at": "2026-11-19T08:47:51.713Z",
+      "last_activity_at": "2026-11-19T08:47:51.713Z"
+    },
+    {
+      "id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Cuối ngày nên tổng kết những gì?",
+      "content": "Mình thử dành 10 phút trước khi kết thúc ngày làm việc để nhìn lại. Nếu chỉ ghi ba dòng, mọi người sẽ ghi những gì?",
+      "attachments": [],
+      "created_at": "2026-11-19T19:16:51.713Z",
+      "last_activity_at": "2026-11-19T19:16:51.713Z"
+    },
+    {
+      "id": "9791ec3d-b0e5-45d2-a542-2bba542a49d1",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "title": "Khi khách hỏi điều mình chưa chắc, trả lời ra sao?",
+      "content": "Mình nghĩ thừa nhận cần kiểm tra lại sẽ tốt hơn trả lời vội. Mọi người dùng cách diễn đạt nào để vẫn giữ được sự tin tưởng?",
+      "attachments": [],
+      "created_at": "2026-11-20T05:06:51.713Z",
+      "last_activity_at": "2026-11-20T05:06:51.713Z"
+    },
+    {
+      "id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Thực hành theo cặp: góp ý sao cho dễ tiếp thu?",
+      "content": "Nhóm mình sắp có buổi luyện tình huống. Mình muốn phần góp ý cụ thể và tích cực, tránh khiến bạn mới mất tự tin. Có khung góp ý nào đơn giản không?",
+      "attachments": [],
+      "created_at": "2026-11-20T15:15:51.713Z",
+      "last_activity_at": "2026-11-20T15:15:51.713Z"
+    },
+    {
+      "id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Làm việc cùng đồng nghiệp: bàn giao cần ghi gì?",
+      "content": "Có những việc hai người cùng hỗ trợ nên đôi lúc thông tin bị lệch nhau. Mọi người dùng mẫu bàn giao nào để rõ mà không dài dòng?",
+      "attachments": [],
+      "created_at": "2026-11-21T04:10:51.713Z",
+      "last_activity_at": "2026-11-21T04:10:51.713Z"
+    },
+    {
+      "id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Lịch kín nhưng vẫn thấy chưa hiệu quả",
+      "content": "Mình có tuần rất bận nhưng cuối tuần nhìn lại chưa hoàn thành việc quan trọng. Có lẽ mình nhận nhiều việc nhỏ quá. Mọi người từng gặp chưa?",
+      "attachments": [],
+      "created_at": "2026-11-21T14:45:51.713Z",
+      "last_activity_at": "2026-11-21T14:45:51.713Z"
+    },
+    {
+      "id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "title": "Một cuộc hẹn tốt có nhất thiết phải có kết quả ngay?",
+      "content": "Có cuộc gặp khách chia sẻ được nhiều nhu cầu nhưng chưa muốn quyết định. Theo mọi người nên đánh giá chất lượng buổi gặp dựa trên điều gì?",
+      "attachments": [],
+      "created_at": "2026-11-22T02:59:51.713Z",
+      "last_activity_at": "2026-11-22T02:59:51.713Z"
+    },
+    {
+      "id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Gợi ý hoạt động chia sẻ kinh nghiệm cuối tuần",
+      "content": "Mình muốn buổi sinh hoạt nhóm bớt giống báo cáo. Đang nghĩ mỗi người kể một việc làm được và một điều muốn xin góp ý. Mọi người có cách tổ chức nào hay?",
+      "attachments": [],
+      "created_at": "2026-11-22T14:03:51.713Z",
+      "last_activity_at": "2026-11-22T14:03:51.713Z"
+    },
+    {
+      "id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "title": "Cách sắp xếp tài liệu trước một cuộc gặp trực tiếp",
+      "content": "Mình hay mang nhiều tài liệu rồi mất thời gian tìm đúng trang. Đang muốn chuẩn bị gọn hơn theo nhu cầu của từng cuộc gặp. Mọi người làm sao?",
+      "attachments": [],
+      "created_at": "2026-11-22T22:59:51.713Z",
+      "last_activity_at": "2026-11-22T22:59:51.713Z"
+    },
+    {
+      "id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "title": "Thử thách nhỏ tuần tới: giữ một thói quen mới",
+      "content": "Mình chọn xác nhận lịch ngày mai trước khi kết thúc công việc hôm nay. Ai muốn thử cùng một thói quen nhỏ trong một tuần không? Cuối tuần quay lại chia sẻ kết quả nhé.",
+      "attachments": [],
+      "created_at": "2026-11-23T10:19:51.713Z",
+      "last_activity_at": "2026-11-23T10:19:51.713Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "3ee1723c-e9a1-41af-aaaf-d7952587c664",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình chốt ba việc chính từ tối Chủ nhật, sáng đầu tuần chỉ rà lại các cuộc hẹn.",
+      "attachments": [],
+      "created_at": "2026-11-12T10:29:51.713Z"
+    },
+    {
+      "id": "04ff4aeb-c152-495b-8033-e084f775533f",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": "3ee1723c-e9a1-41af-aaaf-d7952587c664",
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-12T11:22:51.713Z"
+    },
+    {
+      "id": "b1d92c39-d649-4cb3-9d7d-d6f35fa3f0c3",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình để trống một khung giờ buổi chiều cho việc phát sinh. Lịch đỡ bị dồn hơn.",
+      "attachments": [],
+      "created_at": "2026-11-12T11:45:51.713Z"
+    },
+    {
+      "id": "343f347b-b602-42ca-bf3e-98a4329463e3",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": "b1d92c39-d649-4cb3-9d7d-d6f35fa3f0c3",
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-12T12:15:51.713Z"
+    },
+    {
+      "id": "54bd083b-ab26-4a2e-b27b-796e9c5470ac",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Nếu khách đổi lịch thì bạn có chuyển sang làm việc tiếp theo luôn không?",
+      "attachments": [],
+      "created_at": "2026-11-12T12:31:51.713Z"
+    },
+    {
+      "id": "31099e31-b904-437d-b0e8-8d8c4cc95a4c",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": "54bd083b-ab26-4a2e-b27b-796e9c5470ac",
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-12T13:35:51.713Z"
+    },
+    {
+      "id": "c800b5db-9c91-4306-b4e4-2ad06b610f61",
+      "topic_id": "bab2904b-00aa-49b3-8eb9-077bdb9ec88e",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình nghĩ không cần áp dụng hết cùng lúc, chọn một cách phù hợp rồi theo dõi kết quả trước.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-12T13:49:51.713Z"
+    },
+    {
+      "id": "7ed01f44-02e7-44df-9d11-497fb38b4674",
+      "topic_id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình đưa hai khung giờ khác để khách chọn, tránh hỏi quá rộng là khi nào anh chị rảnh.",
+      "attachments": [],
+      "created_at": "2026-11-12T21:15:51.713Z"
+    },
+    {
+      "id": "c09d8efe-a183-4aac-a913-198adbc0ce32",
+      "topic_id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình thường hỏi khách muốn đổi sang gọi điện ngắn hay hẹn lại trực tiếp.",
+      "attachments": [],
+      "created_at": "2026-11-12T22:15:51.713Z"
+    },
+    {
+      "id": "5b322912-5925-44e0-86be-bb793bc1a86d",
+      "topic_id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "parent_id": "c09d8efe-a183-4aac-a913-198adbc0ce32",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-12T23:22:51.713Z"
+    },
+    {
+      "id": "4de47da2-3965-4e2f-8123-69ef50646b05",
+      "topic_id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Theo mình cứ xác nhận việc đổi lịch trước, rồi mới đề xuất ngày mới.",
+      "attachments": [],
+      "created_at": "2026-11-12T23:32:51.713Z"
+    },
+    {
+      "id": "cd5f5a5f-6211-4082-827d-75feaeb880e8",
+      "topic_id": "dc7f3713-8af0-4191-9b93-8aa000d3704c",
+      "parent_id": "4de47da2-3965-4e2f-8123-69ef50646b05",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-13T00:18:51.713Z"
+    },
+    {
+      "id": "24bd024e-632c-478d-9007-4bf30755520e",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình hỏi điều gì khiến anh chị muốn tìm hiểu vào thời điểm này.",
+      "attachments": [],
+      "created_at": "2026-11-13T10:03:51.713Z"
+    },
+    {
+      "id": "62434abe-6606-4f01-b7e4-4bfa031a3e0c",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": "24bd024e-632c-478d-9007-4bf30755520e",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-13T11:24:51.713Z"
+    },
+    {
+      "id": "2c7de1db-d75b-48f5-9fdd-e572817b0d51",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": true,
+      "content": "Mình hỏi khách mong muốn nhận được điều gì sau buổi trao đổi hôm nay.",
+      "attachments": [],
+      "created_at": "2026-11-13T11:40:51.713Z"
+    },
+    {
+      "id": "cad034f2-85b0-4579-a4d9-4c0875700239",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": "2c7de1db-d75b-48f5-9fdd-e572817b0d51",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-13T12:09:51.713Z"
+    },
+    {
+      "id": "8bfa4ffe-7f17-4b5f-b21b-305d7f70d0e9",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Có người thích đi thẳng vào vấn đề. Mình thường hỏi xem họ có bao nhiêu thời gian trước.",
+      "attachments": [],
+      "created_at": "2026-11-13T12:16:51.713Z"
+    },
+    {
+      "id": "9adbc6db-f483-4c08-8409-6345759ac3c2",
+      "topic_id": "b0253627-05e6-4578-8a85-747b8c4c4c6a",
+      "parent_id": "8bfa4ffe-7f17-4b5f-b21b-305d7f70d0e9",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-13T13:30:51.713Z"
+    },
+    {
+      "id": "bab95a94-474f-4a0f-9077-d048aa8b6ec3",
+      "topic_id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình chỉ ghi nhu cầu chính, việc đã hẹn và ngày liên hệ tiếp theo.",
+      "attachments": [],
+      "created_at": "2026-11-13T19:56:51.713Z"
+    },
+    {
+      "id": "1209d23c-f25c-4ab3-acab-1109b556c668",
+      "topic_id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "parent_id": "bab95a94-474f-4a0f-9077-d048aa8b6ec3",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-13T21:08:51.713Z"
+    },
+    {
+      "id": "f6bf95f7-f7f9-46f8-a758-8e2fc4e020e7",
+      "topic_id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình dùng mã khách trong ghi chú, không ghi các thông tin nhạy cảm lên ứng dụng cá nhân.",
+      "attachments": [],
+      "created_at": "2026-11-13T21:18:51.713Z"
+    },
+    {
+      "id": "92c11220-fd6f-47fb-b4ee-7aa68c6b39d4",
+      "topic_id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Sổ vẫn tiện lúc trao đổi, cuối ngày mình chuyển phần việc cần làm vào lịch.",
+      "attachments": [],
+      "created_at": "2026-11-13T22:36:51.713Z"
+    },
+    {
+      "id": "ddda4099-a6a2-49a0-96cf-8936f2473f4f",
+      "topic_id": "5c844f7d-9648-446c-a88a-20de7e9ff7db",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình lưu lại chủ đề để cuối tuần đọc kỹ hơn. Cảm ơn mọi người đã chia sẻ cách làm cụ thể.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-13T22:58:51.713Z"
+    },
+    {
+      "id": "22b8a86a-5c0d-43ae-9d06-1522cc5799b6",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Nhóm mình dành 10 phút cập nhật, 15 phút tháo gỡ một vướng mắc, 5 phút chốt việc.",
+      "attachments": [],
+      "created_at": "2026-11-14T06:00:51.713Z"
+    },
+    {
+      "id": "ec9c841d-edd0-4185-8ccf-d6434a0e0f2b",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": "22b8a86a-5c0d-43ae-9d06-1522cc5799b6",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-14T06:29:51.713Z"
+    },
+    {
+      "id": "4dc8a3ee-7b94-4a25-a5e3-801e5c283fde",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Các câu hỏi ngoài chủ đề được ghi lại để trao đổi riêng sau cuộc họp.",
+      "attachments": [],
+      "created_at": "2026-11-14T06:46:51.713Z"
+    },
+    {
+      "id": "0f959bc9-6744-4ce0-bc8e-4e05631e0d63",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": "4dc8a3ee-7b94-4a25-a5e3-801e5c283fde",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-14T08:06:51.713Z"
+    },
+    {
+      "id": "f7c44169-b277-469d-979a-4bf1aba36e60",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Nên có một người ghi rõ ai làm gì và hẹn lúc nào cập nhật.",
+      "attachments": [],
+      "created_at": "2026-11-14T08:15:51.713Z"
+    },
+    {
+      "id": "308951aa-eef4-4b05-bb14-1ff5a24563b7",
+      "topic_id": "59fce85d-a96b-4a65-a2ef-39cc297ed834",
+      "parent_id": "f7c44169-b277-469d-979a-4bf1aba36e60",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-14T08:36:51.713Z"
+    },
+    {
+      "id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ưu tiên hiểu quy trình, biết người hỗ trợ và thực hành một tình huống đơn giản.",
+      "attachments": [],
+      "created_at": "2026-11-14T18:34:51.713Z"
+    },
+    {
+      "id": "af6ea64c-1123-4901-9f4d-87ffed64d0ec",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-14T18:59:51.713Z"
+    },
+    {
+      "id": "3fa82181-5cc9-43a4-b24a-cd232c2dda95",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Bạn mới có người đồng hành sẽ đỡ ngại hỏi hơn là chỉ nhận một tập tài liệu.",
+      "attachments": [],
+      "created_at": "2026-11-14T19:15:51.713Z"
+    },
+    {
+      "id": "576d7fd0-4848-4d43-867d-15956a8fcf0a",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": "3fa82181-5cc9-43a4-b24a-cd232c2dda95",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-14T20:02:51.713Z"
+    },
+    {
+      "id": "feacdb3b-7ade-43e1-a51f-d267269f8786",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Theo mình nên hỏi lại cuối ngày xem bạn ấy còn vướng bước nào.",
+      "attachments": [],
+      "created_at": "2026-11-14T20:22:51.713Z"
+    },
+    {
+      "id": "8e3f7701-aa51-4085-94c9-23c97c148aa3",
+      "topic_id": "fdb76e83-87ae-4c61-82ce-6b18fa5e5e75",
+      "parent_id": "feacdb3b-7ade-43e1-a51f-d267269f8786",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-14T20:58:51.713Z"
+    },
+    {
+      "id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình tập nhắc lại ý chính và hỏi xem mình hiểu đúng chưa.",
+      "attachments": [],
+      "created_at": "2026-11-15T04:49:51.713Z"
+    },
+    {
+      "id": "35f7fdea-6c40-4ce7-bd48-db6917528987",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-15T05:54:51.713Z"
+    },
+    {
+      "id": "f7a80ee9-34b2-4348-b102-2fd537de2c4b",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": true,
+      "content": "Luyện theo cặp rất hữu ích: một người kể chuyện trong hai phút, người còn lại chỉ nghe.",
+      "attachments": [],
+      "created_at": "2026-11-15T06:11:51.713Z"
+    },
+    {
+      "id": "f6ba1322-e62b-4cf9-bdb5-4a84641d140f",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": "f7a80ee9-34b2-4348-b102-2fd537de2c4b",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-15T07:03:51.713Z"
+    },
+    {
+      "id": "5c042a80-c857-4859-9e31-25b9a492b72c",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": true,
+      "content": "Mình ghi một từ khóa thay vì chen vào. Đợi khách nói xong mới hỏi tiếp.",
+      "attachments": [],
+      "created_at": "2026-11-15T07:28:51.713Z"
+    },
+    {
+      "id": "7f69e25c-2f6e-4096-9e22-811b574ae7a8",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": "5c042a80-c857-4859-9e31-25b9a492b72c",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-15T08:07:51.713Z"
+    },
+    {
+      "id": "b091ac55-5fae-4f98-ae75-a49da04824e4",
+      "topic_id": "2eaf7592-f6ec-4755-be4d-59a5caf3d208",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình nghĩ không cần áp dụng hết cùng lúc, chọn một cách phù hợp rồi theo dõi kết quả trước.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-15T08:13:51.713Z"
+    },
+    {
+      "id": "3211cb6b-0f9e-45d8-bfa3-e53e727cfa9a",
+      "topic_id": "898932ac-d7df-40f5-9df4-75320c0fa94b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình bắt đầu từ số buổi có thể làm việc thực tế, rồi chia lịch liên hệ và cuộc hẹn.",
+      "attachments": [],
+      "created_at": "2026-11-15T15:04:51.713Z"
+    },
+    {
+      "id": "658049ab-5c9f-46f0-9572-7803f1edd8aa",
+      "topic_id": "898932ac-d7df-40f5-9df4-75320c0fa94b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Nên có khoảng dự phòng cho tuần bận việc gia đình, đừng chia đều máy móc.",
+      "attachments": [],
+      "created_at": "2026-11-15T15:36:51.713Z"
+    },
+    {
+      "id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "topic_id": "898932ac-d7df-40f5-9df4-75320c0fa94b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình nhìn cả chất lượng trao đổi chứ không chỉ đếm số hoạt động.",
+      "attachments": [],
+      "created_at": "2026-11-15T16:13:51.713Z"
+    },
+    {
+      "id": "3ff78c87-c01e-4407-806d-0e480347c5bc",
+      "topic_id": "898932ac-d7df-40f5-9df4-75320c0fa94b",
+      "parent_id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-15T16:55:51.713Z"
+    },
+    {
+      "id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "topic_id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình hỏi khách thích nhận xác nhận qua kênh nào ngay lúc chốt lịch.",
+      "attachments": [],
+      "created_at": "2026-11-16T03:45:51.713Z"
+    },
+    {
+      "id": "5393e987-cf32-4b25-83c2-80fa22bc8ee9",
+      "topic_id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "parent_id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-16T04:43:51.713Z"
+    },
+    {
+      "id": "13bd5eda-8f16-4a1c-8a45-cf9424315b99",
+      "topic_id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Nếu đã xác nhận buổi sáng thì mình không nhắn lại nhiều lần trong ngày.",
+      "attachments": [],
+      "created_at": "2026-11-16T05:07:51.713Z"
+    },
+    {
+      "id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "topic_id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Tin nhắn nên có giờ, địa điểm và cách báo nếu cần đổi lịch.",
+      "attachments": [],
+      "created_at": "2026-11-16T06:06:51.713Z"
+    },
+    {
+      "id": "e255f663-acfa-4f96-ad0d-40adb0ca8bb4",
+      "topic_id": "1a356584-ac43-4afb-a7ab-b8b4bb2df158",
+      "parent_id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-16T06:30:51.713Z"
+    },
+    {
+      "id": "b9d35673-446d-4d88-9649-4833ea6ae2b4",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": true,
+      "content": "Mình xem lại việc nào mình kiểm soát được và chọn một việc nhỏ để hoàn thành trước.",
+      "attachments": [],
+      "created_at": "2026-11-16T14:38:51.713Z"
+    },
+    {
+      "id": "3fdfba64-13a4-45c6-85c9-5c4252772f21",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": "b9d35673-446d-4d88-9649-4833ea6ae2b4",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-16T15:58:51.713Z"
+    },
+    {
+      "id": "5f5fc2ef-382c-4665-b8b1-871502d68558",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình trao đổi với người đồng hành để có thêm góc nhìn, tránh tự nghĩ mãi một mình.",
+      "attachments": [],
+      "created_at": "2026-11-16T16:15:51.713Z"
+    },
+    {
+      "id": "3fd03d37-8f41-476c-8451-20547d9701b1",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": "5f5fc2ef-382c-4665-b8b1-871502d68558",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-16T16:37:51.713Z"
+    },
+    {
+      "id": "ffc4f83f-0898-40bf-9c5b-433b0b599ac8",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Nghỉ một buổi đúng nghĩa cũng giúp mình quay lại tập trung hơn.",
+      "attachments": [],
+      "created_at": "2026-11-16T16:45:51.713Z"
+    },
+    {
+      "id": "20bc8711-fc8a-42c1-80c8-68ddf77df6be",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": "ffc4f83f-0898-40bf-9c5b-433b0b599ac8",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-16T17:04:51.713Z"
+    },
+    {
+      "id": "8a634753-52d7-4407-9d12-a2b6e21acceb",
+      "topic_id": "52795c5c-e79c-4555-b27f-7106fd79b687",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình mới bắt đầu nên những ví dụ ngắn như thế này dễ áp dụng hơn nhiều.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-16T17:19:51.713Z"
+    },
+    {
+      "id": "bdb06c61-ea10-424f-9356-445372b30cbf",
+      "topic_id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình chia theo công việc, có thư mục tài liệu đang dùng và phần lưu bản cũ.",
+      "attachments": [],
+      "created_at": "2026-11-16T23:52:51.713Z"
+    },
+    {
+      "id": "2bf88292-17df-48c1-a3e0-ecc3f5d3abbb",
+      "topic_id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "parent_id": "bdb06c61-ea10-424f-9356-445372b30cbf",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-17T00:11:51.713Z"
+    },
+    {
+      "id": "bf47f7e3-b15d-4d1f-ae5b-3ad34fa92420",
+      "topic_id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Tên tệp có ngày cập nhật và người phụ trách. Tài liệu hết hiệu lực cần đánh dấu rõ.",
+      "attachments": [],
+      "created_at": "2026-11-17T00:17:51.713Z"
+    },
+    {
+      "id": "2d799d4b-f139-41fb-868c-f8792301b90a",
+      "topic_id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Một trang mục lục có link trực tiếp sẽ dễ dùng trên điện thoại hơn.",
+      "attachments": [],
+      "created_at": "2026-11-17T01:35:51.713Z"
+    },
+    {
+      "id": "8f3764df-00a7-4694-8e3e-587e5f732eee",
+      "topic_id": "9db18538-253a-4ee1-ab29-632129c2feca",
+      "parent_id": "2d799d4b-f139-41fb-868c-f8792301b90a",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-17T02:40:51.713Z"
+    },
+    {
+      "id": "88363dad-bece-41ad-be42-e72bcf52c2ed",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": true,
+      "content": "Nhớ kiểm tra âm thanh và đường đi trước, đặc biệt nếu có khách lớn tuổi.",
+      "attachments": [],
+      "created_at": "2026-11-17T13:20:51.713Z"
+    },
+    {
+      "id": "6b04d054-7172-4f31-a894-498058d4f345",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": "88363dad-bece-41ad-be42-e72bcf52c2ed",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-17T13:36:51.713Z"
+    },
+    {
+      "id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình phân công rõ người đón khách và người hỗ trợ các câu hỏi sau buổi gặp.",
+      "attachments": [],
+      "created_at": "2026-11-17T13:52:51.713Z"
+    },
+    {
+      "id": "1d022466-5737-4ba3-9d28-e891813e1225",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-17T14:16:51.713Z"
+    },
+    {
+      "id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Nên có phương án liên hệ khi khách đến muộn hoặc không tìm được địa điểm.",
+      "attachments": [],
+      "created_at": "2026-11-17T14:24:51.713Z"
+    },
+    {
+      "id": "5a20d850-a666-494c-a72f-abc1c72e4918",
+      "topic_id": "146e459b-f55b-40cb-a41e-8ed51758c96b",
+      "parent_id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-17T14:56:51.713Z"
+    },
+    {
+      "id": "28b6b2f6-fcc3-4502-a619-eae7f5eefbba",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": true,
+      "content": "Mình học 15 phút và tự viết lại ba ý bằng lời của mình.",
+      "attachments": [],
+      "created_at": "2026-11-17T23:04:51.713Z"
+    },
+    {
+      "id": "b7894e4d-8b5d-4b81-a0c7-9f9c421ef796",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": "28b6b2f6-fcc3-4502-a619-eae7f5eefbba",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-17T23:23:51.713Z"
+    },
+    {
+      "id": "4e1991c5-8b90-491f-9d96-11c0ceb5839b",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình chọn một câu hỏi thực tế trong tuần rồi tra tài liệu chính thức liên quan.",
+      "attachments": [],
+      "created_at": "2026-11-17T23:39:51.713Z"
+    },
+    {
+      "id": "7e7294f3-25b0-4ceb-8443-5ab76f3eff20",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": "4e1991c5-8b90-491f-9d96-11c0ceb5839b",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-17T23:59:51.713Z"
+    },
+    {
+      "id": "98a58611-ff83-4c00-8c1b-48f078294ec6",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Nhóm mình có buổi chia sẻ 20 phút, mỗi lần chỉ tập trung một nội dung.",
+      "attachments": [],
+      "created_at": "2026-11-18T00:07:51.713Z"
+    },
+    {
+      "id": "4dc8eebb-1524-4197-bd9e-80cfbff560da",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": "98a58611-ff83-4c00-8c1b-48f078294ec6",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-18T01:01:51.713Z"
+    },
+    {
+      "id": "8a62befa-f9b6-4b95-b6d2-e155931a10fd",
+      "topic_id": "110c7449-8f26-47c7-94be-0e10d5fb8906",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình nghĩ không cần áp dụng hết cùng lúc, chọn một cách phù hợp rồi theo dõi kết quả trước.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-18T01:17:51.713Z"
+    },
+    {
+      "id": "fca2c65c-eacf-485b-8aba-52cf74b5531f",
+      "topic_id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": true,
+      "content": "Mình nghĩ nên bắt đầu bằng tên và lý do cuộc gặp, tránh kể quá nhiều thành tích.",
+      "attachments": [],
+      "created_at": "2026-11-18T09:37:51.713Z"
+    },
+    {
+      "id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "topic_id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Câu cuối có thể là một lời mời khách chia sẻ mong muốn của họ.",
+      "attachments": [],
+      "created_at": "2026-11-18T10:43:51.713Z"
+    },
+    {
+      "id": "59617d13-dfba-4f63-b10a-686babefb423",
+      "topic_id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "parent_id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-18T11:53:51.713Z"
+    },
+    {
+      "id": "660c4a06-f438-444a-af3a-3340aa4f3266",
+      "topic_id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": true,
+      "content": "Bạn thử nói thành tiếng rồi bấm giờ, câu nào thấy khó nói thì rút ngắn.",
+      "attachments": [],
+      "created_at": "2026-11-18T12:19:51.713Z"
+    },
+    {
+      "id": "eafbf403-6abc-4bba-b056-a7b3fdd8728a",
+      "topic_id": "e9d02303-1ec0-49de-8183-dfee2bb68c5a",
+      "parent_id": "660c4a06-f438-444a-af3a-3340aa4f3266",
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-18T12:38:51.713Z"
+    },
+    {
+      "id": "01ed3196-2e9b-43e1-8d8e-81b2b6056fb2",
+      "topic_id": "934250b6-c7f8-4ba3-b150-be1bfd8bce11",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": true,
+      "content": "Mình hỏi rõ khi nào tiện để trao đổi tiếp và ghi lại đúng ngày đã thống nhất.",
+      "attachments": [],
+      "created_at": "2026-11-18T21:36:51.713Z"
+    },
+    {
+      "id": "26105f3d-dfb5-4746-950f-d5e8ffea52f6",
+      "topic_id": "934250b6-c7f8-4ba3-b150-be1bfd8bce11",
+      "parent_id": "01ed3196-2e9b-43e1-8d8e-81b2b6056fb2",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-18T22:05:51.713Z"
+    },
+    {
+      "id": "70171239-df70-4624-aacf-fb0e005486b3",
+      "topic_id": "934250b6-c7f8-4ba3-b150-be1bfd8bce11",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": true,
+      "content": "Mỗi lần liên hệ nên giải quyết một điều khách còn cần, tránh chỉ hỏi đã quyết định chưa.",
+      "attachments": [],
+      "created_at": "2026-11-18T22:13:51.713Z"
+    },
+    {
+      "id": "516e6de0-e20b-4c39-845c-75aa0aa48543",
+      "topic_id": "934250b6-c7f8-4ba3-b150-be1bfd8bce11",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Nếu khách muốn tạm dừng thì mình tôn trọng và để họ chủ động liên hệ lại.",
+      "attachments": [],
+      "created_at": "2026-11-18T23:22:51.713Z"
+    },
+    {
+      "id": "8f8e62fe-c113-4d9c-b72e-f0824877a4cb",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghim thư mục hay dùng và để lịch công việc ở màn hình chính.",
+      "attachments": [],
+      "created_at": "2026-11-19T09:01:51.713Z"
+    },
+    {
+      "id": "2d3e04f4-cdf7-4da0-8170-97a2488c79f7",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": "8f8e62fe-c113-4d9c-b72e-f0824877a4cb",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-19T10:14:51.713Z"
+    },
+    {
+      "id": "b6ec7f27-fac1-4811-8252-da265e4ea533",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình đặt tên ghi chú theo ngày và nội dung, tìm lại nhanh hơn nhiều.",
+      "attachments": [],
+      "created_at": "2026-11-19T10:37:51.713Z"
+    },
+    {
+      "id": "bac5edcd-d9ea-462c-be4c-972047073ae6",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": "b6ec7f27-fac1-4811-8252-da265e4ea533",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-19T10:55:51.713Z"
+    },
+    {
+      "id": "0ee83c45-a589-4284-a797-83a5473ffef2",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình tải sẵn tài liệu cần dùng trước khi đến chỗ mạng yếu.",
+      "attachments": [],
+      "created_at": "2026-11-19T11:02:51.713Z"
+    },
+    {
+      "id": "577a6b78-d997-464f-beeb-83c0f6cb74c6",
+      "topic_id": "7f46f174-5fa9-4a00-b077-411c35761c42",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình mới bắt đầu nên những ví dụ ngắn như thế này dễ áp dụng hơn nhiều.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-19T12:09:51.713Z"
+    },
+    {
+      "id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Một việc đã xong, một việc còn vướng và một việc ưu tiên cho ngày mai.",
+      "attachments": [],
+      "created_at": "2026-11-19T19:27:51.713Z"
+    },
+    {
+      "id": "f12c7568-0632-439c-b525-796c5223ba7c",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-19T20:03:51.713Z"
+    },
+    {
+      "id": "614c2cc6-6143-4bff-a972-ea55a63c542a",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình thêm các lời hẹn cần giữ để tránh bỏ sót việc đã nhận với người khác.",
+      "attachments": [],
+      "created_at": "2026-11-19T20:26:51.713Z"
+    },
+    {
+      "id": "bfdee4bf-f27b-4f43-b9b4-acb453a441c7",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": "614c2cc6-6143-4bff-a972-ea55a63c542a",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-19T21:05:51.713Z"
+    },
+    {
+      "id": "d674fd7c-98aa-4025-ba6c-716b2e40df93",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi cả điều đã học được. Những tuần bận đọc lại rất có ích.",
+      "attachments": [],
+      "created_at": "2026-11-19T21:18:51.713Z"
+    },
+    {
+      "id": "29cf662d-6371-4b11-9442-4c9813542d25",
+      "topic_id": "44a71e9a-b188-41d9-bf6b-83fdb4ead71c",
+      "parent_id": "d674fd7c-98aa-4025-ba6c-716b2e40df93",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-19T21:33:51.713Z"
+    },
+    {
+      "id": "04a5bb31-4fad-4ab8-a2fa-4f8cb0c9bac5",
+      "topic_id": "9791ec3d-b0e5-45d2-a542-2bba542a49d1",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình nói phần này mình xin kiểm tra đúng tài liệu rồi phản hồi lại vào giờ cụ thể.",
+      "attachments": [],
+      "created_at": "2026-11-20T05:40:51.713Z"
+    },
+    {
+      "id": "77373fa6-7837-47f1-bacc-9a89916a382e",
+      "topic_id": "9791ec3d-b0e5-45d2-a542-2bba542a49d1",
+      "parent_id": "04a5bb31-4fad-4ab8-a2fa-4f8cb0c9bac5",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-20T06:03:51.713Z"
+    },
+    {
+      "id": "913d9843-0eb9-44fc-89a7-fa8e1a967ca7",
+      "topic_id": "9791ec3d-b0e5-45d2-a542-2bba542a49d1",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Sau đó phải phản hồi đúng hẹn, kể cả lúc chưa có đủ thông tin cuối cùng.",
+      "attachments": [],
+      "created_at": "2026-11-20T06:23:51.713Z"
+    },
+    {
+      "id": "51da5126-0af7-49fc-b2c2-4f1bf60e8d5b",
+      "topic_id": "9791ec3d-b0e5-45d2-a542-2bba542a49d1",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": true,
+      "content": "Mình lưu lại nguồn chính thức để khách có thể cùng kiểm tra.",
+      "attachments": [],
+      "created_at": "2026-11-20T06:51:51.713Z"
+    },
+    {
+      "id": "323acc68-4633-4d56-b0a1-c8cbe8998023",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình nói một điểm làm tốt rồi chọn đúng một điểm để luyện lại.",
+      "attachments": [],
+      "created_at": "2026-11-20T15:24:51.713Z"
+    },
+    {
+      "id": "edf17699-3cb9-4763-a9cd-8f746b34d01b",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": "323acc68-4633-4d56-b0a1-c8cbe8998023",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-20T15:41:51.713Z"
+    },
+    {
+      "id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Nên nhắc hành vi cụ thể thay vì nhận xét chung là bạn chưa tự tin.",
+      "attachments": [],
+      "created_at": "2026-11-20T16:00:51.713Z"
+    },
+    {
+      "id": "4a350838-7d7b-40c6-9cf3-c9bb6f9fd62b",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-20T16:19:51.713Z"
+    },
+    {
+      "id": "b269f2b8-6367-4a70-a808-c87158b2308b",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Cho người thực hành tự nhận xét trước, thường họ cũng thấy chỗ cần sửa.",
+      "attachments": [],
+      "created_at": "2026-11-20T16:28:51.713Z"
+    },
+    {
+      "id": "412fd0f9-34cf-427f-8a06-fa939093de0f",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": "b269f2b8-6367-4a70-a808-c87158b2308b",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-20T17:41:51.713Z"
+    },
+    {
+      "id": "5b5a6166-fd75-41c0-b9e2-3864ad84b3c3",
+      "topic_id": "efce642b-b3d6-4b8a-9a3e-f987319d3c43",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình lưu lại chủ đề để cuối tuần đọc kỹ hơn. Cảm ơn mọi người đã chia sẻ cách làm cụ thể.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-20T17:46:51.713Z"
+    },
+    {
+      "id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "topic_id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình ghi việc đang ở bước nào, ai phụ trách tiếp và thời điểm cần cập nhật.",
+      "attachments": [],
+      "created_at": "2026-11-21T04:20:51.713Z"
+    },
+    {
+      "id": "92187f38-b691-4174-807f-14b145d79ba8",
+      "topic_id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "parent_id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-21T05:31:51.713Z"
+    },
+    {
+      "id": "e9e1beb7-425c-48f6-bf65-70be12197cf0",
+      "topic_id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": true,
+      "content": "Cần tách thông tin đã xác nhận khỏi phần đang chờ kiểm tra.",
+      "attachments": [],
+      "created_at": "2026-11-21T05:56:51.713Z"
+    },
+    {
+      "id": "20602a56-d111-4e76-893a-5f748399839c",
+      "topic_id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "parent_id": "e9e1beb7-425c-48f6-bf65-70be12197cf0",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-21T06:47:51.713Z"
+    },
+    {
+      "id": "5b8ed2c0-7d34-4098-93e9-1e737ae33fc4",
+      "topic_id": "12d4f629-be12-4b80-9f91-362f95c3ec77",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Nếu có thay đổi lớn mình gọi trao đổi nhanh rồi cập nhật lại bằng chữ.",
+      "attachments": [],
+      "created_at": "2026-11-21T06:57:51.713Z"
+    },
+    {
+      "id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình từng như vậy. Bây giờ mình dành sẵn một khung giờ cho việc quan trọng nhất.",
+      "attachments": [],
+      "created_at": "2026-11-21T14:57:51.713Z"
+    },
+    {
+      "id": "bc560cd7-8007-4ef4-8f7c-bcd2a4be1607",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-21T15:46:51.713Z"
+    },
+    {
+      "id": "6e47ded5-696f-4ba3-b328-559d0db24856",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình thử ghi lại thời gian thực tế trong ba ngày để biết bị phân tán ở đâu.",
+      "attachments": [],
+      "created_at": "2026-11-21T16:00:51.713Z"
+    },
+    {
+      "id": "f72eef39-bf52-4a9b-bb00-c7a772eb538d",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": "6e47ded5-696f-4ba3-b328-559d0db24856",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-21T16:35:51.713Z"
+    },
+    {
+      "id": "48f02af8-b720-4918-bb93-bb916ebe8c68",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Nên rà xem có việc nào có thể gom làm cùng lúc hoặc nhờ hỗ trợ.",
+      "attachments": [],
+      "created_at": "2026-11-21T16:53:51.713Z"
+    },
+    {
+      "id": "4f7ef56a-959d-4000-baec-77f7b56c3fb5",
+      "topic_id": "fdd9f084-9c6b-471e-87ca-04b4789d8592",
+      "parent_id": "48f02af8-b720-4918-bb93-bb916ebe8c68",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-21T18:15:51.713Z"
+    },
+    {
+      "id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": true,
+      "content": "Mình xem khách đã hiểu rõ hơn và các câu hỏi đã được trả lời đúng chưa.",
+      "attachments": [],
+      "created_at": "2026-11-22T03:14:51.713Z"
+    },
+    {
+      "id": "fd5c6de3-3001-40f5-aa29-06c03f75380b",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-22T03:45:51.713Z"
+    },
+    {
+      "id": "2b46142d-b570-46b2-9bde-c5ace344e640",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Nếu hai bên thống nhất được bước tiếp theo thì buổi gặp vẫn có giá trị.",
+      "attachments": [],
+      "created_at": "2026-11-22T03:51:51.713Z"
+    },
+    {
+      "id": "eff0eaa0-d28d-4d91-a88d-3887007ad7f7",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": "2b46142d-b570-46b2-9bde-c5ace344e640",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Cảm ơn bạn. Mình sẽ thử cách này trong tuần tới rồi quay lại chia sẻ kết quả.",
+      "attachments": [],
+      "created_at": "2026-11-22T04:45:51.713Z"
+    },
+    {
+      "id": "6aabcb0d-ceed-4df6-8fb5-3e0ecca9d7fa",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình không ép kết quả ngay nếu khách còn cần thời gian cân nhắc.",
+      "attachments": [],
+      "created_at": "2026-11-22T05:01:51.713Z"
+    },
+    {
+      "id": "3e09540d-7e12-4bc5-ae89-42a35b53fbfe",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": "6aabcb0d-ceed-4df6-8fb5-3e0ecca9d7fa",
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-22T05:51:51.713Z"
+    },
+    {
+      "id": "d4dea523-d32f-434c-a8c8-9d2a9f30a91c",
+      "topic_id": "f65c4280-3c13-48b9-9fa8-4d1f5445b5cb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình nghĩ không cần áp dụng hết cùng lúc, chọn một cách phù hợp rồi theo dõi kết quả trước.",
+      "sticker": "👏",
+      "attachments": [],
+      "created_at": "2026-11-22T06:00:51.713Z"
+    },
+    {
+      "id": "20191f9d-3055-426d-bdb4-489cf501417c",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Nhóm mình chọn một tình huống và cùng phân tích các hướng xử lý.",
+      "attachments": [],
+      "created_at": "2026-11-22T14:36:51.713Z"
+    },
+    {
+      "id": "2d5c9ece-9714-4d4a-ac91-6e9118f113ea",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": "20191f9d-3055-426d-bdb4-489cf501417c",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-22T14:55:51.713Z"
+    },
+    {
+      "id": "5ba0f667-5343-4d2b-aa72-49d9431ae3af",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Nên giới hạn thời gian chia sẻ để ai cũng có cơ hội nói.",
+      "attachments": [],
+      "created_at": "2026-11-22T15:08:51.713Z"
+    },
+    {
+      "id": "f39094d5-1e94-4179-a13c-9417d3a02697",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": "5ba0f667-5343-4d2b-aa72-49d9431ae3af",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-22T16:00:51.713Z"
+    },
+    {
+      "id": "63f5e553-cc57-4d2b-bf94-cbf7c80d57e3",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Có thể luân phiên người điều phối, bạn mới cũng được thử ở phần ngắn.",
+      "attachments": [],
+      "created_at": "2026-11-22T16:05:51.713Z"
+    },
+    {
+      "id": "06b3f0a4-38fa-4906-9015-8d709cbc36ce",
+      "topic_id": "c9a06d86-094e-43a1-918a-104b436a9e26",
+      "parent_id": "63f5e553-cc57-4d2b-bf94-cbf7c80d57e3",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-22T17:01:51.713Z"
+    },
+    {
+      "id": "9d208d5c-7093-4e80-8f25-b0d5f8b42ebb",
+      "topic_id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình chỉ chọn tài liệu phù hợp với nội dung đã hẹn, phần tham khảo khác để riêng.",
+      "attachments": [],
+      "created_at": "2026-11-22T23:25:51.713Z"
+    },
+    {
+      "id": "73c19257-e53a-45b4-a90e-49b2b1333178",
+      "topic_id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình đánh dấu trang cần giải thích nhưng luôn giữ đầy đủ tài liệu chính thức.",
+      "attachments": [],
+      "created_at": "2026-11-23T00:46:51.713Z"
+    },
+    {
+      "id": "100aa6d9-5d5e-47ec-97e4-e9fef0ff882a",
+      "topic_id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "parent_id": "73c19257-e53a-45b4-a90e-49b2b1333178",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-23T01:47:51.713Z"
+    },
+    {
+      "id": "fe96ef1f-a229-4ab8-a2b3-a807751b770f",
+      "topic_id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Bản trên điện thoại nên có tên dễ tìm và mở thử trước để tránh lỗi mạng.",
+      "attachments": [],
+      "created_at": "2026-11-23T02:04:51.713Z"
+    },
+    {
+      "id": "00f4dd17-6e07-47eb-add9-773f16bc5544",
+      "topic_id": "dc90d1cf-9787-4dae-a288-31c7c69a5fcc",
+      "parent_id": "fe96ef1f-a229-4ab8-a2b3-a807751b770f",
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình cũng từng thử nhưng chưa làm đều. Đọc chia sẻ của bạn thấy cần bắt đầu từ bước nhỏ hơn.",
+      "attachments": [],
+      "created_at": "2026-11-23T03:26:51.713Z"
+    },
+    {
+      "id": "169e26ce-c7f4-46e2-9322-1b5456ac476f",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_01",
+      "anonymous": false,
+      "content": "Mình tham gia, chọn ghi chú ngay sau mỗi cuộc gặp thay vì để cuối ngày.",
+      "attachments": [],
+      "created_at": "2026-11-23T10:43:51.713Z"
+    },
+    {
+      "id": "f10f489e-f11d-4588-9a2b-ac98c30e66fd",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": "169e26ce-c7f4-46e2-9322-1b5456ac476f",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Ý này hợp với điều mình đang vướng. Bạn thường duy trì việc đó hằng ngày hay chỉ khi cần?",
+      "attachments": [],
+      "created_at": "2026-11-23T11:05:51.713Z"
+    },
+    {
+      "id": "656c4304-2acb-49da-a5b0-fe6a0c596b6c",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_02",
+      "anonymous": false,
+      "content": "Mình sẽ dành 15 phút buổi sáng cho việc quan trọng trước khi đọc các nhóm chat.",
+      "attachments": [],
+      "created_at": "2026-11-23T11:34:51.713Z"
+    },
+    {
+      "id": "1003c680-63d8-4c0d-911e-b8b516e6e638",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": "656c4304-2acb-49da-a5b0-fe6a0c596b6c",
+      "author_code": "FORUM_DEMO_05",
+      "anonymous": false,
+      "content": "Mình ghi lại ý này nhé. Có lẽ nên thử trong vài ngày rồi điều chỉnh theo lịch thực tế.",
+      "attachments": [],
+      "created_at": "2026-11-23T11:55:51.713Z"
+    },
+    {
+      "id": "d998e72b-8cee-4e64-a048-ee57550b3ac0",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_03",
+      "anonymous": false,
+      "content": "Mình chọn dọn lại danh sách việc cần làm mỗi tối. Hy vọng tuần này duy trì được.",
+      "attachments": [],
+      "created_at": "2026-11-23T12:10:51.713Z"
+    },
+    {
+      "id": "d6f4cc17-a70a-4576-b66d-db23d8f89c24",
+      "topic_id": "6d8ede5a-aa78-456f-879a-99da1120cdfb",
+      "parent_id": null,
+      "author_code": "FORUM_DEMO_04",
+      "anonymous": false,
+      "content": "Mình mới bắt đầu nên những ví dụ ngắn như thế này dễ áp dụng hơn nhiều.",
+      "sticker": null,
+      "attachments": [],
+      "created_at": "2026-11-23T13:08:51.713Z"
+    }
+  ],
+  "reactions": [
+    {
+      "comment_id": "b1d92c39-d649-4cb3-9d7d-d6f35fa3f0c3",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b1d92c39-d649-4cb3-9d7d-d6f35fa3f0c3",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "343f347b-b602-42ca-bf3e-98a4329463e3",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "343f347b-b602-42ca-bf3e-98a4329463e3",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "343f347b-b602-42ca-bf3e-98a4329463e3",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "54bd083b-ab26-4a2e-b27b-796e9c5470ac",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "54bd083b-ab26-4a2e-b27b-796e9c5470ac",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "54bd083b-ab26-4a2e-b27b-796e9c5470ac",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "31099e31-b904-437d-b0e8-8d8c4cc95a4c",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "31099e31-b904-437d-b0e8-8d8c4cc95a4c",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "31099e31-b904-437d-b0e8-8d8c4cc95a4c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "31099e31-b904-437d-b0e8-8d8c4cc95a4c",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "c800b5db-9c91-4306-b4e4-2ad06b610f61",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "c800b5db-9c91-4306-b4e4-2ad06b610f61",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "c800b5db-9c91-4306-b4e4-2ad06b610f61",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7ed01f44-02e7-44df-9d11-497fb38b4674",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7ed01f44-02e7-44df-9d11-497fb38b4674",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "c09d8efe-a183-4aac-a913-198adbc0ce32",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b322912-5925-44e0-86be-bb793bc1a86d",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b322912-5925-44e0-86be-bb793bc1a86d",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b322912-5925-44e0-86be-bb793bc1a86d",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4de47da2-3965-4e2f-8123-69ef50646b05",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4de47da2-3965-4e2f-8123-69ef50646b05",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "24bd024e-632c-478d-9007-4bf30755520e",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "24bd024e-632c-478d-9007-4bf30755520e",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2c7de1db-d75b-48f5-9fdd-e572817b0d51",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2c7de1db-d75b-48f5-9fdd-e572817b0d51",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8bfa4ffe-7f17-4b5f-b21b-305d7f70d0e9",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8bfa4ffe-7f17-4b5f-b21b-305d7f70d0e9",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8bfa4ffe-7f17-4b5f-b21b-305d7f70d0e9",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bab95a94-474f-4a0f-9077-d048aa8b6ec3",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bab95a94-474f-4a0f-9077-d048aa8b6ec3",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bab95a94-474f-4a0f-9077-d048aa8b6ec3",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ddda4099-a6a2-49a0-96cf-8936f2473f4f",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ddda4099-a6a2-49a0-96cf-8936f2473f4f",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ddda4099-a6a2-49a0-96cf-8936f2473f4f",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ddda4099-a6a2-49a0-96cf-8936f2473f4f",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "22b8a86a-5c0d-43ae-9d06-1522cc5799b6",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "22b8a86a-5c0d-43ae-9d06-1522cc5799b6",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ec9c841d-edd0-4185-8ccf-d6434a0e0f2b",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ec9c841d-edd0-4185-8ccf-d6434a0e0f2b",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ec9c841d-edd0-4185-8ccf-d6434a0e0f2b",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ec9c841d-edd0-4185-8ccf-d6434a0e0f2b",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f7c44169-b277-469d-979a-4bf1aba36e60",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f7c44169-b277-469d-979a-4bf1aba36e60",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2820ea4f-4446-4764-8bec-221d09d15d0f",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "af6ea64c-1123-4901-9f4d-87ffed64d0ec",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "af6ea64c-1123-4901-9f4d-87ffed64d0ec",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3fa82181-5cc9-43a4-b24a-cd232c2dda95",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3fa82181-5cc9-43a4-b24a-cd232c2dda95",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3fa82181-5cc9-43a4-b24a-cd232c2dda95",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "576d7fd0-4848-4d43-867d-15956a8fcf0a",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "576d7fd0-4848-4d43-867d-15956a8fcf0a",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "576d7fd0-4848-4d43-867d-15956a8fcf0a",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "feacdb3b-7ade-43e1-a51f-d267269f8786",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8e3f7701-aa51-4085-94c9-23c97c148aa3",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8e3f7701-aa51-4085-94c9-23c97c148aa3",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8e3f7701-aa51-4085-94c9-23c97c148aa3",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d7cf99a7-3cd2-4278-bf5b-09ce14e16d40",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "35f7fdea-6c40-4ce7-bd48-db6917528987",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f7a80ee9-34b2-4348-b102-2fd537de2c4b",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f7a80ee9-34b2-4348-b102-2fd537de2c4b",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f7a80ee9-34b2-4348-b102-2fd537de2c4b",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5c042a80-c857-4859-9e31-25b9a492b72c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b091ac55-5fae-4f98-ae75-a49da04824e4",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3211cb6b-0f9e-45d8-bfa3-e53e727cfa9a",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "658049ab-5c9f-46f0-9572-7803f1edd8aa",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "658049ab-5c9f-46f0-9572-7803f1edd8aa",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "658049ab-5c9f-46f0-9572-7803f1edd8aa",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "658049ab-5c9f-46f0-9572-7803f1edd8aa",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "8dab83cb-3678-43b1-a582-8ddad3918118",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "30875bc9-1fa3-48b3-86d2-6cfcd6f00ce9",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "13bd5eda-8f16-4a1c-8a45-cf9424315b99",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "528d3bdd-00d3-4313-ba98-32ee445394ab",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b9d35673-446d-4d88-9649-4833ea6ae2b4",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b9d35673-446d-4d88-9649-4833ea6ae2b4",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3fdfba64-13a4-45c6-85c9-5c4252772f21",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ffc4f83f-0898-40bf-9c5b-433b0b599ac8",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "20bc8711-fc8a-42c1-80c8-68ddf77df6be",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bdb06c61-ea10-424f-9356-445372b30cbf",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "bdb06c61-ea10-424f-9356-445372b30cbf",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bdb06c61-ea10-424f-9356-445372b30cbf",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2bf88292-17df-48c1-a3e0-ecc3f5d3abbb",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2bf88292-17df-48c1-a3e0-ecc3f5d3abbb",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2bf88292-17df-48c1-a3e0-ecc3f5d3abbb",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2bf88292-17df-48c1-a3e0-ecc3f5d3abbb",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bf47f7e3-b15d-4d1f-ae5b-3ad34fa92420",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "6b04d054-7172-4f31-a894-498058d4f345",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "a5faec77-9276-4a8b-b3ea-78fee785ea1c",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "1d022466-5737-4ba3-9d28-e891813e1225",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "88cc3d48-371d-4ec5-8d83-500ff3bdf64d",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5a20d850-a666-494c-a72f-abc1c72e4918",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5a20d850-a666-494c-a72f-abc1c72e4918",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "28b6b2f6-fcc3-4502-a619-eae7f5eefbba",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "28b6b2f6-fcc3-4502-a619-eae7f5eefbba",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "28b6b2f6-fcc3-4502-a619-eae7f5eefbba",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "b7894e4d-8b5d-4b81-a0c7-9f9c421ef796",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b7894e4d-8b5d-4b81-a0c7-9f9c421ef796",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b7894e4d-8b5d-4b81-a0c7-9f9c421ef796",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b7894e4d-8b5d-4b81-a0c7-9f9c421ef796",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4e1991c5-8b90-491f-9d96-11c0ceb5839b",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7e7294f3-25b0-4ceb-8443-5ab76f3eff20",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7e7294f3-25b0-4ceb-8443-5ab76f3eff20",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7e7294f3-25b0-4ceb-8443-5ab76f3eff20",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "7e7294f3-25b0-4ceb-8443-5ab76f3eff20",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "98a58611-ff83-4c00-8c1b-48f078294ec6",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4dc8eebb-1524-4197-bd9e-80cfbff560da",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4dc8eebb-1524-4197-bd9e-80cfbff560da",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4dc8eebb-1524-4197-bd9e-80cfbff560da",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fca2c65c-eacf-485b-8aba-52cf74b5531f",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fca2c65c-eacf-485b-8aba-52cf74b5531f",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fca2c65c-eacf-485b-8aba-52cf74b5531f",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "fca2c65c-eacf-485b-8aba-52cf74b5531f",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "ff9aa4ba-6d0c-43f7-b346-1bc60f6ef637",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "59617d13-dfba-4f63-b10a-686babefb423",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "660c4a06-f438-444a-af3a-3340aa4f3266",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "660c4a06-f438-444a-af3a-3340aa4f3266",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "01ed3196-2e9b-43e1-8d8e-81b2b6056fb2",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "70171239-df70-4624-aacf-fb0e005486b3",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "70171239-df70-4624-aacf-fb0e005486b3",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "516e6de0-e20b-4c39-845c-75aa0aa48543",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "516e6de0-e20b-4c39-845c-75aa0aa48543",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2d3e04f4-cdf7-4da0-8170-97a2488c79f7",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2d3e04f4-cdf7-4da0-8170-97a2488c79f7",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2d3e04f4-cdf7-4da0-8170-97a2488c79f7",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "0ee83c45-a589-4284-a797-83a5473ffef2",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "0ee83c45-a589-4284-a797-83a5473ffef2",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "0ee83c45-a589-4284-a797-83a5473ffef2",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "0ee83c45-a589-4284-a797-83a5473ffef2",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9f1d1aec-eed1-4977-9f17-dd5e6a1646fc",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f12c7568-0632-439c-b525-796c5223ba7c",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f12c7568-0632-439c-b525-796c5223ba7c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "614c2cc6-6143-4bff-a972-ea55a63c542a",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "614c2cc6-6143-4bff-a972-ea55a63c542a",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "bfdee4bf-f27b-4f43-b9b4-acb453a441c7",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d674fd7c-98aa-4025-ba6c-716b2e40df93",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "d674fd7c-98aa-4025-ba6c-716b2e40df93",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d674fd7c-98aa-4025-ba6c-716b2e40df93",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "04a5bb31-4fad-4ab8-a2fa-4f8cb0c9bac5",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "77373fa6-7837-47f1-bacc-9a89916a382e",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "913d9843-0eb9-44fc-89a7-fa8e1a967ca7",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "913d9843-0eb9-44fc-89a7-fa8e1a967ca7",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "913d9843-0eb9-44fc-89a7-fa8e1a967ca7",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "51da5126-0af7-49fc-b2c2-4f1bf60e8d5b",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "323acc68-4633-4d56-b0a1-c8cbe8998023",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "323acc68-4633-4d56-b0a1-c8cbe8998023",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "957cbbb1-d9b0-453a-a9a8-f182ae9928d4",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4a350838-7d7b-40c6-9cf3-c9bb6f9fd62b",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4a350838-7d7b-40c6-9cf3-c9bb6f9fd62b",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4a350838-7d7b-40c6-9cf3-c9bb6f9fd62b",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b269f2b8-6367-4a70-a808-c87158b2308b",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b269f2b8-6367-4a70-a808-c87158b2308b",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "b269f2b8-6367-4a70-a808-c87158b2308b",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b5a6166-fd75-41c0-b9e2-3864ad84b3c3",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b5a6166-fd75-41c0-b9e2-3864ad84b3c3",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b5a6166-fd75-41c0-b9e2-3864ad84b3c3",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5b5a6166-fd75-41c0-b9e2-3864ad84b3c3",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "89a6d6fe-5163-465f-9f62-cea9152cfc65",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "20602a56-d111-4e76-893a-5f748399839c",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "eacf7128-bc48-4dc5-bb26-434c3ee5a6e2",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "6e47ded5-696f-4ba3-b328-559d0db24856",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "6e47ded5-696f-4ba3-b328-559d0db24856",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f72eef39-bf52-4a9b-bb00-c7a772eb538d",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "f72eef39-bf52-4a9b-bb00-c7a772eb538d",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4f7ef56a-959d-4000-baec-77f7b56c3fb5",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4f7ef56a-959d-4000-baec-77f7b56c3fb5",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4f7ef56a-959d-4000-baec-77f7b56c3fb5",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "4f7ef56a-959d-4000-baec-77f7b56c3fb5",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "11f80f8b-20d6-442a-a39c-7832342baa62",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fd5c6de3-3001-40f5-aa29-06c03f75380b",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fd5c6de3-3001-40f5-aa29-06c03f75380b",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fd5c6de3-3001-40f5-aa29-06c03f75380b",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "6aabcb0d-ceed-4df6-8fb5-3e0ecca9d7fa",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3e09540d-7e12-4bc5-ae89-42a35b53fbfe",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3e09540d-7e12-4bc5-ae89-42a35b53fbfe",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "3e09540d-7e12-4bc5-ae89-42a35b53fbfe",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d4dea523-d32f-434c-a8c8-9d2a9f30a91c",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d4dea523-d32f-434c-a8c8-9d2a9f30a91c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "20191f9d-3055-426d-bdb4-489cf501417c",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2d5c9ece-9714-4d4a-ac91-6e9118f113ea",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "2d5c9ece-9714-4d4a-ac91-6e9118f113ea",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "5ba0f667-5343-4d2b-aa72-49d9431ae3af",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "63f5e553-cc57-4d2b-bf94-cbf7c80d57e3",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "06b3f0a4-38fa-4906-9015-8d709cbc36ce",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "06b3f0a4-38fa-4906-9015-8d709cbc36ce",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9d208d5c-7093-4e80-8f25-b0d5f8b42ebb",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "9d208d5c-7093-4e80-8f25-b0d5f8b42ebb",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "73c19257-e53a-45b4-a90e-49b2b1333178",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "73c19257-e53a-45b4-a90e-49b2b1333178",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "73c19257-e53a-45b4-a90e-49b2b1333178",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "100aa6d9-5d5e-47ec-97e4-e9fef0ff882a",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "100aa6d9-5d5e-47ec-97e4-e9fef0ff882a",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "100aa6d9-5d5e-47ec-97e4-e9fef0ff882a",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fe96ef1f-a229-4ab8-a2b3-a807751b770f",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "fe96ef1f-a229-4ab8-a2b3-a807751b770f",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "00f4dd17-6e07-47eb-add9-773f16bc5544",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "00f4dd17-6e07-47eb-add9-773f16bc5544",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "00f4dd17-6e07-47eb-add9-773f16bc5544",
+      "author_code": "FORUM_DEMO_04",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "00f4dd17-6e07-47eb-add9-773f16bc5544",
+      "author_code": "FORUM_DEMO_05",
+      "reaction": "dislike"
+    },
+    {
+      "comment_id": "f10f489e-f11d-4588-9a2b-ac98c30e66fd",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "656c4304-2acb-49da-a5b0-fe6a0c596b6c",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "1003c680-63d8-4c0d-911e-b8b516e6e638",
+      "author_code": "FORUM_DEMO_03",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "1003c680-63d8-4c0d-911e-b8b516e6e638",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "1003c680-63d8-4c0d-911e-b8b516e6e638",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d998e72b-8cee-4e64-a048-ee57550b3ac0",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d998e72b-8cee-4e64-a048-ee57550b3ac0",
+      "author_code": "FORUM_DEMO_02",
+      "reaction": "like"
+    },
+    {
+      "comment_id": "d6f4cc17-a70a-4576-b66d-db23d8f89c24",
+      "author_code": "FORUM_DEMO_01",
+      "reaction": "like"
+    }
+  ]
+}

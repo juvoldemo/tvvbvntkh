@@ -1,10 +1,13 @@
 "use client";
 
 import { createElement, useEffect, useRef, useState } from "react";
-import { Bold, Italic, Underline, List, ListOrdered, RemoveFormatting, Undo2, Redo2 } from "lucide-react";
+import { Bold, Italic, Underline, List, ListOrdered, RemoveFormatting, Undo2, Redo2, Smile } from "lucide-react";
 import styles from "./Forum.module.css";
 
 const PREFIX = "forum-rich-v1:";
+export const POST_STICKERS = Array.from(new Set(Array.from(
+  "😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😋 😛 😜 🤪 😎 🤩 🥳 🤗 🤭 🤫 🤔 🫡 🤐 😐 😑 🙄 😏 😴 🤤 😮 😲 😳 🥺 😢 😭 😤 😠 🤯 😱 🥶 🥵 🤒 🤕 🤧 😷 🤠 🥸 🤓 🧐 😈 👻 🤖 💩 🎃 😺 😸 😹 😻 🙈 🙉 🙊 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❤️‍🔥 💕 💞 💓 💗 💖 💘 💝 💯 💢 💥 💫 💦 💤 👋 🤚 ✋ 🖐️ 🖖 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 👐 🤲 🤝 🙏 💪 🫶 👀 🧠 🌟 ⭐ ✨ ⚡ 🔥 🌈 ☀️ 🌙 ☁️ ❄️ 🌸 🌷 🌹 🌻 🍀 🌿 🌳 🐶 🐱 🐻 🐼 🐰 🦊 🦁 🐯 🐸 🐣 🦋 🐝 🐬 🦄 🍎 🍊 🍋 🍉 🍇 🍓 🍒 🍑 🥑 🍕 🍔 🍟 🍰 🎂 🍫 🍬 ☕ 🧋 🥤 🎉 🎊 🎈 🎁 🎀 🏆 🥇 🥈 🥉 🏅 🎯 🚀 ✈️ 🚗 🏠 💡 📚 ✏️ 📝 📌 📍 📣 🔔 💰 💎 ✅ ❌ ❓ ❗ 💬".split(" ")
+)));
 type Node = string | { tag: string; children: Node[] };
 const tags = new Set(["p", "div", "br", "strong", "b", "em", "i", "u", "ul", "ol", "li"]);
 function read(value: string): Node[] | null {
@@ -35,6 +38,34 @@ export default function ForumEditor({ value, onChange, disabled = false }: { val
   const editor = useRef<HTMLDivElement>(null);
   const lastValue = useRef<string | null>(null);
   const [active, setActive] = useState<string[]>([]);
+  const [stickersOpen, setStickersOpen] = useState(false);
+  const selection = useRef<Range | null>(null);
+  const stickerPicker = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!stickersOpen) return;
+    const close = (event: PointerEvent) => { if (!stickerPicker.current?.contains(event.target as globalThis.Node)) setStickersOpen(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { setStickersOpen(false); editor.current?.focus(); } };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", escape); };
+  }, [stickersOpen]);
+  function rememberSelection() {
+    const current = window.getSelection();
+    if (current?.rangeCount && editor.current?.contains(current.getRangeAt(0).commonAncestorContainer)) selection.current = current.getRangeAt(0).cloneRange();
+  }
+  function insertSticker(sticker: string) {
+    const element = editor.current;
+    if (!element || disabled) return;
+    element.focus();
+    const current = window.getSelection();
+    if (current) {
+      const range = selection.current && element.contains(selection.current.commonAncestorContainer) ? selection.current : document.createRange();
+      if (range !== selection.current) { range.selectNodeContents(element); range.collapse(false); }
+      current.removeAllRanges(); current.addRange(range);
+    }
+    document.execCommand("insertText", false, sticker);
+    sync(); rememberSelection(); setStickersOpen(false);
+  }
   useEffect(() => {
     const element = editor.current;
     if (!element || value === lastValue.current) return;
@@ -78,6 +109,10 @@ export default function ForumEditor({ value, onChange, disabled = false }: { val
   return <div className={styles.editorWrap}>
     <div className={styles.editorToolbar} role="toolbar" aria-label="Định dạng nội dung">
       {tools.map(([command, label, Icon]) => <button key={command} type="button" title={label} aria-label={label} aria-pressed={active.includes(command)} disabled={disabled} onMouseDown={event => event.preventDefault()} onClick={() => { editor.current?.focus(); document.execCommand(command); sync(); }}><Icon size={15} /></button>)}
+      <div ref={stickerPicker} className={styles.editorStickerPicker}>
+        <button type="button" title="Thêm sticker" aria-label="Thêm sticker" aria-expanded={stickersOpen && !disabled} disabled={disabled} onMouseDown={event => { event.preventDefault(); rememberSelection(); }} onClick={() => { rememberSelection(); setStickersOpen(open => !open); }}><Smile size={15} /></button>
+        {stickersOpen && !disabled && <div className={styles.stickerOptions} role="group" aria-label="Chọn sticker">{POST_STICKERS.map(sticker => <button type="button" key={sticker} aria-label={`Chèn sticker ${sticker}`} onMouseDown={event => event.preventDefault()} onClick={() => insertSticker(sticker)}>{sticker}</button>)}</div>}
+      </div>
     </div>
     <div ref={editor} className={styles.richEditor} contentEditable={!disabled} suppressContentEditableWarning role="textbox" aria-label="Nội dung" aria-multiline="true" aria-required="true" data-placeholder="Chia sẻ câu hỏi hoặc kinh nghiệm của bạn…" onInput={sync} onKeyUp={updateActive} onMouseUp={updateActive} onPaste={event => { event.preventDefault(); document.execCommand("insertText", false, event.clipboardData.getData("text/plain")); sync(); }} />
   </div>;

@@ -10,9 +10,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!uuidPattern.test(params.id) || typeof commentId !== "string" || !uuidPattern.test(commentId)) throw new ForumError("Bình luận không hợp lệ.");
     if (reaction !== null && reaction !== "like" && reaction !== "dislike") throw new ForumError("Tương tác không hợp lệ.");
     const db = getSupabaseAdmin();
-    const { data: comment, error: lookupError } = await db.from("forum_comments").select("id").eq("id", commentId).eq("topic_id", params.id).maybeSingle();
+    const { data: comment, error: lookupError } = await db.from("forum_comments").select("*").eq("id", commentId).eq("topic_id", params.id).maybeSingle();
     if (lookupError) throw lookupError;
     if (!comment) throw new ForumError("Không tìm thấy bình luận.", 404);
+    if (comment.hidden_at) throw new ForumError("Bình luận đã bị ẩn.", 403);
     const result = reaction === null
       ? await db.from("forum_comment_reactions").delete().eq("comment_id", commentId).eq("author_code", account.advisor_code)
       : await db.from("forum_comment_reactions").upsert({ comment_id: commentId, author_code: account.advisor_code, reaction }, { onConflict: "comment_id,author_code" });

@@ -4,6 +4,7 @@ import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, us
 import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, Grid2X2, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
 import SkillsSurveyAdminPanel from "./SkillsSurveyAdminPanel";
 import CreationToolsPanel from "./CreationToolsPanel";
+import AccessPasswordCell from "./AccessPasswordCell";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
@@ -495,7 +496,7 @@ export default function AdminDataPage() {
               return <tr key={user.id}>
                 <td><button type="button" className="admin-copy-cell" title="Bấm để sao chép mã TVV" onClick={() => void copyAccessValue(user.advisor_code, codeKey)}>{copiedAccessCell === codeKey ? "Đã sao chép" : user.advisor_code}</button></td>
                 <td>{user.full_name}</td>
-                <td><button type="button" className="admin-copy-cell admin-copy-password" title={user.password_plain ? "Bấm để sao chép mật khẩu" : "Chưa có mật khẩu"} disabled={!user.password_plain} onClick={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)}><code className="admin-password-code">{copiedAccessCell === passwordKey ? "Đã sao chép" : user.password_plain || "Chưa tạo"}</code></button></td>
+                <td><AccessPasswordCell user={user} copied={copiedAccessCell === passwordKey} onCopy={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)} onChanged={password_plain => { setCopiedAccessCell(""); setUsers(current => current.map(item => item.id === user.id ? { ...item, password_plain } : item)); }} /></td>
                 <td>{user.group_name || "—"}</td><td>{user.advisor_position || "—"}</td>
               </tr>;
             })}
@@ -509,7 +510,7 @@ export default function AdminDataPage() {
                 <header><div><small>Tên TVV</small><strong>{user.full_name}</strong></div><span>{user.advisor_position || "—"}</span></header>
                 <dl>
                   <div><dt>Mã TVV</dt><dd><button type="button" className="admin-copy-cell" title="Bấm để sao chép mã TVV" onClick={() => void copyAccessValue(user.advisor_code, codeKey)}>{copiedAccessCell === codeKey ? "Đã sao chép" : user.advisor_code}</button></dd></div>
-                  <div><dt>Mật khẩu</dt><dd><button type="button" className="admin-copy-cell admin-copy-password" title={user.password_plain ? "Bấm để sao chép mật khẩu" : "Chưa có mật khẩu"} disabled={!user.password_plain} onClick={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)}><code className="admin-password-code">{copiedAccessCell === passwordKey ? "Đã sao chép" : user.password_plain || "Chưa tạo"}</code></button></dd></div>
+                  <div><dt>Mật khẩu</dt><dd><AccessPasswordCell user={user} copied={copiedAccessCell === passwordKey} onCopy={() => user.password_plain && void copyAccessValue(user.password_plain, passwordKey)} onChanged={password_plain => { setCopiedAccessCell(""); setUsers(current => current.map(item => item.id === user.id ? { ...item, password_plain } : item)); }} /></dd></div>
                   <div><dt>Nhóm</dt><dd>{user.group_name || "—"}</dd></div>
                 </dl>
               </article>;
