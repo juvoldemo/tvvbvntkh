@@ -1,0 +1,43 @@
+/* Card-based admin entry and return navigation. */
+@media (max-width: 540px) {
+  body .admin-page .admin-access-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); width: 100%; gap: 8px; }
+  body .admin-page .admin-access-actions button { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 44px; padding: 10px 6px; font-size: 12px; white-space: nowrap; }
+  .admin-access-actions button svg { flex-shrink: 0; }
+}
+body .admin-page { padding-bottom: 32px; }
+.admin-feature-launcher, .admin-feature-navigation { max-width: none; margin: 24px 0; }
+body .admin-page .admin-panel-area { max-width: none; }
+body .admin-page .admin-header { padding-left: 28px; padding-right: 28px; }
+.admin-feature-launcher > header { margin-bottom: 20px; }
+.admin-feature-launcher h2 { margin: 0 0 6px; font-size: 22px; color: #17324f; }
+.admin-feature-launcher p { margin: 0; color: #61758d; font-size: 14px; }
+.admin-feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+body .admin-page .admin-feature-card { display: flex; align-items: flex-start; gap: 14px; min-width: 0; min-height: 142px; padding: 22px; border: 1px solid #cddff0; border-radius: 14px; background: var(--feature-bg, #eff6ff) !important; color: #17324f !important; text-align: left; box-shadow: none !important; cursor: pointer; }
+body .admin-page .admin-feature-card:hover { border-color: #087bc5; background: var(--feature-hover, #dbeafe) !important; }
+.admin-feature-icon { display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 10px; background: #ffffffb3; }
+.admin-feature-copy { display: grid; gap: 8px; min-width: 0; width: 100%; align-self: center; text-align: center; }
+.admin-feature-copy strong { font-size: 20px; line-height: 1.4; }
+.admin-feature-copy small { color: #61758d; font-size: 13px; font-weight: 400; line-height: 1.6; }
+.admin-feature-arrow { flex-shrink: 0; margin-left: auto; margin-top: 14px; }
+body .admin-page .admin-feature-card { position: relative; align-items: center; padding: 22px 82px; }
+.admin-feature-card .admin-feature-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); }
+.admin-feature-card .admin-feature-arrow { position: absolute; right: 22px; top: 50%; margin: 0; transform: translateY(-50%); }
+.admin-feature-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+body .admin-page .admin-feature-navigation button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; border: 1px solid #cddff0; border-radius: 8px; padding: 10px 14px; background: #fff !important; color: #005987 !important; box-shadow: none !important; }
+.admin-feature-navigation > span { font-size: 16px; font-weight: 700; color: #17324f; }
+.admin-feature-card:focus-visible, .admin-feature-navigation button:focus-visible { outline: 3px solid #087bc5; outline-offset: 3px; }
+@media (max-width: 1000px) { .admin-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .admin-feature-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; } body .admin-page .admin-feature-card { min-height: 112px; padding: 18px 72px; } .admin-feature-card .admin-feature-icon { left: 14px; } .admin-feature-card .admin-feature-arrow { right: 14px; } .admin-feature-launcher, .admin-feature-navigation { margin: 18px auto; } }
+
+.admin-feature-card:nth-child(1) { --feature-bg: #eff6ff; --feature-hover: #dbeafe; }
+.admin-feature-card:nth-child(2) { --feature-bg: #f5f3ff; --feature-hover: #ede9fe; }
+.admin-feature-card:nth-child(3) { --feature-bg: #ecfdf5; --feature-hover: #d1fae5; }
+.admin-feature-card:nth-child(4) { --feature-bg: #fff7ed; --feature-hover: #ffedd5; }
+.admin-feature-card:nth-child(5) { --feature-bg: #fffbeb; --feature-hover: #fef3c7; }
+.admin-feature-card:nth-child(6) { --feature-bg: #ecfeff; --feature-hover: #cffafe; }
+.admin-feature-card:nth-child(7) { --feature-bg: #eef2ff; --feature-hover: #e0e7ff; }
+.admin-feature-card:nth-child(8) { --feature-bg: #f7fee7; --feature-hover: #ecfccb; }
+.admin-feature-card:nth-child(9) { --feature-bg: #f0fdfa; --feature-hover: #ccfbf1; }
+.admin-feature-card:nth-child(10) { --feature-bg: #fdf2f8; --feature-hover: #fce7f3; }
+.admin-feature-card:nth-child(11) { --feature-bg: #faf5ff; --feature-hover: #f3e8ff; }
+.admin-feature-card:nth-child(12) { --feature-bg: #fff1f2; --feature-hover: #ffe4e6; }

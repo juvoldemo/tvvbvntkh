@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "node scripts/copy-pdfjs.cjs",
+    "predev": "node scripts/copy-pdfjs.cjs",
+    "prebuild": "node scripts/copy-pdfjs.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -26,6 +29,7 @@
     "lucide-react": "^0.468.0",
     "next": "^14.2.16",
     "papaparse": "^5.4.1",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.15.4",

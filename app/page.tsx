@@ -4491,7 +4491,7 @@ function IllustrationView({ advisor, contracts, estimate, onOpenCalculator }: an
 }
 
 function IllustrationTab({ active, premiumText = "", advisorCode = "" }: { active: boolean; premiumText?: string; advisorCode?: string }) {
-  const minhHoaVersion = "20261122-wrap-person-names";
+  const minhHoaVersion = "20261127-summary-compact-cards";
   const src = `/minhhoa2/index.html?embedded=1&v=${minhHoaVersion}${premiumText ? `&annualPremium=${encodeURIComponent(premiumText)}` : ""}${advisorCode ? `&advisorCode=${encodeURIComponent(advisorCode)}` : ""}`;
   return (
     <section className={`tvv-illustration-embed${active ? " active" : ""}`} aria-hidden={!active}>

@@ -2792,7 +2792,7 @@ function openRiderTerms(code) {
     downloadLink.href = pdfUrl;
     downloadLink.setAttribute("download", `${code}.pdf`);
   }
-  if (frame) frame.src = pdfUrl;
+  if (frame) frame.src = `terms-viewer.html?v=20261127-full&file=${encodeURIComponent(pdfUrl)}`;
 
   modal.hidden = false;
   document.body.classList.add("terms-open");
@@ -2817,7 +2817,7 @@ function openTermsModal({ code, title, subtitle, pdfUrl, downloadName }) {
     downloadLink.href = pdfUrl;
     downloadLink.setAttribute("download", downloadName || "dieu-khoan.pdf");
   }
-  if (frame) frame.src = pdfUrl;
+  if (frame) frame.src = `terms-viewer.html?v=20261127-full&file=${encodeURIComponent(pdfUrl)}`;
 
   modal.hidden = false;
   document.body.classList.add("terms-open");
@@ -5172,23 +5172,30 @@ function renderDashboardSummaryCanvas(snapshot) {
     });
   }
 
-  function heading(title, y, glyph = "✓") {
+  function heading(title, y, glyph = "?") {
+    const label = normalizeCanvasText(title).toUpperCase();
+    ctx.font = `900 28px ${SUMMARY_FONT_FAMILY}`;
+    const textWidth = Math.min(ctx.measureText(label).width, 560);
+    const iconSize = 60;
+    const gap = 12;
+    const groupWidth = iconSize + gap + textWidth;
+    const groupLeft = (canvas.width - groupWidth) / 2;
+    const lineGap = 24;
+    const lineWidth = Math.min(96, Math.max(0, groupLeft - margin - lineGap));
     ctx.strokeStyle = "#a9c4ed";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(margin + 230, y + 24);
-    ctx.lineTo(margin + 322, y + 24);
-    ctx.moveTo(canvas.width - margin - 322, y + 24);
-    ctx.lineTo(canvas.width - margin - 230, y + 24);
+    ctx.moveTo(groupLeft - lineGap - lineWidth, y + 24);
+    ctx.lineTo(groupLeft - lineGap, y + 24);
+    ctx.moveTo(groupLeft + groupWidth + lineGap, y + 24);
+    ctx.lineTo(groupLeft + groupWidth + lineGap + lineWidth, y + 24);
     ctx.stroke();
-    icon(canvas.width / 2 - 176, y + 24, colors.blue, glyph);
-    drawText(ctx, normalizeCanvasText(title).toUpperCase(), canvas.width / 2 - 132, y + 4, {
-      size: 28,
-      weight: 900,
-      color: colors.blue,
-      fitWidth: 560,
-      minSize: 22
+    icon(groupLeft + iconSize / 2, y + 24, colors.blue, glyph);
+    drawText(ctx, label, groupLeft + iconSize + gap, y + 8, {
+      size: 28, weight: 900, color: colors.blue,
+      fitWidth: 560, minSize: 22
     });
+    return groupLeft + iconSize + gap + textWidth / 2;
   }
 
   ctx.fillStyle = colors.bg;
@@ -5212,43 +5219,37 @@ function renderDashboardSummaryCanvas(snapshot) {
   });
 
   let y = 126;
-  const headerCardH = snapshot.isPolicyOwnerSameAsInsured ? 112 : 148;
-  card(margin, y, contentW, headerCardH, 16);
-  icon(margin + 54, y + headerCardH / 2, colors.blue, "●", true);
+  const headerCardH = snapshot.isPolicyOwnerSameAsInsured ? 112 : 178;
+  const headerGap = 18;
+  const headerCardW = (contentW - headerGap * 2) / 3;
   const headerInsured = snapshot.insuredPerson || { name: snapshot.customerName };
   const headerOwner = snapshot.policyOwner || headerInsured;
-  const personX = margin + 106;
-  const personW = 330;
-  if (snapshot.isPolicyOwnerSameAsInsured) {
-    drawText(ctx, "BMBH/N\u0110BH", personX, y + 30, { size: 19, weight: 900, color: colors.blue });
-    drawText(ctx, headerInsured.name || snapshot.customerName, personX, y + 60, { size: 30, weight: 900, color: colors.ink, fitWidth: personW, minSize: 23 });
-  } else {
-    drawText(ctx, "N\u0110BH", personX, y + 22, { size: 18, weight: 900, color: colors.blue });
-    drawText(ctx, headerInsured.name || snapshot.customerName, personX + 76, y + 18, { size: 26, weight: 900, color: colors.ink, fitWidth: personW - 76, minSize: 20 });
-    ctx.fillStyle = "#fff4d8";
-    drawRoundedRect(ctx, personX - 4, y + 76, personW + 8, 48, 14);
-    ctx.fill();
-    drawText(ctx, "BMBH", personX + 10, y + 88, { size: 18, weight: 900, color: colors.gold });
-    drawText(ctx, headerOwner.name || "-", personX + 86, y + 84, { size: 25, weight: 900, color: colors.ink, fitWidth: personW - 96, minSize: 19 });
+  for (let index = 0; index < 3; index++) {
+    card(margin + index * (headerCardW + headerGap), y, headerCardW, headerCardH, 16);
   }
-  ctx.strokeStyle = colors.line;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(margin + 470, y + 26);
-  ctx.lineTo(margin + 470, y + headerCardH - 26);
-  ctx.moveTo(margin + 770, y + 26);
-  ctx.lineTo(margin + 770, y + headerCardH - 26);
-  ctx.stroke();
-  icon(margin + 522, y + headerCardH / 2, colors.blue, "✓");
-  drawText(ctx, "PH\u00cd B\u1ea2O HI\u1ec2M", margin + 574, y + headerCardH / 2 - 28, { size: 18, weight: 800, color: colors.blue });
-  drawText(ctx, `${formatVND(totalAnnualPremium)} \u0111/n\u0103m`, margin + 574, y + headerCardH / 2, { size: 25, weight: 900, color: colors.blue, fitWidth: 180, minSize: 19 });
-  icon(margin + 820, y + headerCardH / 2, colors.gold, "≈");
-  drawText(ctx, `${formatVND(Math.ceil(totalAnnualPremium / 365))} \u0111/ng\u00e0y`, margin + 870, y + headerCardH / 2 - 10, {
-    size: 25,
-    weight: 900,
-    color: colors.gold,
-    fitWidth: 140,
-    minSize: 18
+  const personCenter = margin + headerCardW / 2;
+  function personName(name, top) {
+    wrapText(ctx, name || "-", margin + 18, top, headerCardW - 36, 28, {
+      size: 25, weight: 900, color: colors.ink, align: "center"
+    });
+  }
+  if (snapshot.isPolicyOwnerSameAsInsured) {
+    drawText(ctx, "BMBH/N\u0110BH", personCenter, y + 22, { size: 19, weight: 900, color: colors.blue, align: "center" });
+    personName(headerInsured.name || snapshot.customerName, y + 58);
+  } else {
+    drawText(ctx, "N\u0110BH", personCenter, y + 18, { size: 18, weight: 900, color: colors.blue, align: "center" });
+    personName(headerInsured.name || snapshot.customerName, y + 46);
+    drawText(ctx, "BMBH", personCenter, y + 108, { size: 18, weight: 900, color: colors.gold, align: "center" });
+    personName(headerOwner.name, y + 136);
+  }
+  [
+    { label: "PH\u00cd B\u1ea2O HI\u1ec2M N\u0102M", value: totalAnnualPremium, unit: "\u0111\u1ed3ng/n\u0103m", color: colors.blue },
+    { label: "PH\u00cd B\u00ccNH QU\u00c2N NG\u00c0Y", value: Math.ceil(totalAnnualPremium / 365), unit: "\u0111\u1ed3ng/ng\u00e0y", color: colors.gold }
+  ].forEach((item, index) => {
+    const center = margin + (index + 1) * (headerCardW + headerGap) + headerCardW / 2;
+    const offset = (headerCardH - 112) / 2;
+    drawText(ctx, item.label, center, y + offset + 22, { size: 19, weight: 850, color: item.color, align: "center", fitWidth: headerCardW - 32, minSize: 16 });
+    drawText(ctx, formatVND(item.value), center, y + offset + 56, { size: 32, weight: 900, color: item.color, align: "center", fitWidth: headerCardW - 36, minSize: 24 });
   });
 
   y += headerCardH + 12;
@@ -5302,20 +5303,34 @@ function renderDashboardSummaryCanvas(snapshot) {
     grad.addColorStop(0, item[2]);
     grad.addColorStop(1, item[3]);
     card(x, y, protectW, protectH, 16, grad, "rgba(255,255,255,0.2)");
-    icon(x + 70, y + 52, item[2], item[4], true);
-    wrapText(ctx, item[0], x + 116, y + 34, protectW - 146, 22, { size: 20, weight: 900, color: "#fff" });
+    ctx.font = `900 20px ${SUMMARY_FONT_FAMILY}`;
+    const titleLines = item[0].split("\n");
+    const titleWidth = Math.min(protectW - 146, Math.max(...titleLines.map(line => ctx.measureText(normalizeCanvasText(line)).width)));
+    const titleGroupWidth = 60 + 16 + titleWidth;
+    const titleGroupX = x + (protectW - titleGroupWidth) / 2;
+    const titleHeight = titleLines.length * 22;
+    icon(titleGroupX + 30, y + 52, item[2], item[4], true);
+    titleLines.forEach((line, lineIndex) => {
+      drawText(ctx, line, titleGroupX + 76 + titleWidth / 2, y + 52 - titleHeight / 2 + lineIndex * 22, {
+        size: 20, weight: 900, color: "#fff", align: "center", fitWidth: titleWidth, minSize: 16
+      });
+    });
+    const titleBottom = y + 52 + titleHeight / 2;
     if (isAsgdSummary && index === 1) {
       drawText(ctx, "50% STBH gia tăng", x + protectW / 2, y + 100, { size: 27, weight: 900, color: "#fff", align: "center" });
       drawText(ctx, "Tối đa 200 triệu đồng", x + protectW / 2, y + 142, { size: 23, weight: 850, color: "#fff", align: "center" });
     } else {
-      moneyStack(item[1], x + protectW / 2, y + 98, { size: 50, unitSize: 21, unitOffset: 54, fitWidth: protectW - 46 });
+      // Center the amount and its unit in the space below the card title.
+      const moneyHeight = 54 + 21;
+      const moneyY = isAsgdSummary ? y + 98 : (titleBottom + 12 + y + protectH - 16 - moneyHeight) / 2;
+      moneyStack(item[1], x + protectW / 2, moneyY, { size: 50, unitSize: 21, unitOffset: 54, fitWidth: protectW - 46 });
       if (isAsgdSummary && index === 0) drawText(ctx, "Tự động gia tăng 5% STBH gốc mỗi năm", x + protectW / 2, y + 175, { size: 17, weight: 800, color: "#fff", align: "center" });
     }
   });
 
   y += protectH + 42;
-  heading("Giá trị hoàn lại minh họa", y, "▥");
-  drawText(ctx, "So sánh 2 kịch bản lãi suất: 4,76% và 4,25%/năm", canvas.width / 2, y + 42, {
+  const returnTitleCenter = heading("Giá trị hoàn lại minh họa", y, "▥");
+  drawText(ctx, "So sánh 2 kịch bản lãi suất: 4,76% và 4,25%/năm", returnTitleCenter, y + 62, {
     size: 18,
     weight: 700,
     color: colors.ink,
@@ -5323,7 +5338,7 @@ function renderDashboardSummaryCanvas(snapshot) {
     fitWidth: contentW - 80,
     minSize: 16
   });
-  y += 84;
+  y += 104;
   const years = isAsgdSummary
     ? snapshot.totals.accountMilestones.map((item) => item.year)
     : [5, 10, 15, 20];

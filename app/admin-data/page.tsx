@@ -1,17 +1,33 @@
 "use client";
 
 import { Dispatch, FormEvent, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
-import { BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, Grid2X2, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, Bell, BookOpen, CalendarPlus, CheckCircle2, Clock3, Database, Download, FileText, HelpCircle, Home, Image as ImageIcon, LogOut, Plus, RotateCcw, Save, Search, ShieldCheck, Sparkles, Target, Trash2, Trophy, Upload, UserCircle, Users, X } from "lucide-react";
 import SkillsSurveyAdminPanel from "./SkillsSurveyAdminPanel";
 import CreationToolsPanel from "./CreationToolsPanel";
 import AccessPasswordCell from "./AccessPasswordCell";
+import AccessSearch from "./AccessSearch";
+import "./admin-features.css";
 
 type EventItem = { id: string; title: string; content: string; event_date: string | null; event_type?: string | null; created_at: string };
 type EventAudience = "board_leader" | "team_leader" | "advisor";
 type CompetitionAudience = "all" | "team_leader";
 type CompetitionProgram = { id: string; programName: string; status: string; startDate?: string; endDate?: string; isHidden?: boolean; siteHidden?: boolean; displayAudience?: CompetitionAudience };
 type UserItem = { id: string; advisor_code: string; full_name: string; group_name: string | null; start_date: string | null; advisor_status: string | null; advisor_position: string | null; position_effective_date: string | null; birth_day: number | null; birth_month: number | null; password_plain: string | null; is_active: boolean };
-type AdminTab = "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "class_votes" | "skills_survey" | "invitations";
+type AdminTab = "overview" | "home" | "events" | "competitions" | "analytics" | "data" | "targets" | "activities" | "archive" | "about" | "access" | "skills_survey" | "invitations";
+const ADMIN_FEATURES: Array<{ tab: Exclude<AdminTab, "home">; label: string; description: string; icon: typeof Bell }> = [
+  { tab: "overview", label: "Tổng quan", description: "Xem thống kê và tình hình truy cập hệ thống", icon: Home },
+  { tab: "invitations", label: "Quản lý Banner", description: "Quản lý mẫu thư, banner và công cụ sáng tạo", icon: ImageIcon },
+  { tab: "skills_survey", label: "Khảo sát kỹ năng", description: "Xem kết quả khảo sát và điểm kỹ năng từng TVV", icon: BarChart3 },
+  { tab: "events", label: "Thông báo", description: "Quản lý thông báo và lịch sự kiện", icon: CalendarPlus },
+  { tab: "competitions", label: "Chương trình thi đua", description: "Quản lý chương trình và đối tượng tham gia", icon: Trophy },
+  { tab: "analytics", label: "Analytics", description: "Phân tích truy cập và hoạt động người dùng", icon: BarChart3 },
+  { tab: "data", label: "Dữ liệu", description: "Xem dữ liệu và kết quả thưởng", icon: Database },
+  { tab: "targets", label: "Mục tiêu", description: "Quản lý đăng ký mục tiêu của các nhóm", icon: Target },
+  { tab: "activities", label: "Theo dõi hoạt động", description: "Theo dõi kế hoạch và tiến độ hoạt động nhóm", icon: CheckCircle2 },
+  { tab: "archive", label: "Kho tài liệu", description: "Quản lý biểu mẫu, hướng dẫn và câu hỏi thường gặp", icon: BookOpen },
+  { tab: "about", label: "Cẩm nang tư vấn", description: "Cập nhật nội dung cẩm nang dành cho TVV", icon: ShieldCheck },
+  { tab: "access", label: "Danh sách truy cập", description: "Quản lý tài khoản và quyền truy cập hệ thống", icon: Users },
+];
 type AnalyticsPeriod = "day" | "week" | "month";
 type AnalyticsTimelineItem = { eventName: string; tabName?: string | null; durationSeconds?: number | null; actionName?: string | null; createdAt: string };
 type AnalyticsRow = { sessionId: string; advisorCode: string; fullName: string; groupName: string; position: string; visits: number; actions: number; summaryExports: number; totalSeconds: number; longestTab: string; longestTabSeconds: number; firstAccess: string; lastAccess: string; devices: string[]; tabs: Record<string, number>; timeline: AnalyticsTimelineItem[] };
@@ -37,7 +53,6 @@ type ArchiveFaq = { id: string; question: string; answer: string };
 type AboutItem = { id: string; title: string; content: string; imageUrl?: string };
 type AboutSection = { id: string; title: string; description: string; items: AboutItem[] };
 type AboutContent = { sections: AboutSection[] };
-type ClassVoteAdminItem = { id: string; advisor_code: string; advisor_name: string | null; group_name: string | null; vote_choice: "A" | "T" | "M"; change_count: number; updated_at: string };
 export default function AdminDataPage() {
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
@@ -268,7 +283,7 @@ export default function AdminDataPage() {
   }, [analyticsPeriod]);
 
   useEffect(() => {
-    if (authenticated && (activeTab === "home" || activeTab === "analytics")) void loadAnalytics();
+    if (authenticated && (activeTab === "overview" || activeTab === "analytics")) void loadAnalytics();
   }, [activeTab, authenticated, loadAnalytics]);
 
   async function removeTargetRegistration(id: string, groupName: string) {
@@ -449,46 +464,36 @@ export default function AdminDataPage() {
         </div>
       </header>
       {message && <div className="admin-message">{message}</div>}
-      {activeTab === "home" && <button type="button" className="admin-survey-entry" onClick={() => setActiveTab("invitations")}>
-        <ImageIcon size={24} /><span><strong>Tạo thư</strong><small>Quản lý banner, mẫu thư và vị trí tên khách hàng</small></span><b aria-hidden="true">→</b>
-      </button>}
-      {activeTab === "home" && <button type="button" className="admin-survey-entry" onClick={() => setActiveTab("skills_survey")}>
-        <BarChart3 size={24} />
-        <span><strong>Khảo sát kỹ năng</strong><small>Xem kết quả từng TVV, điểm kỹ năng và tổng điểm</small></span>
-        <b aria-hidden="true">→</b>
-      </button>}
-
-      <nav className="admin-main-tabs" aria-label="Quản trị dữ liệu">
-        <button type="button" className={activeTab === "invitations" ? "active" : ""} onClick={() => setActiveTab("invitations")}><ImageIcon size={17} />Tạo thư</button>
-        <button type="button" className={activeTab === "skills_survey" ? "active" : ""} onClick={() => setActiveTab("skills_survey")}><BarChart3 size={17} />Khảo sát kỹ năng</button>
-        <button type="button" className={activeTab === "events" ? "active" : ""} onClick={() => setActiveTab("events")}><CalendarPlus size={17} />Thông báo</button>
-        <button type="button" className={activeTab === "competitions" ? "active" : ""} onClick={() => { setActiveTab("competitions"); setAccessError(""); }}><Trophy size={17} />Chương trình thi đua</button>
-        <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => { setActiveTab("analytics"); setAccessError(""); }}><BarChart3 size={17} />Analytics</button>
-        <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => { setActiveTab("data"); setAccessError(""); }}><BarChart3 size={17} />Dữ liệu</button>
-        <button type="button" className={activeTab === "targets" ? "active" : ""} onClick={() => { setActiveTab("targets"); setAccessError(""); }}><Target size={17} />Mục tiêu</button>
-        <button type="button" className={activeTab === "activities" ? "active" : ""} onClick={() => { setActiveTab("activities"); setAccessError(""); }}><CheckCircle2 size={17} />Theo dõi hoạt động</button>
-        <button type="button" className={activeTab === "archive" ? "active" : ""} onClick={() => { setActiveTab("archive"); setAccessError(""); }}><BookOpen size={17} />Kho tài liệu</button>
-        <button type="button" className={activeTab === "about" ? "active" : ""} onClick={() => { setActiveTab("about"); setAccessError(""); }}><ShieldCheck size={17} />Cẩm nang tư vấn</button>
-        <button type="button" className={activeTab === "access" ? "active" : ""} onClick={() => { setActiveTab("access"); setAccessError(""); }}><Users size={17} />Danh sách truy cập</button>
-        <button type="button" className={activeTab === "class_votes" ? "active" : ""} onClick={() => setActiveTab("class_votes")}><CheckCircle2 size={17} />Bình chọn</button>
-      </nav>
+      {activeTab === "home" ? <section className="admin-feature-launcher" aria-labelledby="admin-features-title">
+        <header><h2 id="admin-features-title">Tất cả chức năng</h2><p>Chọn chức năng bạn muốn sử dụng.</p></header>
+        <div className="admin-feature-grid">{ADMIN_FEATURES.map(({ tab, label, description, icon: Icon }) =>
+          <button type="button" className="admin-feature-card" key={tab} onClick={() => { setActiveTab(tab); setAccessError(""); window.scrollTo({ top: 0 }); }}>
+            <span className="admin-feature-icon"><Icon size={24} /></span>
+            <span className="admin-feature-copy"><strong>{label}</strong><small>{description}</small></span>
+            <ArrowRight className="admin-feature-arrow" size={18} aria-hidden="true" />
+          </button>
+        )}</div>
+      </section> : <div className="admin-feature-navigation">
+        <button type="button" onClick={() => { setActiveTab("home"); setAccessError(""); window.scrollTo({ top: 0 }); }}><ArrowLeft size={18} />Tất cả chức năng</button>
+        <span>{ADMIN_FEATURES.find((item) => item.tab === activeTab)?.label}</span>
+      </div>}
 
       <section className="admin-panel-area">
         {activeTab === "invitations" && <CreationToolsPanel />}
         {activeTab === "skills_survey" && <SkillsSurveyAdminPanel />}
-        {activeTab === "home" && <AdminHomeDashboard data={analyticsData} period={analyticsPeriod} setPeriod={setAnalyticsPeriod} onNavigate={setActiveTab} />}
+        {activeTab === "overview" && <AdminHomeDashboard data={analyticsData} period={analyticsPeriod} setPeriod={setAnalyticsPeriod} onNavigate={setActiveTab} />}
         {activeTab === "access" && <article className="admin-card admin-access-card">
           <div className="admin-access-heading">
           <div className="admin-card-title"><Users /><h2>Danh sách được truy cập</h2></div>
           <div className="admin-access-actions">
-            <button type="button" className="admin-secondary" disabled={busy || passwordsLoading || accessLoading || users.length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu cho tài khoản chưa tạo</button>
-            <button type="button" className="admin-secondary" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách Excel</button>
+            <button type="button" className="admin-secondary" title="Tạo mật khẩu cho tài khoản chưa tạo" disabled={busy || passwordsLoading || accessLoading || users.length === 0} onClick={randomizeAccessPasswords}>Tạo mật khẩu</button>
+            <button type="button" className="admin-secondary" title="Xuất danh sách Excel" disabled={busy || users.filter((user) => user.is_active).length === 0} onClick={exportAccessList}><Download size={17} />Xuất danh sách</button>
           </div>
           </div>
-          <div className="admin-access-search"><Search size={18} /><input type="search" value={accessSearch} onChange={(event) => setAccessSearch(event.target.value)} placeholder="Tìm theo tên hoặc mã TVV" /></div>
+          <AccessSearch value={accessSearch} onChange={setAccessSearch} />
           {accessError && <div className="admin-message error">{accessError} <button type="button" disabled={accessLoading} onClick={() => void loadUsers()}>Thử lại</button></div>}
           {passwordsLoading && <div className="admin-count">Đang bổ sung mật khẩu cho tài khoản chưa tạo...</div>}
-          <div className="admin-count">{accessLoading ? "Đang tải danh sách..." : `${activeAccessUsers.length} người đang được cấp quyền${accessSearch ? ` · Tìm thấy ${filteredAccessUsers.length}` : ""}`}</div>
+          {accessLoading && <div className="admin-count">Đang tải danh sách...</div>}
           <div className="admin-table-wrap admin-access-table"><table><thead><tr><th>Mã TVV</th><th>Tên TVV</th><th>Mật khẩu hiện tại</th><th>Nhóm</th><th>Chức vụ</th></tr></thead><tbody>
             {filteredAccessUsers.map((user) => {
               const codeKey = `${user.id}-code`;
@@ -578,99 +583,9 @@ export default function AdminDataPage() {
           setMessage={setMessage}
         />}
         {activeTab === "about" && <AboutAdminPanel content={aboutContent} setContent={setAboutContent} onSaved={loadData} setMessage={setMessage} />}
-        {activeTab === "class_votes" && <ClassVotesAdminPanel />}
       </section>
-      <nav className="admin-bottom-nav" aria-label="Điều hướng nhanh">
-        <button type="button" className={activeTab === "home" ? "active" : ""} onClick={() => setActiveTab("home")}><Home /><span>Tổng quan</span></button>
-        <button type="button" className={activeTab === "analytics" ? "active" : ""} onClick={() => setActiveTab("analytics")}><BarChart3 /><span>Analytics</span></button>
-        <button type="button" className={activeTab === "data" ? "active" : ""} onClick={() => setActiveTab("data")}><Database /><span>Dữ liệu</span></button>
-        <button type="button" className={activeTab === "class_votes" ? "active" : ""} onClick={() => setActiveTab("class_votes")}><CheckCircle2 /><span>Bình chọn</span></button>
-        <button type="button" className={!(["home", "analytics", "data"] as AdminTab[]).includes(activeTab) ? "active" : ""} onClick={() => setActiveTab("events")}><Grid2X2 /><span>Thêm</span></button>
-      </nav>
     </main>
   );
-}
-
-function ClassVotesAdminPanel() {
-  const [votes, setVotes] = useState<ClassVoteAdminItem[]>([]);
-  const [isLocked, setIsLocked] = useState(false);
-  const [isStarted, setIsStarted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const load = useCallback(async () => {
-    setLoading(true); setError("");
-    try {
-      const response = await fetch("/api/admin/class-votes", { cache: "no-store" });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không thể tải danh sách bình chọn.");
-      setVotes(payload.votes ?? []); setIsLocked(Boolean(payload.isLocked)); setIsStarted(Boolean(payload.isStarted));
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể tải danh sách bình chọn."); }
-    finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { void load(); }, [load]);
-
-  async function setLock(nextLocked: boolean) {
-    setBusy(true); setError("");
-    try {
-      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isLocked: nextLocked }) });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không thể cập nhật trạng thái khóa.");
-      setIsLocked(Boolean(payload.isLocked));
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể cập nhật trạng thái khóa."); }
-    finally { setBusy(false); }
-  }
-
-  async function startVoting() {
-    setBusy(true); setError("");
-    try {
-      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isStarted: true }) });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không thể bắt đầu bình chọn.");
-      setIsStarted(Boolean(payload.isStarted)); setIsLocked(Boolean(payload.isLocked));
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể bắt đầu bình chọn."); }
-    finally { setBusy(false); }
-  }
-
-  async function hideBanner() {
-    if (!window.confirm("Ẩn banner Khẳng định đẳng cấp trên toàn bộ giao diện người dùng?")) return;
-    setBusy(true); setError("");
-    try {
-      const response = await fetch("/api/admin/class-votes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isStarted: false }) });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không thể ẩn banner.");
-      setIsStarted(Boolean(payload.isStarted));
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể ẩn banner."); }
-    finally { setBusy(false); }
-  }
-
-  async function resetVotes() {
-    if (!window.confirm("Reset toàn bộ bình chọn? TVV sẽ có thể bình chọn lại từ đầu.")) return;
-    setBusy(true); setError("");
-    try {
-      const response = await fetch("/api/admin/class-votes", { method: "DELETE" });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Không thể reset bình chọn.");
-      await load();
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không thể reset bình chọn."); }
-    finally { setBusy(false); }
-  }
-
-  return <article className="admin-card class-votes-admin">
-    <div className="admin-card-title"><CheckCircle2 /><div><h2>Quản lý bình chọn</h2><p>Theo dõi phương án TVV đã chốt, khóa chốt bình chọn hoặc reset để bắt đầu lại.</p></div></div>
-    <div className="class-votes-admin-actions">
-      <div><strong>{!isStarted ? "Banner đang ẩn" : isLocked ? "Đã khóa bình chọn" : "Banner đang hiển thị"}</strong><small>{!isStarted ? "Banner hiện đang ẩn trên toàn bộ giao diện người dùng." : isLocked ? "Nút Chốt đã bị vô hiệu hóa trên giao diện người dùng." : "TVV có thể chọn và chốt bình chọn."}</small></div>
-      {!isStarted ? <button type="button" className="class-votes-start" disabled={busy || loading} onClick={() => void startVoting()}>Hiện</button> : <><button type="button" className={isLocked ? "locked" : ""} role="switch" aria-checked={isLocked} disabled={busy || loading} onClick={() => void setLock(!isLocked)}><i /><span>{isLocked ? "Mở khóa" : "Khóa chốt"}</span></button><button type="button" className="class-votes-reset" disabled={busy || loading || !votes.length} onClick={() => void resetVotes()}><RotateCcw size={17} />Reset toàn bộ</button><button type="button" className="class-votes-end" disabled={busy || loading} onClick={() => void hideBanner()}>Ẩn</button></>}
-    </div>
-    {error && <p className="admin-data-empty class-votes-error">{error}</p>}
-    <div className="admin-table-wrap"><table><thead><tr><th>Tên TVV</th><th>Nhóm</th><th>Phương án</th><th>Lần thay đổi</th><th>Chốt lúc</th></tr></thead><tbody>
-      {votes.map((vote) => <tr key={vote.id}><td><b>{vote.advisor_name || vote.advisor_code}</b></td><td>{vote.group_name || "—"}</td><td><span className={`class-vote-admin-choice choice-${vote.vote_choice}`}>{vote.vote_choice}</span></td><td>{vote.change_count}/1</td><td>{new Date(vote.updated_at).toLocaleString("vi-VN")}</td></tr>)}
-      {!loading && !votes.length && <tr><td colSpan={5}>Chưa có TVV chốt bình chọn.</td></tr>}
-      {loading && <tr><td colSpan={5}>Đang tải dữ liệu bình chọn…</td></tr>}
-    </tbody></table></div>
-  </article>;
 }
 
 function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
@@ -684,14 +599,6 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
     { label: "TVV hoạt động", value: summary.uniqueAdvisors, icon: Users },
     { label: "Phiên hôm nay", value: summary.sessions, icon: FileText },
     { label: "Tổng thời gian truy cập", value: formatAdminDuration(summary.totalSeconds), icon: Clock3 }
-  ];
-  const shortcuts: Array<{ tab: AdminTab; label: string; icon: typeof Bell }> = [
-    { tab: "invitations", label: "Tạo thư", icon: ImageIcon },
-    { tab: "events", label: "Thông báo", icon: Bell }, { tab: "competitions", label: "Thi đua", icon: Trophy },
-    { tab: "data", label: "Dữ liệu", icon: BarChart3 }, { tab: "targets", label: "Mục tiêu", icon: Target },
-    { tab: "activities", label: "Hoạt động", icon: CheckCircle2 }, { tab: "archive", label: "Tài liệu", icon: BookOpen },
-    { tab: "about", label: "Cẩm nang", icon: ShieldCheck }, { tab: "access", label: "Truy cập", icon: UserCircle },
-    { tab: "skills_survey", label: "Khảo sát kỹ năng", icon: BarChart3 }
   ];
   const rawTrends = data?.trends ?? [];
   const trends = period === "day"
@@ -716,7 +623,6 @@ function AdminHomeDashboard({ data, period, setPeriod, onNavigate }: {
       <header><h2>Tổng quan hôm nay</h2></header>
       <div className="admin-home-metrics">{metrics.map((metric) => { const Icon = metric.icon; return <article key={metric.label}><i><Icon /></i><div><span>{metric.label}</span><strong>{metric.value}</strong></div><small>Thống kê theo kỳ đang chọn</small></article>; })}</div>
     </section>
-    <section className="admin-home-section admin-home-shortcuts"><h2>Quản lý nhanh</h2><div>{shortcuts.map((item) => { const Icon = item.icon; return <button type="button" key={item.tab} aria-label={item.label} title={item.label} onClick={() => onNavigate(item.tab)}><Icon /></button>; })}</div></section>
     <section className="admin-home-section admin-home-chart">
       <header className="admin-chart-heading"><div><h2>Phân tích truy cập</h2><p>Xu hướng số phiên truy cập theo từng khoảng thời gian.</p></div><div className="admin-chart-total"><span><i />Tổng trong kỳ</span><strong>{totalTrendSessions} phiên</strong></div></header>
       <div className="admin-home-periods">{(["day", "week", "month"] as AnalyticsPeriod[]).map((item) => <button type="button" key={item} className={period === item ? "active" : ""} onClick={() => setPeriod(item)}>{item === "day" ? "Ngày" : item === "week" ? "Tuần" : "Tháng"}</button>)}</div>

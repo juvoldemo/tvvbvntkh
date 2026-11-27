@@ -21,3 +21,4 @@ debug/*
 !debug/.gitkeep
 
 data/site-settings/
+public/minhhoa2/pdfjs/

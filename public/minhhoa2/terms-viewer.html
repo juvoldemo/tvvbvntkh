@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Điều khoản sản phẩm</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { touch-action: pan-x pan-y; }
+    body { margin: 0; background: #e8eef5; color: #004b7a; font: 14px system-ui, sans-serif; }
+    #pages { padding: 0; min-width: 100%; touch-action: pan-x pan-y; }
+    .page { margin: 0 auto 8px; background: white; overflow: hidden; }
+    canvas { display: block; width: 100%; height: auto; }
+    #status { padding: 16px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="status" role="status">Đang tải tài liệu…</div>
+  <main id="pages" aria-label="Các trang điều khoản"></main>
+  <script type="module" src="terms-viewer.js?v=20261127-full"></script>
+</body>
+</html>

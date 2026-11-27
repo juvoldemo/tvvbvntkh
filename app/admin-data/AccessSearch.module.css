@@ -1,0 +1,39 @@
+.u471 {
+  color-scheme: light;
+  --ux-surface: #fff;
+  --ux-ink: #17324f;
+  --ux-ink-2: #526a83;
+  --ux-line-2: #cddceb;
+  --ux-accent: #005987;
+  --ux-accent-soft: #0059871f;
+  --ux-shadow: #283c5014;
+  --ux-shadow-strong: #283c5033;
+  --ux-ease: cubic-bezier(.2,.8,.2,1);
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+.u471 .field { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; height: 48px; padding: 0 15px; border-radius: 14px; overflow: hidden; isolation: isolate; background: var(--ux-surface); color: var(--ux-ink-2); box-shadow: 0 0 0 1px var(--ux-line-2), 0 1px 2px var(--ux-shadow), 0 14px 30px -20px var(--ux-shadow-strong); transition: transform .5s cubic-bezier(.34,1.7,.5,1), box-shadow .35s var(--ux-ease), color .2s; }
+.u471 .field:hover { color: var(--ux-ink); }
+.u471 .field:active { transform: scale(.975); transition: transform .14s var(--ux-ease); }
+.u471 .field:focus-within { box-shadow: 0 0 0 1px var(--ux-accent), 0 0 0 5px var(--ux-accent-soft), 0 16px 32px -20px var(--ux-shadow-strong); animation: pop .55s cubic-bezier(.34,1.6,.5,1); }
+.u471 .field input { position: relative; z-index: 1; flex: 1; width: 100%; min-width: 0; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; outline: none; background: transparent; color: var(--ux-ink); box-shadow: none; font: inherit; font-size: 14.5px; font-weight: 550; text-align: left; }
+.u471 .field input::placeholder { color: var(--ux-ink-2); opacity: 1; }
+.u471 .icon { flex: none; opacity: .75; transition: transform .5s cubic-bezier(.34,1.8,.5,1); }
+.u471 .field:focus-within .icon { transform: rotate(-14deg) scale(1.12); }
+.u471 .ripple { position: absolute; z-index: 0; left: 24px; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: var(--ux-accent); pointer-events: none; animation: ripple .75s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes pop { 0% { transform: scale(.975); } 45% { transform: scale(1.025); } 100% { transform: scale(1); } }
+@keyframes ripple { 0% { opacity: .26; transform: scale(.4); } 100% { opacity: 0; transform: scale(26); } }
+@media (prefers-reduced-motion: reduce) { .u471 .field, .u471 .icon, .u471 .ripple { animation: none; transition: none; transform: none; } .u471 .ripple { display: none; } }
+
+:global(body .admin-page) .u471 .field input { background: transparent !important; color: var(--ux-ink) !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; outline: none; padding: 0 !important; }
+:global(body .admin-page) .u471 .field input::placeholder { color: var(--ux-ink-2) !important; opacity: 1; }
+:global(body .admin-page) .u471 .field input:focus,
+:global(body .admin-page) .u471 .field input:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}

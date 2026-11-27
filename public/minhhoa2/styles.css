@@ -8720,3 +8720,33 @@ body:not(.riders-mode) .field-row .person-name-input {
   overflow: hidden;
   resize: none;
 }
+
+/* Inline document reader with touch zoom and no PDF toolbars. */
+.terms-modal[hidden] { display: none !important; }
+.terms-dialog { min-width: 0; grid-template-rows: minmax(0, 1fr) !important; }
+.terms-toolbar { display: none !important; }
+.terms-toolbar .terms-link { min-height: 32px; }
+.terms-header .terms-close { color: #004b7a !important; text-shadow: none; }
+.terms-reader { min-width: 0; overflow: hidden; }
+
+/* Let the document fill the frame; the close button floats over it. */
+.terms-modal { padding: 0 !important; }
+.terms-dialog { height: 100dvh !important; }
+.terms-header .terms-close {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.terms-header .terms-close,
+.terms-header .terms-close:hover,
+.terms-header .terms-close:focus,
+.terms-header .terms-close:active {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
